@@ -62,7 +62,7 @@ vars.AddVariables(
     ('FTP_USER'       , 'Username for the FTP'                         , ''),
     ('FTP_PASS'       , 'Password for the FTP'                         , ''),
     ('PACKAGE_SUFFIX' , 'Suffix for the package names'                 , ''),
-                  
+
     BoolVariable('COLOR_CMDS' , 'Display colored output messages when building', True),
     EnumVariable('SHOW_TEST_OUTPUT', 'Display the test log as it is being run', 'single', allowed_values=('always', 'never', 'single')),
     BoolVariable('UPDATE_REFERENCE', 'Update the reference log/image for the specified targets', False),
@@ -72,103 +72,103 @@ vars.AddVariables(
     BoolVariable('DISABLE_COMMON', 'Disable shaders found in the common repository', False),
 
     PathVariable('MAYA_ROOT',
-                 'Directory where Maya is installed (defaults to $MAYA_LOCATION)', 
+                 'Directory where Maya is installed (defaults to $MAYA_LOCATION)',
                  get_default_path('MAYA_LOCATION', '.')),
     PathVariable('MAYA_ROOT',
-                 'Directory where Maya is installed (defaults to $MAYA_LOCATION)', 
+                 'Directory where Maya is installed (defaults to $MAYA_LOCATION)',
                  get_default_path('MAYA_LOCATION', '.')),
-    PathVariable('MTOA_ROOT', 
-                 'Directory where MtoA is installed', 
-                 get_default_path('MTOA_HOME', '.')), 
-    PathVariable('MTOA_API_INCLUDES', 
-                 'Where to find MtoA API includes', 
-                 os.path.join('$MTOA_ROOT', 'include'), PathVariable.PathIsDir),                    
-    PathVariable('MTOA_API_LIB', 
-                 'Where to find MtoA API static libraries', 
-                 os.path.join('$MTOA_ROOT', 'lib'), PathVariable.PathIsDir), 
+    PathVariable('MTOA_ROOT',
+                 'Directory where MtoA is installed',
+                 get_default_path('MTOA_HOME', '.')),
+    PathVariable('MTOA_API_INCLUDES',
+                 'Where to find MtoA API includes',
+                 os.path.join('$MTOA_ROOT', 'include'), PathVariable.PathIsDir),
+    PathVariable('MTOA_API_LIB',
+                 'Where to find MtoA API static libraries',
+                 os.path.join('$MTOA_ROOT', 'lib'), PathVariable.PathIsDir),
     PathVariable('ILMBASE_INCLUDE_PATH',
                  'ILMBase include path',
-                 '.'),    
+                 '.'),
     PathVariable('JSON_INCLUDE_PATH',
                  'Json include path',
-                 '.'), 
+                 '.'),
     PathVariable('JSON_LIB',
                  'Json lib path',
-                 '.'),                     
+                 '.'),
     PathVariable('PYSTRING_INCLUDE_PATH',
                  'Pystring include path',
-                 '.'), 
+                 '.'),
     PathVariable('PYSTRING_LIB',
                  'Pystring lib path',
                  '.'),
     PathVariable('ILMBASE_LIBS',
                  'ILMBase static libs path',
-                 '.'),        
+                 '.'),
     PathVariable('ILMBASE_BIN',
                  'ILMBase bin path',
-                 '.'),          
+                 '.'),
     PathVariable('BOOST_INCLUDE_PATH',
                  'Boost include path',
-                 '.'), 
+                 '.'),
     PathVariable('BOOST_LIBS',
                  'Boost static lib path',
-                 '.'), 
+                 '.'),
     PathVariable('MAYA_INCLUDE_PATH',
                  'Directory where Maya SDK headers are installed',
                  '.'),
-    PathVariable('ALEMBIC_INCLUDE_PATH', 
-                 'Where to find Alembic includes', 
+    PathVariable('ALEMBIC_INCLUDE_PATH',
+                 'Where to find Alembic includes',
                  get_default_path('ALEMBIC_INCLUDE_PATH', '.')),
-    PathVariable('ALEMBIC_LIBS', 
-                 'Where to find Alembic static libraries', 
+    PathVariable('ALEMBIC_LIBS',
+                 'Where to find Alembic static libraries',
                  '.', PathVariable.PathIsDir),
-    PathVariable('ARNOLD', 
-                 'Where to find Arnold installation', 
-                 get_default_path('ARNOLD_HOME', 'Arnold')),                   
-    PathVariable('ARNOLD_API_INCLUDES', 
-                 'Where to find Arnold API includes', 
+    PathVariable('ARNOLD',
+                 'Where to find Arnold installation',
+                 get_default_path('ARNOLD_HOME', 'Arnold')),
+    PathVariable('ARNOLD_API_INCLUDES',
+                 'Where to find Arnold API includes',
                  os.path.join('$ARNOLD', 'include'), PathVariable.PathIsDir),
-    PathVariable('ARNOLD_API_LIB', 
-                 'Where to find Arnold API static libraries', 
+    PathVariable('ARNOLD_API_LIB',
+                 'Where to find Arnold API static libraries',
                  arnold_default_api_lib, PathVariable.PathIsDir),
-    PathVariable('ARNOLD_BINARIES', 
-                 'Where to find Arnold API dynamic libraries and executables', 
+    PathVariable('ARNOLD_BINARIES',
+                 'Where to find Arnold API dynamic libraries and executables',
                  os.path.join('$ARNOLD', 'bin'), PathVariable.PathIsDir),
-    PathVariable('GLEW_INCLUDES', 
-                 'Where to find GLEW includes', 
+    PathVariable('GLEW_INCLUDES',
+                 'Where to find GLEW includes',
                  glew_default_include, PathVariable.PathIsDir),
-    PathVariable('GLEW_LIB', 
-                 'Where to find GLEW static library', 
+    PathVariable('GLEW_LIB',
+                 'Where to find GLEW static library',
                  glew_default_lib, PathVariable.PathIsFile),
-    PathVariable('TARGET_MODULE_PATH', 
-                 'Path used for installation of the mtoa module', 
+    PathVariable('TARGET_MODULE_PATH',
+                 'Path used for installation of the mtoa module',
                  '.', PathVariable.PathIsDirCreate),
-    PathVariable('TARGET_PLUGIN_PATH', 
-                 'Path used for installation of the mtoa plugin', 
+    PathVariable('TARGET_PLUGIN_PATH',
+                 'Path used for installation of the mtoa plugin',
                  os.path.join('$TARGET_MODULE_PATH', 'plug-ins'), PathVariable.PathIsDirCreate),
-    PathVariable('TARGET_SCRIPTS_PATH', 
-                 'Path used for installation of scripts', 
+    PathVariable('TARGET_SCRIPTS_PATH',
+                 'Path used for installation of scripts',
                  os.path.join('$TARGET_MODULE_PATH', 'scripts'), PathVariable.PathIsDirCreate),
-    PathVariable('TARGET_PYTHON_PATH', 
-                 'Path used for installation of Python scripts', 
-                 os.path.join('$TARGET_MODULE_PATH', 'scripts'), PathVariable.PathIsDirCreate),            
-    PathVariable('TARGET_ICONS_PATH', 
-                 'Path used for installation of icons', 
+    PathVariable('TARGET_PYTHON_PATH',
+                 'Path used for installation of Python scripts',
+                 os.path.join('$TARGET_MODULE_PATH', 'scripts'), PathVariable.PathIsDirCreate),
+    PathVariable('TARGET_ICONS_PATH',
+                 'Path used for installation of icons',
                  os.path.join('$TARGET_MODULE_PATH', 'icons'), PathVariable.PathIsDirCreate),
-    PathVariable('TARGET_SHADER_PATH', 
-                 'Path used for installation of arnold shaders', 
+    PathVariable('TARGET_SHADER_PATH',
+                 'Path used for installation of arnold shaders',
                  os.path.join('$TARGET_MODULE_PATH', 'shaders'), PathVariable.PathIsDirCreate),
-    PathVariable('TARGET_PROCEDURAL_PATH', 
-                 'Path used for installation of arnold procedurals', 
+    PathVariable('TARGET_PROCEDURAL_PATH',
+                 'Path used for installation of arnold procedurals',
                  os.path.join('$TARGET_MODULE_PATH', 'procedurals'), PathVariable.PathIsDirCreate),
-    PathVariable('TARGET_EXTENSION_PATH', 
-                 'Path used for installation of mtoa translator extensions', 
+    PathVariable('TARGET_EXTENSION_PATH',
+                 'Path used for installation of mtoa translator extensions',
                  os.path.join('$TARGET_MODULE_PATH', 'extensions'), PathVariable.PathIsDirCreate),
-    PathVariable('TARGET_DOC_PATH', 
-                 'Path for documentation', 
-                 os.path.join('$TARGET_MODULE_PATH', 'docs','api'), PathVariable.PathIsDirCreate),                  
-    PathVariable('TARGET_BINARIES', 
-                 'Path for libraries', 
+    PathVariable('TARGET_DOC_PATH',
+                 'Path for documentation',
+                 os.path.join('$TARGET_MODULE_PATH', 'docs','api'), PathVariable.PathIsDirCreate),
+    PathVariable('TARGET_BINARIES',
+                 'Path for libraries',
                  os.path.join('$TARGET_MODULE_PATH', 'bin'), PathVariable.PathIsDirCreate),
     PathVariable('TOOLS_PATH',
                  'Where to find external tools required for sh',
@@ -179,7 +179,7 @@ if system.os() == 'darwin':
     vars.Add(EnumVariable('SDK_VERSION', 'Version of the Mac OSX SDK to use', '10.7', allowed_values=('10.6', '10.7', '10.8', '10.9')))
     vars.Add(PathVariable('SDK_PATH', 'Root path to installed OSX SDKs', '/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs'))
 
-if system.os() == 'windows':    
+if system.os() == 'windows':
     # Ugly hack. Create a temporary environment, without loading any tool, so we can set the MSVC_ARCH
     # variable from the contents of the TARGET_ARCH variable. Then we can load tools.
     tmp_env = Environment(variables = vars, tools=[])
@@ -220,10 +220,10 @@ MAYA_ROOT = env.subst(env['MAYA_ROOT'])
 MAYA_INCLUDE_PATH = env.subst(env['MAYA_INCLUDE_PATH'])
 
 if env['MAYA_INCLUDE_PATH'] == '.':
-	if system.os() == 'darwin':
-	    MAYA_INCLUDE_PATH = os.path.join(MAYA_ROOT, '../../devkit/include')
-	else:
-	    MAYA_INCLUDE_PATH = os.path.join(MAYA_ROOT, 'include')
+    if system.os() == 'darwin':
+        MAYA_INCLUDE_PATH = os.path.join(MAYA_ROOT, '../../devkit/include')
+    else:
+        MAYA_INCLUDE_PATH = os.path.join(MAYA_ROOT, 'include')
 
 ARNOLD = env.subst(env['ARNOLD'])
 ARNOLD_API_INCLUDES = env.subst(env['ARNOLD_API_INCLUDES'])
@@ -240,16 +240,16 @@ ILMBASE_INCLUDE_PATH = env.subst(env['ILMBASE_INCLUDE_PATH'])
 ILMBASE_BIN = env.subst(env['ILMBASE_BIN'])
 ILMBASE_LIBS = env.subst(env['ILMBASE_LIBS'])
 ALEMBIC_LIBS = env.subst(env['ALEMBIC_LIBS'])
-TARGET_MODULE_PATH = env.subst(env['TARGET_MODULE_PATH']) 
-TARGET_PLUGIN_PATH = env.subst(env['TARGET_PLUGIN_PATH'])  
-TARGET_SCRIPTS_PATH = env.subst(env['TARGET_SCRIPTS_PATH']) 
-TARGET_PYTHON_PATH = env.subst(env['TARGET_PYTHON_PATH']) 
-TARGET_ICONS_PATH = env.subst(env['TARGET_ICONS_PATH'])  
-TARGET_SHADER_PATH = env.subst(env['TARGET_SHADER_PATH']) 
+TARGET_MODULE_PATH = env.subst(env['TARGET_MODULE_PATH'])
+TARGET_PLUGIN_PATH = env.subst(env['TARGET_PLUGIN_PATH'])
+TARGET_SCRIPTS_PATH = env.subst(env['TARGET_SCRIPTS_PATH'])
+TARGET_PYTHON_PATH = env.subst(env['TARGET_PYTHON_PATH'])
+TARGET_ICONS_PATH = env.subst(env['TARGET_ICONS_PATH'])
+TARGET_SHADER_PATH = env.subst(env['TARGET_SHADER_PATH'])
 TARGET_PROCEDURAL_PATH = env.subst(env['TARGET_PROCEDURAL_PATH'])
-TARGET_EXTENSION_PATH = env.subst(env['TARGET_EXTENSION_PATH']) 
-TARGET_DOC_PATH = env.subst(env['TARGET_DOC_PATH'])  
-TARGET_BINARIES = env.subst(env['TARGET_BINARIES']) 
+TARGET_EXTENSION_PATH = env.subst(env['TARGET_EXTENSION_PATH'])
+TARGET_DOC_PATH = env.subst(env['TARGET_DOC_PATH'])
+TARGET_BINARIES = env.subst(env['TARGET_BINARIES'])
 PACKAGE_SUFFIX = env.subst(env['PACKAGE_SUFFIX'])
 
 # Get arnold and maya versions used for this build
@@ -292,8 +292,8 @@ try:
     if data['arnold'] != arnold_version:
         print '''
         You are building with arnold %s instead
-        of the officially supported version %s. 
-        You might encounter bugs, build errors 
+        of the officially supported version %s.
+        You might encounter bugs, build errors
         or undefined behavior.
         ''' % (arnold_version, data['arnold'])
 except:
@@ -318,8 +318,8 @@ if env['COMPILER'] == 'gcc':
         env['CXX'] = 'g++' + compiler_version
     # env.Append(CXXFLAGS = Split('-fno-rtti'))
 
-    if env['MODE'] == 'opt': 
-        env.Append(CPPDEFINES = Split('NDEBUG')) 
+    if env['MODE'] == 'opt':
+        env.Append(CPPDEFINES = Split('NDEBUG'))
 
     ## Hide all internal symbols (the ones without AI_API decoration)
     env.Append(CCFLAGS = Split('-fvisibility=hidden'))
@@ -343,12 +343,12 @@ if env['COMPILER'] == 'gcc':
     if env['MODE'] == 'opt' or env['MODE'] == 'profile':
         env.Append(CCFLAGS = Split(env['GCC_OPT_FLAGS']))
     if env['MODE'] == 'debug' or env['MODE'] == 'profile':
-        if system.os() == 'darwin': 
-            env.Append(CCFLAGS = Split('-gstabs')) 
-            env.Append(LINKFLAGS = Split('-gstabs')) 
-        else: 
-            env.Append(CCFLAGS = Split('-g -fno-omit-frame-pointer')) 
-            env.Append(LINKFLAGS = Split('-g')) 
+        if system.os() == 'darwin':
+            env.Append(CCFLAGS = Split('-gstabs'))
+            env.Append(LINKFLAGS = Split('-gstabs'))
+        else:
+            env.Append(CCFLAGS = Split('-g -fno-omit-frame-pointer'))
+            env.Append(LINKFLAGS = Split('-g'))
     if system.os() == 'linux' and env['MODE'] == 'profile':
         env.Append(CCFLAGS = Split('-pg'))
         env.Append(LINKFLAGS = Split('-pg'))
@@ -365,9 +365,9 @@ if env['COMPILER'] == 'gcc':
 elif env['COMPILER'] == 'msvc':
     MSVC_FLAGS  = " /W3"         # Warning level : 3
     MSVC_FLAGS += " /wd 4005"
-    MSVC_FLAGS += " /EHsc"       # enable synchronous C++ exception handling model & 
+    MSVC_FLAGS += " /EHsc"       # enable synchronous C++ exception handling model &
                                 # assume extern "C" functions do not throw exceptions
-    MSVC_FLAGS += " /Gd"         # makes __cdecl the default calling convention 
+    MSVC_FLAGS += " /Gd"         # makes __cdecl the default calling convention
     MSVC_FLAGS += " /fp:precise" # precise floating point model: results are predictable
 
     if env['WARN_LEVEL'] == 'strict':
@@ -383,7 +383,7 @@ elif env['COMPILER'] == 'msvc':
         MSVC_FLAGS += " /GL"     # enables whole program optimization
         MSVC_FLAGS += " /MD"     # uses multithreaded DLL runtime library
         MSVC_FLAGS += " /Ox"     # selects maximum optimization
-      
+
         LINK_FLAGS += " /LTCG"   # enables link time code generation (needed by /GL)
     else:  ## Debug mode
         MSVC_FLAGS += " /Od"   # disables all optimizations
@@ -393,14 +393,14 @@ elif env['COMPILER'] == 'msvc':
 
     env.Append(CCFLAGS = Split(MSVC_FLAGS))
     env.Append(LINKFLAGS = Split(LINK_FLAGS))
-   
+
     if env['MODE'] == 'opt':
         env.Append(CPPDEFINES = Split('NDEBUG'))
-    # We cannot enable this define, as it will try to use symbols from the debug runtime library  
+    # We cannot enable this define, as it will try to use symbols from the debug runtime library
     # Re-acivated to allow memory tracking in MSVC
     if env['MODE'] == 'debug':
         env.Append(CPPDEFINES = Split('_DEBUG'))
-        # for MSVC memory tracking 
+        # for MSVC memory tracking
         env.Append(CPPDEFINES = Split('_CRTDBG_MAP_ALLOC'))
 
     env.Append(CPPDEFINES = Split('_CRT_SECURE_NO_WARNINGS'))
@@ -409,30 +409,30 @@ elif env['COMPILER'] == 'icc':
 
     ICC_FLAGS  = " /W3"            # displays remarks, warnings, and errors
     ICC_FLAGS += " /Qstd:c99"      # conforms to The ISO/IEC 9899:1999 International Standard
-    ICC_FLAGS += " /EHsc"          # enable synchronous C++ exception handling model & 
+    ICC_FLAGS += " /EHsc"          # enable synchronous C++ exception handling model &
                                   # assume extern "C" functions do not throw exceptions
-    ICC_FLAGS += " /GS"            # generates code that detects some buffer overruns 
-    ICC_FLAGS += " /Qprec"         # improves floating-point precision and consistency 
-    ICC_FLAGS += " /Qvec-report0"  # disables diagnostic information reported by the vectorizer 
+    ICC_FLAGS += " /GS"            # generates code that detects some buffer overruns
+    ICC_FLAGS += " /Qprec"         # improves floating-point precision and consistency
+    ICC_FLAGS += " /Qvec-report0"  # disables diagnostic information reported by the vectorizer
 
     if env['WARN_LEVEL'] == 'strict':
         ICC_FLAGS += " /WX"  # treats warnings as errors
 
     # Disables the following warnings:
     #
-    #  424 : 
-    #  537 : 
-    #  991 : 
-    # 1478 : 
-    # 1572 : 
-    # 1786 : 
-    ICC_FLAGS += " /Qdiag-disable:424,537,991,1478,1572,1786" 
+    #  424 :
+    #  537 :
+    #  991 :
+    # 1478 :
+    # 1572 :
+    # 1786 :
+    ICC_FLAGS += " /Qdiag-disable:424,537,991,1478,1572,1786"
 
     XILINK_FLAGS  = " /LARGEADDRESSAWARE"
 
     if export_symbols:
         ICC_FLAGS    += " /debug:full"  # generates complete debug information
-        ICC_FLAGS    += " /Zi"          # 
+        ICC_FLAGS    += " /Zi"          #
         XILINK_FLAGS += " /DEBUG"
 
     if env['MODE'] in ['opt', 'profile']:
@@ -457,13 +457,13 @@ elif env['COMPILER'] == 'icc':
 
     env.Append(CCFLAGS = Split(ICC_FLAGS))
     env.Append(LINKFLAGS = Split(XILINK_FLAGS))
-   
+
     if env['MODE'] == 'opt':
         env.Append(CPPDEFINES = Split('NDEBUG'))
-# We cannot enable this define, as it will try to use symbols from the debug runtime library  
+# We cannot enable this define, as it will try to use symbols from the debug runtime library
 #   if env['MODE'] == 'debug':
 #      env.Append(CPPDEFINES = Split('_DEBUG'))
-            
+
 if env['MODE'] == 'debug':
     env.Append(CPPDEFINES = Split('ARNOLD_DEBUG'))
 
@@ -479,7 +479,7 @@ elif system.os() == 'linux':
 ## Add path to Arnold API by default
 env.Append(CPPPATH = [ARNOLD_API_INCLUDES,])
 env.Append(LIBPATH = [ARNOLD_API_LIB, ARNOLD_BINARIES])
-   
+
 ## configure base directory for temp files
 BUILD_BASE_DIR = os.path.join('build', '%s_%s' % (system.os(), system.target_arch()), maya_version, '%s_%s' % (env['COMPILER'], env['MODE']))
 env['BUILD_BASE_DIR'] = BUILD_BASE_DIR
@@ -522,7 +522,7 @@ if system.os() == 'windows':
     mtoa_env.Append(CPPDEFINES = Split('NT_PLUGIN REQUIRE_IOSTREAM'))
     mtoa_env.Append(LIBPATH = [os.path.join(MAYA_ROOT, 'lib'), ARNOLD_API_LIB, env["MTOA_API_LIB"]])
     mtoa_env.Append(LIBS=Split('Foundation.lib OpenMaya.lib OpenMayaRender.lib OpenMayaAnim.lib mtoa_api.lib ai.lib'))
-   
+
 
     MTOA_TRANSLATORS = env.SConscript(os.path.join('mtoa', 'SConscript'),
                                                 variant_dir = os.path.join(BUILD_BASE_DIR, 'extensions'),
@@ -558,7 +558,7 @@ else:
         maya_env.Append(LIBS=Split('GL'))
         maya_env.Append(CPPDEFINES = Split('LINUX'))
         maya_env.Append(LIBPATH = [os.path.join(MAYA_ROOT, 'lib')])
-    
+
     elif system.os() == 'darwin':
         # MAYA_LOCATION on osx includes Maya.app/Contents
         maya_env.Append(CPPPATH = [MAYA_INCLUDE_PATH])
@@ -585,7 +585,7 @@ else:
                                 variant_dir = os.path.join(BUILD_BASE_DIR, 'procedurals'),
                                 duplicate   = 0,
                                 exports     = 'env')
-                                 
+
     def osx_hardcode_path(target, source, env):
         cmd = ""
 
@@ -594,8 +594,8 @@ else:
         elif target[0] == MTOA[0]:
             cmd = " install_name_tool -add_rpath @loader_path/../bin/"
         else:
-	          cmd = "install_name_tool -id " + str(target[0]).split('/')[-1]
-         
+              cmd = "install_name_tool -id " + str(target[0]).split('/')[-1]
+
         if cmd :
             p = subprocess.Popen(cmd + " " + str(target[0]), shell=True)
             retcode = p.wait()
@@ -616,7 +616,7 @@ if system.os() == 'windows':
             new = os.path.splitext(str(path))[0] + '.mll'
             env.Command(new, str(path), Copy("$TARGET", "$SOURCE"))
             env.Install(TARGET_PLUGIN_PATH, [new])
-            
+
     nprocs = []
     for proc in ARNOLD_PROCS:
         if str(proc).endswith(".dll"):
@@ -694,7 +694,7 @@ def deploy(target, source, env):
         print "\b#",
 
     local_package_name = str(source[0])
-    
+
     server = env['FTP']
 
     ftp = ftplib.FTP(server)
@@ -710,7 +710,7 @@ def deploy(target, source, env):
             ftp.cwd(d)
         except:
             ftp.mkd(d)
-            ftp.cwd(d)    
+            ftp.cwd(d)
 
     f = open(os.path.abspath(local_package_name), 'rb')
     print 'Sending "%s" to %s/%s...' % (source[0], server, directory)

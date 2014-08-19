@@ -1,6 +1,6 @@
 //
-// Copyright (C) 2014 Nozon. 
-// 
+// Copyright (C) 2014 Nozon.
+//
 // File: pluginMain.cpp
 //
 // Author: Gaël Honorez
@@ -22,7 +22,7 @@ MString    drawDbClassification("drawdb/geometry/alembicHolder");
 MString    drawRegistrantId("AlembicHolderPlugin");
 
 MStatus initializePlugin( MObject obj )
-{ 
+{
     MStatus   status;
     MFnPlugin plugin( obj, "Nozon", "1.0", "Any");
 
@@ -85,7 +85,7 @@ MStatus uninitializePlugin( MObject obj)
         return status;
     }
 
-    
+
     status = plugin.deregisterCommand( "ABCHierarchy" );
     if (!status) {
         status.perror("deregisterCommand");

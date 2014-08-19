@@ -83,46 +83,46 @@ void ApplyTransformation( struct AtNode * node,
     {
         return;
     }
-   
+
     // confirm that this node has a parameter
     if ( !nodeHasParameter( node, "matrix" ) )
     {
         return;
     }
-   
+
     // check to see that we're not a single identity matrix
     if (xformSamples->size() == 1 &&
             xformSamples->begin()->second == Imath::M44d())
     {
         return;
     }
-   
-   
+
+
     std::vector<float> sampleTimes;
     sampleTimes.reserve(xformSamples->size());
-   
+
     std::vector<float> mlist;
     mlist.reserve( 16* xformSamples->size() );
-   
+
     for ( MatrixSampleMap::iterator I = xformSamples->begin();
             I != xformSamples->end(); ++I )
     {
         // build up a vector of relative sample times to feed to
         // "transform_time_samples" or "time_samples"
         sampleTimes.push_back( GetRelativeSampleTime(args, (*I).first) );
-       
-       
+
+
         for (int i = 0; i < 16; i++)
         {
             mlist.push_back( (*I).second.getValue()[i] );
         }
     }
-   
+
     AiNodeSetArray(node, "matrix",
                 ArrayConvert(1, xformSamples->size(),
                         AI_TYPE_MATRIX, &mlist[0]));
-   
-   
+
+
     if ( sampleTimes.size() > 1 )
     {
         // persp_camera calls it time_samples while the primitives call it

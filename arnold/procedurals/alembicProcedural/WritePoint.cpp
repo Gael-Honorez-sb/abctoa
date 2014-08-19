@@ -71,14 +71,14 @@ void ProcessIndexedBuiltinParam(
         size_t elementSize)
 {
     if ( !param.valid() ) { return; }
-    
+
     bool isFirstSample = true;
     for ( SampleTimeSet::iterator I = sampleTimes.begin();
           I != sampleTimes.end(); ++I, isFirstSample = false)
     {
         ISampleSelector sampleSelector( *I );
-        
-        
+
+
         switch ( param.getScope() )
         {
         case kVaryingScope:
@@ -86,27 +86,27 @@ void ProcessIndexedBuiltinParam(
         {
             // a value per-point, idxs should be the same as vidxs
             // so we'll leave it empty
-            
+
             // we'll get the expanded form here
             typename geomParamT::Sample sample = param.getExpandedValue(
                     sampleSelector);
-            
+
             size_t footprint = sample.getVals()->size() * elementSize;
-            
+
             values.reserve( values.size() + footprint );
             values.insert( values.end(),
                     (float32_t*) sample.getVals()->get(),
                     ((float32_t*) sample.getVals()->get()) + footprint );
-            
+
             break;
         }
         case kFacevaryingScope:
         {
             // get the indexed form and feed to nidxs
-            
+
             typename geomParamT::Sample sample = param.getIndexedValue(
                     sampleSelector);
-            
+
             if ( isFirstSample )
             {
                 idxs.reserve( sample.getIndices()->size() );
@@ -115,23 +115,23 @@ void ProcessIndexedBuiltinParam(
                         sample.getIndices()->get() +
                                 sample.getIndices()->size() );
             }
-            
+
             size_t footprint = sample.getVals()->size() * elementSize;
             values.reserve( values.size() + footprint );
             values.insert( values.end(),
                     (const float32_t*) sample.getVals()->get(),
                     ((const float32_t*) sample.getVals()->get()) + footprint );
-            
+
             break;
         }
         default:
             break;
         }
-        
-        
+
+
     }
-    
-    
+
+
 }
 
 //-*****************************************************************************
@@ -156,18 +156,18 @@ AtNode * ProcessPointsBase(
     {
         return NULL;
     }
-    
+
     Alembic::AbcGeom::IPointsSchema  &ps = prim.getSchema();
     TimeSamplingPtr ts = ps.getTimeSampling();
-    
+
     sampleTimes.insert( ts->getFloorIndex(args.frame / args.fps, ps.getNumSamples()).second );
-    
+
     std::string name = args.nameprefix + prim.getFullName();
-    
+
     AtNode * instanceNode = NULL;
-    
+
     std::string cacheId;
-    
+
     SampleTimeSet singleSampleTimes;
     singleSampleTimes.insert( ts->getFloorIndex(args.frame / args.fps, ps.getNumSamples()).second );
 
@@ -208,21 +208,21 @@ AtNode * ProcessPointsBase(
     {
         std::ostringstream buffer;
         AbcA::ArraySampleKey sampleKey;
-        
-        
+
+
         for ( SampleTimeSet::iterator I = sampleTimes.begin();
                 I != sampleTimes.end(); ++I )
         {
             ISampleSelector sampleSelector( *I );
             ps.getPositionsProperty().getKey(sampleKey, sampleSelector);
-            
+
             buffer << GetRelativeSampleTime( args, (*I) ) << ":";
             sampleKey.digest.print(buffer);
             buffer << ":";
         }
-        
+
         cacheId = buffer.str();
-        
+
         instanceNode = AiNode( "ginstance" );
         AiNodeSetStr( instanceNode, "name", name.c_str() );
         args.createdNodes.push_back(instanceNode);
@@ -231,7 +231,7 @@ AtNode * ProcessPointsBase(
         {
             AiNodeSetByte( instanceNode, "visibility",
                     AiNodeGetByte( args.proceduralNode, "visibility" ) );
-        
+
         }
         else
         {
@@ -263,11 +263,11 @@ AtNode * ProcessPointsBase(
 
         if ( I != g_meshCache.end() )
         {
-            AiNodeSetPtr(instanceNode, "node", (*I).second );    
+            AiNodeSetPtr(instanceNode, "node", (*I).second );
             return NULL;
         }
     }
-    
+
 
     bool isFirstSample = true;
 
@@ -278,7 +278,7 @@ AtNode * ProcessPointsBase(
     std::string radiusParam = "pscale";
     if (AiNodeLookUpUserParameter(args.proceduralNode, "radiusProperty") !=NULL )
         radiusParam = std::string(AiNodeGetStr(args.proceduralNode, "radiusProperty"));
-    
+
 
     bool useVelocities = false;
     if ((sampleTimes.size() == 1) && (args.shutterOpen != args.shutterClose))
@@ -295,13 +295,13 @@ AtNode * ProcessPointsBase(
         Alembic::AbcGeom::IPointsSchema::Sample sample = ps.getValue( sampleSelector );
 
         Alembic::Abc::P3fArraySamplePtr v3ptr = sample.getPositions();
-        size_t pSize = sample.getPositions()->size(); 
+        size_t pSize = sample.getPositions()->size();
 
         // handling radius
-        
+
         IFloatGeomParam::Sample widthSamp;
         IFloatGeomParam widthParam = ps.getWidthsParam();
-        
+
         if(!widthParam)
         {
             ICompoundProperty prop = ps.getArbGeomParams();
@@ -319,7 +319,7 @@ AtNode * ProcessPointsBase(
             }
         }
         else
-            widthParam.getExpanded(widthSamp, sampleSelector); 
+            widthParam.getExpanded(widthSamp, sampleSelector);
 
 
         if(useVelocities && isFirstSample)
@@ -333,9 +333,9 @@ AtNode * ProcessPointsBase(
 
             float timeoffset = ((args.frame / args.fps) - ts->getFloorIndex((*I), ps.getNumSamples()).second) * args.fps;
 
-            for ( size_t pId = 0; pId < pSize; ++pId ) 
+            for ( size_t pId = 0; pId < pSize; ++pId )
             {
-                Alembic::Abc::V3f posAtOpen = ((*v3ptr)[pId] + (*velptr)[pId] * scaleVelocity *-timeoffset);            
+                Alembic::Abc::V3f posAtOpen = ((*v3ptr)[pId] + (*velptr)[pId] * scaleVelocity *-timeoffset);
                 AtPoint pos1;
                 pos1.x = posAtOpen.x;
                 pos1.y = posAtOpen.y;
@@ -352,13 +352,13 @@ AtNode * ProcessPointsBase(
                 if(widthSamp)
                     radius.push_back((*widthSamp.getVals())[pId] * radiusPoint);
                 else
-                    radius.push_back(radiusPoint);    
+                    radius.push_back(radiusPoint);
             }
         }
         else
             // not motion blur or correctly sampled particles
         {
-            for ( size_t pId = 0; pId < pSize; ++pId ) 
+            for ( size_t pId = 0; pId < pSize; ++pId )
             {
                 AtPoint pos;
                 pos.x = (*v3ptr)[pId].x;
@@ -372,16 +372,16 @@ AtNode * ProcessPointsBase(
             }
         }
     }
-    
+
     AtNode* pointsNode = AiNode( "points" );
-    
+
     if (!pointsNode)
     {
         AiMsgError("Failed to make points node for %s",
                 prim.getFullName().c_str());
         return NULL;
     }
-    
+
 
     args.createdNodes.push_back(pointsNode);
     if ( instanceNode != NULL)
@@ -392,15 +392,15 @@ AtNode * ProcessPointsBase(
     {
         AiNodeSetStr( pointsNode, "name", name.c_str() );
     }
-    
+
     if(!useVelocities)
     {
         AiNodeSetArray(pointsNode, "points",
-                AiArrayConvert( vidxs.size() / sampleTimes.size(), 
+                AiArrayConvert( vidxs.size() / sampleTimes.size(),
                         sampleTimes.size(), AI_TYPE_POINT, (void*)(&(vidxs[0]))
                                 ));
         AiNodeSetArray(pointsNode, "radius",
-                AiArrayConvert( vidxs.size() / sampleTimes.size(), 
+                AiArrayConvert( vidxs.size() / sampleTimes.size(),
                         sampleTimes.size(), AI_TYPE_FLOAT, (void*)(&(radius[0]))
                                 ));
 
@@ -408,16 +408,16 @@ AtNode * ProcessPointsBase(
         {
             std::vector<float> relativeSampleTimes;
             relativeSampleTimes.reserve( sampleTimes.size() );
-        
+
             for (SampleTimeSet::const_iterator I = sampleTimes.begin();
                     I != sampleTimes.end(); ++I )
             {
                chrono_t sampleTime = GetRelativeSampleTime( args, (*I) );
 
                 relativeSampleTimes.push_back(sampleTime);
-                    
+
             }
-        
+
             AiNodeSetArray( pointsNode, "deform_time_samples",
                     AiArrayConvert(relativeSampleTimes.size(), 1,
                             AI_TYPE_FLOAT, &relativeSampleTimes[0]));
@@ -426,14 +426,14 @@ AtNode * ProcessPointsBase(
     else
     {
         AiNodeSetArray(pointsNode, "points",
-                AiArrayConvert( vidxs.size() / 2, 
+                AiArrayConvert( vidxs.size() / 2,
                         2, AI_TYPE_POINT, (void*)(&(vidxs[0]))
                                 ));
         AiNodeSetArray(pointsNode, "radius",
-                AiArrayConvert( vidxs.size() /2 / sampleTimes.size(), 
+                AiArrayConvert( vidxs.size() /2 / sampleTimes.size(),
                         sampleTimes.size(), AI_TYPE_FLOAT, (void*)(&(radius[0]))
-                                ));        
-        
+                                ));
+
         AiNodeSetArray( pointsNode, "deform_time_samples",
                     AiArray(2, 1, AI_TYPE_FLOAT, 0.f, 1.f));
 
@@ -447,14 +447,14 @@ AtNode * ProcessPointsBase(
         const std::string &propName = propHeader.getName();
     }
 
-    
+
     if ( instanceNode == NULL )
     {
         if ( xformSamples )
         {
             ApplyTransformation( pointsNode, xformSamples, args );
         }
-        
+
         return pointsNode;
     }
     else
@@ -462,12 +462,12 @@ AtNode * ProcessPointsBase(
         AiNodeSetByte( pointsNode, "visibility", 0 );
 
         AiNodeSetInt( pointsNode, "mode", 1 );
-        
+
         AiNodeSetPtr(instanceNode, "node", pointsNode );
         g_meshCache[cacheId] = pointsNode;
         return pointsNode;
     }
-    
+
 }
 
 
@@ -478,19 +478,19 @@ void ProcessPoint( IPoints &points, ProcArgs &args,
     SampleTimeSet sampleTimes;
     std::vector<AtPoint> vidxs;
     std::vector<float> radius;
-    
+
     AtNode * pointsNode = ProcessPointsBase(
             points, args, sampleTimes, vidxs, radius, xformSamples);
-    
+
     // This is a valid condition for the second instance onward and just
     // means that we don't need to do anything further.
     if ( !pointsNode )
     {
         return;
     }
-    
+
     IPointsSchema &ps = points.getSchema();
 
-    
+
 }
 

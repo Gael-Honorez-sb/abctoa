@@ -17,7 +17,7 @@ namespace{
 "uniform vec4 offset;"
 "uniform vec4 shadeColor;\n";
 
-    const char* vertexShader = 
+    const char* vertexShader =
 "in vec3 position;\n"
 "void main()\n"
 "{\n"
@@ -26,7 +26,7 @@ namespace{
 
     const char* fragmentShader =
 "out vec4 frag_color;\n"
-"void main() { frag_color = shadeColor;}\n";    
+"void main() { frag_color = shadeColor;}\n";
 }
 
 // Wireframe line style defines
@@ -35,7 +35,7 @@ namespace{
 class UserData : public MUserData
 {
 public:
-    UserData(nozAlembicHolder* node)        
+    UserData(nozAlembicHolder* node)
         : MUserData(false),
           fShapeNode(node),
           fSeconds(0.0),
@@ -45,13 +45,13 @@ public:
         fWireframeColor[1] = 1.0f;
         fWireframeColor[2] = 1.0f;
     }
-    
+
     void set(const double& seconds,
              const MColor& wireframeColor,
              bool          isSelected)
     {
         fSeconds = seconds;
-        
+
         fWireframeColor[0] = wireframeColor[0];
         fWireframeColor[1] = wireframeColor[1];
         fWireframeColor[2] = wireframeColor[2];
@@ -124,10 +124,10 @@ MUserData* AlembicHolderOverride::prepareForDraw(
     MUserData* oldData)
 {
     using namespace MHWRender;
-    
+
     MObject object    = objPath.node();
     MObject transform = objPath.transform();
-    
+
     // Retrieve data cache (create if does not exist)
     UserData* data = dynamic_cast<UserData*>(oldData);
     if (!data)
@@ -185,7 +185,7 @@ void AlembicHolderOverride::draw(const MHWRender::MDrawContext& context, const M
 
     if (theRenderer->drawAPIIsOpenGL())
     {
-        
+
 
         glMatrixMode(GL_PROJECTION);
         glPushMatrix();
@@ -203,11 +203,11 @@ void AlembicHolderOverride::draw(const MHWRender::MDrawContext& context, const M
         std::string sceneKey = shapeNode->getSceneKey();
         CAlembicDatas* cache = shapeNode->alembicData();
         std::string selectionKey = shapeNode->getSelectionKey();
-        
+
         // draw bounding box
         if(selectionKey != "" || displayStyle == 0)
         {
-            
+
             MBoundingBox box = shapeNode->boundingBox();
             float w = (float) box.width();
             float h = (float) box.height();
@@ -238,7 +238,7 @@ void AlembicHolderOverride::draw(const MHWRender::MDrawContext& context, const M
                 glVertex3f( (float)vertex[0],   (float)vertex[1],   (float)vertex[2] );
                 glVertex3f( (float)vertex[0]+w, (float)vertex[1],   (float)vertex[2] );
                 glVertex3f( (float)vertex[0]+w, (float)vertex[1]+h, (float)vertex[2] );
-                glVertex3f( (float)vertex[0],   (float)vertex[1]+h, (float)vertex[2] );    
+                glVertex3f( (float)vertex[0],   (float)vertex[1]+h, (float)vertex[2] );
                 glVertex3f( (float)vertex[0],   (float)vertex[1],   (float)vertex[2] );
                 glEnd();
 
@@ -246,25 +246,25 @@ void AlembicHolderOverride::draw(const MHWRender::MDrawContext& context, const M
                 MPoint sideFactor(0,0,d);
                 MPoint vertex2 = minVertex + sideFactor;
                 glBegin( MGL_LINE_LOOP );
-                glVertex3f( (float)vertex2[0],   (float)vertex2[1],   (float)vertex2[2] );    
+                glVertex3f( (float)vertex2[0],   (float)vertex2[1],   (float)vertex2[2] );
                 glVertex3f( (float)vertex2[0]+w, (float)vertex2[1],   (float)vertex2[2] );
                 glVertex3f( (float)vertex2[0]+w, (float)vertex2[1]+h, (float)vertex2[2] );
-                glVertex3f( (float)vertex2[0],   (float)vertex2[1]+h, (float)vertex2[2] );    
-                glVertex3f( (float)vertex2[0],   (float)vertex2[1],   (float)vertex2[2] );    
+                glVertex3f( (float)vertex2[0],   (float)vertex2[1]+h, (float)vertex2[2] );
+                glVertex3f( (float)vertex2[0],   (float)vertex2[1],   (float)vertex2[2] );
                 glEnd();
 
                 // Connect the edges together
                 glBegin( MGL_LINES );
-                glVertex3f( (float)vertex2[0],   (float)vertex2[1],   (float)vertex2[2] );    
+                glVertex3f( (float)vertex2[0],   (float)vertex2[1],   (float)vertex2[2] );
                 glVertex3f( (float)vertex[0],   (float)vertex[1],   (float)vertex[2] );
 
-                glVertex3f( (float)vertex2[0]+w,   (float)vertex2[1],   (float)vertex2[2] );    
+                glVertex3f( (float)vertex2[0]+w,   (float)vertex2[1],   (float)vertex2[2] );
                 glVertex3f( (float)vertex[0]+w,   (float)vertex[1],   (float)vertex[2] );
 
-                glVertex3f( (float)vertex2[0]+w,   (float)vertex2[1]+h,   (float)vertex2[2] );    
+                glVertex3f( (float)vertex2[0]+w,   (float)vertex2[1]+h,   (float)vertex2[2] );
                 glVertex3f( (float)vertex[0]+w,   (float)vertex[1]+h,   (float)vertex[2] );
 
-                glVertex3f( (float)vertex2[0],   (float)vertex2[1]+h,   (float)vertex2[2] );    
+                glVertex3f( (float)vertex2[0],   (float)vertex2[1]+h,   (float)vertex2[2] );
                 glVertex3f( (float)vertex[0],   (float)vertex[1]+h,   (float)vertex[2] );
                 glEnd();
 
@@ -293,7 +293,7 @@ void AlembicHolderOverride::draw(const MHWRender::MDrawContext& context, const M
                 glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
             }
         }
-        
+
         if(displayStyle & MHWRender::MDrawContext::kGouraudShaded)
         {
             glPushMatrix();
@@ -319,12 +319,12 @@ void AlembicHolderOverride::draw(const MHWRender::MDrawContext& context, const M
                 else
                     cache->abcSceneManager.getScene(sceneKey)->draw(cache->abcSceneState);
             }
-            
-            
+
+
             unsetLightingGL(context);
-            
+
         }
-        
+
         glMatrixMode(MGL_PROJECTION);
         glPopMatrix();
         glMatrixMode(MGL_MODELVIEW);
@@ -335,7 +335,7 @@ void AlembicHolderOverride::draw(const MHWRender::MDrawContext& context, const M
 bool AlembicHolderOverride::setupLightingGL(const MHWRender::MDrawContext& context)
 {
     MStatus status;
-    
+
     // Take into account only the 8 lights supported by the basic
     // OpenGL profile.
     const unsigned int nbLights =
@@ -409,8 +409,8 @@ bool AlembicHolderOverride::setupLightingGL(const MHWRender::MDrawContext& conte
                     const MGLfloat dir[3] = { direction[0],
                                               direction[1],
                                               direction[2]};
-                        
-                            
+
+
                     glLightfv(MGL_LIGHT0+i, MGL_AMBIENT,  ambient);
                     glLightfv(MGL_LIGHT0+i, MGL_DIFFUSE,  diffuse);
                     glLightfv(MGL_LIGHT0+i, MGL_POSITION, pos);
@@ -431,8 +431,8 @@ bool AlembicHolderOverride::setupLightingGL(const MHWRender::MDrawContext& conte
                                               -direction[1],
                                               -direction[2],
                                               0.0f };
-                        
-                            
+
+
                     glLightfv(MGL_LIGHT0+i, MGL_AMBIENT,  ambient);
                     glLightfv(MGL_LIGHT0+i, MGL_DIFFUSE,  diffuse);
                     glLightfv(MGL_LIGHT0+i, MGL_POSITION, pos);
@@ -450,8 +450,8 @@ bool AlembicHolderOverride::setupLightingGL(const MHWRender::MDrawContext& conte
                                           position[1],
                                           position[2],
                                           1.0f };
-                        
-                            
+
+
                 glLightfv(MGL_LIGHT0+i, MGL_AMBIENT,  ambient);
                 glLightfv(MGL_LIGHT0+i, MGL_DIFFUSE,  diffuse);
                 glLightfv(MGL_LIGHT0+i, MGL_POSITION, pos);
@@ -465,8 +465,8 @@ bool AlembicHolderOverride::setupLightingGL(const MHWRender::MDrawContext& conte
                                               1.0f };
                 const MGLfloat diffuse[4] = { 0.0f, 0.0f, 0.0f, 1.0f };
                 const MGLfloat pos[4] = { 0.0f, 0.0f, 0.0f, 1.0f };
-                        
-                            
+
+
                 glLightfv(MGL_LIGHT0+i, MGL_AMBIENT,  ambient);
                 glLightfv(MGL_LIGHT0+i, MGL_DIFFUSE,  diffuse);
                 glLightfv(MGL_LIGHT0+i, MGL_POSITION, pos);
@@ -485,7 +485,7 @@ void AlembicHolderOverride::unsetLightingGL(
     const MHWRender::MDrawContext& context)
 {
     MStatus status;
-    
+
     // Take into account only the 8 lights supported by the basic
     // OpenGL profile.
     const unsigned int nbLights =
@@ -498,7 +498,7 @@ void AlembicHolderOverride::unsetLightingGL(
     if (nbLights > 0) {
         for (unsigned int i=0; i<nbLights; ++i) {
             glDisable(MGL_LIGHT0+i);
-            
+
             const MGLfloat ambient[4] = { 0.0f, 0.0f, 0.0f, 1.0f };
             glLightfv(MGL_LIGHT0+i, MGL_AMBIENT,  ambient);
 
@@ -516,17 +516,17 @@ void AlembicHolderOverride::unsetLightingGL(
                 const MGLfloat spec[4]    = { 0.0f, 0.0f, 0.0f, 1.0f };
                 glLightfv(MGL_LIGHT0+i, MGL_SPECULAR, spec);
             }
-            
+
             const MGLfloat pos[4]     = { 0.0f, 0.0f, 1.0f, 0.0f };
             glLightfv(MGL_LIGHT0+i, MGL_POSITION, pos);
-            
+
             const MGLfloat dir[3]     = { 0.0f, 0.0f, -1.0f };
             glLightfv(MGL_LIGHT0+i, MGL_SPOT_DIRECTION, dir);
-            
+
             glLightf(MGL_LIGHT0+i,  MGL_SPOT_EXPONENT,  0.0);
             glLightf(MGL_LIGHT0+i,  MGL_SPOT_CUTOFF,  180.0);
         }
-        
+
         glDisable(MGL_LIGHTING);
         glDisable(MGL_COLOR_MATERIAL) ;
         glDisable(MGL_NORMALIZE) ;

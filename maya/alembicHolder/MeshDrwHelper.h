@@ -48,8 +48,8 @@ namespace SimpleAbcViewer {
 //! \brief Both the SubD and PolyMesh classes draw in the same way, so we
 //! create this helper class to do the common work.
 
-    
-    
+
+
 class MeshDrwHelper : private boost::noncopyable
 {
 public:
@@ -91,7 +91,7 @@ public:
     // This is a weird thing. Just makes the helper invalid
     // by nulling everything out. For internal use.
     void makeInvalid();
-    
+
     void setName(std::string name) { m_name = name; }
 
 protected:
@@ -106,14 +106,14 @@ protected:
     Int32ArraySamplePtr m_meshCounts;
 
     BufferObject buffer;
-    
+
     MGLuint mVertexBuffer, mNormalBuffer, mIndexBuffer, mColorBuffer;
     MGLenum mPrimType;
     MGLsizei mPrimNum;
 
 
     std::vector<V3f> m_customN;
-    
+
     //std::vector<C4f> m_colors;
 
     bool m_valid;
@@ -121,7 +121,7 @@ protected:
     Box3d m_bounds;
 
     TriArray m_triangles;
-    
+
     std::string m_name;
 
 };

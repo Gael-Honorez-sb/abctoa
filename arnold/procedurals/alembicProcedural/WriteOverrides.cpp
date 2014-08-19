@@ -72,7 +72,7 @@ void ApplyOverrides(std::string name, AtNode* node, std::vector<std::string> tag
         }
         if(overrides.size() > 0)
         {
-            for( Json::ValueIterator itr = overrides.begin() ; itr != overrides.end() ; itr++ ) 
+            for( Json::ValueIterator itr = overrides.begin() ; itr != overrides.end() ; itr++ )
             {
                 std::string attribute = itr.key().asString();
                 const AtNodeEntry* nodeEntry = AiNodeGetNodeEntry(node);
@@ -81,16 +81,16 @@ void ApplyOverrides(std::string name, AtNode* node, std::vector<std::string> tag
                 if ( paramEntry != NULL)
                 {
                     Json::Value val = args.overrideRoot[*it][itr.key().asString()];
-                    if( val.isString() ) 
+                    if( val.isString() )
                         AiNodeSetStr(node, attribute.c_str(), val.asCString());
-                    else if( val.isBool() ) 
+                    else if( val.isBool() )
                         AiNodeSetBool(node, attribute.c_str(), val.asBool());
-                    else if( val.isInt() ) 
+                    else if( val.isInt() )
                     {
                         //make the difference between Byte & int!
                         int typeEntry = AiParamGetType(paramEntry);
                         if(typeEntry == AI_TYPE_BYTE)
-                        {    
+                        {
                             if(attribute=="visibility")
                             {
                                 AtByte attrViz = val.asInt();
@@ -135,12 +135,12 @@ void ApplyOverrides(std::string name, AtNode* node, std::vector<std::string> tag
                             else
                                 AiNodeSetByte(node, attribute.c_str(), val.asInt());
                         }
-                        else 
+                        else
                             AiNodeSetInt(node, attribute.c_str(), val.asInt());
                     }
-                    else if( val.isUInt() ) 
+                    else if( val.isUInt() )
                         AiNodeSetUInt(node, attribute.c_str(), val.asUInt());
-                    else if( val.isDouble() ) 
+                    else if( val.isDouble() )
                         AiNodeSetFlt(node, attribute.c_str(), val.asDouble());
                 }
             }
@@ -152,7 +152,7 @@ void ApplyShaders(std::string name, AtNode* node, std::vector<std::string> tags,
 {
     bool foundInPath = false;
     AtNode* appliedShader = NULL;
-    for(std::map<std::string, AtNode*>::iterator it = args.shaders.begin(); it != args.shaders.end(); ++it) 
+    for(std::map<std::string, AtNode*>::iterator it = args.shaders.begin(); it != args.shaders.end(); ++it)
     {
         //check both path & tag
         if(it->first.find("/") != std::string::npos)

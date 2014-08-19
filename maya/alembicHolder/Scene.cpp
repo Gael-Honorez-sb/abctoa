@@ -103,10 +103,10 @@ Scene::Scene( const std::string &abcFileName, const std::string &objectPath )
   , m_objectPath( objectPath )
   , m_minTime( ( chrono_t )FLT_MAX )
   , m_maxTime( ( chrono_t )-FLT_MAX )
-{        
+{
     boost::timer Timer;
 
-    
+
     Alembic::AbcCoreFactory::IFactory factory;
     //factory.(32setOgawaNumStreams);
     m_archive = factory.getArchive(abcFileName );
@@ -166,7 +166,7 @@ void Scene::setTime( chrono_t iSeconds )
                      << iSeconds );
         m_curtime = iSeconds;
     }
-    
+
     m_bounds = m_drawable->getBounds();
 }
 
@@ -192,11 +192,11 @@ void Scene::draw( SceneState &s_state )
 
 //    glEnable( GL_LIGHTING );
 //    setMaterials( 1.0, true );
-    
+
     // Get the matrix
     M44d currentMatrix;
     gGLFT->glGetDoublev( MGL_MODELVIEW_MATRIX, ( MGLdouble * )&(currentMatrix[0][0]) );
-    
+
     DrawContext dctx;
     dctx.setWorldToCamera( currentMatrix );
     dctx.setPointSize( s_state.pointSize );
@@ -221,11 +221,11 @@ void Scene::drawOnly( SceneState &s_state, std::string selection )
 
     //    glEnable( GL_LIGHTING );
     //    setMaterials( 1.0, true );
-    
+
         // Get the matrix
         M44d currentMatrix;
         gGLFT->glGetDoublev( MGL_MODELVIEW_MATRIX, ( MGLdouble * )&(currentMatrix[0][0]) );
-    
+
         DrawContext dctx;
         dctx.setWorldToCamera( currentMatrix );
         dctx.setPointSize( s_state.pointSize );

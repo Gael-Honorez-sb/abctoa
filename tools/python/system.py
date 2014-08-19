@@ -16,7 +16,7 @@ def os():
 ## Returns host system architecture ('x86', 'x86_64', 'sparc_64')
 def host_arch():
    return HOST_ARCH
-   
+
 ## Returns target system architecture ('x86', 'x86_64', 'sparc_64')
 def target_arch():
    return TARGET_ARCH
@@ -24,11 +24,11 @@ def target_arch():
 ## Returns a list of valid operating systems
 def get_valid_oses():
    return VALID_OSES
-   
+
 ## Returns a list of valid target architectures
 def get_valid_target_archs():
    return VALID_ARCHS
-   
+
 ## Returns a simplified label for the system architecture ('linux_x86', 'linux_x86_64', 'darwin32', 'win32')
 def get_arch_label(os, arch):
    if OS == 'windows':
@@ -89,7 +89,7 @@ elif OS == 'darwin':
       HOST_ARCH = 'x86'
 elif OS == 'linux':
    VALID_ARCHS = ('x86', 'x86_64', 'sparc_64')
-   
+
    if platform.machine() == 'sparc64':
       HOST_ARCH = 'sparc_64'
    elif platform.machine() == 'x86_64':

@@ -72,9 +72,9 @@ std::string GetArnoldTypeString( GeometryScope scope, int arnoldAPIType)
     default:
         buffer << "constant";
     }
-    
+
     buffer << " ";
-    
+
     switch ( arnoldAPIType )
     {
         case AI_TYPE_BOOLEAN:
@@ -114,8 +114,8 @@ std::string GetArnoldTypeString( GeometryScope scope, int arnoldAPIType)
             // For now, only support the above types
             return "";
     }
-    
-    
+
+
     return buffer.str();
 }
 
@@ -129,53 +129,53 @@ void AddArbitraryGeomParam( ICompoundProperty & parent,
                             int arnoldAPIType)
 {
     T param( parent, propHeader.getName() );
-    
+
     if ( !param.valid() )
     {
         //TODO error message?
         return;
     }
-    
+
     std::string declStr = GetArnoldTypeString( param.getScope(),
             arnoldAPIType );
 
-    
+
 
     if ( declStr.empty() )
     {
         return;
     }
-    
+
     // TODO For now, don't support user-defined arrays.
     // It's reasonable to support these for kConstantScope
     if ( param.getArrayExtent() > 1 )
     {
         return;
     }
-    
+
     if ( !AiNodeDeclare( primNode, CleanAttributeName(param.getName()).c_str(), declStr.c_str() ) )
     {
         //TODO, AiWarning
         return;
     }
-    
+
     if ( param.getScope() == kConstantScope ||
             param.getScope() == kUnknownScope)
     {
-        
+
         //Set scalars directly based on arnoldAPIType since we're
         //not yet support array types here
-        
+
         typename T::prop_type::sample_ptr_type valueSample =
                 param.getExpandedValue( sampleSelector ).getVals();
-       
+
         switch ( arnoldAPIType )
         {
             case AI_TYPE_INT:
                 AiNodeSetInt( primNode, CleanAttributeName(param.getName()).c_str(),
                         reinterpret_cast<const Alembic::Util::int32_t *>(
                                 valueSample->get() )[0] );
-                
+
                 break;
             case AI_TYPE_DOUBLE:
                 AiNodeSetFlt( primNode, CleanAttributeName(param.getName()).c_str(),
@@ -189,79 +189,79 @@ void AddArbitraryGeomParam( ICompoundProperty & parent,
                                 valueSample->get() )[0] );
                 break;
             case AI_TYPE_STRING:
-                
+
                 AiNodeSetStr( primNode, CleanAttributeName(param.getName()).c_str(),
                         reinterpret_cast<const std::string *>(
                                 valueSample->get() )[0].c_str() );
-                
+
                 break;
             case AI_TYPE_RGB:
             {
-                const float32_t * data = 
+                const float32_t * data =
                         reinterpret_cast<const float32_t *>(
                                 valueSample->get() );
-                
+
                 AiNodeSetRGB( primNode, CleanAttributeName(param.getName()).c_str(),
                         data[0], data[1], data[2]);
-                
+
                 break;
             }
             case AI_TYPE_RGBA:
             {
-                const float32_t * data = 
+                const float32_t * data =
                         reinterpret_cast<const float32_t *>(
                                 valueSample->get() );
                 AiNodeSetRGBA( primNode, CleanAttributeName(param.getName()).c_str(),
                         data[0], data[1], data[2], data[3]);
-                
+
                 break;
             }
             case AI_TYPE_POINT:
             {
-                const float32_t * data = 
+                const float32_t * data =
                         reinterpret_cast<const float32_t *>(
                                 valueSample->get() );
-                
+
                 AiNodeSetPnt( primNode, CleanAttributeName(param.getName()).c_str(),
                         data[0], data[1], data[2]);
-                
+
                 break;
             }
             case AI_TYPE_VECTOR:
             {
-                const float32_t * data = 
+                const float32_t * data =
                         reinterpret_cast<const float32_t *>(
                                 valueSample->get() );
-                
+
                 AiNodeSetVec( primNode, CleanAttributeName(param.getName()).c_str(),
                         data[0], data[1], data[2] );
-                
+
                 break;
             }
             case AI_TYPE_POINT2:
             {
-                const float32_t * data = 
+                const float32_t * data =
                         reinterpret_cast<const float32_t *>(
                                 valueSample->get() );
-                
+
                 AiNodeSetPnt2( primNode, CleanAttributeName(param.getName()).c_str(),
                         data[0], data[1] );
                 break;
             }
             case AI_TYPE_MATRIX:
             {
-                const float32_t * data = 
+                const float32_t * data =
                         reinterpret_cast<const float32_t *>(
                                 valueSample->get() );
-                
+
                 AtMatrix m;
                 for ( size_t i = 0; i < 16; ++i )
                 {
                     *((&m[0][0])+i) = data[i];
                 }
                 AiNodeSetMatrix( primNode, CleanAttributeName(param.getName()).c_str(), m);
-                
-                
+
+
                 break;
             }
             default:
@@ -272,7 +272,7 @@ void AddArbitraryGeomParam( ICompoundProperty & parent,
     else
     {
         // Always set arrays for other scopes
-    
+
         if ( param.getScope() == kFacevaryingScope)
         {
             if (param.isIndexed ())
@@ -287,7 +287,7 @@ void AddArbitraryGeomParam( ICompoundProperty & parent,
 
                 //get the indices
                 Alembic::Abc::UInt32ArraySamplePtr idxSample = param.getIndexedValue( sampleSelector ).getIndices();
-                
+
                 std::vector<unsigned int> idxs;
                 idxs.reserve( idxSample->size() );
                 idxs.insert( idxs.end(),
@@ -302,7 +302,7 @@ void AddArbitraryGeomParam( ICompoundProperty & parent,
                for (unsigned int i = 0; i < nsides->nelements / nsides->nkeys; ++i)
                {
                   int curNum = AiArrayGetUInt(nsides ,i);
-              
+
                   for (int j = 0; j < curNum; ++j)
                   {
                       nvidxReversed.push_back(idxs[base+curNum-j-1]);
@@ -316,16 +316,16 @@ void AddArbitraryGeomParam( ICompoundProperty & parent,
         {
             typename T::prop_type::sample_ptr_type valueSample =
                     param.getExpandedValue( sampleSelector ).getVals();
-        
-    
+
+
             AiNodeSetArray( primNode, CleanAttributeName(param.getName()).c_str(),
                     AiArrayConvert( valueSample->size(), 1, arnoldAPIType,
                             (void *) valueSample->get() ) );
 
         }
 }
-  
-    
+
+
 }
 
 
@@ -337,36 +337,36 @@ void AddArbitraryStringGeomParam( ICompoundProperty & parent,
                             AtNode * primNode)
 {
     IStringGeomParam param( parent, propHeader.getName() );
-    
+
     if ( !param.valid() )
     {
         //TODO error message?
         return;
     }
-    
+
     std::string declStr = GetArnoldTypeString( param.getScope(),
             AI_TYPE_STRING );
     if ( declStr.empty() )
     {
         return;
     }
-    
-    
+
+
     // TODO, remove this restriction and support arrays for constant values
     if ( param.getArrayExtent() > 1 )
     {
         return;
     }
-    
+
     if ( !AiNodeDeclare( primNode, CleanAttributeName(param.getName()).c_str(), declStr.c_str() ) )
     {
         //TODO, AiWarning
         return;
     }
-    
+
     IStringGeomParam::prop_type::sample_ptr_type valueSample =
                 param.getExpandedValue( sampleSelector ).getVals();
-    
+
     if ( param.getScope() == kConstantScope ||
             param.getScope() == kUnknownScope)
     {
@@ -382,20 +382,20 @@ void AddArbitraryStringGeomParam( ICompoundProperty & parent,
         {
             strPtrs.push_back( valueSample->get()[i].c_str() );
         }
-        
+
         AiNodeSetArray( primNode, CleanAttributeName(param.getName()).c_str(),
                 AiArrayConvert( valueSample->size(), 1, AI_TYPE_STRING,
                         (void *) &strPtrs[0] ) );
-        
-    
+
+
     }
-    
+
 }
 
 //-*****************************************************************************
 
 //UserDefDeclare(node, name.c_str(), userType.c_str())) continue;
-//SetUserData(node, name.c_str(), dataSize, apiType, dataStart);  
+//SetUserData(node, name.c_str(), dataSize, apiType, dataStart);
 
 
 void AddArbitraryGeomParams( ICompoundProperty &parent,
@@ -423,7 +423,7 @@ void AddArbitraryGeomParams( ICompoundProperty &parent,
         {
             continue;
         }
-        
+
         if ( IDoubleGeomParam::matches( propHeader ) )
         {
            AddArbitraryGeomParam<IDoubleGeomParam>(
@@ -523,8 +523,8 @@ void AddArbitraryGeomParams( ICompoundProperty &parent,
                     primNode,
                     AI_TYPE_MATRIX);
         }
-        
-        
+
+
     }
 }
 
@@ -538,7 +538,7 @@ void AddArbitraryProceduralParams(AtNode* proc, AtNode * primNode)
         const AtUserParamEntry *upentry = AiUserParamIteratorGetNext(iter);
         //printf("%s\n", AiUserParamGetName(upentry));
         const char* paramName = AiUserParamGetName(upentry);
-        
+
         GeometryScope toAbcCategory = kConstantScope;
 
         int category  = AiUserParamGetCategory (upentry);
@@ -569,12 +569,12 @@ void AddArbitraryProceduralParams(AtNode* proc, AtNode * primNode)
                 strcmp(paramName, "skipOverrides") == 0 ||
                 strcmp(paramName, "skipDisplacements") == 0 ||
                 strcmp(paramName, "skipOverrides") == 0 ||
-                strcmp(paramName, "skipLayers") == 0 
+                strcmp(paramName, "skipLayers") == 0
                 )
                 continue;
         }
 
-        
+
 
         std::string declStr = GetArnoldTypeString( toAbcCategory, arnoldAPIType );
         if ( declStr.empty() )
@@ -595,7 +595,7 @@ void AddArbitraryProceduralParams(AtNode* proc, AtNode * primNode)
 
             case AI_TYPE_INT:
                 AiNodeSetInt( primNode, paramName, AiNodeGetInt(proc, paramName)  );
-                
+
                 break;
             case AI_TYPE_DOUBLE:
                 AiNodeSetFlt( primNode, paramName, AiNodeGetFlt(proc, paramName)  );
@@ -609,31 +609,31 @@ void AddArbitraryProceduralParams(AtNode* proc, AtNode * primNode)
                 break;
             case AI_TYPE_RGB:
             {
-                AtRGB val = AiNodeGetRGB(proc, paramName);               
+                AtRGB val = AiNodeGetRGB(proc, paramName);
                 AiNodeSetRGB( primNode, paramName, val.r, val.b, val.g);
                 break;
             }
             case AI_TYPE_RGBA:
             {
-                AtRGBA val = AiNodeGetRGBA(proc, paramName);               
+                AtRGBA val = AiNodeGetRGBA(proc, paramName);
                 AiNodeSetRGBA( primNode, paramName, val.r, val.b, val.g, val.a);
                 break;
             }
             case AI_TYPE_POINT:
             {
-                AtPoint val = AiNodeGetPnt(proc, paramName);               
+                AtPoint val = AiNodeGetPnt(proc, paramName);
                 AiNodeSetPnt( primNode, paramName, val.x, val.y, val.z);
                 break;
             }
             case AI_TYPE_VECTOR:
             {
-                AtVector val = AiNodeGetVec(proc, paramName);               
+                AtVector val = AiNodeGetVec(proc, paramName);
                 AiNodeSetVec( primNode, paramName, val.x, val.y, val.z);
                 break;
             }
             case AI_TYPE_POINT2:
             {
-                AtPoint2 val = AiNodeGetPnt2(proc, paramName);               
+                AtPoint2 val = AiNodeGetPnt2(proc, paramName);
                 AiNodeSetPnt2( primNode, paramName, val.x, val.y);
                 break;
             }

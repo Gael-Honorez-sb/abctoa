@@ -4,12 +4,12 @@
 # are made available under the terms of the GNU Public License v3.0
 # which accompanies this distribution, and is available at
 # http://www.gnu.org/licenses/gpl.html
-# 
+#
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation, either version 3 of the License, or
 # (at your option) any later version.
-# 
+#
 # This program is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -23,11 +23,11 @@ import functools
 import maya.mel as mel
 import maya.cmds as cmds
 
-# class MyDelegate(QtGui.QItemDelegate):      
-#     def __init__(self):    
-#         QtGui.QItemDelegate.__init__(self)  
+# class MyDelegate(QtGui.QItemDelegate):
+#     def __init__(self):
+#         QtGui.QItemDelegate.__init__(self)
 
-#     def sizeHint(self, option, index):  
+#     def sizeHint(self, option, index):
 #         return QtGui.QSize(32,32)
 
 class abcTreeItem(QtGui.QTreeWidgetItem):
@@ -38,7 +38,7 @@ class abcTreeItem(QtGui.QTreeWidgetItem):
         self.path = path
 
         self.cacheAssignations = self.cache.getAssignations()
-        
+
         self.shaderToAssign = ""
         if len(self.path) == 0:
             self.setText(0, "/%s" % os.path.basename(self.cache.ABCcache))
@@ -52,8 +52,8 @@ class abcTreeItem(QtGui.QTreeWidgetItem):
         d = os.path.dirname(__file__)
 
         if itemType == "Transform":
-            
-            
+
+
             icon.addFile(os.path.join(d, "../icons/group.png"), QtCore.QSize(22,22))
         else:
             icon.addFile(os.path.join(d, "../icons/shape.png"), QtCore.QSize(22,22))
@@ -61,7 +61,7 @@ class abcTreeItem(QtGui.QTreeWidgetItem):
         self.setIcon(0, icon)
 
         icon2 = QtGui.QIcon()
-        icon2.addFile(os.path.join(d, "../icons/sg.xpm"), QtCore.QSize(25,25))        
+        icon2.addFile(os.path.join(d, "../icons/sg.xpm"), QtCore.QSize(25,25))
         self.setIcon(1, icon2)
 
 
@@ -74,7 +74,7 @@ class abcTreeItem(QtGui.QTreeWidgetItem):
 
 
     def assignShaderFromFile(self, shader):
-        self.shaderToAssign = shader        
+        self.shaderToAssign = shader
         self.assignShader()
 
     def assignDisplacementFromFile(self, shader):
@@ -90,7 +90,7 @@ class abcTreeItem(QtGui.QTreeWidgetItem):
                 assignDisplacement.triggered.connect(self.assignDisplacement)
                 self.shaderToAssign = shader
                 menu.addAction(assignDisplacement)
-                
+
             else:
                 assignShader = QtGui.QAction("Assign %s" % shader, menu)
                 assignShader.triggered.connect(self.assignShader)
@@ -114,7 +114,7 @@ class abcTreeItem(QtGui.QTreeWidgetItem):
                 assignShader.triggered.connect(functools.partial(self.assignDisplacementFromFile, sh))
                 self.shaderToAssign = shader
                 menu.addAction(assignShader)
-        
+
         path = self.getPath()
         menu.addSeparator()
         shader = self.cache.assignations.getShader(path, self.parent.getLayer())
@@ -134,9 +134,9 @@ class abcTreeItem(QtGui.QTreeWidgetItem):
         importinscene= QtGui.QAction("Import in Scene", menu)
         importinscene.triggered.connect(self.importinscene)
         menu.addAction(importinscene)
-        
 
-        menu.popup(QtGui.QCursor.pos())   
+
+        menu.popup(QtGui.QCursor.pos())
 
     def importinscene(self):
         print self.path[-1]
@@ -158,10 +158,10 @@ class abcTreeItem(QtGui.QTreeWidgetItem):
             for item in selectedItems:
                 if item != self:
                     item.cache.assignDisplacement(item.getPath(), shaderName)
-     
+
 
         self.parent.checkShaders(self.parent.getLayer())
-        
+
 
     def assignShader(self):
 
@@ -189,7 +189,7 @@ class abcTreeItem(QtGui.QTreeWidgetItem):
 
     def deassignDisplace(self):
         path = self.getPath()
-        
+
         self.cache.assignDisplacement(path, None)
 
 
@@ -257,12 +257,12 @@ class abcTreeItem(QtGui.QTreeWidgetItem):
             if shader.get("inherited", False):
                 self.setForeground(1, QtCore.Qt.darkGray)
                 font.setItalic(1)
-                font.setBold (0)  
+                font.setBold (0)
             else:
                 font.setItalic(0)
-                font.setBold (1)  
-            self.setFont( 1,  font )             
-        
+                font.setBold (1)
+            self.setFont( 1,  font )
+
         else:
             self.setText(1, "")
 
@@ -278,11 +278,11 @@ class abcTreeItem(QtGui.QTreeWidgetItem):
             if shader.get("inherited", False):
                 self.setForeground(2, QtCore.Qt.darkGray)
                 font.setItalic(1)
-                font.setBold (0)  
+                font.setBold (0)
             else:
                 font.setItalic(0)
-                font.setBold (1)  
-            self.setFont( 2,  font )  
-               
+                font.setBold (1)
+            self.setFont( 2,  font )
+
         else:
             self.setText(2, "")

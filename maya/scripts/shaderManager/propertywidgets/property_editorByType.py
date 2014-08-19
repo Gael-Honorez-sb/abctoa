@@ -15,9 +15,9 @@ from shaderManager.propertywidgets.property_widget_visibility import *
 from arnold import *
 
 PROPERTY_BLACK_LIST = {
-'options'        : ['outputs'], 
-'polymesh'       : ['nidxs', 'nlist', 'nsides', 'shidxs', 'uvidxs', 'uvlist', 'vidxs', 'vlist', 'autobump_visibility', 'sidedness', 'ray_bias', 'use_light_group', 'use_shadow_group'], 
-'driver_display' : ['callback', 'callback_data'] 
+'options'        : ['outputs'],
+'polymesh'       : ['nidxs', 'nlist', 'nsides', 'shidxs', 'uvidxs', 'uvlist', 'vidxs', 'vlist', 'autobump_visibility', 'sidedness', 'ray_bias', 'use_light_group', 'use_shadow_group'],
+'driver_display' : ['callback', 'callback_data']
 }
 
 class PropertyEditor(QWidget):
@@ -28,12 +28,12 @@ class PropertyEditor(QWidget):
         QWidget.__init__(self, parent)
         mainLayout = QVBoxLayout()
         self.setLayout(mainLayout)
-          
+
         self.mainEditor = mainEditor
         self.node = AiNodeEntryLookUp(nodetype)
-        name = AiNodeEntryGetName (self.node) if self.node else "<No node selected>"      
-        
-        labelLayout = QHBoxLayout()                  
+        name = AiNodeEntryGetName (self.node) if self.node else "<No node selected>"
+
+        labelLayout = QHBoxLayout()
         mainLayout.addLayout(labelLayout)
         labelLayout.addWidget(QLabel("Node: %s" % name))
         labelLayout.addStretch()
@@ -47,59 +47,59 @@ class PropertyEditor(QWidget):
 
         if self.node:
             frameLayout = QVBoxLayout()
-            scrollArea = QScrollArea()            
+            scrollArea = QScrollArea()
             scrollArea.setWidgetResizable(True)
             frame = QFrame()
             frame.setLayout(frameLayout)
             mainLayout.addWidget(scrollArea)
 
             #blackhole matte
-            propertyWidget = PropertyWidgetBool2(self, False, "matte", frame)              
+            propertyWidget = PropertyWidgetBool2(self, False, "matte", frame)
             self.propertyWidgets["matte"] = propertyWidget
             if propertyWidget:
-              frameLayout.addWidget(propertyWidget)            
+              frameLayout.addWidget(propertyWidget)
 
-            propertyWidget2 = PropertyWidgetBool2(self, False, "forceVisible", frame)              
+            propertyWidget2 = PropertyWidgetBool2(self, False, "forceVisible", frame)
             self.propertyWidgets["forceVisible"] = propertyWidget2
             if propertyWidget2:
-              frameLayout.addWidget(propertyWidget2)   
+              frameLayout.addWidget(propertyWidget2)
 
           ## Built-in parameters
-            iter = AiNodeEntryGetParamIterator(self.node) 
+            iter = AiNodeEntryGetParamIterator(self.node)
             while not AiParamIteratorFinished(iter):
-                pentry = AiParamIteratorGetNext(iter)  
-                paramName = AiParamGetName(pentry) 
+                pentry = AiParamIteratorGetNext(iter)
+                paramName = AiParamGetName(pentry)
 
-                blackList = PROPERTY_BLACK_LIST[name] if name in PROPERTY_BLACK_LIST else [] 
-                if paramName != 'name' and not paramName in blackList: 
-                  propertyWidget = self.GetPropertyWidget(self.node, str(paramName), AiParamGetType(pentry), pentry, frame, False)                   
+                blackList = PROPERTY_BLACK_LIST[name] if name in PROPERTY_BLACK_LIST else []
+                if paramName != 'name' and not paramName in blackList:
+                  propertyWidget = self.GetPropertyWidget(self.node, str(paramName), AiParamGetType(pentry), pentry, frame, False)
                   self.propertyWidgets[paramName] = propertyWidget
                   if propertyWidget:
                     frameLayout.addWidget(propertyWidget)
-            
-            AiParamIteratorDestroy(iter) 
+
+            AiParamIteratorDestroy(iter)
             frameLayout.addStretch(0)
-        
+
             scrollArea.setWidget(frame)
         else:
             mainLayout.addStretch()
-        
+
         self.colorDialog = QColorDialog(self)
-    
+
     def propertyValue(self, message):
       self.propertyWidgets[message["paramname"]].changed(message)
       self.propertyWidgets[message["paramname"]].title.setText("<font color='red'>%s</font>" % message["paramname"])
-      
+
     def resetToDefault(self):
-      self.reset.emit() 
+      self.reset.emit()
       for param in self.propertyWidgets:
         if hasattr(self.propertyWidgets[param], "title"):
-          self.propertyWidgets[param].title.setText(param)  
+          self.propertyWidgets[param].title.setText(param)
 
     def GetPropertyWidget(self, nentry, name, type, pentry, parent, userData):
       widget = None
       if "visibility" in name or "sidedness" in name:
-         widget = PropertyWidgetVisibility(self, pentry, name, parent) 
+         widget = PropertyWidgetVisibility(self, pentry, name, parent)
       elif type == AI_TYPE_BYTE:
          widget = PropertyWidgetInt(self, pentry, name, parent)
       elif type == AI_TYPE_INT:
@@ -130,5 +130,4 @@ class PropertyEditor(QWidget):
       #    widget = PropertyWidgetNode(self, pentry, name, parent)
       if widget and userData:
          widget.setBackgroundRole(QPalette.Base)
-      return widget 
-    
+      return widget

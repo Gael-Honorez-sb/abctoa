@@ -11,7 +11,7 @@ Import('mtoa_env')
 local_env = mtoa_env.Clone()
 
 # Add new plugin directory names here
-EXTENSIONS = ['abcShader', "ABCViewer"] 
+EXTENSIONS = ['abcShader', "ABCViewer"]
 
 source_files = []
 include_files = []

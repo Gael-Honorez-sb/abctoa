@@ -37,23 +37,23 @@ class abcContainersExportCmd : public MPxCommand {
 
     virtual MStatus doIt( const MArgList &args );
     virtual MStatus undoIt();
- 
+
     virtual MStatus redoIt();
- 
+
     virtual bool isUndoable() const;
- 
+
     virtual bool hasSyntax() const;
- 
+
     static MSyntax mySyntax();
 
     static void* creator() {return new abcContainersExportCmd;};
- 
+
     bool isHistoryOn() const;
- 
+
     MString commandString() const;
- 
+
     MStatus setHistoryOn( bool state );
- 
+
     MStatus setCommandString( const MString & );
 
 };

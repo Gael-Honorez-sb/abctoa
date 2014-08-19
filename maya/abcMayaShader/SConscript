@@ -16,9 +16,9 @@ source_files  = find_files_recursive(src_base_dir, ['.c', '.cpp'])
 include_files = find_files_recursive(src_base_dir, ['.h'])
 
 #local_env.Append(CPPPATH = ['.'])
-MTOA_API_INCLUDES = local_env['MTOA_API_INCLUDES'] 
-ARNOLD_API_INCLUDES = local_env['ARNOLD_API_INCLUDES'] 
-MTOA_API_LIB = local_env['MTOA_API_LIB'] 
+MTOA_API_INCLUDES = local_env['MTOA_API_INCLUDES']
+ARNOLD_API_INCLUDES = local_env['ARNOLD_API_INCLUDES']
+MTOA_API_LIB = local_env['MTOA_API_LIB']
 
 
 local_env.Append(CPPPATH = local_env['CPPPATH']  + [MTOA_API_INCLUDES, ARNOLD_API_INCLUDES])

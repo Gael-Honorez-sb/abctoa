@@ -55,17 +55,17 @@ IObjectDrw::IObjectDrw( IObject &iObj, bool iResetIfNoChildren, std::vector<std:
     // If not valid, just bail.
     if ( !m_object ) { return; }
 
-   if (path.size()) 
+   if (path.size())
    {
         const ObjectHeader *ohead = m_object.getChildHeader( path[0] );
-        
-        if ( ohead!=NULL ) 
+
+        if ( ohead!=NULL )
         {
             path.erase(path.begin());
             DrawablePtr dptr;
             if ( IXform::matches( *ohead ) ) {
                 IXform xform( m_object, ohead->getName() );
-                if ( xform ) 
+                if ( xform )
                 {
 
                     ICompoundProperty arbGeomParams = xform.getSchema().getArbGeomParams();
@@ -82,7 +82,7 @@ IObjectDrw::IObjectDrw( IObject &iObj, bool iResetIfNoChildren, std::vector<std:
                                 {
                                     IStringGeomParam::prop_type::sample_ptr_type valueSample =
                                                     param.getExpandedValue( m_currentTime ).getVals();
- 
+
                                     if ( param.getScope() == kConstantScope || param.getScope() == kUnknownScope)
                                     {
                                         Json::Value jtags;
@@ -115,9 +115,9 @@ IObjectDrw::IObjectDrw( IObject &iObj, bool iResetIfNoChildren, std::vector<std:
                 m_maxTime = std::max( m_maxTime, dptr->getMaxTime() );
             }
         }
-    }       
+    }
     else
-    {  
+    {
         // IObject has no explicit time sampling, but its children may.
         size_t numChildren = m_object.getNumChildren();
         for ( size_t i = 0; i < numChildren; ++i )
@@ -161,7 +161,7 @@ IObjectDrw::IObjectDrw( IObject &iObj, bool iResetIfNoChildren, std::vector<std:
                                 {
                                     IStringGeomParam::prop_type::sample_ptr_type valueSample =
                                                     param.getExpandedValue( m_currentTime ).getVals();
- 
+
                                     if ( param.getScope() == kConstantScope || param.getScope() == kUnknownScope)
                                     {
                                         Json::Value jtags;
@@ -174,7 +174,7 @@ IObjectDrw::IObjectDrw( IObject &iObj, bool iResetIfNoChildren, std::vector<std:
                                                 {
                                                     // we skip this thing
                                                     toSkip = true;
-                                                    
+
                                                 }
                                             }
                                     }
@@ -212,7 +212,7 @@ IObjectDrw::IObjectDrw( IObject &iObj, bool iResetIfNoChildren, std::vector<std:
             }
         }
     }
-    
+
     // Make the bounds empty to start
     m_bounds.makeEmpty();
 
@@ -253,9 +253,9 @@ void IObjectDrw::setTime( chrono_t iTime )
     if (iTime != m_currentTime)
     {
         m_currentTime = iTime;
-        
+
         if ( !m_object ) { return; }
-        
+
         // Object itself has no properties to worry about.
         m_bounds.makeEmpty();
         for ( DrawablePtrVec::iterator iter = m_children.begin();

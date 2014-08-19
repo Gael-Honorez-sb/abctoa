@@ -69,7 +69,7 @@ public:
     // Get/Sec selection
     const std::string &getSelection() const {return m_selectionPath;}
     void setSelection( const std::string & path) {m_selectionPath = path;}
-    
+
 
 protected:
     M44d m_localToWorld;

@@ -21,7 +21,7 @@ struct ShaderData
 {
     std::map<std::string,AtNode*> aShaders;
     Mat::IMaterial matObj;
-}; 
+};
 
 
 node_parameters
@@ -33,7 +33,7 @@ node_parameters
     AiMetaDataSetInt(mds, NULL, "maya.id", 0x70532);
     AiMetaDataSetBool(mds, NULL, "maya.hide", true);
 
-    
+
 
 }
 
@@ -95,44 +95,44 @@ void setArrayParameter(Alembic::Abc::ICompoundProperty props, Alembic::AbcCoreAb
     if (Abc::IFloatArrayProperty::matches(header))
     {
         // float type
-        
-        Abc::FloatArraySamplePtr samp; 
+
+        Abc::FloatArraySamplePtr samp;
         Abc::IFloatArrayProperty prop(props, header.getName());
         if (prop.valid())
         {
-            size_t numSamples = prop.getNumSamples();         
+            size_t numSamples = prop.getNumSamples();
             if (numSamples > 0)
             {
-                prop.get( samp, Alembic::Abc::ISampleSelector((Alembic::Abc::index_t)0) ); 
+                prop.get( samp, Alembic::Abc::ISampleSelector((Alembic::Abc::index_t)0) );
                 arrayValues = AiArrayAllocate(samp->size(), numSamples, AI_TYPE_FLOAT);
-                for( int i = 0; i < samp->size(); ++i ) 
+                for( int i = 0; i < samp->size(); ++i )
                 {
                     AiArraySetFlt(arrayValues, i, (*samp)[i]);
                 }
-            
+
                 AiNodeSetArray(node, header.getName().c_str(), arrayValues);
             }
         }
-        
-    
+
+
     }
     else if (Abc::IInt32ArrayProperty::matches(header))
     {
         // int type
-        Abc::Int32ArraySamplePtr samp; 
+        Abc::Int32ArraySamplePtr samp;
         Abc::IInt32ArrayProperty prop(props, header.getName());
         if (prop.valid())
         {
-            size_t numSamples = prop.getNumSamples();         
+            size_t numSamples = prop.getNumSamples();
             if (numSamples > 0)
             {
-                prop.get( samp, Alembic::Abc::ISampleSelector((Alembic::Abc::index_t)0) ); 
+                prop.get( samp, Alembic::Abc::ISampleSelector((Alembic::Abc::index_t)0) );
                 arrayValues = AiArrayAllocate(samp->size(), numSamples, AI_TYPE_INT);
-                for( int i = 0; i < samp->size(); ++i ) 
+                for( int i = 0; i < samp->size(); ++i )
                 {
                     AiArraySetInt(arrayValues, i, (*samp)[i]);
                 }
-    
+
                 AiNodeSetArray(node, header.getName().c_str(), arrayValues);
             }
         }
@@ -140,20 +140,20 @@ void setArrayParameter(Alembic::Abc::ICompoundProperty props, Alembic::AbcCoreAb
     else if (Abc::IBoolArrayProperty::matches(header))
     {
         // bool type
-        Abc::BoolArraySamplePtr samp; 
+        Abc::BoolArraySamplePtr samp;
         Abc::IBoolArrayProperty prop(props, header.getName());
         if (prop.valid())
         {
-            size_t numSamples = prop.getNumSamples();         
+            size_t numSamples = prop.getNumSamples();
             if (numSamples > 0)
             {
-                prop.get( samp, Alembic::Abc::ISampleSelector((Alembic::Abc::index_t)0) ); 
+                prop.get( samp, Alembic::Abc::ISampleSelector((Alembic::Abc::index_t)0) );
                 arrayValues = AiArrayAllocate(samp->size(), numSamples, AI_TYPE_BOOLEAN);
-                for( int i = 0; i < samp->size(); ++i ) 
+                for( int i = 0; i < samp->size(); ++i )
                 {
                     AiArraySetBool(arrayValues, i, (*samp)[i]);
                 }
-    
+
                 AiNodeSetArray(node, header.getName().c_str(), arrayValues);
             }
         }
@@ -161,20 +161,20 @@ void setArrayParameter(Alembic::Abc::ICompoundProperty props, Alembic::AbcCoreAb
     else if (Abc::IStringArrayProperty::matches(header))
     {
         // string type
-        Abc::StringArraySamplePtr samp; 
+        Abc::StringArraySamplePtr samp;
         Abc::IStringArrayProperty prop(props, header.getName());
         if (prop.valid())
         {
-            size_t numSamples = prop.getNumSamples();         
+            size_t numSamples = prop.getNumSamples();
             if (numSamples > 0)
             {
-                prop.get( samp, Alembic::Abc::ISampleSelector((Alembic::Abc::index_t)0) ); 
+                prop.get( samp, Alembic::Abc::ISampleSelector((Alembic::Abc::index_t)0) );
                 arrayValues = AiArrayAllocate(samp->size(), numSamples, AI_TYPE_STRING);
-                for( int i = 0; i < samp->size(); ++i ) 
+                for( int i = 0; i < samp->size(); ++i )
                 {
                     AiArraySetStr(arrayValues, i, (*samp)[i].c_str());
                 }
-    
+
                 AiNodeSetArray(node, header.getName().c_str(), arrayValues);
             }
         }
@@ -183,14 +183,14 @@ void setArrayParameter(Alembic::Abc::ICompoundProperty props, Alembic::AbcCoreAb
     else if (Abc::IV3fArrayProperty::matches(header))
     {
         // vector type
-        Abc::V3fArraySamplePtr samp; 
+        Abc::V3fArraySamplePtr samp;
         Abc::IV3fArrayProperty prop(props, header.getName());
         if (prop.valid())
         {
-            size_t numSamples = prop.getNumSamples();         
+            size_t numSamples = prop.getNumSamples();
             if (numSamples > 0)
             {
-                prop.get( samp, Alembic::Abc::ISampleSelector((Alembic::Abc::index_t)0) ); 
+                prop.get( samp, Alembic::Abc::ISampleSelector((Alembic::Abc::index_t)0) );
                 arrayValues = AiArrayAllocate(samp->size(), numSamples, AI_TYPE_VECTOR);
                 for( int i = 0; i < samp->size(); ++i)
                 {
@@ -200,22 +200,22 @@ void setArrayParameter(Alembic::Abc::ICompoundProperty props, Alembic::AbcCoreAb
                     val.z = (*samp)[i].z;
                     AiArraySetVec(arrayValues,i, val);
 
-                }        
-                AiNodeSetArray(node, header.getName().c_str(), arrayValues);    
+                }
+                AiNodeSetArray(node, header.getName().c_str(), arrayValues);
             }
         }
     }
     else if (Abc::IP3fArrayProperty::matches(header))
     {
         // point type
-        Abc::P3fArraySamplePtr samp; 
+        Abc::P3fArraySamplePtr samp;
         Abc::IP3fArrayProperty prop(props, header.getName());
         if (prop.valid())
         {
-            size_t numSamples = prop.getNumSamples();         
+            size_t numSamples = prop.getNumSamples();
             if (numSamples > 0)
             {
-                prop.get( samp, Alembic::Abc::ISampleSelector((Alembic::Abc::index_t)0) ); 
+                prop.get( samp, Alembic::Abc::ISampleSelector((Alembic::Abc::index_t)0) );
                 arrayValues = AiArrayAllocate(samp->size(), numSamples, AI_TYPE_POINT);
                 for( int i = 0; i < samp->size(); ++i)
                 {
@@ -225,22 +225,22 @@ void setArrayParameter(Alembic::Abc::ICompoundProperty props, Alembic::AbcCoreAb
                     val.z = (*samp)[i].z;
                     AiArraySetPnt(arrayValues,i, val);
 
-                }        
-                AiNodeSetArray(node, header.getName().c_str(), arrayValues);    
+                }
+                AiNodeSetArray(node, header.getName().c_str(), arrayValues);
             }
         }
     }
     else if (Abc::IC3fArrayProperty::matches(header))
     {
         // color type
-        Abc::C3fArraySamplePtr samp; 
+        Abc::C3fArraySamplePtr samp;
         Abc::IC3fArrayProperty prop(props, header.getName());
         if (prop.valid())
         {
-            size_t numSamples = prop.getNumSamples();         
+            size_t numSamples = prop.getNumSamples();
             if (numSamples > 0)
             {
-                prop.get( samp, Alembic::Abc::ISampleSelector((Alembic::Abc::index_t)0) ); 
+                prop.get( samp, Alembic::Abc::ISampleSelector((Alembic::Abc::index_t)0) );
                 arrayValues = AiArrayAllocate(samp->size(), numSamples, AI_TYPE_RGB);
                 for( int i = 0; i < samp->size(); ++i)
                 {
@@ -250,8 +250,8 @@ void setArrayParameter(Alembic::Abc::ICompoundProperty props, Alembic::AbcCoreAb
                     val.b = (*samp)[i].z;
                     AiArraySetRGB(arrayValues,i, val);
 
-                }        
-                AiNodeSetArray(node, header.getName().c_str(), arrayValues);    
+                }
+                AiNodeSetArray(node, header.getName().c_str(), arrayValues);
             }
         }
     }
@@ -259,14 +259,14 @@ void setArrayParameter(Alembic::Abc::ICompoundProperty props, Alembic::AbcCoreAb
     else if (Abc::IP2fArrayProperty::matches(header))
     {
         //  point2
-        Abc::P2fArraySamplePtr samp; 
+        Abc::P2fArraySamplePtr samp;
         Abc::IP2fArrayProperty prop(props, header.getName());
         if (prop.valid())
         {
-            size_t numSamples = prop.getNumSamples();         
+            size_t numSamples = prop.getNumSamples();
             if (numSamples > 0)
             {
-                prop.get( samp, Alembic::Abc::ISampleSelector((Alembic::Abc::index_t)0) ); 
+                prop.get( samp, Alembic::Abc::ISampleSelector((Alembic::Abc::index_t)0) );
                 arrayValues = AiArrayAllocate(samp->size(), numSamples, AI_TYPE_POINT2);
                 for( int i = 0; i < samp->size(); ++i)
                 {
@@ -275,8 +275,8 @@ void setArrayParameter(Alembic::Abc::ICompoundProperty props, Alembic::AbcCoreAb
                     val.y = (*samp)[i].y;
                     AiArraySetPnt2(arrayValues,i, val);
 
-                }        
-                AiNodeSetArray(node, header.getName().c_str(), arrayValues);    
+                }
+                AiNodeSetArray(node, header.getName().c_str(), arrayValues);
             }
         }
     }
@@ -322,7 +322,7 @@ void setParameter(Alembic::Abc::ICompoundProperty props, Alembic::AbcCoreAbstrac
                 AiNodeSetUInt(node, header.getName().c_str(), prop.getValue());
                 AiMsgDebug("Setting Uint32 parameter %s.%s with value %i", AiNodeGetName(node), header.getName().c_str(), prop.getValue());
             }
-            
+
         }
     }
     else if (Abc::IBoolProperty::matches(header))
@@ -394,12 +394,12 @@ void setParameter(Alembic::Abc::ICompoundProperty props, Alembic::AbcCoreAbstrac
 node_initialize
 {
     AiNodeSetLocalData(node, new ShaderData);
-    ShaderData* data = reinterpret_cast<ShaderData*>(AiNodeGetLocalData(node)); 
+    ShaderData* data = reinterpret_cast<ShaderData*>(AiNodeGetLocalData(node));
 
-    Alembic::Abc::IArchive archive; 
+    Alembic::Abc::IArchive archive;
     Alembic::AbcCoreFactory::IFactory factory;
     factory.setPolicy(Alembic::Abc::ErrorHandler::kQuietNoopPolicy);
-    archive = factory.getArchive(AiNodeGetStr(node, "file")); 
+    archive = factory.getArchive(AiNodeGetStr(node, "file"));
     if (!archive.valid())
     {
         AiMsgError("[AbcShader] Cannot read file %s", AiNodeGetStr(node, "file"));
@@ -419,42 +419,42 @@ node_initialize
     }
 
     Abc::IObject object = materialsObject.getChild(shaderFrom);
-    if (Mat::IMaterial::matches(object.getHeader())) 
+    if (Mat::IMaterial::matches(object.getHeader()))
     {
-        Mat::IMaterial matObj(object, Abc::kWrapExisting); 
+        Mat::IMaterial matObj(object, Abc::kWrapExisting);
         data->matObj = matObj;
         //first, we create all the nodes.
         for (size_t i = 0, e = matObj.getSchema().getNumNetworkNodes(); i < e; ++i)
         {
             Mat::IMaterialSchema::NetworkNode abcnode = matObj.getSchema().getNetworkNode(i);
-            std::string target = "<undefined>"; 
+            std::string target = "<undefined>";
             abcnode.getTarget(target);
             if(target == "arnold")
             {
-                std::string nodeType = "<undefined>"; 
-                abcnode.getNodeType(nodeType); 
+                std::string nodeType = "<undefined>";
+                abcnode.getNodeType(nodeType);
                 AiMsgDebug("Creating %s node named %s", nodeType.c_str(), abcnode.getName().c_str());
                 AtNode* aShader = AiNode (nodeType.c_str());
-                
+
                 std::string name = std::string(AiNodeGetStr(node, "name")) + "_" + abcnode.getName();
 
                 AiNodeSetStr (aShader, "name", name.c_str());
                 data->aShaders[abcnode.getName()] = aShader;
 
                 // We set the default attributes
-                Abc::ICompoundProperty parameters = abcnode.getParameters(); 
-                if (parameters.valid()) 
+                Abc::ICompoundProperty parameters = abcnode.getParameters();
+                if (parameters.valid())
                 {
-                    for (size_t i = 0, e = parameters.getNumProperties(); i < e; ++i) 
+                    for (size_t i = 0, e = parameters.getNumProperties(); i < e; ++i)
                     {
                         const Abc::PropertyHeader & header = parameters.getPropertyHeader(i);
 
                         if (header.getName() == "name")
                             continue;
 
-                        if (header.isArray()) 
+                        if (header.isArray())
                             setArrayParameter(parameters, header, aShader);
-                            
+
                         else
                             setParameter(parameters, header, aShader);
                     }
@@ -469,19 +469,19 @@ node_initialize
         {
             Mat::IMaterialSchema::NetworkNode abcnode = matObj.getSchema().getNetworkNode(i);
 
-            std::string target = "<undefined>"; 
+            std::string target = "<undefined>";
             abcnode.getTarget(target);
             if(target == "arnold")
             {
-                size_t numConnections = abcnode.getNumConnections(); 
+                size_t numConnections = abcnode.getNumConnections();
                 if(numConnections)
                 {
                     AiMsgDebug("linking nodes");
-                    std::string inputName, connectedNodeName, connectedOutputName; 
+                    std::string inputName, connectedNodeName, connectedOutputName;
                     for (size_t j = 0; j < numConnections; ++j)
                     {
-                        if (abcnode.getConnection(j, inputName, connectedNodeName, connectedOutputName)) 
-                        {    
+                        if (abcnode.getConnection(j, inputName, connectedNodeName, connectedOutputName))
+                        {
                             AiMsgDebug("Linking %s.%s to %s.%s", connectedNodeName.c_str(), connectedOutputName.c_str(), abcnode.getName().c_str(), inputName.c_str());
                             AiNodeLinkOutput(data->aShaders[connectedNodeName.c_str()], connectedOutputName.c_str(), data->aShaders[abcnode.getName().c_str()], inputName.c_str());
                         }
@@ -495,14 +495,14 @@ node_initialize
 
         // Getting the root node now ...
         std::string connectedNodeName = "<undefined>";
-        std::string connectedOutputName = "<undefined>";                
+        std::string connectedOutputName = "<undefined>";
         if (matObj.getSchema().getNetworkTerminal(
                     "arnold", "surface", connectedNodeName, connectedOutputName))
         {
             AiMsgDebug("Linking %s.%s to root", connectedNodeName.c_str(), connectedOutputName.c_str());
-            AiNodeLink(data->aShaders[connectedNodeName.c_str()],  "shaderIn", node);    
+            AiNodeLink(data->aShaders[connectedNodeName.c_str()],  "shaderIn", node);
         }
-            
+
     }
 
 }
@@ -516,10 +516,10 @@ node_update
     data->matObj.getSchema().getNetworkInterfaceParameterMappingNames(mappingNames);
     for (std::vector<std::string>::iterator I = mappingNames.begin(); I != mappingNames.end(); ++I)
     {
-        
+
         std::string mapToNodeName;
         std::string mapToParamName;
-        
+
         if (data->matObj.getSchema().getNetworkInterfaceParameterMapping((*I), mapToNodeName, mapToParamName))
         {
             std::string interfaceName = *I;
@@ -528,19 +528,19 @@ node_update
             if (!abcNode.valid())
                 continue;
 
-            
+
             if (data->aShaders.count(abcNode.getName()) == 0)
                 continue;
 
             AtNode* aShader = data->aShaders[abcNode.getName()];
 
             Alembic::Abc::ICompoundProperty props = abcNode.getParameters();
-            if (!props.valid()) 
+            if (!props.valid())
                 continue;
 
             if (props.getNumProperties() > 0)
             {
-                
+
                 Alembic::AbcCoreAbstract::PropertyHeader header = *props.getPropertyHeader(mapToParamName);
                 const AtUserParamEntry* type = AiNodeLookUpUserParameter(node, interfaceName.c_str());
                 if(type)
@@ -563,13 +563,13 @@ node_update
 
                             }
                         }
-                        else 
+                        else
                             AiMsgDebug("shader is not linked %s", header.getName().c_str());
                     }
                     else
-                        setUserParameter(node, interfaceName, header, aShader);                        
+                        setUserParameter(node, interfaceName, header, aShader);
                 }
-                
+
 
             }
 

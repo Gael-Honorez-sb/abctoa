@@ -27,5 +27,5 @@ def make_package(target, source, env):
             else:
                 for f in file_list:
                     zp.write(f, os.path.join(target_dir, os.path.basename(f)))
-         
+
     return None

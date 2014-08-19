@@ -3,7 +3,7 @@ This module implements the function for performing an indivudal test of a Maya b
 
 It must be in a separate module in order to work properly with the python multiprocessing module
 """
- 
+
 import time
 import os
 import shutil
@@ -41,7 +41,7 @@ def print_banner(test_name, color_cmds=False):
 
 def run_test(test_name, lock, test_dir, cmd, output_image, reference_image, expected_result, update_reference=False, show_test_output=True, color_cmds=False):
     os.chdir(test_dir)
-    
+
     fore_magenta = ''
     fore_cyan = ''
     fore_green = ''
@@ -53,7 +53,7 @@ def run_test(test_name, lock, test_dir, cmd, output_image, reference_image, expe
         fore_green = Fore.GREEN
         fore_red = Fore.RED
         style_bright = Style.BRIGHT
-#	## remove any leftovers
+#   ## remove any leftovers
     saferemove(output_image)
     saferemove('new.jpg')
     saferemove('ref.jpg')
@@ -76,7 +76,7 @@ def run_test(test_name, lock, test_dir, cmd, output_image, reference_image, expe
         lock.acquire()
         print '...starting %s...' % test_name
         lock.release()
-    
+
     output_image_dir, output_image_name = os.path.split(output_image)
     # replace test render dir with this test dir
     # image filename "testrender" and format "Tiff" are set in the test scene render settings
@@ -84,8 +84,8 @@ def run_test(test_name, lock, test_dir, cmd, output_image, reference_image, expe
     cmd = string.replace(cmd, "%proj%", output_image_dir)
     cmd = string.replace(cmd, "%dir%", output_image_dir)
     cmd = string.replace(cmd, "%file%", os.path.join(output_image_dir, 'test.ma'))
-    
-    # verbose and log options for Render cmd : -verb -log "test.log" 
+
+    # verbose and log options for Render cmd : -verb -log "test.log"
     if show_test_output:
         cmd = string.replace(cmd, "%options%", '-im %s' % os.path.splitext(output_image_name)[0])
         print fore_cyan + cmd
@@ -98,7 +98,7 @@ def run_test(test_name, lock, test_dir, cmd, output_image, reference_image, expe
             cmd = '%s  1> "%s" 2>&1' % (cmd, logfile)
         else:
             cmd = '%s  > "%s" 2>> "%s"' % (cmd, logfile, logfile)
-    
+
     before_time = time.time()
     try:
         retcode = os.system(cmd)
@@ -107,7 +107,7 @@ def run_test(test_name, lock, test_dir, cmd, output_image, reference_image, expe
         return
 
     running_time = time.time() - before_time
-                          
+
     ## redirect test output (if not using os.system
     # if output_to_file:
         # file = open("%s.log" % (test_name), 'w')
@@ -143,7 +143,7 @@ def run_test(test_name, lock, test_dir, cmd, output_image, reference_image, expe
             saferemove(reference_image)
             shutil.copy(output_image, reference_image)
             reference_log = os.path.join(os.path.dirname(reference_image), 'reference.log')
-            
+
             print 'Updating %s ...' % (reference_image)
             print 'Updating %s ...' % (reference_log)
             shutil.copy('%s.log' % test_name, reference_log)
@@ -188,15 +188,15 @@ def run_test(test_name, lock, test_dir, cmd, output_image, reference_image, expe
         print "logged to", logfile
 
     print '%s %s' % ('time'.ljust(15), running_time)
-        
+
     ## progress text (scream if the test didn't pass)
-    
+
     if status == 'OK':
         print fore_green + '%s %s' % ('status'.ljust(15), status)
     else:
         print fore_red + '%s %s' % ('status'.ljust(15), status)
         print fore_red + '%s %s' % ('cause'.ljust(15), cause)
-        
+
 
     lock.release()
 

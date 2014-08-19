@@ -69,14 +69,14 @@ void ProcessIndexedBuiltinParam(
         size_t elementSize)
 {
     if ( !param.valid() ) { return; }
-    
+
     bool isFirstSample = true;
     for ( SampleTimeSet::iterator I = sampleTimes.begin();
           I != sampleTimes.end(); ++I, isFirstSample = false)
     {
         ISampleSelector sampleSelector( *I );
-        
-        
+
+
         switch ( param.getScope() )
         {
         case kVaryingScope:
@@ -84,27 +84,27 @@ void ProcessIndexedBuiltinParam(
         {
             // a value per-point, idxs should be the same as vidxs
             // so we'll leave it empty
-            
+
             // we'll get the expanded form here
             typename geomParamT::Sample sample = param.getExpandedValue(
                     sampleSelector);
-            
+
             size_t footprint = sample.getVals()->size() * elementSize;
-            
+
             values.reserve( values.size() + footprint );
             values.insert( values.end(),
                     (float32_t*) sample.getVals()->get(),
                     ((float32_t*) sample.getVals()->get()) + footprint );
-            
+
             break;
         }
         case kFacevaryingScope:
         {
             // get the indexed form and feed to nidxs
-            
+
             typename geomParamT::Sample sample = param.getIndexedValue(
                     sampleSelector);
-            
+
             if ( isFirstSample )
             {
                 idxs.reserve( sample.getIndices()->size() );
@@ -113,23 +113,23 @@ void ProcessIndexedBuiltinParam(
                         sample.getIndices()->get() +
                                 sample.getIndices()->size() );
             }
-            
+
             size_t footprint = sample.getVals()->size() * elementSize;
             values.reserve( values.size() + footprint );
             values.insert( values.end(),
                     (const float32_t*) sample.getVals()->get(),
                     ((const float32_t*) sample.getVals()->get()) + footprint );
-            
+
             break;
         }
         default:
             break;
         }
-        
-        
+
+
     }
-    
-    
+
+
 }
 
 //-*****************************************************************************
@@ -157,10 +157,10 @@ AtNode * ProcessPolyMeshBase(
         primT & prim, ProcArgs & args,
         SampleTimeSet & sampleTimes,
         std::vector<unsigned int> & vidxs,
-        MatrixSampleMap * xformSamples, 
+        MatrixSampleMap * xformSamples,
         const std::string & facesetName = "" )
 {
-        
+
     if ( !prim.valid() )
     {
         return NULL;
@@ -179,12 +179,12 @@ AtNode * ProcessPolyMeshBase(
     {
         sampleTimes.insert( ts->getFloorIndex(args.frame / args.fps, ps.getNumSamples()).second );
     }
-    
+
     std::string name = args.nameprefix + prim.getFullName();
     AtNode * instanceNode = NULL;
-    
+
     std::string cacheId;
-    
+
     SampleTimeSet singleSampleTimes;
     singleSampleTimes.insert( ts->getFloorIndex(args.frame / args.fps, ps.getNumSamples()).second );
 
@@ -205,7 +205,7 @@ AtNode * ProcessPolyMeshBase(
                 {
                     IStringGeomParam::prop_type::sample_ptr_type valueSample =
                                     param.getExpandedValue( frameSelector ).getVals();
- 
+
                     if ( param.getScope() == kConstantScope || param.getScope() == kUnknownScope)
                     {
                         Json::Value jtags;
@@ -224,11 +224,11 @@ AtNode * ProcessPolyMeshBase(
 
     // displacement stuff
     AtNode* appliedDisplacement = NULL;
-    
+
     if(args.linkDisplacement)
     {
         bool foundInPath = false;
-        for(std::map<std::string, AtNode*>::iterator it = args.displacements.begin(); it != args.displacements.end(); ++it) 
+        for(std::map<std::string, AtNode*>::iterator it = args.displacements.begin(); it != args.displacements.end(); ++it)
         {
             //check both path & tag
             if(it->first.find("/") != string::npos)
@@ -252,11 +252,11 @@ AtNode * ProcessPolyMeshBase(
                     appliedDisplacement = it->second;
                 }
 
-            }            
+            }
         }
     }
 
-    
+
     // overrides that can't be applied on instances
     // we create a hash from that.
     std::string hashAttributes("@");
@@ -294,7 +294,7 @@ AtNode * ProcessPolyMeshBase(
             }
             if(overrides.size() > 0)
             {
-                for( Json::ValueIterator itr = overrides.begin() ; itr != overrides.end() ; itr++ ) 
+                for( Json::ValueIterator itr = overrides.begin() ; itr != overrides.end() ; itr++ )
                 {
                     std::string attribute = itr.key().asString();
 
@@ -303,8 +303,8 @@ AtNode * ProcessPolyMeshBase(
                         objectMatte = args.overrideRoot[*it][itr.key().asString()].asBool();
                     }
 
-                    if (attribute=="smoothing" 
-                        || attribute=="subdiv_iterations" 
+                    if (attribute=="smoothing"
+                        || attribute=="subdiv_iterations"
                         || attribute=="subdiv_type"
                         || attribute=="subdiv_adaptive_metric"
                         || attribute=="subdiv_uv_smoothing"
@@ -316,7 +316,7 @@ AtNode * ProcessPolyMeshBase(
                         || attribute=="invert_normals")
                     {
                         Json::Value val = args.overrideRoot[*it][itr.key().asString()];
-                        
+
                         rootEncode[attribute]=val;
                     }
                 }
@@ -336,28 +336,28 @@ AtNode * ProcessPolyMeshBase(
     {
         std::ostringstream buffer;
         AbcA::ArraySampleKey sampleKey;
-        
-        
+
+
         for ( SampleTimeSet::iterator I = sampleTimes.begin();
                 I != sampleTimes.end(); ++I )
         {
             ISampleSelector sampleSelector( *I );
             ps.getPositionsProperty().getKey(sampleKey, sampleSelector);
-            
+
             buffer << GetRelativeSampleTime( args, (*I) ) << ":";
             sampleKey.digest.print(buffer);
             buffer << ":";
         }
-        
+
         buffer << "@" << hash(hashAttributes);
         buffer << "@" << facesetName;
-        
+
         cacheId = buffer.str();
-        
+
         instanceNode = AiNode( "ginstance" );
         AiNodeSetStr( instanceNode, "name", name.c_str() );
         args.createdNodes.push_back(instanceNode);
-        
+
         AiNodeSetBool( instanceNode, "inherit_xform", false );
 
         if ( args.proceduralNode )
@@ -369,9 +369,9 @@ AtNode * ProcessPolyMeshBase(
         {
             AiNodeSetByte( instanceNode, "visibility", AI_RAY_ALL );
         }
-        
+
         ApplyTransformation( instanceNode, xformSamples, args );
-        
+
         // adding arbitary parameters
         AddArbitraryGeomParams(
                 arbGeomParams,
@@ -397,42 +397,42 @@ AtNode * ProcessPolyMeshBase(
             return NULL;
         }
     }
-    
+
     std::vector<AtByte> nsides;
     std::vector<float> vlist;
-    
+
     std::vector<float> uvlist;
     std::vector<unsigned int> uvidxs;
-    
-    
+
+
     // POTENTIAL OPTIMIZATIONS LEFT TO THE READER
     // 1) vlist needn't be copied if it's a single sample
     size_t numSampleTimes = sampleTimes.size();
     bool isFirstSample = true;
     for ( SampleTimeSet::iterator I = sampleTimes.begin();
           I != sampleTimes.end(); ++I, isFirstSample = false)
-    {        
+    {
         ISampleSelector sampleSelector( *I );
         typename primT::schema_type::Sample sample = ps.getValue( sampleSelector );
-        
+
         if ( isFirstSample )
         {
-            
+
             size_t numPolys = sample.getFaceCounts()->size();
             nsides.reserve( sample.getFaceCounts()->size() );
-            for ( size_t i = 0; i < numPolys; ++i ) 
+            for ( size_t i = 0; i < numPolys; ++i )
             {
                 Alembic::Util::int32_t n = sample.getFaceCounts()->get()[i];
-                
+
                 if ( n > 255 )
                 {
                     // TODO, warning about unsupported face
                     return NULL;
                 }
-                
+
                 nsides.push_back( (AtByte) n );
             }
-            
+
             size_t vidxSize = sample.getFaceIndices()->size();
             vidxs.reserve( vidxSize );
 
@@ -454,7 +454,7 @@ AtNode * ProcessPolyMeshBase(
             //vidxs.insert( vidxs.end(), sample.getFaceIndices()->get(),
                     //sample.getFaceIndices()->get() + vidxSize );
         }
-        
+
         if(numSampleTimes == 1 && (args.shutterOpen != args.shutterClose) && (ps.getVelocitiesProperty().valid()) && isFirstSample )
         {
             float scaleVelocity = 1.0f/args.fps;
@@ -464,13 +464,13 @@ AtNode * ProcessPolyMeshBase(
             Alembic::Abc::V3fArraySamplePtr velptr = sample.getVelocities();
             Alembic::Abc::P3fArraySamplePtr v3ptr = sample.getPositions();
 
-            size_t pSize = sample.getPositions()->size(); 
+            size_t pSize = sample.getPositions()->size();
             vlist.resize(pSize*3*2);
             numSampleTimes = 2;
             float timeoffset = ((args.frame / args.fps) - ts->getFloorIndex((*I), ps.getNumSamples()).second) * args.fps;
             for ( size_t vId = 0; vId < pSize; ++vId )
             {
-                
+
                 Alembic::Abc::V3f posAtOpen = ((*v3ptr)[vId] + (*velptr)[vId] * scaleVelocity *-timeoffset);
                 vlist[3*vId + 0] = posAtOpen.x;
                 vlist[3*vId + 1] = posAtOpen.y;
@@ -479,7 +479,7 @@ AtNode * ProcessPolyMeshBase(
                 Alembic::Abc::V3f posAtEnd = ((*v3ptr)[vId] + (*velptr)[vId] * scaleVelocity *(1.0f-timeoffset));
                 vlist[3*vId + 3*pSize + 0] = posAtEnd.x;
                 vlist[3*vId + 3*pSize + 1] = posAtEnd.y;
-                vlist[3*vId + 3*pSize + 2] = posAtEnd.z;            
+                vlist[3*vId + 3*pSize + 2] = posAtEnd.z;
             }
         }
         else
@@ -491,7 +491,7 @@ AtNode * ProcessPolyMeshBase(
                             sample.getPositions()->size() * 3 );
         }
     }
-    
+
     bool customUv = false;
     if(args.useUvArchive)
     {
@@ -499,7 +499,7 @@ AtNode * ProcessPolyMeshBase(
         PathList path;
         TokenizePath( prim.getFullName(), path );
         IObject current = args.uvsRoot;
-        for ( size_t i = 0; i < path.size(); ++i ) 
+        for ( size_t i = 0; i < path.size(); ++i )
         {
             IObject parent = current;
             current = current.getChild(path[i]);
@@ -543,17 +543,17 @@ AtNode * ProcessPolyMeshBase(
                 uvidxs,
                 2);
     }
-    
-    
+
+
     AtNode* meshNode = AiNode( "polymesh" );
-    
+
     if (!meshNode)
     {
         AiMsgError("Failed to make polymesh node for %s",
                 prim.getFullName().c_str());
         return NULL;
     }
-    
+
     args.createdNodes.push_back(meshNode);
 
     // Attribute overrides. We assume instance mode all the time here.
@@ -566,12 +566,12 @@ AtNode * ProcessPolyMeshBase(
                 const Json::Value overrides = args.overrideRoot[*it];
                 if(overrides.size() > 0)
                 {
-                    for( Json::ValueIterator itr = overrides.begin() ; itr != overrides.end() ; itr++ ) 
+                    for( Json::ValueIterator itr = overrides.begin() ; itr != overrides.end() ; itr++ )
                     {
                         std::string attribute = itr.key().asString();
 
-                        if (attribute=="smoothing" 
-                            || attribute=="subdiv_iterations" 
+                        if (attribute=="smoothing"
+                            || attribute=="subdiv_iterations"
                             || attribute=="subdiv_type"
                             || attribute=="subdiv_adaptive_metric"
                             || attribute=="subdiv_uv_smoothing"
@@ -591,22 +591,22 @@ AtNode * ProcessPolyMeshBase(
                             {
                                 //AiMsgDebug("attribute %s exists on shape", attribute.c_str());
                                 Json::Value val = args.overrideRoot[*it][itr.key().asString()];
-                                if( val.isString() ) 
+                                if( val.isString() )
                                     AiNodeSetStr(meshNode, attribute.c_str(), val.asCString());
-                                else if( val.isBool() ) 
+                                else if( val.isBool() )
                                     AiNodeSetBool(meshNode, attribute.c_str(), val.asBool());
-                                else if( val.isInt() ) 
+                                else if( val.isInt() )
                                 {
                                     //make the difference between Byte & int!
                                     int typeEntry = AiParamGetType(paramEntry);
                                     if(typeEntry == AI_TYPE_BYTE)
                                         AiNodeSetByte(meshNode, attribute.c_str(), val.asInt());
-                                    else 
+                                    else
                                         AiNodeSetInt(meshNode, attribute.c_str(), val.asInt());
                                 }
-                                else if( val.isUInt() ) 
+                                else if( val.isUInt() )
                                     AiNodeSetUInt(meshNode, attribute.c_str(), val.asUInt());
-                                else if( val.isDouble() ) 
+                                else if( val.isDouble() )
                                     AiNodeSetFlt(meshNode, attribute.c_str(), val.asDouble());
                             }
                         }
@@ -636,20 +636,20 @@ AtNode * ProcessPolyMeshBase(
         AiNodeSetStr( meshNode, "name", name.c_str() );
     }
 
-    AiNodeSetArray(meshNode, "vidxs", 
+    AiNodeSetArray(meshNode, "vidxs",
             AiArrayConvert(vidxs.size(), 1, AI_TYPE_UINT,
                     (void*)&vidxs[0]));
-    
+
     AiNodeSetArray(meshNode, "nsides",
             AiArrayConvert(nsides.size(), 1, AI_TYPE_BYTE,
                     &(nsides[0])));
-    
+
 
     AiNodeSetArray(meshNode, "vlist",
-            AiArrayConvert( vlist.size() / numSampleTimes, 
+            AiArrayConvert( vlist.size() / numSampleTimes,
                     numSampleTimes, AI_TYPE_FLOAT, (void*)(&(vlist[0]))
                             ));
-    
+
     if ( !uvlist.empty() )
     {
         //TODO, option to disable v flipping
@@ -698,21 +698,21 @@ AtNode * ProcessPolyMeshBase(
                             &(vidxs[0])));
         }
     }
-    
+
     if ( sampleTimes.size() > 1 )
     {
         std::vector<float> relativeSampleTimes;
         relativeSampleTimes.reserve( sampleTimes.size() );
-        
+
         for (SampleTimeSet::const_iterator I = sampleTimes.begin();
                 I != sampleTimes.end(); ++I )
         {
            chrono_t sampleTime = GetRelativeSampleTime( args, (*I) );
 
             relativeSampleTimes.push_back(sampleTime);
-                    
+
         }
-        
+
         AiNodeSetArray( meshNode, "deform_time_samples",
                 AiArrayConvert(relativeSampleTimes.size(), 1,
                         AI_TYPE_FLOAT, &relativeSampleTimes[0]));
@@ -722,26 +722,26 @@ AtNode * ProcessPolyMeshBase(
         AiNodeSetArray( meshNode, "deform_time_samples",
                 AiArray(2, 1, AI_TYPE_FLOAT, 0.f, 1.f));
     }
-    
+
     // faceset visibility array
     if ( !facesetName.empty() )
     {
         if ( ps.hasFaceSet( facesetName ) )
         {
             ISampleSelector frameSelector( *singleSampleTimes.begin() );
-            
-            
+
+
             IFaceSet faceSet = ps.getFaceSet( facesetName );
-            IFaceSetSchema::Sample faceSetSample = 
+            IFaceSetSchema::Sample faceSetSample =
                     faceSet.getSchema().getValue( frameSelector );
-            
+
             std::set<int> facesToKeep;
-            
-            
+
+
             facesToKeep.insert( faceSetSample.getFaces()->get(),
                     faceSetSample.getFaces()->get() +
                             faceSetSample.getFaces()->size() );
-            
+
 //            std::vector<AtBoolean> faceVisArray;
 //            faceVisArray.reserve( nsides.size() );
 //
@@ -750,7 +750,7 @@ AtNode * ProcessPolyMeshBase(
 //                faceVisArray.push_back(
 //                        facesToKeep.find( i ) != facesToKeep.end() );
 //            }
-            
+
 //            if ( AiNodeDeclare( meshNode, "face_visibility", "uniform BOOL" ) )
 //            {
 //               AtArray *tmpArray; //= AiArrayConvert( faceVisArray.size(), 1, AI_TYPE_BOOLEAN,
@@ -760,7 +760,7 @@ AtNode * ProcessPolyMeshBase(
 //            }
         }
     }
-    
+
     {
         ICompoundProperty arbGeomParams = ps.getArbGeomParams();
         ISampleSelector frameSelector( *singleSampleTimes.begin() );
@@ -777,7 +777,7 @@ AtNode * ProcessPolyMeshBase(
         {
             ApplyTransformation( meshNode, xformSamples, args );
         }
-        
+
         return meshNode;
     }
     else
@@ -786,7 +786,7 @@ AtNode * ProcessPolyMeshBase(
          AiNodeSetByte( meshNode, "visibility", 0 );
          g_meshCache[cacheId] = meshNode;
         return meshNode;
-        
+
     }
 
 }
@@ -809,15 +809,15 @@ void ProcessPolyMesh( IPolyMesh &polymesh, ProcArgs &args,
     {
         return;
     }
-    
-    
+
+
     IPolyMeshSchema &ps = polymesh.getSchema();
 
     std::vector<float> nlist;
     std::vector<unsigned int> nidxs;
 
     AiNodeSetBool(meshNode, "smoothing", true);
-    
+
     if(AiNodeGetInt(meshNode, "subdiv_type") == 0)
     {
         //TODO: better check
@@ -829,11 +829,11 @@ void ProcessPolyMesh( IPolyMesh &polymesh, ProcArgs &args,
                     nlist,
                     nidxs,
                     3);
-    
+
         }
 
-    
-    
+
+
         if ( !nlist.empty() )
         {
             AiNodeSetArray(meshNode, "nlist",
@@ -851,7 +851,7 @@ void ProcessPolyMesh( IPolyMesh &polymesh, ProcArgs &args,
                for (unsigned int i = 0; i < nsides->nelements / nsides->nkeys; ++i)
                {
                   int curNum = AiArrayGetUInt(nsides ,i);
-              
+
                   for (int j = 0; j < curNum; ++j)
                   {
                       nvidxReversed.push_back(nidxs[base+curNum-j-1]);
@@ -868,7 +868,7 @@ void ProcessPolyMesh( IPolyMesh &polymesh, ProcArgs &args,
             }
         }
     }
-    
+
 }
 
 //-*************************************************************************
@@ -878,11 +878,11 @@ void ProcessSubD( ISubD &subd, ProcArgs &args,
 {
     SampleTimeSet sampleTimes;
     std::vector<unsigned int> vidxs;
-    
+
     AtNode * meshNode = ProcessPolyMeshBase(
             subd, args, sampleTimes, vidxs,
                     xformSamples, facesetName );
-    
+
     // This is a valid condition for the second instance onward and just
     // means that we don't need to do anything further.
     if ( !meshNode )

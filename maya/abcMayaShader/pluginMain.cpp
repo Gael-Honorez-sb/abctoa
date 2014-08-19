@@ -1,6 +1,6 @@
 //
 // Copyright (C) nozon
-// 
+//
 // File: pluginMain.cpp
 //
 // Author: Maya Plug-in Wizard 2.0
@@ -33,20 +33,20 @@ const MString ARNOLD_SWATCH("ArnoldRenderSwatch");
 MStatus initializePlugin( MObject obj )
 //
 //    Description:
-//        this method is called when the plug-in is loaded into Maya.  It 
-//        registers all of the services that this plug-in provides with 
+//        this method is called when the plug-in is loaded into Maya.  It
+//        registers all of the services that this plug-in provides with
 //        Maya.
 //
 //    Arguments:
 //        obj - a handle to the plug-in object (use MFnPlugin to access it)
 //
-{ 
+{
     MStatus   status;
     MFnPlugin plugin( obj, "nozon", "2013", "Any");
 
 
     MString classification( "shader/surface/");
-    
+
     //classification += MString(":") + ARNOLD_CLASSIFY(classification);
     classification += MString(":swatch/") + ARNOLD_SWATCH;
 
@@ -58,7 +58,7 @@ MStatus initializePlugin( MObject obj )
         return status;
     }
 
-    plugin.registerCommand( "abcContainersExport", abcContainersExportCmd::creator, abcContainersExportCmd::mySyntax); 
+    plugin.registerCommand( "abcContainersExport", abcContainersExportCmd::creator, abcContainersExportCmd::mySyntax);
 
     plugin.registerCommand( "abcCacheExport", abcCacheExportCmd::creator, abcCacheExportCmd::mySyntax);
 
@@ -68,7 +68,7 @@ MStatus initializePlugin( MObject obj )
 MStatus uninitializePlugin( MObject obj)
 //
 //    Description:
-//        this method is called when the plug-in is unloaded from Maya. It 
+//        this method is called when the plug-in is unloaded from Maya. It
 //        deregisters all of the services that it was providing.
 //
 //    Arguments:

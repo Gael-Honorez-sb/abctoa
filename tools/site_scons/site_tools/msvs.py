@@ -343,16 +343,16 @@ V6DSPHeader = """\
 CFG=%(name)s - Win32 %(confkey)s
 !MESSAGE This is not a valid makefile. To build this project using NMAKE,
 !MESSAGE use the Export Makefile command and run
-!MESSAGE 
+!MESSAGE
 !MESSAGE NMAKE /f "%(name)s.mak".
-!MESSAGE 
+!MESSAGE
 !MESSAGE You can specify a configuration when running NMAKE
 !MESSAGE by defining the macro CFG on the command line. For example:
-!MESSAGE 
+!MESSAGE
 !MESSAGE NMAKE /f "%(name)s.mak" CFG="%(name)s - Win32 %(confkey)s"
-!MESSAGE 
+!MESSAGE
 !MESSAGE Possible choices for configuration are:
-!MESSAGE 
+!MESSAGE
 """
 
 class _GenerateV6DSP(_DSPGenerator):
@@ -838,7 +838,7 @@ class _DSWGenerator(object):
         if len(projects) < 1:
             raise SCons.Errors.UserError("You must specify at least one project to create an MSVSSolution.")
         self.dspfiles = list(map(str, projects))
-        
+
         if env.has_key('dependencies'):
            self.dependencies = env['dependencies']
            if not SCons.Util.is_List(self.dependencies):

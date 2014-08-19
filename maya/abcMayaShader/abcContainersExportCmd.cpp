@@ -19,7 +19,7 @@ namespace Abc =  Alembic::Abc;
 namespace Mat = Alembic::AbcMaterial;
 
 
-MStatus abcContainersExportCmd::doIt( const MArgList &args) 
+MStatus abcContainersExportCmd::doIt( const MArgList &args)
 {
   MStatus stat = MStatus::kSuccess;
   MArgDatabase argData( syntax(), args);
@@ -32,7 +32,7 @@ MStatus abcContainersExportCmd::doIt( const MArgList &args)
   }
   MString filename("");
   argData.getFlagArgument( "-f", 0, filename);
-  
+
   Abc::OArchive archive(Alembic::AbcCoreHDF5::WriteArchive(), filename.asChar() );
   Abc::OObject root(archive, Abc::kTop);
   Abc::OObject materials(root, "materials");
@@ -45,24 +45,24 @@ MStatus abcContainersExportCmd::doIt( const MArgList &args)
     else
     {
          MItDependencyNodes nodeIt;
-         for (; !nodeIt.isDone(); nodeIt.next()) 
+         for (; !nodeIt.isDone(); nodeIt.next())
          {
             MObject node = nodeIt.item();
             if (node.isNull())
-                continue;         
+                continue;
             list.add (node);
          }
     }
 
     CMayaScene::Begin(MTOA_SESSION_ASS);
-    CArnoldSession* arnoldSession = CMayaScene::GetArnoldSession(); 
+    CArnoldSession* arnoldSession = CMayaScene::GetArnoldSession();
     AtNodeSet* exportedNodes = new AtNodeSet;
     MItSelectionList iter(list, MFn::kContainer);
-     for (; !iter.isDone(); iter.next()) 
+     for (; !iter.isDone(); iter.next())
      {
          MObject dependNode;
          iter.getDependNode(dependNode);
-         
+
          MFnContainerNode container(dependNode);
          //cout << "found a container" << endl;
 
@@ -72,24 +72,24 @@ MStatus abcContainersExportCmd::doIt( const MArgList &args)
          container.getMembers(members);
          MPlug toExport;
          // get the shading engine
-         for (unsigned int j = 0; j < members.length(); j++) 
+         for (unsigned int j = 0; j < members.length(); j++)
          {
-            
+
             MObject shaderNode = members[j];
-            
+
             if(shaderNode.hasFn(MFn::kShadingEngine))
             {
-                MFnDependencyNode fnDGNode(shaderNode);    
-                MPlugArray connections; 
-                MPlug shaderPlug = fnDGNode.findPlug("surfaceShader"); 
-                shaderPlug.connectedTo(connections, true, false); 
-                if (connections.length() > 0) 
+                MFnDependencyNode fnDGNode(shaderNode);
+                MPlugArray connections;
+                MPlug shaderPlug = fnDGNode.findPlug("surfaceShader");
+                shaderPlug.connectedTo(connections, true, false);
+                if (connections.length() > 0)
                 {
                     toExport = connections[0];
                 }
                 break;
             }
-            
+
         }
          if(!toExport.isNull())
          {
@@ -98,8 +98,8 @@ MStatus abcContainersExportCmd::doIt( const MArgList &args)
              {
                  AtNode* root = translator->GetArnoldRootNode();
 
-                 std::set<AtNode*>::const_iterator sit (exportedNodes->begin()), send(exportedNodes->end()); 
-                 for(;sit!=send;++sit) 
+                 std::set<AtNode*>::const_iterator sit (exportedNodes->begin()), send(exportedNodes->end());
+                 for(;sit!=send;++sit)
                  {
                      // adding the node to the network
                      MString nodeName(container.name());
@@ -121,10 +121,10 @@ MStatus abcContainersExportCmd::doIt( const MArgList &args)
                      AtParamIterator* nodeParam = AiNodeEntryGetParamIterator(AiNodeGetNodeEntry(*sit));
                      int outputType = AiNodeEntryGetOutputType(AiNodeGetNodeEntry(*sit));
 
-                     while (!AiParamIteratorFinished(nodeParam)) 
+                     while (!AiParamIteratorFinished(nodeParam))
                      {
                          const AtParamEntry *paramEntry = AiParamIteratorGetNext(nodeParam);
-                         const char* paramName = AiParamGetName(paramEntry); 
+                         const char* paramName = AiParamGetName(paramEntry);
 
                          if(AiParamGetType(paramEntry) == AI_TYPE_ARRAY)
                          {
@@ -134,7 +134,7 @@ MStatus abcContainersExportCmd::doIt( const MArgList &args)
                              {
                                  AtArray* paramArray = AiNodeGetArray(*sit, paramName);
                                  cout << "this is an array of size " <<  paramArray->nelements << endl;
-                                 
+
                                  processArrayValues(*sit, paramName, paramArray, outputType, matObj, nodeName, container.name());
                                  for(unsigned int i=0; i < paramArray->nelements; i++)
                                  {
@@ -159,7 +159,7 @@ MStatus abcContainersExportCmd::doIt( const MArgList &args)
             {
                 for (unsigned i=0; i < publishedNames.length(); ++i)
                 {
-                
+
                     MPlug publishedPlug = publishedPlugs[i];
                     MString plugName = publishedPlug.name();
 
@@ -167,47 +167,47 @@ MStatus abcContainersExportCmd::doIt( const MArgList &args)
                     plugName.split('.', parts);
                     AtNode* aNode = AiNodeLookUpByName(parts[0].asChar());
 
-                    
+
                     MString nodeName(container.name());
                     nodeName = nodeName + "_" + MString(AiNodeGetName(aNode));
 
                     // try to find the fucker
-                    const AtNodeEntry* arnoldNodeEntry = AiNodeGetNodeEntry(aNode); 
-                    CBaseAttrHelper helper(arnoldNodeEntry); 
+                    const AtNodeEntry* arnoldNodeEntry = AiNodeGetNodeEntry(aNode);
+                    CBaseAttrHelper helper(arnoldNodeEntry);
                      AtParamIterator* nodeParam = AiNodeEntryGetParamIterator(AiNodeGetNodeEntry(aNode));
-                     
+
                      if (parts[1] == "fileTextureName")
                          parts[1] = "filename";
 
-                     while (!AiParamIteratorFinished(nodeParam)) 
+                     while (!AiParamIteratorFinished(nodeParam))
                      {
                          const AtParamEntry *paramEntry = AiParamIteratorGetNext(nodeParam);
-                         const char* paramName = AiParamGetName(paramEntry); 
-                         
+                         const char* paramName = AiParamGetName(paramEntry);
+
 
 
                          if(helper.GetMayaAttrName(paramName) == parts[1].asChar())
                          {
                              cout << "Published name "<< publishedNames[i].asChar() << " for " << nodeName.asChar() << "." << paramName << endl;
 
-                             matObj.getSchema().setNetworkInterfaceParameterMapping(publishedNames[i].asChar(), nodeName.asChar(), paramName); 
+                             matObj.getSchema().setNetworkInterfaceParameterMapping(publishedNames[i].asChar(), nodeName.asChar(), paramName);
                              break;
                          }
-                        
+
                      }
-                    
+
                 }
-                
+
             }
 
          }
         }
      }
   CMayaScene::End();
- 
+
   return MStatus::kSuccess;
 }
-    
+
 
 //  There is never anything to undo.
 //////////////////////////////////////////////////////////////////////

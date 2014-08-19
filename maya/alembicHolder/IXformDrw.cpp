@@ -117,7 +117,7 @@ void IXformDrw::setTime( chrono_t iSeconds )
                 {
                     IStringGeomParam::prop_type::sample_ptr_type valueSample =
                                     param.getExpandedValue( ss ).getVals();
- 
+
                     if ( param.getScope() == kConstantScope || param.getScope() == kUnknownScope)
                     {
                         Json::Value jtags;

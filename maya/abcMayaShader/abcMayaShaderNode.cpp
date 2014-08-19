@@ -1,6 +1,6 @@
 //
 // Copyright (C) nozon
-// 
+//
 // File: abcMayaShaderNode.cpp
 //
 // Dependency Graph Node: abcMayaShader
@@ -40,7 +40,7 @@ namespace Mat = Alembic::AbcMaterial;
 
 
 // You MUST change this to a unique value!!!  The id is a 32bit value used
-// to identify this type of node in the binary file format.  
+// to identify this type of node in the binary file format.
 //
 
 MTypeId     abcMayaShader::id( 0x70811 );
@@ -75,7 +75,7 @@ void* abcMayaShader::creator()
 //
 //    Description:
 //        this method exists to give Maya a way to create new objects
-//      of this type. 
+//      of this type.
 //
 //    Return Value:
 //        a new object of this type
@@ -90,13 +90,13 @@ MStatus abcMayaShader::initialize()
 //
 //    Description:
 //        This method is called to create and initialize all of the attributes
-//      and attribute dependencies for this node type.  This is only called 
+//      and attribute dependencies for this node type.  This is only called
 //        once when the node type is registered with Maya.
 //
 //    Return Values:
 //        MS::kSuccess
 //        MS::kFailure
-//        
+//
 {
     //add the necessary nodes
     MFnTypedAttribute typedAttr;
@@ -126,7 +126,7 @@ MStatus abcMayaShader::initialize()
     // Create a shader path attrib to allow access by the AE for UI purposes
     aShaderFrom = typedAttr.create("shaderFrom", "shdfrm", MFnData::kString);
     typedAttr.setInternal(true);
-    
+
     // shader list
     aShaders = typedAttr.create("shaders", "shaders", MFnStringData::kString);
     typedAttr.setArray(true);
@@ -163,16 +163,16 @@ void abcMayaShader::rejigShaders( void *data) {
 bool abcMayaShader::rebuildShadersList()
 {
 
-    Alembic::Abc::IArchive archive; 
+    Alembic::Abc::IArchive archive;
     Alembic::AbcCoreFactory::IFactory factory;
     factory.setPolicy(Alembic::Abc::ErrorHandler::kQuietNoopPolicy);
-    archive = factory.getArchive(m_abcFile.asChar()); 
+    archive = factory.getArchive(m_abcFile.asChar());
     if (!archive.valid())
     {
         MString theError = "Cannot read file " + m_abcFile;
         MGlobal::displayError(theError);
         return false;
-    }     
+    }
 
     Abc::IObject materialsObject(archive.getTop(), "materials");
     if(!materialsObject.valid())
@@ -190,9 +190,9 @@ bool abcMayaShader::rebuildShadersList()
     {
         MString shaderName(materialsObject.getChildHeader(i).getName().c_str());
         zPlug.selectAncestorLogicalIndex(i,aShaders);
-        zPlug.setValue(shaderName);    
+        zPlug.setValue(shaderName);
     }
-    
+
     MDataBlock  data=forceCache();
     MArrayDataHandle hVDBAttrs = data.inputArrayValue(aShaders);
     MArrayDataBuilder bVDBAttrs = hVDBAttrs.builder();
@@ -204,7 +204,7 @@ bool abcMayaShader::rebuildShadersList()
         {
             bVDBAttrs.removeElement(x);
         }
-    
+
         data.setClean(aShaders);
     }
     return true;
@@ -216,20 +216,20 @@ bool abcMayaShader::rebuildShader()
     bool rebuiltAnything = false;
 
     // Re (build) current shader
-    if (m_shaderDirty) 
+    if (m_shaderDirty)
     {
         //MGlobal::displayInfo(MString("Rebuild shader") );
 
-        Alembic::Abc::IArchive archive; 
+        Alembic::Abc::IArchive archive;
         Alembic::AbcCoreFactory::IFactory factory;
         factory.setPolicy(Alembic::Abc::ErrorHandler::kQuietNoopPolicy);
-        archive = factory.getArchive(m_abcFile.asChar()); 
+        archive = factory.getArchive(m_abcFile.asChar());
         if (!archive.valid())
         {
             MString theError = "Cannot read file " + m_abcFile;
             MGlobal::displayError(theError);
             return false;
-        } 
+        }
         Abc::IObject materialsObject(archive.getTop(), "materials");
         if(!materialsObject.valid())
         {
@@ -237,19 +237,19 @@ bool abcMayaShader::rebuildShader()
             MGlobal::displayError(theError);
             return false;
         }
-        
+
         if(m_shaderFrom.empty())
         {
             MString theError = "no material name given";
             MGlobal::displayError(theError);
             return false;
         }
-        
+
         Abc::IObject object = materialsObject.getChild(m_shaderFrom);
 
-        if (Mat::IMaterial::matches(object.getHeader())) 
+        if (Mat::IMaterial::matches(object.getHeader()))
         {
-            Mat::IMaterial matObj(object, Abc::kWrapExisting); 
+            Mat::IMaterial matObj(object, Abc::kWrapExisting);
 
             std::vector<std::string> mappingNames;
             matObj.getSchema().getNetworkInterfaceParameterMappingNames(mappingNames);
@@ -259,12 +259,12 @@ bool abcMayaShader::rebuildShader()
 
             MFnNumericAttribute nAttrib;
             MFnTypedAttribute tAttrib;
-            
+
             // Managing the attributes here
 
 
             // first we need to set mark all previous attributes as "old"
-            for (std::vector<attributeAttrib>::iterator it=m_attributeAttribList.begin(); it<m_attributeAttribList.end(); it++) 
+            for (std::vector<attributeAttrib>::iterator it=m_attributeAttribList.begin(); it<m_attributeAttribList.end(); it++)
             {
                 //cout << "attribute " << it->name << " marked as inused" << endl;
                 it->found = false; //mark it as unused
@@ -283,10 +283,10 @@ bool abcMayaShader::rebuildShader()
                         continue;
 
                     Alembic::Abc::ICompoundProperty props = node.getParameters();
-                    if (!props.valid()) 
+                    if (!props.valid())
                         continue;
 
-                    
+
 
                     if (props.getNumProperties() > 0)
                     {
@@ -296,14 +296,14 @@ bool abcMayaShader::rebuildShader()
                         {
                             Alembic::AbcCoreAbstract::PropertyHeader header = props.getPropertyHeader(propNum);
                         }
-                        
+
 
                         Alembic::AbcCoreAbstract::PropertyHeader header = *props.getPropertyHeader(mapToParamName);
                         if (Abc::IFloatProperty::matches(header))
                         {
                             // float type
                             bool exists = checkNumericAttributeExists(name, MFnNumericData::kFloat);
-                            
+
                             if(!exists)
                             {
                                 attributeAttrib aa;
@@ -319,7 +319,7 @@ bool abcMayaShader::rebuildShader()
 
                                     MPlug pl = dn.findPlug(aa.attrib);
                                     Abc::IFloatProperty prop(props, header.getName());
-                                    
+
                                     if (prop.valid())
                                     {
                                         const Alembic::AbcCoreAbstract::MetaData md = prop.getMetaData();
@@ -354,7 +354,7 @@ bool abcMayaShader::rebuildShader()
                         else if (Abc::IStringProperty::matches(header))
                         {
                             bool exists = checkStringAttributeExists(name);
-                            
+
                             if(!exists)
                             {
                                 attributeAttrib aa;
@@ -365,7 +365,7 @@ bool abcMayaShader::rebuildShader()
                                 {
                                     // string type
                                     MFnStringData fnStringData;
-                                
+
 
                                     aa.attrib = tAttrib.create(name, name, MFnStringData::kString);
                                     tAttrib.setKeyable(true);
@@ -414,7 +414,7 @@ bool abcMayaShader::rebuildShader()
                                 {
                                     aa.attrib = dn.attribute(name);
                                     MFnAttribute fnAttr(aa.attrib);
-                                    fnAttr.addToCategory(mapToNodeName.c_str()); 
+                                    fnAttr.addToCategory(mapToNodeName.c_str());
                                 }
 
                                 m_attributeAttribList.push_back(aa);
@@ -500,7 +500,7 @@ bool abcMayaShader::rebuildShader()
                                     nAttrib.setKeyable(true);
                                     nAttrib.addToCategory(mapToNodeName.c_str());
                                     mod.addAttribute(thisMObject(), aa.attrib);
-                                
+
                                     MPlug pl = dn.findPlug(aa.attrib);
                                     Abc::IC3fProperty prop(props, header.getName());
                                     if (prop.valid() && !pl.isNull())
@@ -516,12 +516,12 @@ bool abcMayaShader::rebuildShader()
                             }
                         }
                     }
-                }                
+                }
             }
             // Now we clear all the plugs that has not been found.
             for (unsigned int ii=0; ii < m_attributeAttribList.size();)
             {
-                if (m_attributeAttribList[ii].found == false) 
+                if (m_attributeAttribList[ii].found == false)
                 {
                     mod.removeAttribute(thisMObject(), m_attributeAttribList[ii].attrib);
                     m_attributeAttribList.erase(m_attributeAttribList.begin()+ii);
@@ -530,7 +530,7 @@ bool abcMayaShader::rebuildShader()
                     ii++;
 
             }
-                    
+
             mod.doIt();
 
         }
@@ -550,20 +550,20 @@ bool abcMayaShader::rebuildShader()
 bool abcMayaShader::checkStringAttributeExists(MString name)
 {
     std::vector<attributeAttrib>::iterator it=m_attributeAttribList.begin();
-    while (it < m_attributeAttribList.end()) 
+    while (it < m_attributeAttribList.end())
     {
         if (it->name == name)
             break;
         it++;
     }
 
-    if (it !=m_attributeAttribList.end()) 
+    if (it !=m_attributeAttribList.end())
     {
         MDGModifier mod;
         MFnDependencyNode dn(thisMObject());
 
         //if found, we check if the type is the same.
-        
+
         if(it->attrib.hasFn(MFn::kStringData))
         {
             MFnNumericAttribute fnAttrib(it->attrib);
@@ -575,7 +575,7 @@ bool abcMayaShader::checkStringAttributeExists(MString name)
         }
 
         // we've found something, but not the same time -> delete this fucker.
-        if ( dn.hasAttribute( name )) 
+        if ( dn.hasAttribute( name ))
         {
             mod.removeAttribute(thisMObject(), it->attrib);
             mod.doIt();
@@ -591,14 +591,14 @@ bool abcMayaShader::checkStringAttributeExists(MString name)
 bool abcMayaShader::checkNumericAttributeExists(MString name, MFnNumericData::Type type)
 {
     std::vector<attributeAttrib>::iterator it=m_attributeAttribList.begin();
-    while (it < m_attributeAttribList.end()) 
+    while (it < m_attributeAttribList.end())
     {
         if (it->name == name)
             break;
         it++;
     }
 
-    if (it !=m_attributeAttribList.end()) 
+    if (it !=m_attributeAttribList.end())
     {
         MDGModifier mod;
         MFnDependencyNode dn(thisMObject());
@@ -606,7 +606,7 @@ bool abcMayaShader::checkNumericAttributeExists(MString name, MFnNumericData::Ty
         //if found, we check if the type is the same.
         if(it->attrib.hasFn(MFn::kNumericAttribute))
         {
-            
+
             MFnNumericAttribute fnAttrib(it->attrib);
             if(fnAttrib.unitType() == type)
             {
@@ -617,12 +617,12 @@ bool abcMayaShader::checkNumericAttributeExists(MString name, MFnNumericData::Ty
 
         }
         // we've found something, but not the same type -> delete this fucker.
-        if ( dn.hasAttribute( name )) 
+        if ( dn.hasAttribute( name ))
         {
             //cout << "attribute " << name << " deletion" << endl;
             mod.removeAttribute(thisMObject(), it->attrib);
             mod.doIt();
-            
+
         }
         m_attributeAttribList.erase(it);
     }
@@ -630,13 +630,13 @@ bool abcMayaShader::checkNumericAttributeExists(MString name, MFnNumericData::Ty
 
 }
 
-bool abcMayaShader::setInternalValueInContext( const MPlug &plug, 
+bool abcMayaShader::setInternalValueInContext( const MPlug &plug,
                                                const MDataHandle &handle,
                                                MDGContext & )
 {
   bool retVal = false;
 
-  if ( plug == aShaderFrom) 
+  if ( plug == aShaderFrom)
   {
     m_shaderFrom = handle.asString().asChar();
     m_shaderDirty = true;
@@ -656,7 +656,7 @@ bool abcMayaShader::setInternalValueInContext( const MPlug &plug,
 
 ////////////////////////////////////////////////////////////////////////////////
 /* virtual */
-bool abcMayaShader::getInternalValueInContext( const MPlug &plug, 
+bool abcMayaShader::getInternalValueInContext( const MPlug &plug,
                                                MDataHandle &handle,
                                                MDGContext& )
 {
@@ -666,23 +666,23 @@ bool abcMayaShader::getInternalValueInContext( const MPlug &plug,
     {
         handle.set(MString(m_shaderFrom.c_str()));
         retVal = true;
-    }  
+    }
 
 
     if ( plug == sABCFile )
     {
         handle.set(m_abcFile);
         retVal = true;
-    }  
+    }
 
     return retVal;
 }
 
 
-abcMayaShader* abcMayaShader::findNodeByName(const MString &name) 
+abcMayaShader* abcMayaShader::findNodeByName(const MString &name)
 {
 
-  for (std::vector<abcMayaShader*>::iterator it = sNodeList.begin(); it < sNodeList.end(); it++) 
+  for (std::vector<abcMayaShader*>::iterator it = sNodeList.begin(); it < sNodeList.end(); it++)
   {
     if ( (*it)->name() == name)
       return *it;

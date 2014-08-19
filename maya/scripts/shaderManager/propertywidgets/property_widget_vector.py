@@ -85,4 +85,4 @@ class PropertyWidgetVector(PropertyWidget):
       elif self.vectorType == PropertyWidget.POINT:
          AiNodeSetPnt(self.node, self.paramName, self.widget1.value(), self.widget2.value(), self.widget3.value())
       elif self.vectorType == PropertyWidget.POINT2:
-         AiNodeSetPnt2(self.node, self.paramName, self.widget1.value(), self.widget2.value()) 
+         AiNodeSetPnt2(self.node, self.paramName, self.widget1.value(), self.widget2.value())

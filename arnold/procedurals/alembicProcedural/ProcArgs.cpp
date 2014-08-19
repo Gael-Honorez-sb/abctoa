@@ -68,11 +68,11 @@ ProcArgs::ProcArgs( const char * paramStr )
 
     typedef boost::char_separator<char> Separator;
     typedef boost::tokenizer<Separator> Tokenizer;
-    
+
     std::vector<std::string> tokens;
     std::string params( paramStr );
 
-    Tokenizer tokenizer( params, Separator(" ") ); 
+    Tokenizer tokenizer( params, Separator(" ") );
     for ( Tokenizer::iterator iter = tokenizer.begin(); iter != tokenizer.end() ;
           ++iter )
     {
@@ -129,7 +129,7 @@ ProcArgs::ProcArgs( const char * paramStr )
         else if ( token == "-excludexform" )
         {
             excludeXform = true;
-            
+
         }
         else if ( token == "-subditerations" )
         {
@@ -183,15 +183,15 @@ void ProcArgs::usage()
 {
     std::cerr << "AlembicRiProcedural usage:" << std::endl;
     std::cerr << std::endl;
-    
-    
+
+
     std::cerr << "-filename /path/to/some/archive.abc" << std::endl;
     std::cerr << std::endl;
-    
+
     std::cerr << "This is the only required argument. "
                  "It has no default value." << std::endl;
     std::cerr << std::endl;
-    
+
 
     std::cerr << "-frame 42" << std::endl;
     std::cerr << std::endl;
@@ -199,18 +199,18 @@ void ProcArgs::usage()
     std::cerr << "The frame number to load from within the archive. "
                  "The default value is 0. This is combined with -fps to map "
                  "to Alembic time units (double-precision seconds).";
-    
+
     std::cerr << std::endl;
     std::cerr << std::endl;
-    
+
     std::cerr << "-fps 24" << std::endl;
     std::cerr << std::endl;
-    
+
     std::cerr << "Combined with -frame above. The default value is 24.0.";
     std::cerr << std::endl;
     std::cerr << std::endl;
-    
-    
+
+
     std::cerr << "-shutteropen 0.0" << std::endl;
     std::cerr << "-shutterclose 0.5" << std::endl;
     std::cerr << std::endl;
@@ -226,7 +226,7 @@ void ProcArgs::usage()
 
     std::cerr << "-objectpath /assetroot/characters" << std::endl;
     std::cerr << std::endl;
-    
+
     std::cerr << "If specified, only objects at or below the provided path "
                  "(within the archive) will be emitted. When combined with "
                  "-excludexform, this can also be used to load individual "
@@ -238,26 +238,26 @@ void ProcArgs::usage()
                  "a \"face_visibility\" user data array.";
     std::cerr << std::endl;
     std::cerr << std::endl;
-    
+
     std::cerr << "-excludexform" << std::endl;
     std::cerr << std::endl;
-    
+
     std::cerr << "If specified, the \"matrix\" parameter will not be set on "
                  "the resulting primitive nodes." << std::endl;
     std::cerr << std::endl;
-    
+
     std::cerr << "-subditerations 2" << std::endl;
     std::cerr << std::endl;
-    
+
     std::cerr << "For AbcGeom::ISubD objects, this option specifies the "
                  "\"subdiv_iterations\" value. It currently has no effect for "
                  "other primitive types. The default value is 0.";
     std::cerr << std::endl;
     std::cerr << std::endl;
-    
+
     std::cerr << "-nameprefix some_prefix__" << std::endl;
     std::cerr << std::endl;
-    
+
     std::cerr << "Because node names are unique scene-wide in arnold, this "
                  "allows you control potential name clashes when loading or "
                  "instancing an archive (or multiple equivalently named "
@@ -274,10 +274,10 @@ void ProcArgs::usage()
 
 
 
-    
+
     std::cerr << "-makeinstance" << std::endl;
     std::cerr << std::endl;
-    
+
     std::cerr << "This behavior is disabled by default. If enabled, the "
                  "procedural will attempt to identify identical primitives "
                  "(using Alembic's per-array-property hash keys) and create "
@@ -291,8 +291,8 @@ void ProcArgs::usage()
                  "The ray visibility of the source primitive will be set to "
                  "AI_RAY_NONE and the \"ginstance\" node's will be set to "
                  "that of the calling \"procedural\" node.";
-    
+
     std::cerr << std::endl;
 
-    
+
 }
