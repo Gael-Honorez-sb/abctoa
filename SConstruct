@@ -751,7 +751,7 @@ for p in scriptfiles:
     ]
 
 PACKAGE_FILES.append([os.path.join(BUILD_BASE_DIR, 'alembicProcedural' 'arnold', 'AlembicArnoldProcedural%s' % get_library_extension()), 'procedurals'])
-PACKAGE_FILES.append([os.path.join(BUILD_BASE_DIR, 'extensions' 'abcShader', 'AlembicArnoldProcedural%s' % get_library_extension()), 'extensions'])
+PACKAGE_FILES.append([os.path.join(BUILD_BASE_DIR, 'extensions' 'abcShader', 'abcShader%s' % get_library_extension()), 'extensions'])
 PACKAGE_FILES.append([os.path.join(BUILD_BASE_DIR, 'alembicProcedural' 'arnold', 'AlembicArnoldProcedural%s' % get_library_extension()), 'extensions'])
 #PACKAGE_FILES.append([os.path.join(BUILD_BASE_DIR, 'alembicProcedural', 'AlembicArnoldProcedural%s' % get_library_extension()), 'procedurals'])
 
