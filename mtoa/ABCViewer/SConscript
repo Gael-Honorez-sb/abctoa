@@ -1,39 +1,25 @@
 # vim: filetype=python
 
-import system, os
+## load our own python modules
+import system
 from build_tools import find_files_recursive
 
+import os
+
 # import build env
-Import('ext_env')
-local_env = ext_env.Clone()
+Import('mtoa_env')
+local_env = mtoa_env.Clone()
 
 # Automatically add all source and include files found in the source path
-src_base_dir  = os.path.join(local_env['ROOT_DIR'], 'contrib', 'extensions', 'ABCViewer')
+src_base_dir  = os.path.join(local_env['ROOT_DIR'], 'mtoa', 'ABCViewer')
 source_files  = find_files_recursive(src_base_dir, ['.c', '.cpp'])
 include_files = find_files_recursive(src_base_dir, ['.h'])
 
-EXT = local_env.SharedLibrary('ABCViewer', source_files, LIBPREFIX='')
+BOOST_INCLUDE_PATH = local_env['BOOST_INCLUDE_PATH'] 
 
-local_env.Append(CPPPATH = ["c:/Program Files/Boost/boost_1_42"])
+local_env.Append(CPPPATH = local_env['CPPPATH']  + [BOOST_INCLUDE_PATH])
 
-if system.os() == 'windows':
-   local_env['MSVSSCONSCRIPT'] = ext_env.File('SConscript')
-   EXT_PRJ = local_env.MSVSProject(target = 'ABCViewer' + local_env['MSVS']['PROJECTSUFFIX'],
-                                    srcs = source_files + include_files,
-                                    incs = [],
-                                    buildtarget = 'ABCViewer',
-                                    cmdargs = ['-Q -s COMPILER=msvc MODE=debug TARGET_ARCH=x86',
-                                               '-Q -s COMPILER=icc MODE=debug TARGET_ARCH=x86',
-                                               '-Q -s COMPILER=msvc MODE=opt TARGET_ARCH=x86',
-                                               '-Q -s COMPILER=icc MODE=opt TARGET_ARCH=x86'],
-                                    variant = ['Debug_MSVC|Win32',
-                                               'Debug_ICC|Win32',
-                                               'Opt_MSVC|Win32',
-                                               'Opt_ICC|Win32'],
-                                    auto_build_solution = 0,
-                                    nokeep = 1)
-   local_env.AlwaysBuild(EXT_PRJ)
-   
-   Return('EXT EXT_PRJ')
-else:
-   Return('EXT')
+
+MTOA_VIEWER = local_env.SharedLibrary('ABCViewer', source_files, LIBPREFIX='')
+
+Return('MTOA_VIEWER')

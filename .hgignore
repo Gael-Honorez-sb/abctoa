@@ -1,0 +1,40 @@
+syntax: glob
+.git
+build
+*.rej
+*.pyc
+*~
+*.orig
+custom.py
+custom*.py
+.*
+*.bak
+Debug
+*.project
+*.settings*
+*.cproject
+*.external*
+*.pydev*
+*.vcproj
+*.sln
+*.pdb
+*.ncb
+*.suo
+*.user
+*.bat
+x64
+*.log
+*.css
+*.png
+*.gif
+*.old
+*.pyd
+syntax: regexp
+\.launch$
+syntax: regexp
+^UpgradeLog\.XML$
+syntax: regexp
+\.rar$
+syntax: regexp
+\.tgz$
+
