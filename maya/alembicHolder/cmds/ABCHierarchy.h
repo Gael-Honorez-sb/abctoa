@@ -13,21 +13,21 @@
 class ABCHierarchy : public MPxCommand
 {
 public:
-//    ABCHierarchy();
-//    virtual ~ABCHierarchy();
-    static void        cleanup();
-    MStatus doIt( const MArgList& args );
-    bool isUndoable() const {return false;};
-    static void* creator();
+//	ABCHierarchy();
+//	virtual ~ABCHierarchy();
+	static void		cleanup();
+	MStatus doIt( const MArgList& args );
+	bool isUndoable() const {return false;};
+	static void* creator();
 
-    const char *     filename () const {return m_filename.asChar();}
-    const char *     path () const {return m_path.asChar();}
+	const char * 	filename () const {return m_filename.asChar();}
+	const char * 	path () const {return m_path.asChar();}
 
-    static const MString commandName;
+	static const MString commandName;
 
 private:
-    MString m_filename;
-    MString m_path;
+	MString m_filename;
+	MString m_path;
 
 };
 
