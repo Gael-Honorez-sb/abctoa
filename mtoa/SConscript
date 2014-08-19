@@ -30,7 +30,7 @@ for dir in EXTENSIONS:
             plugin_env = local_env.Clone()
             MTOA_TRANSLATORS    += plugin_env.SConscript(sconscriptPath,
                              duplicate   = 0,
-                             variant_dir = os.path.join(local_env['BUILD_BASE_DIR']),
+                             variant_dir = os.path.join(local_env['BUILD_BASE_DIR'], 'mtoa', dir),
                              exports     = 'mtoa_env')
         else:
             proc_src_files = [os.path.join(dir, name) for name in find_files_recursive(base_dir, ['.c', '.cpp'])]
