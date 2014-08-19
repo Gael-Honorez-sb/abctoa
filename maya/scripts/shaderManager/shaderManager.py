@@ -4,12 +4,12 @@
 # are made available under the terms of the GNU Public License v3.0
 # which accompanies this distribution, and is available at
 # http://www.gnu.org/licenses/gpl.html
-# 
+#
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation, either version 3 of the License, or
 # (at your option) any later version.
-# 
+#
 # This program is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -31,7 +31,7 @@ sip.setapi('QProcess', 2)
 sip.setapi('QString', 2)
 
 import json
-from arnold import *    
+from arnold import *
 
 from PyQt4 import QtGui, QtCore
 from PyQt4.QtGui import *
@@ -40,7 +40,7 @@ from PyQt4.QtCore import *
 
 from gpucache import gpucache, treeitem
 reload(treeitem)
-from propertywidgets.property_editorByType import PropertyEditor 
+from propertywidgets.property_editorByType import PropertyEditor
 
 import maya.cmds as cmds
 import maya.mel as mel
@@ -80,11 +80,11 @@ class List(list_form, list_base):
         self.tagGroup.setVisible(0)
 
         self.shaderToAssign = None
-        self.ABCViewerNode = {}        
+        self.ABCViewerNode = {}
         self.tags = {}
         self.getNode()
-        self.getCache()    
-        
+        self.getCache()
+
         self.thisTagItem = None
         self.thisTreeItem = None
 
@@ -96,26 +96,26 @@ class List(list_form, list_base):
         self.propertyEditorWindow.setAllowedAreas(QtCore.Qt.LeftDockWidgetArea | QtCore.Qt.RightDockWidgetArea)
         self.propertyEditorWindow.setWindowTitle("Properties")
         self.propertyEditorWindow.setMinimumWidth(300)
-        self.addDockWidget(QtCore.Qt.LeftDockWidgetArea, self.propertyEditorWindow) 
+        self.addDockWidget(QtCore.Qt.LeftDockWidgetArea, self.propertyEditorWindow)
         self.propertyEditor = PropertyEditor(self, "polymesh", self.propertyEditorWindow)
-        self.propertyEditorWindow.setWidget(self.propertyEditor)  
+        self.propertyEditorWindow.setWidget(self.propertyEditor)
 
 
         self.propertyEditor.propertyChanged.connect(self.propertyChanged)
 
         self.hierarchyWidget.setColumnWidth(0,600)
         self.hierarchyWidget.setIconSize(QSize(22,22))
-                
+
         self.hierarchyWidget.dragEnterEvent = self.newhierarchyWidgetdragEnterEvent
         self.hierarchyWidget.dragMoveEvent = self.newhierarchyWidgetdragMoveEvent
-        self.hierarchyWidget.dropEvent = self.newhierarchyWidgetDropEvent 
+        self.hierarchyWidget.dropEvent = self.newhierarchyWidgetDropEvent
 
         self.hierarchyWidget.setColumnWidth(0,200)
         self.hierarchyWidget.setColumnWidth(1,300)
-        self.hierarchyWidget.setColumnWidth(2,300) 
+        self.hierarchyWidget.setColumnWidth(2,300)
 
-        self.populate() 
-    
+        self.populate()
+
         self.curPath = ""
         self.ABCcurPath = ""
         self.hierarchyWidget.itemDoubleClicked.connect(self.itemDoubleClicked)
@@ -123,7 +123,7 @@ class List(list_form, list_base):
         self.hierarchyWidget.itemCollapsed.connect(self.requireItemCollapse)
         self.hierarchyWidget.itemClicked.connect(self.itemCLicked)
         self.hierarchyWidget.itemPressed.connect(self.itemPressed)
-        
+
         #self.shadersList.startDrag = self.newshadersListStartDrag
         self.shadersList.itemPressed.connect(self.shaderCLicked)
         self.shadersList.mouseMoveEvent = self.newshadersListmouseMoveEvent
@@ -131,7 +131,7 @@ class List(list_form, list_base):
         self.fillShaderList()
 
         if AiUniverseIsActive() and AiRendering() == False:
-             AiEnd()     
+             AiEnd()
 
 
         self.getLayers()
@@ -161,7 +161,7 @@ class List(list_form, list_base):
         self.updateTree()
 
     def overrideShadersChanged(self, state):
-        
+
         result = True
         if state == 0:
             result = False
@@ -195,11 +195,11 @@ class List(list_form, list_base):
             cmds.connectAttr("%s.outColor" % node, "%s.surfaceShader" % sg)
         except:
             print "Error creating shading group for node", node
-        
+
         return sg
 
 
-    def newNodeCB(self, newNode, data ): 
+    def newNodeCB(self, newNode, data ):
         ''' Callback when creating a new node '''
         mobject = MObjectHandle( newNode ).object()
         nodeFn = MFnDependencyNode ( mobject )
@@ -218,9 +218,9 @@ class List(list_form, list_base):
                 icon.addFile(os.path.join(d, "icons/sg.xpm"), QtCore.QSize(25,25))
                 item = QtGui.QListWidgetItem(sg)
                 item.setIcon(icon)
-                self.shadersList.addItem(item)            
+                self.shadersList.addItem(item)
 
-    def delNodeCB(self, node, data ): 
+    def delNodeCB(self, node, data ):
         ''' Callback when a node has been deleted '''
         mobject = MObjectHandle( node ).object()
         nodeFn = MFnDependencyNode ( mobject )
@@ -259,7 +259,7 @@ class List(list_form, list_base):
 
         drag.setPixmap(self.shadersList.itemAt(event.pos()).icon().pixmap(50,50))
         drag.setHotSpot(QtCore.QPoint(0,0))
-        drag.start(QtCore.Qt.MoveAction) 
+        drag.start(QtCore.Qt.MoveAction)
 
     def newhierarchyWidgetdragEnterEvent(self, event):
         if event.mimeData().hasFormat("application/x-shader"):
@@ -317,8 +317,8 @@ class List(list_form, list_base):
                 if over:
                     self.overrideProps.setChecked(over["removeProperties"])
                     self.overrideShaders.setChecked(over["removeShaders"])
-                    self.overrideDisps.setChecked(over["removeDisplacements"])   
-                
+                    self.overrideDisps.setChecked(over["removeDisplacements"])
+
 
         self.updateTree()
         if self.hierarchyWidget.currentItem():
@@ -405,7 +405,7 @@ class List(list_form, list_base):
         elif self.lastClick == 2:
             item = self.listTagsWidget.currentItem()
             item.assignProperty(propName, default, value)
-       
+
 
         self.propertyEditor.propertyChanged.connect(self.propertyChanged)
 
@@ -417,7 +417,7 @@ class List(list_form, list_base):
         if cacheState == 2:
             self.propertyEditor.propertyWidgets[propName].title.setText("<font color='red'>%s</font>" % propName)
         if cacheState == 1:
-            self.propertyEditor.propertyWidgets[propName].title.setText("<font color='orange'>%s</font>" % propName)   
+            self.propertyEditor.propertyWidgets[propName].title.setText("<font color='orange'>%s</font>" % propName)
 
 
     def fillShaderList(self):
@@ -428,11 +428,11 @@ class List(list_form, list_base):
             item = QtGui.QListWidgetItem(sg)
             item.setIcon(icon)
             self.shadersList.addItem(item)
-     
+
     def getLayer(self):
-        if self.curLayer != "defaultRenderLayer":        
+        if self.curLayer != "defaultRenderLayer":
             return self.curLayer
-        return None        
+        return None
 
     def itemCLicked(self, item, col, force=False) :
         self.propertyEditing = True
@@ -446,7 +446,7 @@ class List(list_form, list_base):
         if self.thisTreeItem == item and force==False:
             self.propertyEditing = False
             return
-        self.thisTreeItem = item        
+        self.thisTreeItem = item
 
         state = item.checkState(col)
         curPath = item.getPath()
@@ -457,7 +457,7 @@ class List(list_form, list_base):
 
         self.propertyEditor.resetToDefault()
 
-  
+
         overridesEntity = cache.getAssignations().getOverrides(curPath, self.getLayer())
         if not overridesEntity and self.getLayer() != None:
             overridesEntity = cache.getAssignations().getOverrides(curPath, None)
@@ -472,38 +472,38 @@ class List(list_form, list_base):
 
         self.propertyEditor.propertyChanged.connect(self.propertyChanged)
 
-        if state == 2 : 
-            cache.setToPath(curPath)       
-            
+        if state == 2 :
+            cache.setToPath(curPath)
+
         elif state == 0:
             cache.setToPath("|")
-        
+
         self.propertyEditing = False
-            
-    def itemPressed(self, item, col) :        
+
+    def itemPressed(self, item, col) :
         self.lastClick = 1
-        if QtGui.QApplication.mouseButtons()  == QtCore.Qt.RightButton: 
-            item.pressed()            
-   
+        if QtGui.QApplication.mouseButtons()  == QtCore.Qt.RightButton:
+            item.pressed()
+
 
     def requireItemCollapse(self, item):
         pass
 
     def requireItemExpanded(self, item) :
         self.expandItem(item)
-        
+
     def itemDoubleClicked(self, item, column) :
         self.expandItem(item)
-        
+
     def expandItem(self, item) :
         items = cmds.ABCHierarchy(item.cache.ABCcache, item.getPath().replace("/", "|"))
         if items != None :
             self.createBranch(item, items)
         else :
             item.setChildIndicatorPolicy(1)
-    
+
     def createBranch(self, parentItem, abcchild, selected = 0, hierarchy = False, p = "/") :
-        for item in abcchild : 
+        for item in abcchild :
             itemType = item.split(":")[0]
             itemName = item.split(":")[-1]
 
@@ -512,20 +512,20 @@ class List(list_form, list_base):
                 text = parentItem.child(i).text(0)
                 if str(text) == str(itemName) :
                     itemExists = True
-                    
+
             if itemExists == False :
                 newItem = treeitem.abcTreeItem(parentItem.cache, parentItem.path + [itemName], itemType, self)
                 parentItem.cache.itemsTree.append(newItem)
 
                 newItem.checkShaders(self.getLayer())
 
-                newItem.setCheckState(0, selected) 
+                newItem.setCheckState(0, selected)
                 newItem.setChildIndicatorPolicy(0)
-                parentItem.addChild(newItem)  
-                
+                parentItem.addChild(newItem)
+
                 if hierarchy == True :
                     parentItem = newItem
-    
+
     def populate(self) :
         for cache in self.ABCViewerNode.values():
             if cache.cache != "":
@@ -539,11 +539,11 @@ class List(list_form, list_base):
                 if cache.ABCcurPath != None :
                     if cache.ABCcurPath != "/" :
                         paths = cache.ABCcurPath.split("/")
-                        if len(paths) > 0 :  
-                            self.createBranch(root, paths[1:], 2, True)            
+                        if len(paths) > 0 :
+                            self.createBranch(root, paths[1:], 2, True)
                     else:
                         root.setCheckState(0, 2)
-                
+
                 self.hierarchyWidget.addTopLevelItem(root)
                 self.createBranch(root,firstLevel)
                 root.setExpanded(1)
@@ -553,7 +553,7 @@ class List(list_form, list_base):
         x = cmds.ls(mat=1, sl=1)
         if len(x) == 0:
             return None
-        
+
         if cmds.nodeType(x[0]) == "displacementShader":
             return x[0]
 
@@ -561,10 +561,10 @@ class List(list_form, list_base):
             SGs = cmds.listConnections( x[0], d=True, s=False, type="shadingEngine")
             if not SGs:
                 sg = self.createSG(x[0])
-                return sg   
+                return sg
 
             return SGs[0]
-            
+
     def checkShaders(self, layer=None):
         for cache in self.ABCViewerNode.values():
             if cache.cache != "":

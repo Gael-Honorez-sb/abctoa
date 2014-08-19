@@ -2,7 +2,7 @@
 #define _abcMayaShaderNode
 //
 // Copyright (C) nozon
-// 
+//
 // File: abcMayaShaderNode.h
 //
 // Dependency Graph Node: abcMayaShader
@@ -12,16 +12,16 @@
 
 #include <maya/MPxNode.h>
 #include <maya/MFnNumericAttribute.h>
-#include <maya/MTypeId.h> 
-#include <maya/MNodeClass.h> 
+#include <maya/MTypeId.h>
+#include <maya/MNodeClass.h>
 #include <vector>
 
- 
+
 class abcMayaShader : public MPxNode
 {
 public:
                         abcMayaShader();
-    virtual                ~abcMayaShader(); 
+    virtual                ~abcMayaShader();
 
     virtual MStatus        compute( const MPlug& plug, MDataBlock& data );
 
@@ -60,7 +60,7 @@ public:
     MString m_abcFile;
     std::string m_shaderFrom;
 
-    struct attributeAttrib 
+    struct attributeAttrib
     {
       MString name;
       MString setName;

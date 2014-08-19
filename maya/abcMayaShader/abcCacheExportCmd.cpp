@@ -5,7 +5,7 @@ namespace Abc =  Alembic::Abc;
 namespace Mat = Alembic::AbcMaterial;
 
 
-MStatus abcCacheExportCmd::doIt( const MArgList &args) 
+MStatus abcCacheExportCmd::doIt( const MArgList &args)
 {
   MStatus stat = MStatus::kSuccess;
   MArgDatabase argData( syntax(), args);
@@ -18,7 +18,7 @@ MStatus abcCacheExportCmd::doIt( const MArgList &args)
   }
   MString filename("");
   argData.getFlagArgument( "-f", 0, filename);
-  
+
   Abc::OArchive archive(Alembic::AbcCoreOgawa::WriteArchive(), filename.asChar() );
   Abc::OObject root(archive, Abc::kTop);
   Abc::OObject materials(root, "materials");
@@ -32,7 +32,7 @@ MStatus abcCacheExportCmd::doIt( const MArgList &args)
     {
         MString node("");
         argData.getFlagArgument( "-node", 0, node);
-        if (list.add(node) != MS::kSuccess) 
+        if (list.add(node) != MS::kSuccess)
         {
             MString warn = node;
             warn += " could not be select, skipping.";
@@ -43,27 +43,27 @@ MStatus abcCacheExportCmd::doIt( const MArgList &args)
     else
     {
          MItDependencyNodes nodeIt;
-         for (; !nodeIt.isDone(); nodeIt.next()) 
+         for (; !nodeIt.isDone(); nodeIt.next())
          {
             MObject node = nodeIt.item();
             if (node.isNull())
-                continue;         
+                continue;
             list.add (node);
          }
     }
 
     CMayaScene::Begin(MTOA_SESSION_ASS);
-    CArnoldSession* arnoldSession = CMayaScene::GetArnoldSession(); 
+    CArnoldSession* arnoldSession = CMayaScene::GetArnoldSession();
     CRenderSession* renderSession = CMayaScene::GetRenderSession();
 
     renderSession->SetOutputAssMask(16);
     arnoldSession->SetExportFilterMask(16);
     renderSession->SetForceTranslateShadingEngines(true);
-    
+
     CMayaScene::Export(NULL, MString(""));
 
     MItSelectionList iter(list, MFn::kPluginShape);
-     for (; !iter.isDone(); iter.next()) 
+     for (; !iter.isDone(); iter.next())
      {
          MObject dependNode;
          iter.getDependNode(dependNode);
@@ -73,11 +73,11 @@ MStatus abcCacheExportCmd::doIt( const MArgList &args)
 
          std::vector<MPlug> shaderToExport;
 
-          for (unsigned int i=0;i<shaders.numElements();++i) 
+          for (unsigned int i=0;i<shaders.numElements();++i)
           {
              MPlug plug = shaders.elementByPhysicalIndex(i);
              MPlugArray connections;
-             plug.connectedTo(connections, true, false); 
+             plug.connectedTo(connections, true, false);
              for (unsigned int k=0; k<connections.length(); ++k)
              {
                 MPlug sgPlug = connections[k];
@@ -85,15 +85,15 @@ MStatus abcCacheExportCmd::doIt( const MArgList &args)
                 {
                     shaderToExport.push_back(sgPlug);
                 }
-             }  
+             }
           }
 
 
         for (std::vector<MPlug>::iterator it = shaderToExport.begin() ; it != shaderToExport.end(); ++it)
         {
             AtNodeSet* exportedNodes = new AtNodeSet;
-            
-            
+
+
             MPlug toExport = *it;
             // create the material
             MFnDependencyNode container(toExport.node());
@@ -109,14 +109,14 @@ MStatus abcCacheExportCmd::doIt( const MArgList &args)
                  exportedNodes->insert(root);
                  // We need to traverse the tree again...
                  getAllArnoldNodes(root, exportedNodes);
-                 
-                 std::set<AtNode*>::const_iterator sit (exportedNodes->begin()), send(exportedNodes->end()); 
-                 for(;sit!=send;++sit) 
+
+                 std::set<AtNode*>::const_iterator sit (exportedNodes->begin()), send(exportedNodes->end());
+                 for(;sit!=send;++sit)
                  {
                      // adding the node to the network
                      MString nodeName(container.name());
                      nodeName = nodeName + ":" + MString(AiNodeGetName(*sit));
-                        
+
                      MStringArray splittedName;
                      if(nodeName.split('.', splittedName) == MS::kSuccess)
                      {
@@ -136,23 +136,23 @@ MStatus abcCacheExportCmd::doIt( const MArgList &args)
                         nodeName.asChar(),
                         "out");
                      }
-                     
+
                      //export parameters
 
-                     
+
                      AtParamIterator* nodeParam = AiNodeEntryGetParamIterator(AiNodeGetNodeEntry(*sit));
                      int outputType = AiNodeEntryGetOutputType(AiNodeGetNodeEntry(*sit));
 
-                     while (!AiParamIteratorFinished(nodeParam)) 
+                     while (!AiParamIteratorFinished(nodeParam))
                      {
                          const AtParamEntry *paramEntry = AiParamIteratorGetNext(nodeParam);
-                         const char* paramName = AiParamGetName(paramEntry); 
+                         const char* paramName = AiParamGetName(paramEntry);
 
                          if(AiParamGetType(paramEntry) == AI_TYPE_ARRAY)
                          {
 
                             AtArray* paramArray = AiNodeGetArray(*sit, paramName);
-                             
+
                             processArrayValues(*sit, paramName, paramArray, outputType, matObj, nodeName, container.name());
                             for(unsigned int i=0; i < paramArray->nelements; i++)
                             {
@@ -177,7 +177,7 @@ MStatus abcCacheExportCmd::doIt( const MArgList &args)
     CMayaScene::End();
     return MStatus::kSuccess;
 }
-    
+
 
 //  There is never anything to undo.
 //////////////////////////////////////////////////////////////////////

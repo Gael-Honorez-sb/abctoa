@@ -88,7 +88,7 @@ public:
     //! ...
     void draw( SceneState &s_state );
     void drawOnly( SceneState &s_state, std::string selection );
-    
+
     void setSelectionPath( std::string selectionPath );
 
 protected:

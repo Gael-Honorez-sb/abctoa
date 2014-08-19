@@ -84,13 +84,13 @@ void ProcessIndexedBuiltinParam(
         size_t elementSize)
 {
     if ( !param.valid() ) { return; }
-    
+
     bool isFirstSample = true;
     for ( SampleTimeSet::iterator I = sampleTimes.begin();
           I != sampleTimes.end(); ++I, isFirstSample = false)
     {
         ISampleSelector sampleSelector( *I );
-        
+
         switch ( param.getScope() )
         {
         case kVaryingScope:
@@ -98,27 +98,27 @@ void ProcessIndexedBuiltinParam(
         {
             // a value per-point, idxs should be the same as vidxs
             // so we'll leave it empty
-            
+
             // we'll get the expanded form here
             typename geomParamT::Sample sample = param.getExpandedValue(
                     sampleSelector);
-            
+
             size_t footprint = sample.getVals()->size() * elementSize;
-            
+
             values.reserve( values.size() + footprint );
             values.insert( values.end(),
                     (float32_t*) sample.getVals()->get(),
                     ((float32_t*) sample.getVals()->get()) + footprint );
-            
+
             break;
         }
         case kFacevaryingScope:
         {
             // get the indexed form and feed to nidxs
-            
+
             typename geomParamT::Sample sample = param.getIndexedValue(
                     sampleSelector);
-            
+
             if ( isFirstSample )
             {
                 idxs.reserve( sample.getIndices()->size() );
@@ -127,23 +127,23 @@ void ProcessIndexedBuiltinParam(
                         sample.getIndices()->get() +
                                 sample.getIndices()->size() );
             }
-            
+
             size_t footprint = sample.getVals()->size() * elementSize;
             values.reserve( values.size() + footprint );
             values.insert( values.end(),
                     (const float32_t*) sample.getVals()->get(),
                     ((const float32_t*) sample.getVals()->get()) + footprint );
-            
+
             break;
         }
         default:
             break;
         }
-        
-        
+
+
     }
-    
-    
+
+
 }
 
 //-*****************************************************************************
@@ -170,13 +170,13 @@ AtNode * ProcessCurvesBase(
     {
         return NULL;
     }
-    
+
 
     // Get the time samples for this geo
 
     Alembic::AbcGeom::ICurvesSchema &ps = prim.getSchema();
     TimeSamplingPtr ts = ps.getTimeSampling();
-   
+
     if ( ps.getTopologyVariance() != kHeterogenousTopology )
     {
         GetRelevantSampleTimes( args, ts, ps.getNumSamples(), sampleTimes );
@@ -187,13 +187,13 @@ AtNode * ProcessCurvesBase(
     }
 
     std::string name = args.nameprefix + prim.getFullName();
-    
+
     // do custom attributes and assignments
-       
+
     AtNode * instanceNode = NULL;
-    
+
     std::string cacheId;
-    
+
     SampleTimeSet singleSampleTimes;
     singleSampleTimes.insert( ts->getFloorIndex(args.frame / args.fps, ps.getNumSamples()).second );
 
@@ -229,7 +229,7 @@ AtNode * ProcessCurvesBase(
         }
       }
     }
-    
+
     // overrides that can't be applied on instances
     // we create a hash from that.
     std::string hashAttributes("@");
@@ -287,32 +287,32 @@ AtNode * ProcessCurvesBase(
     }
 
     hashAttributes += writer.write(rootEncode);
-   
+
     if ( args.makeInstance )
     {
         std::ostringstream buffer;
         AbcA::ArraySampleKey sampleKey;
-        
-        
+
+
         for ( SampleTimeSet::iterator I = sampleTimes.begin();
                 I != sampleTimes.end(); ++I )
         {
             ISampleSelector sampleSelector( *I );
             ps.getPositionsProperty().getKey(sampleKey, sampleSelector);
-            
+
             buffer << GetRelativeSampleTime( args, (*I) ) << ":";
             sampleKey.digest.print(buffer);
             buffer << ":";
         }
-        
+
         buffer << "@" << hash(hashAttributes);
-        
+
         cacheId = buffer.str();
-        
+
         instanceNode = AiNode( "ginstance" );
         AiNodeSetStr( instanceNode, "name", name.c_str() );
         args.createdNodes.push_back(instanceNode);
-        
+
         AiNodeSetBool( instanceNode, "inherit_xform", false );
 
         if ( args.proceduralNode )
@@ -324,9 +324,9 @@ AtNode * ProcessCurvesBase(
         {
             AiNodeSetByte( instanceNode, "visibility", AI_RAY_ALL );
         }
-        
+
         ApplyTransformation( instanceNode, xformSamples, args );
-        
+
         // adding arbitary parameters
 
         AddArbitraryGeomParams( arbGeomParams, frameSelector, instanceNode );
@@ -353,7 +353,7 @@ AtNode * ProcessCurvesBase(
                AiNodeSetArray(instanceNode, "shader", AiArrayCopy(shaders));
           }
         } // end shader assignment
-        
+
         if ( I != g_meshCache.end() )
         {
            AiNodeSetPtr(instanceNode, "node", (*I).second );
@@ -361,7 +361,7 @@ AtNode * ProcessCurvesBase(
         }
 
     } // end makeinstance
-    
+
     size_t numSampleTimes = sampleTimes.size();
     size_t numCurves;
     size_t pSize;
@@ -379,7 +379,7 @@ AtNode * ProcessCurvesBase(
     const char * modeCurve = "ribbon";
     if (AiNodeLookUpUserParameter(args.proceduralNode, "modeCurve") !=NULL )
       modeCurve = AiNodeGetStr(args.proceduralNode, "modeCurve");
-    
+
     const char * basis = NULL;
 
     for ( SampleTimeSet::iterator I = sampleTimes.begin();
@@ -399,7 +399,7 @@ AtNode * ProcessCurvesBase(
             BasisType basisType = sample.getBasis();
             if ( basisType != kNoBasis )
             {
-                
+
                 switch ( basisType )
                 {
                 case kBezierBasis:
@@ -422,9 +422,9 @@ AtNode * ProcessCurvesBase(
                 }
             }
         }
-        
 
-        
+
+
         if(numSampleTimes == 1 && (args.shutterOpen != args.shutterClose) && (ps.getVelocitiesProperty().valid()) && isFirstSample )
         {
             float scaleVelocity = 1.0f;
@@ -441,7 +441,7 @@ AtNode * ProcessCurvesBase(
 
             for ( size_t vId = 0; vId < pSize; ++vId )
             {
-                
+
                 Alembic::Abc::V3f posAtOpen = ((*v3ptr)[vId] + (*velptr)[vId] * scaleVelocity *-timeoffset);
                 vlist[3*vId + 0] = posAtOpen.x;
                 vlist[3*vId + 1] = posAtOpen.y;
@@ -502,7 +502,7 @@ AtNode * ProcessCurvesBase(
         // vtx are not expected to be rendered in a b-spline.
         // We need to change it so we add a vtx to the start/end rather than
         // removing data from the radius
-        
+
         if ( !fullradlist.empty() )
         {
           unsigned int w_start = w_end;
@@ -728,7 +728,7 @@ AtNode * ProcessCurvesBase(
 
     }
     // }
-    
+
 }
 
 //-*************************************************************************
@@ -739,10 +739,10 @@ void ProcessCurves( ICurves &curves, ProcArgs &args,
     SampleTimeSet sampleTimes;
     std::vector<AtPoint> vidxs;
     std::vector<float> radius;
-    
+
     AtNode * curvesNode = ProcessCurvesBase(
             curves, args, sampleTimes, vidxs, radius, xformSamples);
-    
+
     // This is a valid condition for the second instance onward and just
     // means that we don't need to do anything further.
     if ( !curvesNode )

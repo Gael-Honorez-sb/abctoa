@@ -27,12 +27,12 @@ bool isVisible(IObject child, IXformSchema xs, ProcArgs* args)
 
                     if(overrides.size() > 0)
                     {
-                        for( Json::ValueIterator itr = overrides.begin() ; itr != overrides.end() ; itr++ ) 
+                        for( Json::ValueIterator itr = overrides.begin() ; itr != overrides.end() ; itr++ )
                         {
                             std::string attribute = itr.key().asString();
                             if (attribute == "forceVisible")
                             {
-                            
+
                                 bool vis = args->overrideRoot[*it][itr.key().asString()].asBool();
                                 if(vis)
                                     return true;
@@ -63,7 +63,7 @@ bool isVisible(IObject child, IXformSchema xs, ProcArgs* args)
                 {
                     IStringGeomParam::prop_type::sample_ptr_type valueSample =
                                     param.getExpandedValue( ISampleSelector( args->frame / args->fps ) ).getVals();
- 
+
                     if ( param.getScope() == kConstantScope || param.getScope() == kUnknownScope)
                     {
                         Json::Value jtags;
@@ -102,15 +102,15 @@ bool isVisibleForArnold(IObject child, ProcArgs* args)
 
                 if(overrides.size() > 0)
                 {
-                    for( Json::ValueIterator itr = overrides.begin() ; itr != overrides.end() ; itr++ ) 
+                    for( Json::ValueIterator itr = overrides.begin() ; itr != overrides.end() ; itr++ )
                     {
                         std::string attribute = itr.key().asString();
                         if (attribute == "visibility")
                         {
-                            
+
                             AtUInt16 vis = args->overrideRoot[*it][itr.key().asString()].asInt();
                             if(vis <= minVis)
-                            {    
+                            {
                                 AiMsgDebug("Object %s is invisible", name.c_str());
                                 return false;
                             }
@@ -130,10 +130,10 @@ bool isVisibleForArnold(IObject child, ProcArgs* args)
 
 void OverrideProperties(Json::Value & jroot, Json::Value jrootOverrides)
 {
-    for( Json::ValueIterator itr = jrootOverrides.begin() ; itr != jrootOverrides.end() ; itr++ ) 
+    for( Json::ValueIterator itr = jrootOverrides.begin() ; itr != jrootOverrides.end() ; itr++ )
     {
         const Json::Value paths = jrootOverrides[itr.key().asString()];
-        for( Json::ValueIterator overPath = paths.begin() ; overPath != paths.end() ; overPath++ ) 
+        for( Json::ValueIterator overPath = paths.begin() ; overPath != paths.end() ; overPath++ )
         {
             Json::Value attr = paths[overPath.key().asString()];
             jroot[itr.key().asString()][overPath.key().asString()] = attr;
@@ -147,11 +147,11 @@ Json::Value OverrideAssignations(Json::Value jroot, Json::Value jrootOverrides)
 
     Json::Value newJroot;
     // concatenate both json string.
-    for( Json::ValueIterator itr = jrootOverrides.begin() ; itr != jrootOverrides.end() ; itr++ ) 
+    for( Json::ValueIterator itr = jrootOverrides.begin() ; itr != jrootOverrides.end() ; itr++ )
     {
         Json::Value tmp = jroot[itr.key().asString()];
         const Json::Value paths = jrootOverrides[itr.key().asString()];
-        for( Json::ValueIterator shaderPath = paths.begin() ; shaderPath != paths.end() ; shaderPath++ ) 
+        for( Json::ValueIterator shaderPath = paths.begin() ; shaderPath != paths.end() ; shaderPath++ )
         {
             Json::Value val = paths[shaderPath.key().asUInt()];
             pathOverrides.push_back(val.asString());
@@ -163,7 +163,7 @@ Json::Value OverrideAssignations(Json::Value jroot, Json::Value jrootOverrides)
         else
         {
             const Json::Value shaderPaths = jrootOverrides[itr.key().asString()];
-            for( Json::ValueIterator itr2 = shaderPaths.begin() ; itr2 != shaderPaths.end() ; itr2++ ) 
+            for( Json::ValueIterator itr2 = shaderPaths.begin() ; itr2 != shaderPaths.end() ; itr2++ )
             {
                 newJroot[itr.key().asString()].append(jrootOverrides[itr.key().asString()][itr2.key().asUInt()]);
             }
@@ -174,7 +174,7 @@ Json::Value OverrideAssignations(Json::Value jroot, Json::Value jrootOverrides)
     {
         const Json::Value pathsShader = jroot[itr.key().asString()];
         const Json::Value curval = newJroot[itr.key().asString()];
-        for( Json::ValueIterator shaderPathOrig = pathsShader.begin() ; shaderPathOrig != pathsShader.end() ; shaderPathOrig++ ) 
+        for( Json::ValueIterator shaderPathOrig = pathsShader.begin() ; shaderPathOrig != pathsShader.end() ; shaderPathOrig++ )
         {
             Json::Value val = pathsShader[shaderPathOrig.key().asUInt()];
             bool isPresent = (std::find(pathOverrides.begin(), pathOverrides.end(), val.asCString())  != pathOverrides.end());
@@ -182,16 +182,16 @@ Json::Value OverrideAssignations(Json::Value jroot, Json::Value jrootOverrides)
                 newJroot[itr.key().asString()].append(val);
         }
     }
-    
-    
+
+
     return newJroot;
 }
 
 void ParseShaders(Json::Value jroot, std::string ns, std::string nameprefix, ProcArgs* args, AtByte type)
 {
-    for( Json::ValueIterator itr = jroot.begin() ; itr != jroot.end() ; itr++ ) 
+    for( Json::ValueIterator itr = jroot.begin() ; itr != jroot.end() ; itr++ )
     {
-        AiMsgDebug( "[ABC] Parsing shader %s", itr.key().asCString()); 
+        AiMsgDebug( "[ABC] Parsing shader %s", itr.key().asCString());
         std::string shaderName = ns + itr.key().asString();
         AtNode* shaderNode = AiNodeLookUpByName(shaderName.c_str());
         if(shaderNode == NULL)
@@ -203,12 +203,12 @@ void ParseShaders(Json::Value jroot, std::string ns, std::string nameprefix, Pro
                 if(pystring::endswith(orginalName, ".message"))
                 {
                     orginalName = pystring::replace(orginalName, ".message", "");
-                }                
-                
+                }
+
                 AiMsgDebug( "[ABC] Create shader %s from ABC", orginalName.c_str());
 
                 IObject object = args->materialsObject.getChild(orginalName);
-                if (IMaterial::matches(object.getHeader())) 
+                if (IMaterial::matches(object.getHeader()))
                 {
                     shaderNode = AiNode("AbcShader");
                     AiNodeSetStr(shaderNode, "file", args->abcShaderFile);
@@ -223,7 +223,7 @@ void ParseShaders(Json::Value jroot, std::string ns, std::string nameprefix, Pro
                 shaderNode = AiNodeLookUpByName(shaderName.c_str());
                 if(shaderNode == NULL)
                 {
-                    AiMsgDebug( "[ABC] Searching shader %s deeper underground...", itr.key().asCString()); 
+                    AiMsgDebug( "[ABC] Searching shader %s deeper underground...", itr.key().asCString());
                     // look for the same namespace for shaders...
                     std::vector<std::string> strs;
                     boost::split(strs,nameprefix,boost::is_any_of(":"));
@@ -231,7 +231,7 @@ void ParseShaders(Json::Value jroot, std::string ns, std::string nameprefix, Pro
                     {
                         strs.pop_back();
                         strs.push_back(itr.key().asString());
-                        
+
                         shaderNode = AiNodeLookUpByName(boost::algorithm::join(strs, ":").c_str());
                     }
                 }
@@ -241,7 +241,7 @@ void ParseShaders(Json::Value jroot, std::string ns, std::string nameprefix, Pro
         {
             const Json::Value paths = jroot[itr.key().asString()];
             AiMsgDebug("[ABC] Shader exists, checking paths. size = %d", paths.size());
-            for( Json::ValueIterator itr2 = paths.begin() ; itr2 != paths.end() ; itr2++ ) 
+            for( Json::ValueIterator itr2 = paths.begin() ; itr2 != paths.end() ; itr2++ )
             {
                 Json::Value val = paths[itr2.key().asUInt()];
                 AiMsgDebug("[ABC] Adding path %s", val.asCString());
@@ -249,7 +249,7 @@ void ParseShaders(Json::Value jroot, std::string ns, std::string nameprefix, Pro
                     args->displacements[val.asString().c_str()] = shaderNode;
                 else if(type == 1)
                     args->shaders[val.asString().c_str()] = shaderNode;
-                    
+
             }
         }
         else

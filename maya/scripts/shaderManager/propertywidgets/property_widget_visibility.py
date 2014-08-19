@@ -7,9 +7,9 @@ from property_widget import PropertyWidget
 class PropertyWidgetVisibility(PropertyWidget):
   def __init__(self, controller, pentry, name, parent = None):
     PropertyWidget.__init__(self, name, parent)
-      
+
     self.paramName = name
-     
+
 
     self.controller = controller
     self.controller.setPropertyValue.connect(self.changed)
@@ -19,7 +19,7 @@ class PropertyWidgetVisibility(PropertyWidget):
     self.viz["camera"] = QCheckBox(self)
     self.viz["cast_shadows"] = QCheckBox(self)
     self.viz["diffuse"] = QCheckBox(self)
-    self.viz["glossy"] = QCheckBox(self) 
+    self.viz["glossy"] = QCheckBox(self)
     self.viz["reflection"] = QCheckBox(self)
     self.viz["refraction"] = QCheckBox(self)
 
@@ -32,7 +32,7 @@ class PropertyWidgetVisibility(PropertyWidget):
     #self.widget.setChecked(self.default)
     #self.PropertyChanged(self.default)
 
-    
+
     grid= QGridLayout()
     row = 1
     for v in self.viz:
@@ -42,9 +42,9 @@ class PropertyWidgetVisibility(PropertyWidget):
       self.viz[v].stateChanged.connect(self.PropertyChanged)
       row = row + 1
 
-    
+
     self.layout().addLayout(grid)
-  
+
 
   def computeViz(self):
     value = AI_RAY_ALL
@@ -79,7 +79,7 @@ class PropertyWidgetVisibility(PropertyWidget):
         self.viz["refraction"].setChecked(1)
         value = value - AI_RAY_REFRACTED
     if value > AI_RAY_ALL & ~(AI_RAY_GLOSSY|AI_RAY_DIFFUSE|AI_RAY_REFRACTED|AI_RAY_REFLECTED):
-        self.viz["reflection"].setChecked(1)                
+        self.viz["reflection"].setChecked(1)
         value = value - AI_RAY_REFLECTED
     if value > AI_RAY_ALL & ~(AI_RAY_GLOSSY|AI_RAY_DIFFUSE|AI_RAY_REFRACTED|AI_RAY_REFLECTED|AI_RAY_SHADOW):
         self.viz["cast_shadows"].setChecked(1)

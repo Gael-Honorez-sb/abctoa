@@ -51,7 +51,7 @@
 #include <Alembic/AbcCoreFactory/IFactory.h>
 #include <Alembic/AbcCoreHDF5/ReadWrite.h>
 #include <Alembic/AbcCoreOgawa/ReadWrite.h>
-#include <Alembic/AbcGeom/Visibility.h> 
+#include <Alembic/AbcGeom/Visibility.h>
 
 #include <boost/tokenizer.hpp>
 #include <boost/algorithm/string.hpp>
@@ -86,7 +86,7 @@ void WalkObject( IObject & parent, const ObjectHeader &ohead, ProcArgs &args,
     //to WalkObject
     IObject nextParentObject;
     std::auto_ptr<MatrixSampleMap> concatenatedXformSamples;
-    
+
     if ( IXform::matches( ohead ) )
     {
         IXform xform( parent, ohead.getName() );
@@ -105,7 +105,7 @@ void WalkObject( IObject & parent, const ObjectHeader &ohead, ProcArgs &args,
         else
         {
             if ( xs.getNumOps() > 0 )
-            { 
+            {
                 TimeSamplingPtr ts = xs.getTimeSampling();
                 size_t numSamples = xs.getNumSamples();
 
@@ -113,11 +113,11 @@ void WalkObject( IObject & parent, const ObjectHeader &ohead, ProcArgs &args,
                 GetRelevantSampleTimes( args, ts, numSamples, sampleTimes,
                         xformSamples);
                 MatrixSampleMap localXformSamples;
-                
+
                 MatrixSampleMap * localXformSamplesToFill = 0;
-                
+
                 concatenatedXformSamples.reset(new MatrixSampleMap);
-                
+
                 if ( !xformSamples )
                 {
                     // If we don't have parent xform samples, we can fill
@@ -129,8 +129,8 @@ void WalkObject( IObject & parent, const ObjectHeader &ohead, ProcArgs &args,
                     //otherwise we need to fill in a temporary map
                     localXformSamplesToFill = &localXformSamples;
                 }
-                
-                
+
+
                 for (SampleTimeSet::iterator I = sampleTimes.begin();
                         I != sampleTimes.end(); ++I)
                 {
@@ -145,20 +145,20 @@ void WalkObject( IObject & parent, const ObjectHeader &ohead, ProcArgs &args,
                             localXformSamples,
                             *concatenatedXformSamples.get());
                 }
-                
-                
+
+
                 xformSamples = concatenatedXformSamples.get();
             }
-            
+
             nextParentObject = xform;
         }
     }
     else if ( ISubD::matches( ohead ) )
     {
         std::string faceSetName;
-        
+
         ISubD subd( parent, ohead.getName() );
-        
+
         //if we haven't reached the end of a specified -objectpath,
         //check to see if the next token is a faceset name.
         //If it is, send the name to ProcessSubD for addition of
@@ -170,9 +170,9 @@ void WalkObject( IObject & parent, const ObjectHeader &ohead, ProcArgs &args,
                 faceSetName = *I;
             }
         }
-        
+
         ProcessSubD( subd, args, xformSamples, faceSetName );
-        
+
         //if we found a matching faceset, don't traverse below
         if ( faceSetName.empty() )
         {
@@ -182,9 +182,9 @@ void WalkObject( IObject & parent, const ObjectHeader &ohead, ProcArgs &args,
     else if ( IPolyMesh::matches( ohead ) )
     {
         std::string faceSetName;
-        
+
         IPolyMesh polymesh( parent, ohead.getName() );
-        
+
         //if we haven't reached the end of a specified -objectpath,
         //check to see if the next token is a faceset name.
         //If it is, send the name to ProcessSubD for addition of
@@ -198,7 +198,7 @@ void WalkObject( IObject & parent, const ObjectHeader &ohead, ProcArgs &args,
         }
         if(isVisibleForArnold(parent, &args)) // check if the object is invisible for arnold. It is there to avoid skipping the whole hierarchy.
             ProcessPolyMesh( polymesh, args, xformSamples, faceSetName );
-        
+
         //if we found a matching faceset, don't traverse below
         if ( faceSetName.empty() )
         {
@@ -210,13 +210,13 @@ void WalkObject( IObject & parent, const ObjectHeader &ohead, ProcArgs &args,
     {
         INuPatch patch( parent, ohead.getName() );
         // TODO ProcessNuPatch( patch, args );
-        
+
         nextParentObject = patch;
     }
     else if ( IPoints::matches( ohead ) )
     {
         IPoints points( parent, ohead.getName() );
-        
+
         if(isVisibleForArnold(parent, &args))
             ProcessPoint( points, args, xformSamples );
 
@@ -228,13 +228,13 @@ void WalkObject( IObject & parent, const ObjectHeader &ohead, ProcArgs &args,
 
 /*        if(isVisibleForArnold(parent, &args))
             ProcessCurves( curves, args, xformSamples );*/
-        
+
         nextParentObject = curves;
     }
     else if ( ICamera::matches( ohead ) )
     {
         ICamera camera( parent, ohead.getName() );
-        
+
         nextParentObject = camera;
     }
     else if ( IFaceSet::matches( ohead ) )
@@ -247,14 +247,14 @@ void WalkObject( IObject & parent, const ObjectHeader &ohead, ProcArgs &args,
         AiMsgError("could not determine type of %s", ohead.getName().c_str());
         AiMsgError("%s has MetaData: %s", ohead.getName().c_str(), ohead.getMetaData().serialize().c_str());
         if ( IXform::matches( ohead ) )
-            AiMsgError("but we are matching");        
+            AiMsgError("but we are matching");
         nextParentObject = parent.getChild(ohead.getName());
     }
-    
+
     if ( nextParentObject.valid() )
     {
         //std::cerr << nextParentObject.getFullName() << std::endl;
-        
+
         if ( I == E )
         {
             for ( size_t i = 0; i < nextParentObject.getNumChildren() ; ++i )
@@ -268,7 +268,7 @@ void WalkObject( IObject & parent, const ObjectHeader &ohead, ProcArgs &args,
         {
             const ObjectHeader *nextChildHeader =
                 nextParentObject.getChildHeader( *I );
-            
+
             if ( nextChildHeader != NULL )
             {
                 WalkObject( nextParentObject, *nextChildHeader, args, I+1, E,
@@ -276,16 +276,16 @@ void WalkObject( IObject & parent, const ObjectHeader &ohead, ProcArgs &args,
             }
         }
     }
-    
-    
-    
+
+
+
 }
 
 //-*************************************************************************
 
 int ProcInit( struct AtNode *node, void **user_ptr )
 {
-    
+
 
     bool skipJson = false;
     bool skipShaders = false;
@@ -304,7 +304,7 @@ int ProcInit( struct AtNode *node, void **user_ptr )
             customLayer = true;
     }
 
-    
+
 
 
     if (AiNodeLookUpUserParameter(node, "skipJson") != NULL )
@@ -315,7 +315,7 @@ int ProcInit( struct AtNode *node, void **user_ptr )
         skipOverrides = AiNodeGetBool(node, "skipOverrides");
     if (AiNodeLookUpUserParameter(node, "skipDisplacements") != NULL )
         skipDisplacement = AiNodeGetBool(node, "skipDisplacements");
-    if (AiNodeLookUpUserParameter(node, "skipOverrides") != NULL )        
+    if (AiNodeLookUpUserParameter(node, "skipOverrides") != NULL )
         skipOverrides = AiNodeGetBool(node, "skipOverrides");
     if (AiNodeLookUpUserParameter(node, "skipLayers") != NULL )
         skipLayers = AiNodeGetBool(node, "skipLayers");
@@ -336,7 +336,7 @@ int ProcInit( struct AtNode *node, void **user_ptr )
                     g_loadedAss.push_back(std::string(assfile));
 
             }
-            
+
         }
     }
 
@@ -353,13 +353,13 @@ int ProcInit( struct AtNode *node, void **user_ptr )
 
         else
         {
-            Alembic::AbcCoreFactory::IFactory factory; 
-            IArchive archive = factory.getArchive(abcfile); 
+            Alembic::AbcCoreFactory::IFactory factory;
+            IArchive archive = factory.getArchive(abcfile);
             if (!archive.valid())
             {
                 AiMsgError ( "Cannot read file %s", abcfile);
             }
-            else 
+            else
             {
                 AiMsgDebug ( "reading file %s", abcfile);
                 Abc::IObject materialsObject(archive.getTop(), "materials");
@@ -368,13 +368,13 @@ int ProcInit( struct AtNode *node, void **user_ptr )
                 args->materialsObject = materialsObject;
                 args->abcShaderFile = abcfile;
             }
-        
+
         }
 
 
         IArchive archive;
-        Alembic::AbcCoreFactory::IFactory factory; 
-        archive = factory.getArchive(AiNodeGetStr(node, "abcShaders")); 
+        Alembic::AbcCoreFactory::IFactory factory;
+        archive = factory.getArchive(AiNodeGetStr(node, "abcShaders"));
     }
 
     w_lock.unlock();
@@ -384,12 +384,12 @@ int ProcInit( struct AtNode *node, void **user_ptr )
     {
         // if so, we try to load the archive.
         IArchive archive;
-        Alembic::AbcCoreFactory::IFactory factory; 
-        archive = factory.getArchive(AiNodeGetStr(node, "uvsArchive")); 
+        Alembic::AbcCoreFactory::IFactory factory;
+        archive = factory.getArchive(AiNodeGetStr(node, "uvsArchive"));
         if (!archive.valid())
         {
             AiMsgWarning ( "Cannot read file %s", AiNodeGetStr(node, "uvsArchive"));
-        } 
+        }
         else
         {
             AiMsgDebug ( "Using UV archive %s", AiNodeGetStr(node, "uvsArchive"));
@@ -490,7 +490,7 @@ int ProcInit( struct AtNode *node, void **user_ptr )
 
         }
     }
-    
+
     if(!parsingSuccessful)
     {
         if (customLayer && AiNodeLookUpUserParameter(node, "layerOverrides") !=NULL)
@@ -574,7 +574,7 @@ int ProcInit( struct AtNode *node, void **user_ptr )
     {
         args->linkOverride = true;
         args->overrideRoot = jrootOverrides;
-        for( Json::ValueIterator itr = jrootOverrides.begin() ; itr != jrootOverrides.end() ; itr++ ) 
+        for( Json::ValueIterator itr = jrootOverrides.begin() ; itr != jrootOverrides.end() ; itr++ )
         {
             std::string path = itr.key().asString();
             args->overrides.push_back(path);
@@ -589,7 +589,7 @@ int ProcInit( struct AtNode *node, void **user_ptr )
     #if (AI_VERSION_ARCH_NUM == 3 && AI_VERSION_MAJOR_NUM < 3) || AI_VERSION_ARCH_NUM < 3
         #error Arnold version 3.3+ required for AlembicArnoldProcedural
     #endif
-    
+
         if (!AiCheckAPIVersion(AI_VERSION_ARCH, AI_VERSION_MAJOR, AI_VERSION_MINOR))
         {
             std::cout << "AlembicArnoldProcedural compiled with arnold-"
@@ -597,7 +597,7 @@ int ProcInit( struct AtNode *node, void **user_ptr )
                       << " but is running with incompatible arnold-"
                       << AiGetVersion(NULL, NULL, NULL, NULL) << std::endl;
             return 1;
-        } 
+        }
 
     if ( args->filename.empty() )
     {
@@ -605,31 +605,31 @@ int ProcInit( struct AtNode *node, void **user_ptr )
         return 1;
     }
 
-    
+
     w_lock.lock();
     IObject root;
-    
+
     FileCache::iterator I = g_fileCache.find(args->filename);
     if (I != g_fileCache.end())
         root = (*I).second;
 
     else
     {
-        Alembic::AbcCoreFactory::IFactory factory; 
-        IArchive archive = factory.getArchive(args->filename); 
+        Alembic::AbcCoreFactory::IFactory factory;
+        IArchive archive = factory.getArchive(args->filename);
         if (!archive.valid())
         {
             AiMsgError ( "Cannot read file %s", args->filename.c_str());
         }
-        else 
+        else
         {
             AiMsgDebug ( "reading file %s", args->filename.c_str());
             g_fileCache[args->filename] = archive.getTop();
             root = archive.getTop();
         }
-        
+
     }
-    
+
     PathList path;
     TokenizePath( args->objectpath, path );
 
@@ -690,12 +690,12 @@ int ProcNumNodes( void *user_ptr )
 struct AtNode* ProcGetNode(void *user_ptr, int i)
 {
     ProcArgs * args = reinterpret_cast<ProcArgs*>( user_ptr );
-    
+
     if ( i >= 0 && i < (int) args->createdNodes.size() )
     {
         return args->createdNodes[i];
     }
-    
+
     return NULL;
 }
 

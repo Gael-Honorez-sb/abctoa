@@ -50,16 +50,16 @@ class SceneManager
                 std::cout << "[aABCH] Can't open file: " << abcFile << std::endl;
             }
         }
-            
+
         void addScene(std::string key, SimpleAbcViewer::ScenePtr scene_ptr) {
             if (m_scenes.count(key)) { m_scenes[key].second++; }
             else { m_scenes[key] = CountedScene(scene_ptr, 1); }
         }
-    
+
         SimpleAbcViewer::ScenePtr getScene(std::string key) {
             return m_scenes[key].first; }
-            
-        void removeScene(std::string key) { 
+
+        void removeScene(std::string key) {
             if (m_scenes.count(key)) {
                 if (m_scenes[key].second > 1) {
                     m_scenes[key].second--;
@@ -69,15 +69,15 @@ class SceneManager
                     std::cout << "[aABCH] Closed: " << key << std::endl;
 
 //                    std::cout << key << " - last instance removed" << std::endl;
-                } 
+                }
             }
         }
-        
+
         unsigned int hasKey(std::string key) { return m_scenes.count(key); }
-    
+
     private:
         std::map<std::string, CountedScene> m_scenes;
-    
+
 };
 
 } // End namespace SimpleAbcViewer

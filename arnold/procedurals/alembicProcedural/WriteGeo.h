@@ -52,9 +52,9 @@ void ProcessSubD( ISubD &subd, ProcArgs &args,
         MatrixSampleMap * xformSamples, const std::string & facesetName = "");
 
 // void ProcessNuPatch( INuPatch &patch, ProcArgs &args );
-// 
+//
 //void ProcessPoints( IPoints &patch, ProcArgs &args );
-// 
+//
 //void ProcessCurves( ICurves &curves, ProcArgs &args );
 
 

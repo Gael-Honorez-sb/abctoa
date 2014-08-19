@@ -5,13 +5,13 @@ from property_widget import *
 class PropertyWidgetFloat(PropertyWidget):
    def __init__(self, controller,  pentry, name, parent = None):
       PropertyWidget.__init__(self, name, parent)
-    
+
       self.paramName = name
 
       self.controller = controller
       self.controller.setPropertyValue.connect(self.changed)
       self.controller.reset.connect(self.resetValue)
-         
+
       param_value = AiParamGetDefault(pentry)
       param_type = AiParamGetType(pentry)
       self.default = self.GetParamValueAsString(pentry, param_value, param_type)
@@ -29,7 +29,7 @@ class PropertyWidgetFloat(PropertyWidget):
       #    self.ValueChanged(data.value)
       # else:
       #    self.__ReadFromArnold()
-           
+
       self.widget.valueChanged.connect(self.ValueChanged)
       self.layout().addWidget(self.widget)
    def ValueChanged(self, value):
@@ -40,7 +40,7 @@ class PropertyWidgetFloat(PropertyWidget):
 
       value = message["value"]
       self.widget.setValue(value)
-  
+
 
    def resetValue(self):
       self.widget.setValue(self.default)

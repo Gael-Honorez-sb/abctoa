@@ -12,12 +12,12 @@ class GlShaderHolder
 {
     public:
         void init(char* vs, char* fs);
-        
+
         MGLuint getProgram() { return m_p; }
-        
-    
+
+
     private:
-    
+
         MGLuint m_v;
         MGLuint m_f;
         MGLuint m_p;

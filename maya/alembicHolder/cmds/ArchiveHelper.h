@@ -20,15 +20,15 @@ using namespace Alembic::AbcGeom;
 
 // Get a list of geometry objects - IPolyMeshes and ISubDs
 void getABCGeos(Alembic::Abc::IObject & iObj,
-				std::vector<Alembic::AbcGeom::IObject> & _objs);
+                std::vector<Alembic::AbcGeom::IObject> & _objs);
 
 // Get a list of IXforms
 void getABCXforms(Alembic::Abc::IObject & iObj,
-				std::vector<Alembic::AbcGeom::IXform> & _objs);
+                std::vector<Alembic::AbcGeom::IXform> & _objs);
 
 // Get a list of ICameras
 void getABCCameras(Alembic::Abc::IObject & iObj,
-				std::vector<Alembic::AbcGeom::ICamera> & _objs);
+                std::vector<Alembic::AbcGeom::ICamera> & _objs);
 
 // Find object by name
 bool getNamedXform( IObject iObjTop, const std::string &iName, IXform &iXf );

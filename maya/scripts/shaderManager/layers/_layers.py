@@ -4,12 +4,12 @@
 # are made available under the terms of the GNU Public License v3.0
 # which accompanies this distribution, and is available at
 # http://www.gnu.org/licenses/gpl.html
-# 
+#
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation, either version 3 of the License, or
 # (at your option) any later version.
-# 
+#
 # This program is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -33,13 +33,13 @@ class Layers(object):
             if "properties" in layerdata:
                 self.layers[layername].addOverrides(layerdata["properties"])
             if "displacements" in layerdata:
-                self.layers[layername].addDisplacements(layerdata["displacements"]) 
+                self.layers[layername].addDisplacements(layerdata["displacements"])
 
             if "removeShaders" in layerdata:
                 self.layers[layername].setRemovedShader(layerdata["removeShaders"])
             if "removeProperties" in layerdata:
                 self.layers[layername].setRemovedProperties(layerdata["removeProperties"])
-            if "removeDisplacements" in layerdata:               
+            if "removeDisplacements" in layerdata:
                 self.layers[layername].setRemovedDisplace(layerdata["removeDisplacements"])
 
     def addLayers(self, layers, fromfile=False):
@@ -59,7 +59,7 @@ class Layers(object):
     def getOverridesFromPath(self, path, layer):
         if layer in self.layers:
             return self.layers[layer].getAssignation().getOverridesFromPath(path)
-        return None        
+        return None
 
     def getLayerOverrides(self, layer):
         if layer in self.layers:
@@ -140,12 +140,12 @@ class Layers(object):
             curlayer = self.layers[layer]
             result[layer] = {}
             result[layer]["removeShaders"] = curlayer.removeShaders
-            result[layer]["removeDisplacements"] = curlayer.removeDisplacements            
-            result[layer]["removeProperties"] = curlayer.removeProperties        
+            result[layer]["removeDisplacements"] = curlayer.removeDisplacements
+            result[layer]["removeProperties"] = curlayer.removeProperties
             result[layer]["properties"] = curlayer.getOverrides()
             result[layer]["shaders"] = curlayer.getShaders()
             result[layer]["displacements"] = curlayer.getDisplacements()
-        
+
         return result
 
     def getShaders(self):
@@ -158,4 +158,4 @@ class Layers(object):
         shaders = []
         for layer in self.layers:
             shaders += self.layers[layer].assignation.getDisplacements().keys()
-        return shaders        
+        return shaders

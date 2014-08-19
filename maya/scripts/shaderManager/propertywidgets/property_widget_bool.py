@@ -7,9 +7,9 @@ from property_widget import PropertyWidget
 class PropertyWidgetBool(PropertyWidget):
   def __init__(self, controller, pentry, name, parent = None):
     PropertyWidget.__init__(self, name, parent)
-      
+
     self.paramName = str(name)
-     
+
     self.controller = controller
     self.controller.setPropertyValue.connect(self.changed)
     self.controller.reset.connect(self.resetValue)
@@ -27,7 +27,7 @@ class PropertyWidgetBool(PropertyWidget):
 
     self.widget.stateChanged.connect(self.PropertyChanged)
     self.layout().addWidget(self.widget)
-  
+
 
 
   def PropertyChanged(self, state):
@@ -41,7 +41,7 @@ class PropertyWidgetBool(PropertyWidget):
   def changed(self, message):
     value = message["value"]
     self.widget.setChecked(value)
-      
+
 
   def resetValue(self):
     self.widget.setChecked(self.default)

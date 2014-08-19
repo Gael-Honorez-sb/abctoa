@@ -11,7 +11,7 @@ Import('maya_env')
 local_env = maya_env.Clone()
 
 # Add new plugin directory names here
-PLUGINS = ['abcMayaShader', "alembicHolder"] 
+PLUGINS = ['abcMayaShader', "alembicHolder"]
 
 source_files = []
 include_files = []

@@ -78,16 +78,16 @@ struct ProcArgs
     std::string filename;
     std::string nameprefix;
     std::string xmlpath;
-    
+
     std::string objectpath;
     double frame;
     double fps;
     double shutterOpen;
     double shutterClose;
-    
+
     bool excludeXform;
     bool inheritXform;
-    
+
     bool makeInstance;
     int subdIterations;
     int subdivType;
@@ -97,13 +97,13 @@ struct ProcArgs
     int subdivUvSmoothing;
 
     AtNode * proceduralNode;
-    
+
     std::vector<struct AtNode *> createdNodes;
 
     bool linkShader;
     bool linkDisplacement;
     bool linkOverride;
-    
+
     std::string ns;
 
     bool useUvArchive;
@@ -117,7 +117,7 @@ struct ProcArgs
     bool useAbcShaders;
     Alembic::AbcGeom::IObject materialsObject;
     const char* abcShaderFile;
-    
+
     void usage();
 };
 

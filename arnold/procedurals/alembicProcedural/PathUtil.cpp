@@ -35,7 +35,7 @@
 //-*****************************************************************************
 #include "PathUtil.h"
 
-#include <algorithm> 
+#include <algorithm>
 #include <boost/tokenizer.hpp>
 #include <boost/regex.hpp>
 
@@ -83,11 +83,11 @@ static std::string translate(const char *pattern)
 {
     int i = 0, n = strlen(pattern);
     std::string result;
- 
+
     while (i < n) {
         char c = pattern[i];
         ++i;
- 
+
         if (c == '*') {
             result += ".*";
         } else if (c == '?') {
@@ -140,7 +140,7 @@ static std::string translate(const char *pattern)
 */
     return result + "\\Z(?ms)";
 }
- 
+
 bool matchPattern(std::string str, std::string pat)
 {
     boost::regex rx (translate(pat.c_str()).c_str());

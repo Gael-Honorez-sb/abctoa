@@ -1,6 +1,6 @@
 //
-// Copyright (C) 2014 Nozon. 
-// 
+// Copyright (C) 2014 Nozon.
+//
 // Dependency Graph Node: nozAlembicHolder
 //
 // Author: Gaël Honorez
@@ -66,7 +66,7 @@ NodeCache g_bboxCache;
 
 
 // The id is a 32bit value used to identify this type of node in the binary file format.
-MTypeId nozAlembicHolder::id(0x00114956); 
+MTypeId nozAlembicHolder::id(0x00114956);
 
 MObject nozAlembicHolder::aAbcFile;
 MObject nozAlembicHolder::aObjectPath;
@@ -164,7 +164,7 @@ double nozAlembicHolder::setHolderTime() const {
     plug.getValue(timeOffset);
 
     double dtime;
-    
+
     dtime = time.as(MTime::kSeconds) + timeOffset.as(MTime::kSeconds);
 
     std::string sceneKey = getSceneKey();
@@ -189,12 +189,12 @@ MBoundingBox nozAlembicHolder::boundingBox() const
 
     MBoundingBox bbox = MBoundingBox(MPoint(-1.0f, -1.0f, -1.0f), MPoint(1.0f, 1.0f, 1.0f));
 
-    
+
     if(geom != NULL)
         bbox = geom->bbox;
     else
         cout << "Geom not valid" << endl;
-    
+
     return bbox;
 
 }
@@ -224,7 +224,7 @@ void nozAlembicHolder::copyInternalData(MPxNode* srcNode) {
 
     nozAlembicHolder* nonConstThis = const_cast<nozAlembicHolder*> (this);
     CAlembicDatas* geom = nonConstThis->alembicData();
-    
+
     MFnDagNode fn(node.thisMObject());
     MString abcfile;
     MPlug plug = fn.findPlug(aAbcFile);
@@ -233,7 +233,7 @@ void nozAlembicHolder::copyInternalData(MPxNode* srcNode) {
     MString objectPath;
     plug = fn.findPlug(aObjectPath);
     plug.getValue(objectPath);
-    
+
     MString selectionPath;
     plug = fn.findPlug(aSelectionPath);
     plug.getValue(selectionPath);
@@ -299,31 +299,31 @@ MStatus nozAlembicHolder::initialize() {
     aBoundMinX = nAttr.create( "outBoundMinX", "obminx", MFnNumericData::kFloat, 0, &stat);
     nAttr.setWritable( false );
     nAttr.setStorable( false );
-                
+
     aBoundMinY = nAttr.create( "outBoundMinY", "cobminy", MFnNumericData::kFloat, 0, &stat );
     nAttr.setWritable( false );
     nAttr.setStorable( false );
-        
+
     aBoundMinZ = nAttr.create( "outBoundMinZ", "obminz", MFnNumericData::kFloat, 0, &stat );
     nAttr.setWritable( false );
     nAttr.setStorable( false );
-        
+
     aBoundMin = nAttr.create( "outBoundMin", "obmin", aBoundMinX, aBoundMinY, aBoundMinZ, &stat );
     nAttr.setWritable( false );
     nAttr.setStorable( false );
-        
+
     aBoundMaxX = nAttr.create( "outBoundMaxX", "obmaxx", MFnNumericData::kFloat, 0, &stat );
     nAttr.setWritable( false );
     nAttr.setStorable( false );
-                
+
     aBoundMaxY = nAttr.create( "outBoundMaxY", "cobmaxy", MFnNumericData::kFloat, 0, &stat );
     nAttr.setWritable( false );
     nAttr.setStorable( false );
-        
+
     aBoundMaxZ = nAttr.create( "outBoundMaxZ", "obmaxz", MFnNumericData::kFloat, 0, &stat );
     nAttr.setWritable( false );
     nAttr.setStorable( false );
-        
+
     aBoundMax = nAttr.create( "outBoundMax", "obmax", aBoundMaxX, aBoundMaxY, aBoundMaxZ, &stat );
     nAttr.setWritable( false );
     nAttr.setStorable( false );
@@ -333,7 +333,7 @@ MStatus nozAlembicHolder::initialize() {
     addAttribute( aAbcFile);
     addAttribute( aObjectPath);
     addAttribute( aSelectionPath);
-    addAttribute( aShaderPath);    
+    addAttribute( aShaderPath);
     addAttribute( aTime);
     addAttribute( aTimeOffset);
     addAttribute ( aUpdateCache );
@@ -391,7 +391,7 @@ MStatus nozAlembicHolder::compute( const MPlug& plug, MDataBlock& block )
 {
     if (plug == aUpdateCache)
     {
-    
+
         MString file = block.inputValue(aAbcFile).asString();
         MFileObject fileObject;
         fileObject.setRawFullName(file.expandFilePath());
@@ -417,7 +417,7 @@ MStatus nozAlembicHolder::compute( const MPlug& plug, MDataBlock& block )
         std::string key = mkey.asChar();
 
         if ((fGeometry.m_currscenekey != key && mkey != "|" ) || hasToReload)
-        {    
+        {
             if (fGeometry.m_currscenekey != key && mkey != "|" )
             {
                 CAlembicDatas::abcSceneManager.removeScene(fGeometry.m_currscenekey);
@@ -454,7 +454,7 @@ MStatus nozAlembicHolder::compute( const MPlug& plug, MDataBlock& block )
                 fGeometry.bbox.expand(MPoint(bb.max.x, bb.max.y, bb.max.z));
             }
 
-        
+
             fGeometry.m_abcdirty = true;
 
         }
@@ -489,7 +489,7 @@ bool nozAlembicHolder::GetPlugData()
 
 }
 
-CAlembicDatas* nozAlembicHolder::alembicData() 
+CAlembicDatas* nozAlembicHolder::alembicData()
 {
     if (MRenderView::doesRenderEditorExist())
     {
@@ -553,7 +553,7 @@ void CAlembicHolderUI::getDrawRequests(const MDrawInfo & info,
     //cout << "Ending draw request" << endl;
 }
 
-void CAlembicHolderUI::draw(const MDrawRequest & request, M3dView & view) const 
+void CAlembicHolderUI::draw(const MDrawRequest & request, M3dView & view) const
 {
 
     int token = request.token();
@@ -571,11 +571,11 @@ void CAlembicHolderUI::draw(const MDrawRequest & request, M3dView & view) const
     std::string sceneKey = shapeNode->getSceneKey();
 
     std::string selectionKey = shapeNode->getSelectionKey();
-    
+
     if(selectionKey != "")
         token = kDrawBoundingBox;
 
-    view.beginGL(); 
+    view.beginGL();
     glPushAttrib(GL_ALL_ATTRIB_BITS);
     glEnable(GL_DEPTH_TEST);
     glDepthFunc(GL_LEQUAL);
@@ -717,7 +717,7 @@ void CAlembicHolderUI::drawBoundingBox( const MDrawRequest & request,
     float w = (float) box.width();
     float h = (float) box.height();
     float d = (float) box.depth();
-    
+
     {
         // Query current state so it can be restored
         //
@@ -743,7 +743,7 @@ void CAlembicHolderUI::drawBoundingBox( const MDrawRequest & request,
         glVertex3f( (float)vertex[0],   (float)vertex[1],   (float)vertex[2] );
         glVertex3f( (float)vertex[0]+w, (float)vertex[1],   (float)vertex[2] );
         glVertex3f( (float)vertex[0]+w, (float)vertex[1]+h, (float)vertex[2] );
-        glVertex3f( (float)vertex[0],   (float)vertex[1]+h, (float)vertex[2] );    
+        glVertex3f( (float)vertex[0],   (float)vertex[1]+h, (float)vertex[2] );
         glVertex3f( (float)vertex[0],   (float)vertex[1],   (float)vertex[2] );
         glEnd();
 
@@ -751,25 +751,25 @@ void CAlembicHolderUI::drawBoundingBox( const MDrawRequest & request,
         MPoint sideFactor(0,0,d);
         MPoint vertex2 = minVertex + sideFactor;
         glBegin( MGL_LINE_LOOP );
-        glVertex3f( (float)vertex2[0],   (float)vertex2[1],   (float)vertex2[2] );    
+        glVertex3f( (float)vertex2[0],   (float)vertex2[1],   (float)vertex2[2] );
         glVertex3f( (float)vertex2[0]+w, (float)vertex2[1],   (float)vertex2[2] );
         glVertex3f( (float)vertex2[0]+w, (float)vertex2[1]+h, (float)vertex2[2] );
-        glVertex3f( (float)vertex2[0],   (float)vertex2[1]+h, (float)vertex2[2] );    
-        glVertex3f( (float)vertex2[0],   (float)vertex2[1],   (float)vertex2[2] );    
+        glVertex3f( (float)vertex2[0],   (float)vertex2[1]+h, (float)vertex2[2] );
+        glVertex3f( (float)vertex2[0],   (float)vertex2[1],   (float)vertex2[2] );
         glEnd();
 
         // Connect the edges together
         glBegin( MGL_LINES );
-        glVertex3f( (float)vertex2[0],   (float)vertex2[1],   (float)vertex2[2] );    
+        glVertex3f( (float)vertex2[0],   (float)vertex2[1],   (float)vertex2[2] );
         glVertex3f( (float)vertex[0],   (float)vertex[1],   (float)vertex[2] );
 
-        glVertex3f( (float)vertex2[0]+w,   (float)vertex2[1],   (float)vertex2[2] );    
+        glVertex3f( (float)vertex2[0]+w,   (float)vertex2[1],   (float)vertex2[2] );
         glVertex3f( (float)vertex[0]+w,   (float)vertex[1],   (float)vertex[2] );
 
-        glVertex3f( (float)vertex2[0]+w,   (float)vertex2[1]+h,   (float)vertex2[2] );    
+        glVertex3f( (float)vertex2[0]+w,   (float)vertex2[1]+h,   (float)vertex2[2] );
         glVertex3f( (float)vertex[0]+w,   (float)vertex[1]+h,   (float)vertex[2] );
 
-        glVertex3f( (float)vertex2[0],   (float)vertex2[1]+h,   (float)vertex2[2] );    
+        glVertex3f( (float)vertex2[0],   (float)vertex2[1]+h,   (float)vertex2[2] );
         glVertex3f( (float)vertex[0],   (float)vertex[1]+h,   (float)vertex[2] );
         glEnd();
 
@@ -847,7 +847,7 @@ void CAlembicHolderUI::getDrawRequestsShaded(MDrawRequest& request,
 {
         // Need to get the material info
         //
-        MDagPath path = info.multiPath();       // path to your dag object 
+        MDagPath path = info.multiPath();       // path to your dag object
         M3dView view = info.view();;            // view to draw to
         MMaterial material = MPxSurfaceShapeUI::material( path );
         M3dView::DisplayStatus displayStatus = info.displayStatus();
@@ -870,7 +870,7 @@ void CAlembicHolderUI::getDrawRequestsShaded(MDrawRequest& request,
         if ( materialTransparent ) {
                 request.setIsTransparent( true );
         }
-        
+
         // create a draw request for wireframe on shaded if
         // necessary.
         //

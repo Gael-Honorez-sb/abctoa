@@ -9,25 +9,25 @@ class PropertyWidget(QFrame):
    BYTE = 0
    INT = 1
    UINT = 2
-   
+
    RGB = 0
    RGBA = 1
-   
+
    VECTOR = 0
    POINT = 1
    POINT2 = 2
-   
+
    propertyChanged = pyqtSignal(dict)
-   
+
    def __init__(self, paramname, parent = None):
       QFrame.__init__(self, parent)
-      
+
       self.setBackgroundRole(QPalette.Dark)
       self.setAutoFillBackground(True)
       self.setSizePolicy(QSizePolicy.Minimum, QSizePolicy.Fixed)
-      
+
       layout = QHBoxLayout()
-      
+
       self.title = QLabel(paramname, self)
       layout.addWidget(self.title)
       layout.addStretch()
@@ -35,9 +35,9 @@ class PropertyWidget(QFrame):
       self.setLayout(layout)
 
       self.expanded = False
-      self.normalSize = QSize(self.width(), self.height()) 
-      self.expandedSize = QSize(self.width(), self.height() + 100) 
-   
+      self.normalSize = QSize(self.width(), self.height())
+      self.expandedSize = QSize(self.width(), self.height() + 100)
+
    def GetParamValueAsString(self, pentry, val, type):
       if type == AI_TYPE_BYTE:
          return int(val.contents.BYTE)
@@ -46,7 +46,7 @@ class PropertyWidget(QFrame):
       elif type == AI_TYPE_UINT:
          return int(val.contents.UINT)
       elif type == AI_TYPE_BOOLEAN:
-         return True if (val.contents.BOOL != 0) else False   
+         return True if (val.contents.BOOL != 0) else False
       elif type == AI_TYPE_FLOAT:
          return float(val.contents.FLT)
       elif type == AI_TYPE_VECTOR or type == AI_TYPE_POINT:
@@ -99,7 +99,7 @@ class PropertyWidget(QFrame):
             else:
                return ""
          else:
-            return "(%u elements)" % nelems  
+            return "(%u elements)" % nelems
       else:
          return ""
 
@@ -110,11 +110,11 @@ class PropertyWidget(QFrame):
       if self.expanded:
          self.setFixedSize(self.normalSize)
          self.expanded = False
-      else: 
+      else:
          self.setFixedSize(self.expandedSize)
          self.expanded = True
       self.updateGeometry()
       self.parent().updateGeometry()
-   
+
 #    def mouseDoubleClickEvent(self, event):
 #       self.ToggleExpanded()

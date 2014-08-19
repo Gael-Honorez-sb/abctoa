@@ -80,7 +80,7 @@ void MeshDrwHelper::update( P3fArraySamplePtr iP,
         }
         return;
     }
-    
+
     buffer.clear();
     // Okay, if we're here, the indices are not equal or the counts
     // are not equal or the P-array size changed.
@@ -198,7 +198,7 @@ void MeshDrwHelper::update( P3fArraySamplePtr iP,
         }
     }
 
-    
+
 
     std::vector<MGLfloat> v;
 
@@ -228,9 +228,9 @@ void MeshDrwHelper::update( P3fArraySamplePtr iP,
     {
         m_bounds = iBounds;
     }
-    
+
     updateNormals( iN );
-    
+
     // And that's it.
 }
 
@@ -278,7 +278,7 @@ void MeshDrwHelper::updateNormals( V3fArraySamplePtr iN )
         return;
     }
 
-    
+
     size_t numPoints = m_meshP->size();
     m_meshN = iN;
     m_customN.clear();
@@ -357,7 +357,7 @@ void MeshDrwHelper::updateArbs(Alembic::Abc::ICompoundProperty & iParent,
         if (propName == "Cs")
         {
             Alembic::Abc::IArrayProperty prop(iParent, propName);
-            if (prop.isArray() && prop.getNumSamples()>0) // only if array not empty 
+            if (prop.isArray() && prop.getNumSamples()>0) // only if array not empty
             {
                 Alembic::AbcCoreAbstract::DataType dtype = prop.getDataType();
                 Alembic::Util::uint8_t extent = dtype.getExtent();
@@ -371,7 +371,7 @@ void MeshDrwHelper::updateArbs(Alembic::Abc::ICompoundProperty & iParent,
         else if (propName == "Os")
         {
             Alembic::Abc::IArrayProperty prop(iParent, propName);
-            if (prop.isArray() && prop.getNumSamples()>0) // only if array not empty 
+            if (prop.isArray() && prop.getNumSamples()>0) // only if array not empty
             {
                 Alembic::AbcCoreAbstract::DataType dtype = prop.getDataType();
                 Alembic::Util::uint8_t extent = dtype.getExtent();
@@ -401,7 +401,7 @@ void MeshDrwHelper::updateArbs(Alembic::Abc::ICompoundProperty & iParent,
         m_colors.resize(m_meshP->size());
         float * CsData = (float *) CsSamp->getData();
         float * OsData = (float *) OsSamp->getData();
-        
+
         unsigned int csid=0;
         for (unsigned int idx=0; idx<iIndices->size(); idx++)
         {

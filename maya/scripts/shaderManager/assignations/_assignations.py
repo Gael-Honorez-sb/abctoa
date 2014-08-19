@@ -4,12 +4,12 @@
 # are made available under the terms of the GNU Public License v3.0
 # which accompanies this distribution, and is available at
 # http://www.gnu.org/licenses/gpl.html
-# 
+#
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation, either version 3 of the License, or
 # (at your option) any later version.
-# 
+#
 # This program is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -74,7 +74,7 @@ class cacheAssignations(object):
                 del cleanedDict[layer]
 
         self.parent.updateLayerOverrides(cleanedDict)
-       
+
     def writeOverrides(self):
         self.parent.updateOverrides(self.mainAssignations.getOverrides())
 
@@ -94,7 +94,7 @@ class cacheAssignations(object):
         if not fromFile:
             self.mainAssignations.addDisplacements(displacements)
         else:
-            self.mainAssignationsFromFile.addDisplacements(displacements)            
+            self.mainAssignationsFromFile.addDisplacements(displacements)
 
     def addLayers(self, layers, fromFile=False):
         if not fromFile:
@@ -117,7 +117,7 @@ class cacheAssignations(object):
         return shader
 
     def getAllShaders(self):
-        return self.mainAssignations.getShaders().keys()  + self.layers.getShaders() 
+        return self.mainAssignations.getShaders().keys()  + self.layers.getShaders()
 
     def getAllDisplacements(self):
         return self.mainAssignations.getDisplacements().keys() + self.layers.getDisplacements()
@@ -151,7 +151,7 @@ class cacheAssignations(object):
 
     def getLayerOverrides(self, layer):
         layerOverrides = None
-        layerOverrides = self.layers.getLayerOverrides(layer)        
+        layerOverrides = self.layers.getLayerOverrides(layer)
         if not layerOverrides:
             layerOverrides = self.layersFromFile.getLayerOverrides(layer)
         return layerOverrides
@@ -159,7 +159,7 @@ class cacheAssignations(object):
 
     def setRemovedShader(self, layer, state):
         self.layers.setRemovedShader(layer, state)
-    
+
     def setRemovedDisplace(self, layer, state):
         self.layers.setRemovedDisplace(layer, state)
 
@@ -201,7 +201,7 @@ class cacheAssignations(object):
                 valueFromMain= self.mainAssignationsFromFile.getOverrideValue(curPath, propName)
 
             valueFromFile = self.layersFromFile.getOverrideValue(layer, curPath, propName)
-           
+
             if valueFromFile != value and valueFromMain != value:
                 if valueFromFile != None or valueFromMain != None:
                     default = False
@@ -228,5 +228,5 @@ class cacheAssignations(object):
         else:
             self.layers.assignDisplacement(layer, path, shader)
 
-        self.parent.updateConnections()            
+        self.parent.updateConnections()
 

@@ -94,12 +94,12 @@ void IPointsDrw::setTime( chrono_t iSeconds )
         }
         // Use nearest for now.
         m_ss =  ISampleSelector(iSeconds, ISampleSelector::kNearIndex );
-        
+
         m_points.getSchema().get( m_samp, m_ss );
         // Update bounds from positions
         m_bounds.makeEmpty();
         m_needtoupdate = true;
-        
+
         // If we have a color prop, update it
         /*if ( m_colorProp )
         {
@@ -135,7 +135,7 @@ void IPointsDrw::updateData()
         buffer.genVertexBuffer(v);
         buffer.genIndexBuffer(vidx, MGL_POINTS);
     }
-    
+
     m_needtoupdate = false;
 }
 
@@ -145,7 +145,7 @@ Box3d IPointsDrw::getBounds()
         m_bounds = m_boundsProp.getValue( m_ss );
 
     return m_bounds;
-    
+
 }
 
 //-*****************************************************************************

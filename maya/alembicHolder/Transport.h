@@ -53,7 +53,7 @@ public:
     {
         return m_scene.draw( iState  );
     }
-    
+
     Box3d getBounds() const
     {
         return m_scene.getBounds();
@@ -62,9 +62,9 @@ public:
     void tickForward()
     {
         if ( m_scene.isConstant() ) { return; }
-        
-        m_currentSeconds += m_secondsPerFrame;                           
-        
+
+        m_currentSeconds += m_secondsPerFrame;
+
         if ( m_currentSeconds > m_scene.getMaxTime() )
         {
             m_currentSeconds = m_scene.getMinTime();
@@ -72,13 +72,13 @@ public:
 
         m_scene.setTime( m_currentSeconds );
     }
-    
+
     void tickBackward()
     {
         if ( m_scene.isConstant() ) { return; }
-        
-        m_currentSeconds -= m_secondsPerFrame;                           
-        
+
+        m_currentSeconds -= m_secondsPerFrame;
+
         if ( m_currentSeconds < m_scene.getMinTime() )
         {
             m_currentSeconds = m_scene.getMaxTime();
@@ -89,16 +89,16 @@ public:
 
     const std::string &getFileName() const
     { return m_scene.getFileName(); }
-    
+
     int getCurrentFrame() const
     {
         return ( int )floor( 0.5 +
                              ( m_currentSeconds * m_framesPerSecond ) );
     }
-    
+
 protected:
     Scene m_scene;
-    
+
     chrono_t m_framesPerSecond;
     chrono_t m_secondsPerFrame;
     chrono_t m_currentSeconds;

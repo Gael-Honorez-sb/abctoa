@@ -15,8 +15,8 @@ src_base_dir  = os.path.join(local_env['ROOT_DIR'], 'arnold', 'procedurals', 'al
 source_files  = find_files_recursive(src_base_dir, ['.c', '.cpp'])
 include_files = find_files_recursive(src_base_dir, ['.h'])
 
-JSON_INCLUDE_PATH = local_env['JSON_INCLUDE_PATH'] 
-JSON_LIB = local_env['JSON_LIB'] 
+JSON_INCLUDE_PATH = local_env['JSON_INCLUDE_PATH']
+JSON_LIB = local_env['JSON_LIB']
 
 PYSTRING_INCLUDE_PATH = local_env['PYSTRING_INCLUDE_PATH']
 PYSTRING_LIB = local_env['PYSTRING_LIB']

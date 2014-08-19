@@ -11,7 +11,7 @@ Import('arnold_env')
 local_env = arnold_env.Clone()
 
 # Add new plugin directory names here
-PLUGINS = ["alembicProcedural"] 
+PLUGINS = ["alembicProcedural"]
 
 source_files = []
 include_files = []

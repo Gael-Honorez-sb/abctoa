@@ -1,8 +1,8 @@
 #ifndef _nozAlembicHolderNode
 #define _nozAlembicHolderNode
 //
-// Copyright (C) 2014 Nozon. 
-// 
+// Copyright (C) 2014 Nozon.
+//
 // File: nozAlembicHolderNode.h
 //
 // Dependency Graph Node: nozAlembicHolder
@@ -49,7 +49,7 @@ public:
        std::string m_currscenekey;
        int m_bbmode;
        float time;
-       
+
        //BufferObject buffer;
 
        static SimpleAbcViewer::SceneState   abcSceneState;
@@ -85,14 +85,14 @@ public:
 
 
     virtual void copyInternalData( MPxNode* srcNode );
-    
+
     double setHolderTime() const;
 
     static  void*       creator();
     static  MStatus     initialize();
 
     MStatus     doSomething();
-        
+
     std::string getSceneKey() const;
     std::string getSelectionKey() const;
 
@@ -101,8 +101,8 @@ public:
 
 
 
-    
-    
+
+
 private:
     CAlembicDatas        fGeometry;
     static  MObject     aAbcFile;

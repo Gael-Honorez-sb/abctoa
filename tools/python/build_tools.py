@@ -14,7 +14,7 @@ def top_level_alias(env, name, targets):
 
 def get_all_aliases():
    return ALIASES
-   
+
 def find_in_path(file):
    '''
    Searches for file in the system path. Returns a list of directories containing file
@@ -45,7 +45,7 @@ def find_files(path, valid_extensions):
    '''
    path = os.path.normpath(path)
    return [f for f in os.listdir(path) if any([f.endswith(ext) for ext in valid_extensions])]
-   
+
 def copy_dir_recursive(src, dest):
    '''
    Copy directories recursively, ignoring .svn dirs
@@ -99,7 +99,7 @@ def process_return_code(retcode):
             status = 'CRASHED'
          else:
             status = 'FAILED'
-   return status      
+   return status
 
 def get_arnold_version(path, components = 4):
    '''
@@ -127,7 +127,7 @@ def get_arnold_version(path, components = 4):
          elif tokens[1] == 'AI_VERSION_FIX':
             FIX_VERSION = tokens[2].strip('"')
    f.close()
-   
+
    if (components > 0):
       version = ARCH_VERSION
    if (components > 1):
@@ -136,7 +136,7 @@ def get_arnold_version(path, components = 4):
       version += '.' + MINOR_VERSION
    if (components > 3):
       version += '.' + FIX_VERSION
-   return version      
+   return version
 
 def get_maya_version(path):
    f = open(path, 'r')
@@ -157,10 +157,10 @@ def get_latest_revision():
    '''
    p = subprocess.Popen('svn info .', shell=True, stdout = subprocess.PIPE)
    retcode = p.wait()
-  
+
    revision = 'not found'
    url      = 'not found'
-   
+
    for line in p.stdout:
       if line.startswith('URL:'):
          url = line[5:].strip()
@@ -178,21 +178,21 @@ def strpartition(string, sep):
 
 def append_to_path(env, new_path):
     if system.os() == 'windows':
-	   env.AppendENVPath('PATH', new_path, envname='ENV', sep=';', delete_existing=1) 
+       env.AppendENVPath('PATH', new_path, envname='ENV', sep=';', delete_existing=1)
     else :
        env.AppendENVPath('PATH', new_path, envname='ENV', sep=':', delete_existing=1)
 
 def prepend_to_path(env, new_path):
     if system.os() == 'windows':
-       env.PrependENVPath('PATH', new_path, envname='ENV', sep=';', delete_existing=1) 
+       env.PrependENVPath('PATH', new_path, envname='ENV', sep=';', delete_existing=1)
     else :
        env.PrependENVPath('PATH', new_path, envname='ENV', sep=':', delete_existing=1)
 
 def get_default_path(var, default):
    if var in os.environ:
       return os.environ[var]
-   else:   
-      return default 
+   else:
+      return default
 
 def get_escaped_path(path):
    if system.os() == 'windows':
@@ -223,29 +223,29 @@ def get_library_extension():
       return ".dylib"
    else:
       return ""
-      
+
 def get_executable_extension():
    if system.os() == 'windows':
       return ".exe"
    else:
       return ""
-      
+
 try:
     # available in python >= 2.6
     relpath = os.path.relpath
 except AttributeError:
     def relpath(path, start=os.path.curdir):
         """Return a relative version of a path"""
-    
+
         if not path:
             raise ValueError("no path specified")
-    
+
         start_list = os.path.abspath(start).split(os.path.sep)
         path_list = os.path.abspath(path).split(os.path.sep)
-    
+
         # Work out how much of the filepath is shared by start and path.
         i = len(os.path.commonprefix([start_list, path_list]))
-    
+
         rel_list = [os.path.pardir] * (len(start_list)-i) + path_list[i:]
         if not rel_list:
             return os.path.curdir

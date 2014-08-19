@@ -66,7 +66,7 @@ void CABCViewerTranslator::ProcessRenderFlagsCustom(AtNode* node)
 
    if(m_DagNode.findPlug("aiSelfShadows").asBool() == false)
         ProcessParameter(node, "self_shadows", AI_TYPE_BOOLEAN, "aiSelfShadows");
-   
+
    if(m_DagNode.findPlug("aiOpaque").asBool() == false)
         ProcessParameter(node, "opaque", AI_TYPE_BOOLEAN, "aiOpaque");
 
@@ -83,8 +83,8 @@ void CABCViewerTranslator::ProcessRenderFlagsCustom(AtNode* node)
          AiNodeDeclareConstant(node, "sss_setname", AI_TYPE_STRING);
          AiNodeSetStr(node, "sss_setname", setname.asChar());
       }
-   }   
-   
+   }
+
    ExportTraceSets(node, FindMayaPlug("aiTraceSets"));
 
    MFnDependencyNode dnode(m_dagPath.node(), &status);
@@ -106,7 +106,7 @@ void CABCViewerTranslator::Update(AtNode* procedural)
 }
 
 
-AtNode* CABCViewerTranslator::ExportProcedural(AtNode* procedural, bool update) 
+AtNode* CABCViewerTranslator::ExportProcedural(AtNode* procedural, bool update)
 {
    m_DagNode.setObject(m_dagPath.node());
    AiNodeSetStr(procedural, "name", m_dagPath.partialPathName().asChar());
@@ -118,15 +118,15 @@ AtNode* CABCViewerTranslator::ExportProcedural(AtNode* procedural, bool update)
 
       ExportStandinsShaders(procedural);
    }
-   
 
 
-   if (!update) 
-   {   
+
+   if (!update)
+   {
       MString procLib = "AlembicArnoldProcedural" + LIBEXT ;
 
       AiNodeSetStr(procedural, "dso", procLib.asChar() );
-      
+
       AiNodeSetBool(procedural, "load_at_init", true);
 
 
@@ -136,7 +136,7 @@ AtNode* CABCViewerTranslator::ExportProcedural(AtNode* procedural, bool update)
       MFileObject fileObject;
       fileObject.setRawFullName(abcfile.expandFilePath());
       fileObject.setResolveMethod(MFileObject::kInputFile);
-      abcfile = fileObject.resolvedFullName();      
+      abcfile = fileObject.resolvedFullName();
 
 
       //MTime timeEvaluation = MTime(GetExportFrame(), MTime::uiUnit());
@@ -148,11 +148,11 @@ AtNode* CABCViewerTranslator::ExportProcedural(AtNode* procedural, bool update)
 
       MPlug shaders = m_DagNode.findPlug("shaders");
 
-      for (unsigned int i=0;i<shaders.numElements();++i) 
+      for (unsigned int i=0;i<shaders.numElements();++i)
       {
          MPlug plug = shaders.elementByPhysicalIndex(i);
          MPlugArray connections;
-         plug.connectedTo(connections, true, false); 
+         plug.connectedTo(connections, true, false);
          for (unsigned int k=0; k<connections.length(); ++k)
          {
             MPlug sgPlug = connections[k];
@@ -160,16 +160,16 @@ AtNode* CABCViewerTranslator::ExportProcedural(AtNode* procedural, bool update)
             {
                ExportNode(sgPlug);
             }
-         }  
-         
+         }
+
       }
 
 
       std::string objectPathStr = objectPath.asString().asChar();
-      
 
-      boost::replace_all(objectPathStr, "|", "/"); 
-      
+
+      boost::replace_all(objectPathStr, "|", "/");
+
       if(objectPathStr == "")
          objectPathStr = "/";
 
@@ -188,7 +188,7 @@ AtNode* CABCViewerTranslator::ExportProcedural(AtNode* procedural, bool update)
 
       ExportBoundingBox(procedural);
    }
-   return procedural; 
+   return procedural;
 
 }
 
@@ -202,7 +202,7 @@ void CABCViewerTranslator::ExportShaders()
 
 void CABCViewerTranslator::ExportStandinsShaders(AtNode* procedural)
 {
-   
+
    int instanceNum = m_dagPath.isInstanced() ? m_dagPath.instanceNumber() : 0;
 
    std::vector<AtNode*> meshShaders;
@@ -264,4 +264,3 @@ void CABCViewerTranslator::NodeInitializer(CAbTranslator context)
 
 
 }
- 

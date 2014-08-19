@@ -15,13 +15,13 @@ void ProcessCamera( ICamera &camera, ProcArgs &args,
     SampleTimeSet sampleTimes;
 
     ICameraSchema ps = camera.getSchema();
-    
-    TimeSamplingPtr ts = ps.getTimeSampling();   
+
+    TimeSamplingPtr ts = ps.getTimeSampling();
     sampleTimes.insert( ts->getFloorIndex(args.frame / args.fps, ps.getNumSamples()).second );
 
 
     std::string name = args.nameprefix + camera.getFullName();
-    
+
     SampleTimeSet singleSampleTimes;
     singleSampleTimes.insert( ts->getFloorIndex(args.frame / args.fps, ps.getNumSamples()).second );
 
@@ -31,8 +31,8 @@ void ProcessCamera( ICamera &camera, ProcArgs &args,
 
     AtNode * cameraNode = AiNode("persp_camera");
     AiNodeSetStr(cameraNode, "name", name.c_str());
-    
+
     AiNodeSetFlt(cameraNode, "fov", sample.getFocalLength());
-    
+
 
 }

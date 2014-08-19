@@ -63,20 +63,20 @@ public:
 
 protected:
     IPoints m_points;
-    
+
     IPointsSchema::Sample m_samp;
 
-    P3fArraySamplePtr m_positions;    
+    P3fArraySamplePtr m_positions;
 
     BufferObject buffer;
-    
+
     MGLuint mVertexBuffer, mNormalBuffer, mIndexBuffer, mColorBuffer;
     MGLenum mPrimType;
     MGLsizei mPrimNum;
 
     bool m_needtoupdate;
 
-    
+
 };
 
 } // End namespace SimpleAbcViewer
