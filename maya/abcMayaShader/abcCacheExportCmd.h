@@ -12,7 +12,8 @@
 #include <maya/MArgDatabase.h>
 #include <maya/MGlobal.h>
 #include <maya/MPlugArray.h>
-#include "translators/options/OptionsTranslator.h"
+// FIXME: needed or not?
+//#include "translators/options/OptionsTranslator.h"
 
 class abcCacheExportCmd : public MPxCommand {
   public:

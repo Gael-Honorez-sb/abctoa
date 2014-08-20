@@ -3,8 +3,9 @@
 #define _Abc_Exporter_Utils_h_
 
 #include "ai.h"
-#include "session/ArnoldSession.h"
-#include "scene/MayaScene.h"
+// FIXME: private mtoa headers:
+//#include "session/ArnoldSession.h"
+//#include "scene/MayaScene.h"
 #include "translators/NodeTranslator.h"
 #include <Alembic/Abc/All.h>
 #include <Alembic/AbcCoreHDF5/All.h>

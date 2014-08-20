@@ -22,7 +22,8 @@
 #include <Alembic/AbcMaterial/OMaterial.h>
 #include "ai.h"
 #include "session/ArnoldSession.h"
-#include "scene/MayaScene.h"
+// FIXME: private mtoa header:
+//#include "scene/MayaScene.h"
 #include "translators/NodeTranslator.h"
 
 
