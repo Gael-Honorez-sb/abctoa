@@ -62,7 +62,7 @@
 
 template <typename geomParamT>
 void ProcessIndexedBuiltinParam(
-        geomParamT & param,
+        geomParamT param,
         const SampleTimeSet & sampleTimes,
         std::vector<float> & values,
         std::vector<unsigned int> & idxs,
