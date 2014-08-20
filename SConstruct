@@ -23,23 +23,19 @@ from colorama import Fore, Back, Style
 
 if system.os() == 'darwin':
     ALLOWED_COMPILERS = ('gcc',)   # Do not remove this comma, it's magic
-    arnold_default_api_lib = os.path.join('$ARNOLD', 'bin')
-    glew_default_lib = os.path.join('$EXTERNAL_PATH', 'glew-1.10.0', 'lib', 'libGLEW.a')
-    glew_default_include = os.path.join('$EXTERNAL_PATH', 'glew-1.10.0', 'include')
+    arnold_default_api_lib = os.path.join('$ARNOLD_ROOT', 'bin')
 elif system.os() == 'linux':
     ALLOWED_COMPILERS = ('gcc',)   # Do not remove this comma, it's magic
     # linux conventions would be to actually use lib for dynamic libraries!
-    arnold_default_api_lib = os.path.join('$ARNOLD', 'bin')
-    glew_default_lib = '/usr/lib64/libGLEW.a'
-    glew_default_include = '/usr/include'
+    arnold_default_api_lib = os.path.join('$ARNOLD_ROOT', 'bin')
 elif system.os() == 'windows':
     ALLOWED_COMPILERS = ('msvc', 'icc')
-    arnold_default_api_lib = os.path.join('$ARNOLD', 'lib')
-    glew_default_lib = os.path.join('$EXTERNAL_PATH', 'glew-1.10.0', 'lib', 'glew32s.lib')
-    glew_default_include = os.path.join('$EXTERNAL_PATH', 'glew-1.10.0', 'include')
+    arnold_default_api_lib = os.path.join('$ARNOLD_ROOT', 'lib')
 else:
     print "Unknown operating system: %s" % system.os()
     Exit(1)
+
+ROOT_DIR = os.getcwd()
 
 ################################################################################
 #   Build system options
@@ -57,89 +53,77 @@ vars.AddVariables(
     PathVariable('LINK', 'Linker to use', None),
     PathVariable('SHCC', 'Path to C++ (gcc) compiler used', None),
     PathVariable('SHCXX', 'Path to C++ (gcc) compiler used for generating shared-library objects', None),
-    ('FTP'            , 'Path of the FTP to upload the package'        , ''),
-    ('FTP_SUBDIR'     , 'Subdirectory on the FTP to place the package' , ''),
-    ('FTP_USER'       , 'Username for the FTP'                         , ''),
-    ('FTP_PASS'       , 'Password for the FTP'                         , ''),
-    ('PACKAGE_SUFFIX' , 'Suffix for the package names'                 , ''),
-
     BoolVariable('COLOR_CMDS' , 'Display colored output messages when building', True),
-    EnumVariable('SHOW_TEST_OUTPUT', 'Display the test log as it is being run', 'single', allowed_values=('always', 'never', 'single')),
-    BoolVariable('UPDATE_REFERENCE', 'Update the reference log/image for the specified targets', False),
-    ('TEST_THREADS' , 'Number of simultaneous tests to run', 4),
-    ('TEST_PATTERN' , 'Glob pattern of tests to be run', 'test_*'),
     ('GCC_OPT_FLAGS', 'Optimization flags for gcc', '-O3 -funroll-loops'),
-    BoolVariable('DISABLE_COMMON', 'Disable shaders found in the common repository', False),
-
-    PathVariable('MAYA_ROOT',
-                 'Directory where Maya is installed (defaults to $MAYA_LOCATION)',
-                 get_default_path('MAYA_LOCATION', '.')),
+    PathVariable('BUILD_DIR',
+                 'Directory where temporary build files are placed by scons',
+                 'build'),
     PathVariable('MAYA_ROOT',
                  'Directory where Maya is installed (defaults to $MAYA_LOCATION)',
                  get_default_path('MAYA_LOCATION', '.')),
     PathVariable('MTOA_ROOT',
                  'Directory where MtoA is installed',
                  get_default_path('MTOA_HOME', '.')),
-    PathVariable('MTOA_API_INCLUDES',
+    PathVariable('MTOA_API_INCLUDE_PATH',
                  'Where to find MtoA API includes',
                  os.path.join('$MTOA_ROOT', 'include'), PathVariable.PathIsDir),
-    PathVariable('MTOA_API_LIB',
-                 'Where to find MtoA API static libraries',
-                 os.path.join('$MTOA_ROOT', 'lib'), PathVariable.PathIsDir),
+    PathVariable('MTOA_API_LIBRARY_PATH',
+                 'Where to find MtoA API libraries',
+                 os.path.join('$MTOA_ROOT', 'bin'), PathVariable.PathIsDir),
+    PathVariable('ILMBASE_ROOT',
+                 'ILMBase root directory',
+                 '.'),
     PathVariable('ILMBASE_INCLUDE_PATH',
                  'ILMBase include path',
-                 '.'),
+                 os.path.join('$ILMBASE_ROOT', 'include'), PathVariable.PathIsDir),
+    PathVariable('ILMBASE_LIBRARY_PATH',
+                 'ILMBase static libs path',
+                 os.path.join('$ILMBASE_ROOT', 'lib'), PathVariable.PathIsDir),
     PathVariable('JSON_INCLUDE_PATH',
                  'Json include path',
-                 '.'),
-    PathVariable('JSON_LIB',
-                 'Json lib path',
-                 '.'),
+                 os.path.join(ROOT_DIR, 'contrib', 'jsoncpp', 'include'), PathVariable.PathIsDir),
+    PathVariable('JSON_LIBRARY',
+                 'Json library',
+                 'jsoncpp', PathVariable.PathAccept),
     PathVariable('PYSTRING_INCLUDE_PATH',
                  'Pystring include path',
                  '.'),
-    PathVariable('PYSTRING_LIB',
+    PathVariable('PYSTRING_LIBRARY_PATH',
                  'Pystring lib path',
                  '.'),
-    PathVariable('ILMBASE_LIBS',
-                 'ILMBase static libs path',
-                 '.'),
-    PathVariable('ILMBASE_BIN',
-                 'ILMBase bin path',
+    PathVariable('BOOST_ROOT',
+                 'Boost root directory',
                  '.'),
     PathVariable('BOOST_INCLUDE_PATH',
                  'Boost include path',
-                 '.'),
-    PathVariable('BOOST_LIBS',
+                 os.path.join('$BOOST_ROOT', 'include'), PathVariable.PathIsDir),
+    PathVariable('BOOST_LIBRARY_PATH',
                  'Boost static lib path',
-                 '.'),
+                 os.path.join('$BOOST_ROOT', 'lib'), PathVariable.PathIsDir),
     PathVariable('MAYA_INCLUDE_PATH',
                  'Directory where Maya SDK headers are installed',
                  '.'),
+    PathVariable('ALEMBIC_ROOT',
+                 'Alembic root directory',
+                 '.'),
     PathVariable('ALEMBIC_INCLUDE_PATH',
                  'Where to find Alembic includes',
-                 get_default_path('ALEMBIC_INCLUDE_PATH', '.')),
-    PathVariable('ALEMBIC_LIBS',
+                 os.path.join('$ALEMBIC_ROOT', 'include'), PathVariable.PathIsDir),
+    PathVariable('ALEMBIC_LIBRARY_PATH',
                  'Where to find Alembic static libraries',
-                 '.', PathVariable.PathIsDir),
-    PathVariable('ARNOLD',
+                 os.path.join('$ALEMBIC_ROOT', 'lib'), PathVariable.PathIsDir),
+    PathVariable('HDF5_LIBRARY_PATH',
+                 'Where to find HDF5 static libraries',
+                 os.path.join('$ALEMBIC_ROOT', 'lib'), PathVariable.PathIsDir),
+    PathVariable('ARNOLD_ROOT',
                  'Where to find Arnold installation',
                  get_default_path('ARNOLD_HOME', 'Arnold')),
-    PathVariable('ARNOLD_API_INCLUDES',
+    PathVariable('ARNOLD_API_INCLUDE_PATH',
                  'Where to find Arnold API includes',
-                 os.path.join('$ARNOLD', 'include'), PathVariable.PathIsDir),
-    PathVariable('ARNOLD_API_LIB',
-                 'Where to find Arnold API static libraries',
+                 os.path.join('$ARNOLD_ROOT', 'include'), PathVariable.PathIsDir),
+    PathVariable('ARNOLD_API_LIBRARY_PATH',
+                 'Where to find Arnold API libraries',
                  arnold_default_api_lib, PathVariable.PathIsDir),
-    PathVariable('ARNOLD_BINARIES',
-                 'Where to find Arnold API dynamic libraries and executables',
-                 os.path.join('$ARNOLD', 'bin'), PathVariable.PathIsDir),
-    PathVariable('GLEW_INCLUDES',
-                 'Where to find GLEW includes',
-                 glew_default_include, PathVariable.PathIsDir),
-    PathVariable('GLEW_LIB',
-                 'Where to find GLEW static library',
-                 glew_default_lib, PathVariable.PathIsFile),
     PathVariable('TARGET_MODULE_PATH',
                  'Path used for installation of the mtoa module',
                  '.', PathVariable.PathIsDirCreate),
@@ -225,21 +209,19 @@ if env['MAYA_INCLUDE_PATH'] == '.':
     else:
         MAYA_INCLUDE_PATH = os.path.join(MAYA_ROOT, 'include')
 
-ARNOLD = env.subst(env['ARNOLD'])
-ARNOLD_API_INCLUDES = env.subst(env['ARNOLD_API_INCLUDES'])
-ARNOLD_API_LIB = env.subst(env['ARNOLD_API_LIB'])
-ARNOLD_BINARIES = env.subst(env['ARNOLD_BINARIES'])
+ARNOLD_API_INCLUDE_PATH = env.subst(env['ARNOLD_API_INCLUDE_PATH'])
+ARNOLD_API_LIBRARY_PATH = env.subst(env['ARNOLD_API_LIBRARY_PATH'])
 ALEMBIC_INCLUDE_PATH = env.subst(env['ALEMBIC_INCLUDE_PATH'])
 BOOST_INCLUDE_PATH = env.subst(env['BOOST_INCLUDE_PATH'])
-BOOST_LIBS = env.subst(env['BOOST_LIBS'])
+BOOST_LIBRARY_PATH = env.subst(env['BOOST_LIBRARY_PATH'])
 JSON_INCLUDE_PATH = env.subst(env['JSON_INCLUDE_PATH'])
-JSON_LIB = env.subst(env['JSON_LIB'])
+JSON_LIBRARY = env.subst(env['JSON_LIBRARY'])
 PYSTRING_INCLUDE_PATH = env.subst(env['PYSTRING_INCLUDE_PATH'])
-PYSTRING_LIB = env.subst(env['PYSTRING_LIB'])
+PYSTRING_LIBRARY_PATH = env.subst(env['PYSTRING_LIBRARY_PATH'])
 ILMBASE_INCLUDE_PATH = env.subst(env['ILMBASE_INCLUDE_PATH'])
-ILMBASE_BIN = env.subst(env['ILMBASE_BIN'])
-ILMBASE_LIBS = env.subst(env['ILMBASE_LIBS'])
-ALEMBIC_LIBS = env.subst(env['ALEMBIC_LIBS'])
+ILMBASE_LIBRARY_PATH = env.subst(env['ILMBASE_LIBRARY_PATH'])
+ALEMBIC_LIBRARY_PATH = env.subst(env['ALEMBIC_LIBRARY_PATH'])
+HDF5_LIBRARY_PATH = env.subst(env['HDF5_LIBRARY_PATH'])
 TARGET_MODULE_PATH = env.subst(env['TARGET_MODULE_PATH'])
 TARGET_PLUGIN_PATH = env.subst(env['TARGET_PLUGIN_PATH'])
 TARGET_SCRIPTS_PATH = env.subst(env['TARGET_SCRIPTS_PATH'])
@@ -250,14 +232,33 @@ TARGET_PROCEDURAL_PATH = env.subst(env['TARGET_PROCEDURAL_PATH'])
 TARGET_EXTENSION_PATH = env.subst(env['TARGET_EXTENSION_PATH'])
 TARGET_DOC_PATH = env.subst(env['TARGET_DOC_PATH'])
 TARGET_BINARIES = env.subst(env['TARGET_BINARIES'])
-PACKAGE_SUFFIX = env.subst(env['PACKAGE_SUFFIX'])
+
+STATIC_LIB_SUFFIX = env.subst(env['LIBSUFFIX'])
+SHARED_LIB_SUFFIX = env.subst(env['SHLIBSUFFIX'])
+
+MAYA_LIBS = 'Foundation OpenMaya OpenMayaRender ' \
+            'OpenMayaUI OpenMayaAnim OpenMayaFX'
+ALEMBIC_LIBS = 'AlembicAbcGeom AlembicAbcMaterial AlembicAbcCoreOgawa ' \
+               'AlembicOgawa AlembicAbc AlembicAbcCoreHDF5 ' \
+               'AlembicAbcCoreAbstract AlembicAbcCoreFactory ' \
+               'AlembicAbcCollection AlembicUtil'
+HDF5_LIBS = 'hdf5_hl hdf5'
+ILMBASE_LIBS = 'Iex IlmImf Half'
+ALL_ALEMBIC_LIBS = ALEMBIC_LIBS + ' ' + HDF5_LIBS + ' ' + ILMBASE_LIBS
+if system.os() == 'windows':
+    ALL_ALEMBIC_LIBS += ' zlibwapi'
+ALL_ALEMBIC_INCLUDE_PATHS = [ALEMBIC_INCLUDE_PATH,
+                             BOOST_INCLUDE_PATH,
+                             ILMBASE_INCLUDE_PATH,
+                             os.path.join(ILMBASE_INCLUDE_PATH, 'OpenEXR')]
+ALL_ALEMBIC_LIBRARY_PATHS = [ALEMBIC_LIBRARY_PATH, ILMBASE_LIBRARY_PATH,
+                             HDF5_LIBRARY_PATH]
 
 # Get arnold and maya versions used for this build
-arnold_version    = get_arnold_version(os.path.join(ARNOLD_API_INCLUDES, 'ai_version.h'))
+arnold_version    = get_arnold_version(os.path.join(ARNOLD_API_INCLUDE_PATH, 'ai_version.h'))
 maya_version      = get_maya_version(os.path.join(MAYA_INCLUDE_PATH, 'maya', 'MTypes.h'))
 maya_version_base = maya_version[0:4]
-if int(maya_version) >= 201450:
-    env['ENABLE_XGEN'] = 1
+
 if int(maya_version_base) >= 2014:
     env['ENABLE_VP2'] = 1
 
@@ -281,23 +282,6 @@ elif system.os() == 'windows':
 print 'SCons          : %s' % (SCons.__version__)
 print ''
 
-try:
-   import json
-except ImportError:
-   import simplejson as json
-
-try:
-    json_data = open('dependencies.json')
-    data = json.load(json_data)
-    if data['arnold'] != arnold_version:
-        print '''
-        You are building with arnold %s instead
-        of the officially supported version %s.
-        You might encounter bugs, build errors
-        or undefined behavior.
-        ''' % (arnold_version, data['arnold'])
-except:
-    pass
 
 ################################
 ## COMPILER OPTIONS
@@ -474,14 +458,17 @@ if system.os() == 'windows':
 elif system.os() == 'darwin':
     env.Append(CPPDEFINES = Split('_DARWIN OSMac_'))
 elif system.os() == 'linux':
-    env.Append(CPPDEFINES = Split('_LINUX'))
+    env.Append(CPPDEFINES = Split('_LINUX LINUX'))
 
 ## Add path to Arnold API by default
-env.Append(CPPPATH = [ARNOLD_API_INCLUDES,])
-env.Append(LIBPATH = [ARNOLD_API_LIB, ARNOLD_BINARIES])
+env.Append(CPPPATH = [ARNOLD_API_INCLUDE_PATH,])
+env.Append(LIBPATH = [ARNOLD_API_LIBRARY_PATH])
 
 ## configure base directory for temp files
-BUILD_BASE_DIR = os.path.join('build', '%s_%s' % (system.os(), system.target_arch()), maya_version, '%s_%s' % (env['COMPILER'], env['MODE']))
+BUILD_BASE_DIR = os.path.join(env['BUILD_DIR'],
+                              '%s_%s' % (system.os(), system.target_arch()),
+                              maya_version, '%s_%s' % (env['COMPILER'],
+                                                       env['MODE']))
 env['BUILD_BASE_DIR'] = BUILD_BASE_DIR
 
 if not env['SHOW_CMDS']:
@@ -493,169 +480,195 @@ if not env['SHOW_CMDS']:
     env['LINKCOMSTR']   = color_bred   + 'Linking $TARGET ...'   + color_reset
     env['SHLINKCOMSTR'] = color_bred   + 'Linking $TARGET ...'   + color_reset
 
+
+
 ################################
 ## BUILD TARGETS
 ################################
 
+
 env['BUILDERS']['MakePackage'] = Builder(action = Action(make_package, "Preparing release package: '$TARGET'"))
-env['ROOT_DIR'] = os.getcwd()
+env['ROOT_DIR'] = ROOT_DIR
+env.Append(CPPPATH=['.'])
 
+# jsoncpp library
+# JSONCPP = env.SConscript(os.path.join('contrib', 'jsoncpp', 'SConscript'),
+#                          variant_dir = os.path.join(BUILD_BASE_DIR, 'jsoncpp'),
+#                          duplicate = 0,
+#                          exports   = 'env')
+# env['JSON_LIBRARY'] = JSONCPP
+# FIXME: get json library building:
+
+# Base maya environment
+maya_base_env = env.Clone()
+maya_base_env.Append(CPPPATH=[MAYA_INCLUDE_PATH])
 if system.os() == 'windows':
-    #First the maya plugins. They all need maya & alembic libs.
-    maya_env = env.Clone()
-    maya_env.Append(CPPPATH = ['.'])
-    maya_env.Append(CPPPATH = [MAYA_INCLUDE_PATH, ALEMBIC_INCLUDE_PATH, BOOST_INCLUDE_PATH, ILMBASE_INCLUDE_PATH])
-    maya_env.Append(CPPDEFINES = Split('NT_PLUGIN REQUIRE_IOSTREAM'))
-    maya_env.Append(LIBPATH = [os.path.join(MAYA_ROOT, 'lib'), ALEMBIC_LIBS, ILMBASE_LIBS])
-    maya_env.Append(LIBS=Split('OpenGl32.lib Foundation.lib OpenMaya.lib OpenMayaRender.lib OpenMayaUI.lib OpenMayaAnim.lib OpenMayaFX.lib AlembicAbcGeom.lib AlembicAbcMaterial.lib AlembicAbcCoreOgawa.lib AlembicOgawa.lib AlembicAbc.lib AlembicAbcCoreHDF5.lib AlembicAbcCoreAbstract.lib AlembicAbcCoreFactory.lib AlembicAbcCollection.lib AlembicUtil.lib hdf5_hl.lib hdf5.lib libIex.lib libIlmImf.lib libHalf.lib zlibwapi.lib'))
+    maya_base_env.Append(LIBS=Split('OpenGl32'))
+    maya_base_env.Append(LIBPATH=[os.path.join(MAYA_ROOT, 'lib')])
+    maya_base_env.Append(CPPDEFINES=Split('NT_PLUGIN REQUIRE_IOSTREAM'))
+elif system.os() == 'linux':
+    maya_base_env.Append(LIBS=Split('GL'))
+    maya_base_env.Append(LIBPATH = [os.path.join(MAYA_ROOT, 'lib')])
+    maya_base_env.Append(CPPDEFINES=Split('_BOOL REQUIRE_IOSTREAM'))
+elif system.os() == 'darwin':
+    # MAYA_LOCATION on osx includes Maya.app/Contents
+    maya_base_env.Append(LIBPATH = [os.path.join(MAYA_ROOT, 'MacOS')])
+    maya_base_env.Append(CPPDEFINES=Split('_BOOL REQUIRE_IOSTREAM'))
+maya_base_env.Append(LIBS=Split(MAYA_LIBS))
 
-    MAYA_PLUGINS = env.SConscript(os.path.join('maya', 'SConscript'),
-                                            variant_dir = os.path.join(BUILD_BASE_DIR, 'plugins'),
-                                            duplicate = 0,
-                                            exports   = 'maya_env')
+# First the maya plugins. They all need maya & alembic libs.
+maya_env = maya_base_env.Clone()
+maya_env.Append(CPPPATH=ALL_ALEMBIC_INCLUDE_PATHS)
+maya_env.Append(LIBPATH=ALL_ALEMBIC_LIBRARY_PATHS)
+maya_env.Append(LIBS=Split(ALL_ALEMBIC_LIBS))
 
-
-    # The translator. They only need MtoA & Arnold libs.
-    mtoa_env = env.Clone()
-    mtoa_env.Append(CPPPATH = ['.'])
-    mtoa_env.Append(CPPPATH = [MAYA_INCLUDE_PATH, ARNOLD_API_INCLUDES, env["MTOA_API_INCLUDES"]])
-    mtoa_env.Append(CPPDEFINES = Split('NT_PLUGIN REQUIRE_IOSTREAM'))
-    mtoa_env.Append(LIBPATH = [os.path.join(MAYA_ROOT, 'lib'), ARNOLD_API_LIB, env["MTOA_API_LIB"]])
-    mtoa_env.Append(LIBS=Split('Foundation.lib OpenMaya.lib OpenMayaRender.lib OpenMayaAnim.lib mtoa_api.lib ai.lib'))
-
-
-    MTOA_TRANSLATORS = env.SConscript(os.path.join('mtoa', 'SConscript'),
-                                                variant_dir = os.path.join(BUILD_BASE_DIR, 'extensions'),
-                                                duplicate   = 0,
-                                                exports     = 'mtoa_env')
-
-    # The arnold procedural & plugin. They all need alembic.
-    arnold_env = env.Clone()
-    arnold_env.Append(CPPPATH = ['.'])
-    arnold_env.Append(CPPPATH = [ALEMBIC_INCLUDE_PATH, BOOST_INCLUDE_PATH, ILMBASE_INCLUDE_PATH, ARNOLD_API_LIB])
-    arnold_env.Append(CPPDEFINES = Split('NT_PLUGIN REQUIRE_IOSTREAM'))
-    arnold_env.Append(LIBPATH = [ALEMBIC_LIBS, ILMBASE_LIBS, ARNOLD_API_LIB])
-    arnold_env.Append(LIBS=Split('AlembicAbcGeom.lib AlembicAbcMaterial.lib AlembicAbcCoreOgawa.lib AlembicOgawa.lib AlembicAbc.lib AlembicAbcCoreHDF5.lib AlembicAbcCoreAbstract.lib AlembicAbcCoreFactory.lib AlembicAbcCollection.lib AlembicUtil.lib hdf5_hl.lib hdf5.lib libIex.lib libIlmImf.lib libHalf.lib zlibwapi.lib ai.lib'))
-
-    ARNOLD_SHADERS = env.SConscript(os.path.join('arnold', 'shaders', 'SConscript'),
-                                                variant_dir = os.path.join(BUILD_BASE_DIR, 'shaders', 'arnold'),
-                                                duplicate   = 0,
-                                                exports     = 'arnold_env')
-
-    ARNOLD_PROCS = env.SConscript(os.path.join('arnold', 'procedurals', 'SConscript'),
-                                                variant_dir = os.path.join(BUILD_BASE_DIR, 'procedurals', 'arnold'),
-                                                duplicate   = 0,
-                                                exports     = 'arnold_env')
+MAYA_PLUGINS = env.SConscript(os.path.join('maya', 'SConscript'),
+                                        variant_dir = os.path.join(BUILD_BASE_DIR, 'plugins'),
+                                        duplicate = 0,
+                                        exports   = 'maya_env')
 
 
+# The translator. They only need MtoA & Arnold libs.
+mtoa_env = maya_base_env.Clone()
+mtoa_env.Append(CPPPATH=[ARNOLD_API_INCLUDE_PATH, env["MTOA_API_INCLUDE_PATH"]])
+mtoa_env.Append(LIBPATH=[ARNOLD_API_LIBRARY_PATH, env["MTOA_API_LIBRARY_PATH"]])
+mtoa_env.Append(LIBS=Split('mtoa_api ai'))
+
+MTOA_TRANSLATORS = env.SConscript(os.path.join('mtoa', 'SConscript'),
+                                            variant_dir = os.path.join(BUILD_BASE_DIR, 'extensions'),
+                                            duplicate   = 0,
+                                            exports     = 'mtoa_env')
+
+# The arnold procedural & plugin. They all need alembic.
+arnold_env = env.Clone()
+arnold_env.Append(CPPPATH=ALL_ALEMBIC_INCLUDE_PATHS + [ARNOLD_API_INCLUDE_PATH])
+# FIXME: are these actually required for arnold?
+if system.os() == 'windows':
+    arnold_env.Append(CPPDEFINES=Split('NT_PLUGIN REQUIRE_IOSTREAM'))
 else:
-    maya_env = env.Clone()
-    maya_env.Append(CPPPATH = ['.'])
-    maya_env.Append(CPPDEFINES = Split('_BOOL REQUIRE_IOSTREAM'))
+    arnold_env.Append(CPPDEFINES=Split('_BOOL REQUIRE_IOSTREAM'))
+arnold_env.Append(LIBPATH=ALL_ALEMBIC_LIBRARY_PATHS + [ARNOLD_API_LIBRARY_PATH])
+arnold_env.Append(LIBS=Split(ALL_ALEMBIC_LIBS))
+mtoa_env.Append(LIBS=Split('ai'))
 
-    if system.os() == 'linux':
-        maya_env.Append(CPPPATH = [MAYA_INCLUDE_PATH])
-        maya_env.Append(LIBS=Split('GL'))
-        maya_env.Append(CPPDEFINES = Split('LINUX'))
-        maya_env.Append(LIBPATH = [os.path.join(MAYA_ROOT, 'lib')])
+ARNOLD_SHADERS = env.SConscript(os.path.join('arnold', 'shaders', 'SConscript'),
+                                            variant_dir = os.path.join(BUILD_BASE_DIR, 'shaders', 'arnold'),
+                                            duplicate   = 0,
+                                            exports     = 'arnold_env')
 
-    elif system.os() == 'darwin':
-        # MAYA_LOCATION on osx includes Maya.app/Contents
-        maya_env.Append(CPPPATH = [MAYA_INCLUDE_PATH])
-        maya_env.Append(LIBPATH = [os.path.join(MAYA_ROOT, 'MacOS')])
+ARNOLD_PROCS = env.SConscript(os.path.join('arnold', 'procedurals', 'SConscript'),
+                                            variant_dir = os.path.join(BUILD_BASE_DIR, 'procedurals', 'arnold'),
+                                            duplicate   = 0,
+                                            exports     = 'arnold_env')
 
-    maya_env.Append(LIBS=Split('ai pthread Foundation OpenMaya OpenMayaRender OpenMayaUI OpenMayaAnim OpenMayaFX'))
 
-    MTOA_API = env.SConscript(os.path.join('plugins', 'mtoa', 'SConscriptAPI'),
-                              variant_dir = os.path.join(BUILD_BASE_DIR, 'api'),
-                              duplicate   = 0,
-                              exports     = 'maya_env')
+# else:
+#     maya_env = env.Clone()
+#     maya_env.Append(CPPPATH = ['.'])
+#     maya_env.Append(CPPDEFINES = Split('_BOOL REQUIRE_IOSTREAM'))
 
-    MTOA = env.SConscript(os.path.join('plugins', 'mtoa', 'SConscript'),
-                          variant_dir = os.path.join(BUILD_BASE_DIR, 'mtoa'),
-                          duplicate   = 0,
-                          exports     = 'maya_env')
+#     if system.os() == 'linux':
+#         maya_env.Append(CPPPATH = [MAYA_INCLUDE_PATH])
+#         maya_env.Append(LIBS=Split('GL'))
+#         maya_env.Append(CPPDEFINES = Split('LINUX'))
+#         maya_env.Append(LIBPATH = [os.path.join(MAYA_ROOT, 'lib')])
 
-    MTOA_SHADERS = env.SConscript(os.path.join('shaders', 'src', 'SConscript'),
-                                  variant_dir = os.path.join(BUILD_BASE_DIR, 'shaders'),
-                                  duplicate   = 0,
-                                  exports     = 'env')
+#     elif system.os() == 'darwin':
+#         # MAYA_LOCATION on osx includes Maya.app/Contents
+#         maya_env.Append(CPPPATH = [MAYA_INCLUDE_PATH])
+#         maya_env.Append(LIBPATH = [os.path.join(MAYA_ROOT, 'MacOS')])
 
-    MTOA_PROCS = env.SConscript(os.path.join('procedurals', 'SConscript'),
-                                variant_dir = os.path.join(BUILD_BASE_DIR, 'procedurals'),
-                                duplicate   = 0,
-                                exports     = 'env')
+#     maya_env.Append(LIBS=Split('ai pthread Foundation OpenMaya OpenMayaRender OpenMayaUI OpenMayaAnim OpenMayaFX'))
 
-    def osx_hardcode_path(target, source, env):
-        cmd = ""
+#     MTOA_API = env.SConscript(os.path.join('plugins', 'mtoa', 'SConscriptAPI'),
+#                               variant_dir = os.path.join(BUILD_BASE_DIR, 'api'),
+#                               duplicate   = 0,
+#                               exports     = 'maya_env')
 
-        if target[0] == MTOA_API[0]:
-            cmd = "install_name_tool -id @loader_path/../bin/libmtoa_api.dylib"
-        elif target[0] == MTOA[0]:
-            cmd = " install_name_tool -add_rpath @loader_path/../bin/"
-        else:
-              cmd = "install_name_tool -id " + str(target[0]).split('/')[-1]
+#     MTOA = env.SConscript(os.path.join('plugins', 'mtoa', 'SConscript'),
+#                           variant_dir = os.path.join(BUILD_BASE_DIR, 'mtoa'),
+#                           duplicate   = 0,
+#                           exports     = 'maya_env')
 
-        if cmd :
-            p = subprocess.Popen(cmd + " " + str(target[0]), shell=True)
-            retcode = p.wait()
+#     MTOA_SHADERS = env.SConscript(os.path.join('shaders', 'src', 'SConscript'),
+#                                   variant_dir = os.path.join(BUILD_BASE_DIR, 'shaders'),
+#                                   duplicate   = 0,
+#                                   exports     = 'env')
 
-        return 0
+#     MTOA_PROCS = env.SConscript(os.path.join('procedurals', 'SConscript'),
+#                                 variant_dir = os.path.join(BUILD_BASE_DIR, 'procedurals'),
+#                                 duplicate   = 0,
+#                                 exports     = 'env')
 
-    if system.os() == 'darwin':
-        env.AddPostAction(MTOA_API[0],  Action(osx_hardcode_path, 'Adjusting paths in mtoa_api.dylib ...'))
-        env.AddPostAction(MTOA, Action(osx_hardcode_path, 'Adjusting paths in mtoa.boundle ...'))
-        env.AddPostAction(MTOA_SHADERS, Action(osx_hardcode_path, 'Adjusting paths in mtoa_shaders ...'))
-        env.AddPostAction(MTOA_PROCS, Action(osx_hardcode_path, 'Adjusting paths in mtoa_procs ...'))
+#     def osx_hardcode_path(target, source, env):
+#         cmd = ""
 
-if system.os() == 'windows':
-    # Rename plugins as .mll and install them in the target path
-    for path in MAYA_PLUGINS:
-        if str(path).endswith(".dll"):
+#         if target[0] == MTOA_API[0]:
+#             cmd = "install_name_tool -id @loader_path/../bin/libmtoa_api.dylib"
+#         elif target[0] == MTOA[0]:
+#             cmd = " install_name_tool -add_rpath @loader_path/../bin/"
+#         else:
+#             cmd = "install_name_tool -id " + str(target[0]).split('/')[-1]
 
+#         if cmd :
+#             p = subprocess.Popen(cmd + " " + str(target[0]), shell=True)
+#             retcode = p.wait()
+
+#         return 0
+
+#     if system.os() == 'darwin':
+#         env.AddPostAction(MTOA_API[0],  Action(osx_hardcode_path, 'Adjusting paths in mtoa_api.dylib ...'))
+#         env.AddPostAction(MTOA, Action(osx_hardcode_path, 'Adjusting paths in mtoa.boundle ...'))
+#         env.AddPostAction(MTOA_SHADERS, Action(osx_hardcode_path, 'Adjusting paths in mtoa_shaders ...'))
+#         env.AddPostAction(MTOA_PROCS, Action(osx_hardcode_path, 'Adjusting paths in mtoa_procs ...'))
+
+# Rename plugins as .mll and install them in the target path
+for path in MAYA_PLUGINS:
+    if str(path).endswith(SHARED_LIB_SUFFIX):
+        if system.os() == 'windows':
             new = os.path.splitext(str(path))[0] + '.mll'
             env.Command(new, str(path), Copy("$TARGET", "$SOURCE"))
-            env.Install(TARGET_PLUGIN_PATH, [new])
+        env.Install(TARGET_PLUGIN_PATH, [path])
 
-    nprocs = []
-    for proc in ARNOLD_PROCS:
-        if str(proc).endswith(".dll"):
-            nprocs.append(proc)
-    PROCS = nprocs
-    env.Install(env['TARGET_PROCEDURAL_PATH'], PROCS)
+nprocs = []
+for proc in ARNOLD_PROCS:
+    if str(proc).endswith(SHARED_LIB_SUFFIX):
+        nprocs.append(proc)
+PROCS = nprocs
+env.Install(env['TARGET_PROCEDURAL_PATH'], PROCS)
 
-    nshaders = []
-    for shader in ARNOLD_SHADERS:
-        if str(shader).endswith(".dll"):
-            nshaders.append(shader)
-    SHADERS = nshaders
-    env.Install(env['TARGET_SHADER_PATH'], SHADERS)
+nshaders = []
+for shader in ARNOLD_SHADERS:
+    if str(shader).endswith(SHARED_LIB_SUFFIX):
+        nshaders.append(shader)
+SHADERS = nshaders
+env.Install(env['TARGET_SHADER_PATH'], SHADERS)
 
-    nexts = []
-    for extension in MTOA_TRANSLATORS:
-        if str(extension).endswith(".dll"):
-            nexts.append(extension)
-    EXTS = nexts
-    env.Install(env['TARGET_EXTENSION_PATH'], EXTS)
+nexts = []
+for extension in MTOA_TRANSLATORS:
+    if str(extension).endswith(SHARED_LIB_SUFFIX):
+        nexts.append(extension)
+EXTS = nexts
+env.Install(env['TARGET_EXTENSION_PATH'], EXTS)
 
 # else:
 #     env.Install(TARGET_PLUGIN_PATH, MTOA)
 #     env.Install(TARGET_SHADER_PATH, MTOA_SHADERS)
 #     env.Install(env['TARGET_PROCEDURAL_PATH'], MTOA_PROCS)
 #     if system.os() == 'linux':
-#         libs = glob.glob(os.path.join(ARNOLD_API_LIB, '*.so'))
+#         libs = glob.glob(os.path.join(ARNOLD_API_LIBRARY_PATH, '*.so'))
 #     else:
-#         libs = glob.glob(os.path.join(ARNOLD_API_LIB, '*.dylib'))
+#         libs = glob.glob(os.path.join(ARNOLD_API_LIBRARY_PATH, '*.dylib'))
 
 # env.Install(env['TARGET_LIB_PATH'], libs)
 
-dylibs = glob.glob(os.path.join(ILMBASE_BIN, '*%s' % get_library_extension()))
+dylibs = glob.glob(os.path.join(ILMBASE_LIBRARY_PATH, '*%s' % get_library_extension()))
 env.Install(env['TARGET_BINARIES'], dylibs)
 
 # install scripts
 scriptfiles = find_files_recursive(os.path.join('maya', 'scripts'), ['.py', '.mel', '.ui'])
 env.InstallAs([os.path.join(TARGET_PYTHON_PATH, x) for x in scriptfiles],
-            [os.path.join('maya', 'scripts', x) for x in scriptfiles])
+              [os.path.join('maya', 'scripts', x) for x in scriptfiles])
 
 # install icons
 env.Install(TARGET_ICONS_PATH, glob.glob(os.path.join('icons', '*.xpm')))
@@ -676,7 +689,7 @@ if maya_base_version == '2013':
 
 ## Sets release package name based on MtoA version, architecture and compiler used.
 ##
-package_name = "AlembicHolder-" + "-" + system.os() + "-" + maya_base_version + PACKAGE_SUFFIX
+package_name = "AlembicHolder-" + "-" + system.os() + "-" + maya_base_version
 
 if env['MODE'] in ['debug', 'profile']:
     package_name += '-' + env['MODE']
@@ -685,48 +698,6 @@ package_name_inst = package_name
 
 PACKAGE = env.MakePackage(package_name, MAYA_PLUGINS + MTOA_TRANSLATORS + ARNOLD_SHADERS + ARNOLD_PROCS)
 #PACKAGE = env.MakePackage(package_name, MTOA + MTOA_API + MTOA_SHADERS)
-
-import ftplib
-
-def deploy(target, source, env):
-
-    def ftp_send_binary_cb(block):
-        print "\b#",
-
-    local_package_name = str(source[0])
-
-    server = env['FTP']
-
-    ftp = ftplib.FTP(server)
-
-    ftp.login(env['FTP_USER'], env['FTP_PASS'])
-
-    directory = env['FTP_SUBDIR']
-
-    directory_split = directory.split('/')
-
-    for d in directory_split:
-        try:
-            ftp.cwd(d)
-        except:
-            ftp.mkd(d)
-            ftp.cwd(d)
-
-    f = open(os.path.abspath(local_package_name), 'rb')
-    print 'Sending "%s" to %s/%s...' % (source[0], server, directory)
-    command = "STOR %s" % local_package_name
-    try:
-        ftp.storbinary(command, f, 81920, ftp_send_binary_cb)
-    except:
-        # Old python versions have no ftp callback
-        ftp.storbinary(command, f, 81920)
-    print
-
-    f.close()
-    ftp.close()
-
-env['BUILDERS']['PackageDeploy']  = Builder(action = Action(deploy,  "Deploying release package: '$SOURCE'"))
-
 
 ## Specifies the files that will be included in the release package.
 ## List items have 2 or 3 elements, with 3 possible formats:
@@ -739,7 +710,7 @@ PACKAGE_FILES = [
 [os.path.join(BUILD_BASE_DIR, 'alembicHolder.mod'), '.'],
 [os.path.join('icons', '*.xpm'), 'icons'],
 [os.path.join('icons', '*.png'), 'icons'],
-[os.path.join(ILMBASE_BIN, '*%s' % get_library_extension()), 'bin'],
+[os.path.join(ILMBASE_LIBRARY_PATH, '*%s' % get_library_extension()), 'bin'],
 #[MTOA_SHADERS[0], 'shaders'],
 ]
 
