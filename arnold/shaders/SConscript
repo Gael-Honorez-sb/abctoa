@@ -30,7 +30,7 @@ for dir in PLUGINS:
             plugin_env = local_env.Clone()
             ARNOLD_PLUGINS    += plugin_env.SConscript(sconscriptPath,
                              duplicate   = 0,
-                             variant_dir = os.path.join(local_env['BUILD_BASE_DIR'], 'shaders', 'arnold', dir),
+                             variant_dir = os.path.join(local_env['BUILD_BASE_DIR'], 'arnold', 'shaders', dir),
                              exports     = 'arnold_env')
         else:
             proc_src_files = [os.path.join(dir, name) for name in find_files_recursive(base_dir, ['.c', '.cpp'])]

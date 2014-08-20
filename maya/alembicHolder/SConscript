@@ -16,12 +16,11 @@ source_files  = find_files_recursive(src_base_dir, ['.c', '.cpp'])
 include_files = find_files_recursive(src_base_dir, ['.h'])
 
 JSON_INCLUDE_PATH = local_env['JSON_INCLUDE_PATH']
-JSON_LIB = local_env['JSON_LIB']
-BOOST_LIBS = local_env['BOOST_LIBS']
+JSON_LIBRARY = local_env['JSON_LIBRARY']
+BOOST_LIBRARY_PATH = local_env['BOOST_LIBRARY_PATH']
 
-local_env.Append(CPPPATH = local_env['CPPPATH']  + [JSON_INCLUDE_PATH])
-local_env.Append(LIBPATH = local_env["LIBPATH"] + [BOOST_LIBS])
-local_env.Append(LIBS = local_env["LIBS"] + [JSON_LIB] )
+local_env.Append(CPPPATH = [JSON_INCLUDE_PATH])
+local_env.Append(LIBS = [JSON_LIBRARY] )
 
 
 MAYA_VIEWER = local_env.SharedLibrary('alembicHolder', source_files, LIBPREFIX='')

@@ -4,7 +4,8 @@
 #include <boost/algorithm/string.hpp>
 #include <vector>
 
-#include "render/RenderSession.h"
+// FIXME: private mtoa header (needed?):
+//#include "render/RenderSession.h"
 #include "attributes/AttrHelper.h"
 
 #include "common/UtilityFunctions.h"
@@ -123,7 +124,7 @@ AtNode* CABCViewerTranslator::ExportProcedural(AtNode* procedural, bool update)
 
    if (!update)
    {
-      MString procLib = "AlembicArnoldProcedural" + LIBEXT ;
+      MString procLib = MString("AlembicArnoldProcedural") + LIBEXT ;
 
       AiNodeSetStr(procedural, "dso", procLib.asChar() );
 
