@@ -25,6 +25,7 @@
 #include <maya/MFloatVector.h>
 #include <maya/MString.h>
 #include <maya/MColor.h>
+#include <maya/MArrayDataBuilder.h>
 //Alembic
 #include <Alembic/Abc/All.h>
 #include <Alembic/AbcCoreFactory/IFactory.h>

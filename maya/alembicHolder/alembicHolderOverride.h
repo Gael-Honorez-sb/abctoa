@@ -27,6 +27,7 @@ public:
     virtual MUserData* prepareForDraw(
         const MDagPath& objPath,
         const MDagPath& cameraPath,
+        const MHWRender::MFrameContext& frameContext,
         MUserData* oldData);
 
     static void draw(const MHWRender::MDrawContext& context, const MUserData* userData);

@@ -121,6 +121,7 @@ MBoundingBox AlembicHolderOverride::boundingBox(
 MUserData* AlembicHolderOverride::prepareForDraw(
     const MDagPath& objPath,
     const MDagPath& cameraPath,
+    const MHWRender::MFrameContext& frameContext,
     MUserData* oldData)
 {
     using namespace MHWRender;
@@ -374,15 +375,16 @@ bool AlembicHolderOverride::setupLightingGL(const MHWRender::MDrawContext& conte
         }
 
         for (unsigned int i=0; i<nbLights; ++i) {
-            MFloatPoint position;
             MFloatVector direction;
             float intensity;
             MColor color;
             bool hasDirection;
             bool hasPosition;
+            MFloatPointArray positions;
             status = context.getLightInformation(
-                i, position, direction, intensity, color,
+                i, positions, direction, intensity, color,
                 hasDirection, hasPosition);
+
             if (status != MStatus::kSuccess) return false;
 
             // if (hasPosition)
@@ -397,6 +399,7 @@ bool AlembicHolderOverride::setupLightingGL(const MHWRender::MDrawContext& conte
             if (hasDirection) {
                 if (hasPosition) {
                     // Assumes a Maya Spot Light!
+                    MFloatPoint position = positions[0];
                     const MGLfloat ambient[4] = { 0.0f, 0.0f, 0.0f, 1.0f };
                     const MGLfloat diffuse[4] = { intensity * color[0],
                                                   intensity * color[1],
@@ -441,6 +444,7 @@ bool AlembicHolderOverride::setupLightingGL(const MHWRender::MDrawContext& conte
             }
             else if (hasPosition) {
                 // Assumes a Maya Point Light!
+                MFloatPoint position = positions[0];
                 const MGLfloat ambient[4] = { 0.0f, 0.0f, 0.0f, 1.0f };
                 const MGLfloat diffuse[4] = { intensity * color[0],
                                               intensity * color[1],
