@@ -117,11 +117,7 @@ MStatus abcCacheExportCmd::doIt( const MArgList &args)
                      MString nodeName(container.name());
                      nodeName = nodeName + ":" + MString(AiNodeGetName(*sit));
 
-                     MStringArray splittedName;
-                     if(nodeName.split('.', splittedName) == MS::kSuccess)
-                     {
-                         nodeName = splittedName[0];
-                     }
+                     nodeName = MString(pystring::replace(pystring::replace(std::string(nodeName.asChar()), ".message", ""), ".", "_").c_str());
 
                      AiMsgInfo("[EXPORTING %s] Added node : %s", container.name().asChar(), nodeName.asChar());
                      matObj.getSchema().addNetworkNode(nodeName.asChar(), "arnold", AiNodeEntryGetName(AiNodeGetNodeEntry(*sit)));

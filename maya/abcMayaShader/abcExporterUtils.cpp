@@ -419,11 +419,16 @@ void exportLink(AtNode* sit, int outputType,  Mat::OMaterial matObj, MString nod
 {
     AiMsgTab (+2);
     int comp;
-    AiMsgDebug("Checking link %s.%s", AiNodeGetName(sit), paramName);
+    AiMsgDebug("Checking link %s.%s", nodeName.asChar(), paramName);
     AtNode* linked = AiNodeGetLink(sit, paramName, &comp);
 
     MString nodeNameLinked(containerName);
+
     nodeNameLinked = nodeNameLinked + ":" + MString(AiNodeGetName(linked));
+
+    //We need to replace the "." stuff from the name as we does it from the exporter.
+    nodeNameLinked = MString(pystring::replace(pystring::replace(std::string(nodeNameLinked.asChar()), ".message", ""), ".", "_").c_str());
+
     std::string outPlug;
 
     if(comp == -1)
