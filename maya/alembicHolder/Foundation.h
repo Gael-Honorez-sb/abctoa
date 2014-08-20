@@ -55,6 +55,7 @@
 #include <boost/preprocessor/stringize.hpp>
 #include <boost/timer.hpp>
 #include <boost/program_options.hpp>
+#include <boost/utility.hpp>
 
 #include <iostream>
 #include <algorithm>
