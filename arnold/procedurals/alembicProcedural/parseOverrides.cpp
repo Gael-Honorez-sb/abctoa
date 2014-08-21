@@ -216,7 +216,7 @@ void ParseShaders(Json::Value jroot, std::string ns, std::string nameprefix, Pro
                     AiNodeSetStr(shaderNode, "name", shaderName.c_str());
                 }
             }
-            else
+            if(shaderNode == NULL)
             {
                 // search without custom namespace
                 shaderName = itr.key().asString();
