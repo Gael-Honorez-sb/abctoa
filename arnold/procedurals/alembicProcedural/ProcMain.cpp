@@ -357,7 +357,7 @@ int ProcInit( struct AtNode *node, void **user_ptr )
             IArchive archive = factory.getArchive(abcfile);
             if (!archive.valid())
             {
-                AiMsgError ( "Cannot read file %s", abcfile);
+                AiMsgWarning ( "Cannot read file %s", abcfile);
             }
             else
             {
@@ -368,13 +368,7 @@ int ProcInit( struct AtNode *node, void **user_ptr )
                 args->materialsObject = materialsObject;
                 args->abcShaderFile = abcfile;
             }
-
         }
-
-
-        IArchive archive;
-        Alembic::AbcCoreFactory::IFactory factory;
-        archive = factory.getArchive(AiNodeGetStr(node, "abcShaders"));
     }
 
     w_lock.unlock();
