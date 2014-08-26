@@ -17,6 +17,7 @@
 #include <maya/MDrawContext.h>
 #include <maya/MPxDrawOverride.h>
 #include <maya/MDrawRegistry.h>
+#include <maya/MGlobal.h>
 
 MString    drawDbClassification("drawdb/geometry/alembicHolder");
 MString    drawRegistrantId("AlembicHolderPlugin");
@@ -63,6 +64,11 @@ MStatus initializePlugin( MObject obj )
         return status;
     }
 
+    status = MGlobal::executePythonCommand(MString("import alembicHolder.cmds.registerAlembicHolder;alembicHolder.cmds.registerAlembicHolder.registerAlembicHolder()"), true, false);
+    if (!status) {
+        status.perror("registerMenu");
+        return status;
+    }
     return status;
 }
 
@@ -94,6 +100,12 @@ MStatus uninitializePlugin( MObject obj)
     status = plugin.deregisterCommand( "ABCGetTags" );
     if (!status) {
         status.perror("deregisterCommand");
+        return status;
+    }
+
+    status = MGlobal::executePythonCommand(MString("import alembicHolder.cmds.unregisterAlembicHolder;alembicHolder.cmds.unregisterAlembicHolder.unregisterAlembicHolder()"), true, false);
+    if (!status) {
+        status.perror("unregisterMenu");
         return status;
     }
 
