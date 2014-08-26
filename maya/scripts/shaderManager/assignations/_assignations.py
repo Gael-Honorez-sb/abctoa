@@ -224,7 +224,7 @@ class cacheAssignations(object):
     def assignDisplacement(self, layer, path, shader):
         if layer == None:
             self.mainAssignations.assignDisplacement(path, shader)
-            self.parent.updateDisplacements(self.mainAssignations.getShaders())
+            self.parent.updateDisplacements(self.mainAssignations.getDisplacements())
         else:
             self.layers.assignDisplacement(layer, path, shader)
 
