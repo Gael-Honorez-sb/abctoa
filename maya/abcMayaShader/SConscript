@@ -19,13 +19,15 @@ include_files = find_files_recursive(src_base_dir, ['.h'])
 MTOA_API_INCLUDE_PATH = local_env['MTOA_API_INCLUDE_PATH']
 ARNOLD_API_INCLUDE_PATH = local_env['ARNOLD_API_INCLUDE_PATH']
 MTOA_API_LIBRARY_PATH = local_env['MTOA_API_LIBRARY_PATH']
+PYSTRING_INCLUDE_PATH = local_env['PYSTRING_INCLUDE_PATH']
+PYSTRING_LIBRARY_PATH = local_env['PYSTRING_LIBRARY_PATH']
 
 
-local_env.Append(CPPPATH = [MTOA_API_INCLUDE_PATH, ARNOLD_API_INCLUDE_PATH])
+local_env.Append(CPPPATH = [MTOA_API_INCLUDE_PATH, ARNOLD_API_INCLUDE_PATH, PYSTRING_INCLUDE_PATH])
 
-local_env.Append(LIBPATH = [MTOA_API_LIBRARY_PATH])
+local_env.Append(LIBPATH = [MTOA_API_LIBRARY_PATH, PYSTRING_LIBRARY_PATH])
 
-local_env.Append(LIBS = ["ai", "mtoa_api"] )
+local_env.Append(LIBS = ["ai", "mtoa_api", "pystring"] )
 
 #maya_env.Append(LIBS=Split(
 
