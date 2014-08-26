@@ -496,6 +496,7 @@ CAlembicDatas* nozAlembicHolder::alembicData()
         GetPlugData();
         return &fGeometry;
     }
+    return NULL;
 }
 
 // UI IMPLEMENTATION
