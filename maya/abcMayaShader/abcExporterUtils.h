@@ -4,8 +4,7 @@
 
 #include "ai.h"
 // FIXME: private mtoa headers:
-//#include "session/ArnoldSession.h"
-//#include "scene/MayaScene.h"
+#include "scene/MayaScene.h" // This one is really needed to initiate the shader translation.
 #include "translators/NodeTranslator.h"
 #include <Alembic/Abc/All.h>
 #include <Alembic/AbcCoreHDF5/All.h>
