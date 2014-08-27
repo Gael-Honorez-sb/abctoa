@@ -27,7 +27,9 @@ public:
     virtual MUserData* prepareForDraw(
         const MDagPath& objPath,
         const MDagPath& cameraPath,
+        #ifndef MAYA_2013
         const MHWRender::MFrameContext& frameContext,
+        #endif
         MUserData* oldData);
 
     static void draw(const MHWRender::MDrawContext& context, const MUserData* userData);
