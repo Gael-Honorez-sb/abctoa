@@ -577,9 +577,14 @@ void CAlembicHolderUI::draw(const MDrawRequest & request, M3dView & view) const
         token = kDrawBoundingBox;
 
     view.beginGL();
-    glPushAttrib(GL_ALL_ATTRIB_BITS);
-    glEnable(GL_DEPTH_TEST);
-    glDepthFunc(GL_LEQUAL);
+
+    // Setup the OpenGL state as necessary
+    //
+    // The most straightforward way to ensure that the OpenGL
+    // material parameters are properly restored after drawing is
+    // to use push/pop attrib as we have no easy of knowing the
+    // current values of all the parameters.
+    glPushAttrib(MGL_LIGHTING_BIT);
 
     // handling refreshes
     GLuint glcache = -1;
@@ -624,9 +629,15 @@ void CAlembicHolderUI::draw(const MDrawRequest & request, M3dView & view) const
             }
             glcache = glGenLists(1);
             glNewList(glcache, MGL_COMPILE);
+
+          
             if (cache->abcSceneManager.hasKey(sceneKey))
+            {
                 if (MGlobal::mayaState() == MGlobal::kInteractive)
+                {
                     cache->abcSceneManager.getScene(sceneKey)->draw(cache->abcSceneState);
+                }
+            }
             glEndList();
             g_meshCache[sceneKey] = glcache;
 
@@ -650,11 +661,41 @@ void CAlembicHolderUI::draw(const MDrawRequest & request, M3dView & view) const
         break;
     case kDrawSmoothShaded:
     case kDrawFlatShaded:
-        MMaterial material = request.material();
-        material.setMaterial( request.multiPath(), request.isTransparent() );
-            gGLFT->glPushMatrix();
+        gGLFT->glPushMatrix();
+        
+        glColorMaterial(MGL_FRONT_AND_BACK, MGL_AMBIENT_AND_DIFFUSE);
+        glEnable(MGL_COLOR_MATERIAL) ;
+        glColor4f(.7, .7, .7, 1.0);
+        // On Geforce cards, we emulate two-sided lighting by drawing
+        // triangles twice because two-sided lighting is 10 times
+        // slower than single-sided lighting.
+        
+        bool needEmulateTwoSidedLighting = false;
+        // Query face-culling and two-sided lighting state          
+        bool  cullFace = (gGLFT->glIsEnabled(MGL_CULL_FACE) == MGL_TRUE);
+        MGLint twoSidedLighting = MGL_FALSE;
+        gGLFT->glGetIntegerv(MGL_LIGHT_MODEL_TWO_SIDE, &twoSidedLighting);
+
+        needEmulateTwoSidedLighting = (!cullFace && twoSidedLighting);
+
+        if(needEmulateTwoSidedLighting)
+        {
+            glEnable(MGL_CULL_FACE);
+            glLightModeli(MGL_LIGHT_MODEL_TWO_SIDE, 0);
+            glCullFace(MGL_FRONT);
             glCallList(glcache);
-            gGLFT->glPopMatrix();
+            glCullFace(MGL_BACK);
+            glCallList(glcache);
+            gGLFT->glLightModeli(MGL_LIGHT_MODEL_TWO_SIDE, 1);
+            glDisable(MGL_CULL_FACE);
+        }
+        else
+            glCallList(glcache);
+
+        // restore the OpenGL state
+        
+
+        gGLFT->glPopMatrix();
         break;
     }
 
@@ -681,8 +722,6 @@ void CAlembicHolderUI::draw(const MDrawRequest & request, M3dView & view) const
             break;
         case kDrawSmoothShaded:
         case kDrawFlatShaded:
-            MMaterial material = request.material();
-            material.setMaterial( request.multiPath(), request.isTransparent() );
             gGLFT->glPushMatrix();
             glCallList(glcacheSel);
             gGLFT->glPopMatrix();
@@ -737,6 +776,8 @@ void CAlembicHolderUI::drawBoundingBox( const MDrawRequest & request,
         // the edges together
 
         MPoint minVertex = box.min();
+
+        request.color();
 
         // Draw first side
         glBegin( MGL_LINE_LOOP );
