@@ -555,12 +555,12 @@ arnold_env.Append(LIBS=Split(ALL_ALEMBIC_LIBS))
 arnold_env.Append(LIBS=Split('ai'))
 
 ARNOLD_SHADERS = env.SConscript(os.path.join('arnold', 'shaders', 'SConscript'),
-                                            variant_dir = os.path.join(BUILD_BASE_DIR, 'shaders', 'arnold'),
+                                            variant_dir = os.path.join(BUILD_BASE_DIR, 'shaders'),
                                             duplicate   = 0,
                                             exports     = 'arnold_env')
 
 ARNOLD_PROCS = env.SConscript(os.path.join('arnold', 'procedurals', 'SConscript'),
-                                            variant_dir = os.path.join(BUILD_BASE_DIR, 'procedurals', 'arnold'),
+                                            variant_dir = os.path.join(BUILD_BASE_DIR, 'procedurals'),
                                             duplicate   = 0,
                                             exports     = 'arnold_env')
 
