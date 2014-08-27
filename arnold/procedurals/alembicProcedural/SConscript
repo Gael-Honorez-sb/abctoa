@@ -16,7 +16,7 @@ source_files  = find_files_recursive(src_base_dir, ['.c', '.cpp'])
 include_files = find_files_recursive(src_base_dir, ['.h'])
 
 JSON_INCLUDE_PATH = local_env['JSON_INCLUDE_PATH']
-JSON_LIBRARY = local_env['JSON_LIBRARY']
+JSON_LIBRARY_PATH = local_env['JSON_LIBRARY_PATH']
 
 PYSTRING_INCLUDE_PATH = local_env['PYSTRING_INCLUDE_PATH']
 PYSTRING_LIBRARY_PATH = local_env['PYSTRING_LIBRARY_PATH']
@@ -24,9 +24,9 @@ PYSTRING_LIBRARY_PATH = local_env['PYSTRING_LIBRARY_PATH']
 BOOST_LIBRARY_PATH = local_env['BOOST_LIBRARY_PATH']
 
 local_env.Append(CPPPATH = local_env['CPPPATH']  + [JSON_INCLUDE_PATH, PYSTRING_INCLUDE_PATH])
-local_env.Append(LIBPATH = local_env["LIBPATH"] + [PYSTRING_LIBRARY_PATH, BOOST_LIBRARY_PATH])
+local_env.Append(LIBPATH = local_env["LIBPATH"] + [PYSTRING_LIBRARY_PATH, JSON_LIBRARY_PATH, BOOST_LIBRARY_PATH])
 
-local_env.Append(LIBS = local_env["LIBS"] + [JSON_LIBRARY, "pyString"] )
+local_env.Append(LIBS = local_env["LIBS"] + ["pyString", "json"] )
 
 
 ALEMBIC_PLUGIN = local_env.SharedLibrary('AlembicArnoldProcedural', source_files, LIBPREFIX='')
