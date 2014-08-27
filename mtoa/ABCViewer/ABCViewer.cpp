@@ -4,8 +4,6 @@
 #include <boost/algorithm/string.hpp>
 #include <vector>
 
-// FIXME: private mtoa header (needed?):
-//#include "render/RenderSession.h"
 #include "attributes/AttrHelper.h"
 
 #include "common/UtilityFunctions.h"
