@@ -307,13 +307,13 @@ void AlembicHolderOverride::draw(const MHWRender::MDrawContext& context, const M
 
             const bool drawAsBlack = !anyLights;
 
-            MColor diffuseColor(0.5, 0.5, 0.5, 1.0f);
+            MColor diffuseColor(0.7, 0.7, 0.7, 1.0f);
 
             if(drawAsBlack)
                 glColor4f(0.0f, 0.0f,0.0f, 1.0f);
              else {
             // set colour
-            glColor4f(.5f,.5f,.5f,1.0f);
+            glColor4f(.7f,.7f,.7f,1.0f);
             }
 
             if (cache->abcSceneManager.hasKey(sceneKey))
