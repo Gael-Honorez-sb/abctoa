@@ -20,7 +20,7 @@ JSON_LIBRARY_PATH = local_env['JSON_LIBRARY_PATH']
 BOOST_LIBRARY_PATH = local_env['BOOST_LIBRARY_PATH']
 
 local_env.Append(CPPPATH = [JSON_INCLUDE_PATH])
-local_env.Append(LIBPATH = [JSON_LIBRARY_PATH])
+local_env.Append(LIBPATH = [JSON_LIBRARY_PATH, BOOST_LIBRARY_PATH])
 local_env.Append(LIBS = ["json"] )
 
 
