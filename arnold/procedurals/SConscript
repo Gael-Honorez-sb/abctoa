@@ -23,7 +23,6 @@ ARNOLD_PLUGINS = []
 
 # For every procedural found, get a list of source and include files
 for dir in PLUGINS:
-    print os.path.join(local_env['BUILD_BASE_DIR'], 'procedurals', 'arnold', dir)
     base_dir = os.path.join(local_env['ROOT_DIR'], 'arnold', 'procedurals', dir)
     if os.path.isdir(base_dir) and dir != '.svn':
         sconscriptPath = os.path.join(base_dir, "SConscript")
@@ -31,7 +30,7 @@ for dir in PLUGINS:
             plugin_env = local_env.Clone()
             ARNOLD_PLUGINS    += plugin_env.SConscript(sconscriptPath,
                              duplicate   = 0,
-                             variant_dir = os.path.join(local_env['BUILD_BASE_DIR']),
+                             variant_dir = dir,
                              exports     = 'arnold_env')
         else:
             proc_src_files = [os.path.join(dir, name) for name in find_files_recursive(base_dir, ['.c', '.cpp'])]
