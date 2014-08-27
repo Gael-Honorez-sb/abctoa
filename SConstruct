@@ -552,7 +552,7 @@ else:
     arnold_env.Append(CPPDEFINES=Split('_BOOL REQUIRE_IOSTREAM'))
 arnold_env.Append(LIBPATH=ALL_ALEMBIC_LIBRARY_PATHS + [ARNOLD_API_LIBRARY_PATH])
 arnold_env.Append(LIBS=Split(ALL_ALEMBIC_LIBS))
-mtoa_env.Append(LIBS=Split('ai'))
+arnold_env.Append(LIBS=Split('ai'))
 
 ARNOLD_SHADERS = env.SConscript(os.path.join('arnold', 'shaders', 'SConscript'),
                                             variant_dir = os.path.join(BUILD_BASE_DIR, 'shaders', 'arnold'),
