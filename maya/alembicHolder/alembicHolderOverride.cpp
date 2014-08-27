@@ -121,8 +121,11 @@ MBoundingBox AlembicHolderOverride::boundingBox(
 MUserData* AlembicHolderOverride::prepareForDraw(
     const MDagPath& objPath,
     const MDagPath& cameraPath,
+    #ifndef MAYA_2013
     const MHWRender::MFrameContext& frameContext,
-    MUserData* oldData)
+    #endif
+    MUserData* oldData
+    )
 {
     using namespace MHWRender;
 

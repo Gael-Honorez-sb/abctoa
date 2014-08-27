@@ -259,8 +259,8 @@ arnold_version    = get_arnold_version(os.path.join(ARNOLD_API_INCLUDE_PATH, 'ai
 maya_version      = get_maya_version(os.path.join(MAYA_INCLUDE_PATH, 'maya', 'MTypes.h'))
 maya_version_base = maya_version[0:4]
 
-if int(maya_version_base) >= 2014:
-    env['ENABLE_VP2'] = 1
+if int(maya_version_base) < 2014:
+    env['MAYA_2013'] = 1
 
 if int(maya_version_base) == 2012:
     env['MSVC_VERSION'] = '9.0'
@@ -450,6 +450,9 @@ elif env['COMPILER'] == 'icc':
 
 if env['MODE'] == 'debug':
     env.Append(CPPDEFINES = Split('ARNOLD_DEBUG'))
+
+if env["MAYA_2013"] == 1:
+    env.Append(CPPDEFINES=Split('MAYA_2013'))
 
 ## platform related defines
 if system.os() == 'windows':
