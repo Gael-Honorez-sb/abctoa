@@ -82,9 +82,9 @@ vars.AddVariables(
     PathVariable('JSON_INCLUDE_PATH',
                  'Json include path',
                  os.path.join(ROOT_DIR, 'contrib', 'jsoncpp', 'include'), PathVariable.PathIsDir),
-    PathVariable('JSON_LIBRARY',
-                 'Json library',
-                 'jsoncpp', PathVariable.PathAccept),
+    PathVariable('JSON_LIBRARY_PATH',
+                 'Json library path',
+                 os.path.join(ROOT_DIR, 'contrib', 'jsoncpp', 'lib'), PathVariable.PathIsDir),
     PathVariable('PYSTRING_INCLUDE_PATH',
                  'Pystring include path',
                  '.'),
@@ -215,7 +215,7 @@ ALEMBIC_INCLUDE_PATH = env.subst(env['ALEMBIC_INCLUDE_PATH'])
 BOOST_INCLUDE_PATH = env.subst(env['BOOST_INCLUDE_PATH'])
 BOOST_LIBRARY_PATH = env.subst(env['BOOST_LIBRARY_PATH'])
 JSON_INCLUDE_PATH = env.subst(env['JSON_INCLUDE_PATH'])
-JSON_LIBRARY = env.subst(env['JSON_LIBRARY'])
+JSON_LIBRARY_PATH = env.subst(env['JSON_LIBRARY_PATH'])
 PYSTRING_INCLUDE_PATH = env.subst(env['PYSTRING_INCLUDE_PATH'])
 PYSTRING_LIBRARY_PATH = env.subst(env['PYSTRING_LIBRARY_PATH'])
 ILMBASE_INCLUDE_PATH = env.subst(env['ILMBASE_INCLUDE_PATH'])
