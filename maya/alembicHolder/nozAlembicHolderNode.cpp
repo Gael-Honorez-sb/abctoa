@@ -61,7 +61,7 @@ static MGLFunctionTable *gGLFT = NULL;
 //#include "boost/foreach.hpp"
 
 typedef std::map<std::string, GLuint> NodeCache;
-NodeCache g_meshCache;
+
 NodeCache g_bboxCache;
 
 
@@ -126,12 +126,6 @@ void nodePreRemovalCallback(MObject& obj, void* data) {
     CAlembicDatas::abcSceneManager.removeScene(sceneKey);
     if(CAlembicDatas::abcSceneManager.hasKey(sceneKey) == 0)
     {
-        NodeCache::iterator I = g_meshCache.find(sceneKey);
-        if (I != g_meshCache.end())
-        {
-            glDeleteLists((*I).second, 1);
-            g_meshCache.erase(I);
-        }
         NodeCache::iterator J = g_bboxCache.find(sceneKey);
         if (J != g_bboxCache.end())
         {
@@ -423,12 +417,6 @@ MStatus nozAlembicHolder::compute( const MPlug& plug, MDataBlock& block )
                 CAlembicDatas::abcSceneManager.removeScene(fGeometry.m_currscenekey);
                 if(CAlembicDatas::abcSceneManager.hasKey(fGeometry.m_currscenekey) == 0)
                 {
-                    NodeCache::iterator I = g_meshCache.find(fGeometry.m_currscenekey);
-                    if (I != g_meshCache.end())
-                    {
-                        glDeleteLists((*I).second, 1);
-                        g_meshCache.erase(I);
-                    }
                     NodeCache::iterator J = g_bboxCache.find(fGeometry.m_currscenekey);
                     if (J != g_bboxCache.end())
                     {
@@ -596,52 +584,18 @@ void CAlembicHolderUI::draw(const MDrawRequest & request, M3dView & view) const
         else
             glcache = (*I).second;
     }
-    else
+
+    if(refresh == true && token == kDrawBoundingBox)
     {
-        NodeCache::iterator I = g_meshCache.find(sceneKey);
-        if (I == g_meshCache.end())
+        if (glcache != -1)
         {
-            refresh=true;
+            glDeleteLists(glcache,1);
         }
-        else
-            glcache = (*I).second;
-    }
-
-    if(refresh == true)
-    {
-        if(token == kDrawBoundingBox)
-        {
-            if (glcache != -1)
-            {
-                glDeleteLists(glcache,1);
-            }
-            glcache = glGenLists(1);
-            glNewList(glcache, MGL_COMPILE);
-            drawBoundingBox( request, view );
-            glEndList();
-            g_bboxCache[sceneKey] = glcache;
-        }
-        else
-        {
-            if (glcache != -1)
-            {
-                glDeleteLists(glcache, 1);
-            }
-            glcache = glGenLists(1);
-            glNewList(glcache, MGL_COMPILE);
-
-          
-            if (cache->abcSceneManager.hasKey(sceneKey))
-            {
-                if (MGlobal::mayaState() == MGlobal::kInteractive)
-                {
-                    cache->abcSceneManager.getScene(sceneKey)->draw(cache->abcSceneState);
-                }
-            }
-            glEndList();
-            g_meshCache[sceneKey] = glcache;
-
-        }
+        glcache = glGenLists(1);
+        glNewList(glcache, MGL_COMPILE);
+        drawBoundingBox( request, view );
+        glEndList();
+        g_bboxCache[sceneKey] = glcache;
     }
 
     switch (token)
@@ -652,62 +606,24 @@ void CAlembicHolderUI::draw(const MDrawRequest & request, M3dView & view) const
 
     case kDrawWireframe:
     case kDrawWireframeOnShaded:
-
-        gGLFT->glPolygonMode(GL_FRONT_AND_BACK, MGL_LINE);
+        if (cache->abcSceneManager.hasKey(sceneKey) && (MGlobal::mayaState() == MGlobal::kInteractive))
+        {
+            gGLFT->glPolygonMode(GL_FRONT_AND_BACK, MGL_LINE);
             gGLFT->glPushMatrix();
-            glCallList(glcache);
+            cache->abcSceneManager.getScene(sceneKey)->draw(cache->abcSceneState);
             gGLFT->glPopMatrix();
-        gGLFT->glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+            gGLFT->glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+        }
         break;
     case kDrawSmoothShaded:
     case kDrawFlatShaded:
-        gGLFT->glPushMatrix();
-        
-        glColorMaterial(MGL_FRONT_AND_BACK, MGL_AMBIENT_AND_DIFFUSE);
-        glEnable(MGL_COLOR_MATERIAL) ;
-        glColor4f(.7, .7, .7, 1.0);
-        // On Geforce cards, we emulate two-sided lighting by drawing
-        // triangles twice because two-sided lighting is 10 times
-        // slower than single-sided lighting.
-        
-        bool needEmulateTwoSidedLighting = false;
-        // Query face-culling and two-sided lighting state          
-        bool  cullFace = (gGLFT->glIsEnabled(MGL_CULL_FACE) == MGL_TRUE);
-        MGLint twoSidedLighting = MGL_FALSE;
-        gGLFT->glGetIntegerv(MGL_LIGHT_MODEL_TWO_SIDE, &twoSidedLighting);
-
-        needEmulateTwoSidedLighting = (!cullFace && twoSidedLighting);
-
-        if(needEmulateTwoSidedLighting)
-        {
-            glEnable(MGL_CULL_FACE);
-            glLightModeli(MGL_LIGHT_MODEL_TWO_SIDE, 0);
-            glCullFace(MGL_FRONT);
-            glCallList(glcache);
-            glCullFace(MGL_BACK);
-            glCallList(glcache);
-            gGLFT->glLightModeli(MGL_LIGHT_MODEL_TWO_SIDE, 1);
-            glDisable(MGL_CULL_FACE);
-        }
-        else
-            glCallList(glcache);
-
-        // restore the OpenGL state
-        
-
-        gGLFT->glPopMatrix();
+        if (cache->abcSceneManager.hasKey(sceneKey) && (MGlobal::mayaState() == MGlobal::kInteractive))
+            drawingMeshes(sceneKey, cache, "");
         break;
     }
 
-    if(selectionKey != "")
+    if(selectionKey != "" && cache->abcSceneManager.hasKey(sceneKey) && (MGlobal::mayaState() == MGlobal::kInteractive))
     {
-        GLuint glcacheSel = glGenLists(1);
-        glNewList(glcacheSel, MGL_COMPILE);
-        if (cache->abcSceneManager.hasKey(sceneKey))
-            if (MGlobal::mayaState() == MGlobal::kInteractive)
-                cache->abcSceneManager.getScene(sceneKey)->drawOnly(cache->abcSceneState, selectionKey);
-        glEndList();
-
         switch (cache->token)
         {
         case kDrawBoundingBox :
@@ -716,15 +632,13 @@ void CAlembicHolderUI::draw(const MDrawRequest & request, M3dView & view) const
         case kDrawWireframeOnShaded:
             gGLFT->glPolygonMode(GL_FRONT_AND_BACK, MGL_LINE);
             gGLFT->glPushMatrix();
-            glCallList(glcacheSel);
+            cache->abcSceneManager.getScene(sceneKey)->drawOnly(cache->abcSceneState, selectionKey);
             gGLFT->glPopMatrix();
             gGLFT->glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
             break;
         case kDrawSmoothShaded:
         case kDrawFlatShaded:
-            gGLFT->glPushMatrix();
-            glCallList(glcacheSel);
-            gGLFT->glPopMatrix();
+            drawingMeshes(sceneKey, cache, selectionKey);
             break;
         }
     }
@@ -732,6 +646,51 @@ void CAlembicHolderUI::draw(const MDrawRequest & request, M3dView & view) const
     cache->m_abcdirty = false;
     glPopAttrib();
     view.endGL();
+}
+
+void CAlembicHolderUI::drawingMeshes( std::string sceneKey, CAlembicDatas * cache, std::string selectionKey) const
+{
+    gGLFT->glPushMatrix();
+    glColorMaterial(MGL_FRONT_AND_BACK, MGL_AMBIENT_AND_DIFFUSE);
+    glEnable(MGL_COLOR_MATERIAL) ;
+    glColor4f(.7, .7, .7, 1.0);
+    // On Geforce cards, we emulate two-sided lighting by drawing
+    // triangles twice because two-sided lighting is 10 times
+    // slower than single-sided lighting.
+        
+    bool needEmulateTwoSidedLighting = false;
+    // Query face-culling and two-sided lighting state          
+    bool  cullFace = (gGLFT->glIsEnabled(MGL_CULL_FACE) == MGL_TRUE);
+    MGLint twoSidedLighting = MGL_FALSE;
+    gGLFT->glGetIntegerv(MGL_LIGHT_MODEL_TWO_SIDE, &twoSidedLighting);
+
+    needEmulateTwoSidedLighting = (!cullFace && twoSidedLighting);
+
+    if(needEmulateTwoSidedLighting)
+    {
+        glEnable(MGL_CULL_FACE);
+        glLightModeli(MGL_LIGHT_MODEL_TWO_SIDE, 0);
+        glCullFace(MGL_FRONT);
+        if(selectionKey != "")
+            cache->abcSceneManager.getScene(sceneKey)->drawOnly(cache->abcSceneState, selectionKey);
+        else
+            cache->abcSceneManager.getScene(sceneKey)->draw(cache->abcSceneState);
+        glCullFace(MGL_BACK);
+        if(selectionKey != "")
+            cache->abcSceneManager.getScene(sceneKey)->drawOnly(cache->abcSceneState, selectionKey);
+        else
+            cache->abcSceneManager.getScene(sceneKey)->draw(cache->abcSceneState);
+        gGLFT->glLightModeli(MGL_LIGHT_MODEL_TWO_SIDE, 1);
+        glDisable(MGL_CULL_FACE);
+    }
+    else
+    {
+        if(selectionKey != "")
+            cache->abcSceneManager.getScene(sceneKey)->drawOnly(cache->abcSceneState, selectionKey);
+        else
+            cache->abcSceneManager.getScene(sceneKey)->draw(cache->abcSceneState);
+    }
+    gGLFT->glPopMatrix();
 }
 
 void CAlembicHolderUI::drawBoundingBox( const MDrawRequest & request,
