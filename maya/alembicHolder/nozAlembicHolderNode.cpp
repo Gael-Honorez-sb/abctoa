@@ -143,29 +143,28 @@ nozAlembicHolder::nozAlembicHolder() {
 nozAlembicHolder::~nozAlembicHolder() {
 }
 
-double nozAlembicHolder::setHolderTime() const {
+void nozAlembicHolder::setHolderTime() const {
     nozAlembicHolder* nonConstThis = const_cast<nozAlembicHolder*> (this);
     CAlembicDatas* geom = nonConstThis->alembicData();
 
+    if(geom != NULL)
+    {
+        MFnDagNode fn(thisMObject());
+        MTime time, timeOffset;
 
+        MPlug plug = fn.findPlug(aTime);
+        plug.getValue(time);
+        plug = fn.findPlug(aTimeOffset);
+        plug.getValue(timeOffset);
 
-    MFnDagNode fn(thisMObject());
-    MTime time, timeOffset;
+        double dtime;
 
-    MPlug plug = fn.findPlug(aTime);
-    plug.getValue(time);
-    plug = fn.findPlug(aTimeOffset);
-    plug.getValue(timeOffset);
+        dtime = time.as(MTime::kSeconds) + timeOffset.as(MTime::kSeconds);
 
-    double dtime;
-
-    dtime = time.as(MTime::kSeconds) + timeOffset.as(MTime::kSeconds);
-
-    std::string sceneKey = getSceneKey();
-    if (geom->abcSceneManager.hasKey(sceneKey))
-        geom->abcSceneManager.getScene(sceneKey)->setTime(dtime);
-
-    return dtime;
+        std::string sceneKey = getSceneKey();
+        if (geom->abcSceneManager.hasKey(sceneKey))
+            geom->abcSceneManager.getScene(sceneKey)->setTime(dtime);
+    }
 }
 
 
@@ -181,8 +180,8 @@ MBoundingBox nozAlembicHolder::boundingBox() const
     nozAlembicHolder* nonConstThis = const_cast<nozAlembicHolder*> (this);
     CAlembicDatas* geom = nonConstThis->alembicData();
 
+    
     MBoundingBox bbox = MBoundingBox(MPoint(-1.0f, -1.0f, -1.0f), MPoint(1.0f, 1.0f, 1.0f));
-
 
     if(geom != NULL)
         bbox = geom->bbox;
@@ -219,6 +218,7 @@ void nozAlembicHolder::copyInternalData(MPxNode* srcNode) {
     nozAlembicHolder* nonConstThis = const_cast<nozAlembicHolder*> (this);
     CAlembicDatas* geom = nonConstThis->alembicData();
 
+
     MFnDagNode fn(node.thisMObject());
     MString abcfile;
     MPlug plug = fn.findPlug(aAbcFile);
@@ -232,9 +232,11 @@ void nozAlembicHolder::copyInternalData(MPxNode* srcNode) {
     plug = fn.findPlug(aSelectionPath);
     plug.getValue(selectionPath);
 
-
-    geom->abcSceneManager.addScene(abcfile.asChar(), objectPath.asChar());
-    geom->m_currscenekey = getSceneKey();
+    if(geom != NULL)
+    {
+        geom->abcSceneManager.addScene(abcfile.asChar(), objectPath.asChar());
+        geom->m_currscenekey = getSceneKey();
+    }
 
 }
 
@@ -501,10 +503,17 @@ CAlembicHolderUI::CAlembicHolderUI() {
 void CAlembicHolderUI::getDrawRequests(const MDrawInfo & info,
         bool /*objectAndActiveOnly*/, MDrawRequestQueue & queue) {
 
+    if(MGlobal::mayaState() == MGlobal::kInteractive)
+        return;
+
     MDrawData data;
     MDrawRequest request = info.getPrototype(*this);
     nozAlembicHolder* shapeNode = (nozAlembicHolder*) surfaceShape();
     CAlembicDatas* geom = shapeNode->alembicData();
+    
+    if(geom == NULL)
+        return;
+
     getDrawData(geom, data);
     request.setDrawData(data);
 
@@ -544,7 +553,6 @@ void CAlembicHolderUI::getDrawRequests(const MDrawInfo & info,
 
 void CAlembicHolderUI::draw(const MDrawRequest & request, M3dView & view) const
 {
-
     int token = request.token();
 
     MDrawData data = request.drawData();
@@ -606,7 +614,7 @@ void CAlembicHolderUI::draw(const MDrawRequest & request, M3dView & view) const
 
     case kDrawWireframe:
     case kDrawWireframeOnShaded:
-        if (cache->abcSceneManager.hasKey(sceneKey) && (MGlobal::mayaState() == MGlobal::kInteractive))
+        if (cache->abcSceneManager.hasKey(sceneKey))
         {
             gGLFT->glPolygonMode(GL_FRONT_AND_BACK, MGL_LINE);
             gGLFT->glPushMatrix();
@@ -617,12 +625,12 @@ void CAlembicHolderUI::draw(const MDrawRequest & request, M3dView & view) const
         break;
     case kDrawSmoothShaded:
     case kDrawFlatShaded:
-        if (cache->abcSceneManager.hasKey(sceneKey) && (MGlobal::mayaState() == MGlobal::kInteractive))
+        if (cache->abcSceneManager.hasKey(sceneKey))
             drawingMeshes(sceneKey, cache, "");
         break;
     }
 
-    if(selectionKey != "" && cache->abcSceneManager.hasKey(sceneKey) && (MGlobal::mayaState() == MGlobal::kInteractive))
+    if(selectionKey != "" && cache->abcSceneManager.hasKey(sceneKey))
     {
         switch (cache->token)
         {
