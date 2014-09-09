@@ -20,10 +20,20 @@ import maya.cmds as cmds
 import shaderManager
 
 def alembicShaderManager():
-	reload(shaderManager)
-	shaderManager.manager().show()
+    reload(shaderManager)
+    shaderManager.manager().show()
+
+def createAlembicHolder():
+    x = cmds.createNode('alembicHolder', n="AlembicHolderShape")
+    cmds.setAttr("%s.overrideLevelOfDetail" % x, 1)
+    cmds.setAttr("%s.overrideVisibility" % x, 1) 
+    cmds.setAttr("%s.visibleInRefractions" % x, 1)
+    cmds.setAttr("%s.visibleInReflections" % x, 1)
+    cmds.connectAttr("time1.outTime", "%s.time" % x)
+
 
 def registerAlembicHolder():
-	if not cmds.about(b=1):
-		cmds.menu('AlembicHolderMenu', label='Alembic Holder', parent='MayaWindow', tearOff=True )
-		cmds.menuItem('AlembicShaderManager', label='Shader Manager', parent='AlembicHolderMenu', c=lambda *args: alembicShaderManager())
+    if not cmds.about(b=1):
+        cmds.menu('AlembicHolderMenu', label='Alembic Holder', parent='MayaWindow', tearOff=True )
+        cmds.menuItem('CreateAlembicHolder', label='Create Holder', parent='AlembicHolderMenu', c=lambda *args: createAlembicHolder())
+        cmds.menuItem('AlembicShaderManager', label='Shader Manager', parent='AlembicHolderMenu', c=lambda *args: alembicShaderManager())
