@@ -55,13 +55,13 @@ MeshDrwHelper::~MeshDrwHelper()
 
 //-*****************************************************************************
 void MeshDrwHelper::update( P3fArraySamplePtr iP,
-                            V3fArraySamplePtr iN,
+                            N3fArraySamplePtr iN,
                             Int32ArraySamplePtr iIndices,
                             Int32ArraySamplePtr iCounts,
                             Abc::Box3d iBounds )
 {
 
-    // Before doing a ton, just have a quick look.
+   // Before doing a ton, just have a quick look.
 
     if ( m_meshP && iP &&
          ( m_meshP->size() == iP->size() ) &&
@@ -231,12 +231,13 @@ void MeshDrwHelper::update( P3fArraySamplePtr iP,
 
     updateNormals( iN );
 
+    pushNormals();
     // And that's it.
 }
 
 //-*****************************************************************************
 void MeshDrwHelper::update( P3fArraySamplePtr iP,
-                            V3fArraySamplePtr iN,
+                            N3fArraySamplePtr iN,
                             Abc::Box3d iBounds )
 {
     // Check validity.
@@ -262,9 +263,32 @@ void MeshDrwHelper::update( P3fArraySamplePtr iP,
     updateNormals( iN );
 }
 
-//-*****************************************************************************
-void MeshDrwHelper::updateNormals( V3fArraySamplePtr iN )
+void MeshDrwHelper::pushNormals()
 {
+    const V3f *normals = NULL;
+    if ( m_meshN  && ( m_meshN->size() == m_meshP->size() ) )
+        normals = m_meshN->get(); 
+    else if ( m_customN.size() == m_meshP->size() )
+        normals = &(m_customN.front());
+
+
+    if(normals != NULL)
+    {
+        std::vector<MGLfloat> v;
+        for ( size_t p = 0; p < m_meshP->size(); ++p )
+        {
+            v.push_back(normals[p].x);
+            v.push_back(normals[p].y);
+            v.push_back(normals[p].z);
+            }
+        buffer.genNormalBuffer(v);
+    }
+}
+
+//-*****************************************************************************
+void MeshDrwHelper::updateNormals( N3fArraySamplePtr iN )
+{
+
     if ( !m_valid || !m_meshP )
     {
         makeInvalid();
@@ -272,12 +296,10 @@ void MeshDrwHelper::updateNormals( V3fArraySamplePtr iN )
     }
 
     // Now see if we need to calculate normals.
-    if ( ( m_meshN && iN == m_meshN ) )//||
-//         ( !iN && m_customN.size() > 0 ) )
+    if ( ( m_meshN && iN == m_meshN ) || (!iN && m_customN.size() > 0 ))
     {
         return;
     }
-
 
     size_t numPoints = m_meshP->size();
     m_meshN = iN;
@@ -291,8 +313,6 @@ void MeshDrwHelper::updateNormals( V3fArraySamplePtr iN )
         m_meshN.reset();
         m_customN.resize( numPoints );
         std::fill( m_customN.begin(), m_customN.end(), V3f( 0.0f ) );
-
-        //std::cout << "Recalcing normals for object: " << std::endl;
 
         for ( size_t tidx = 0; tidx < m_triangles.size(); ++tidx )
         {
@@ -318,20 +338,7 @@ void MeshDrwHelper::updateNormals( V3fArraySamplePtr iN )
         }
     }
 
-
-    // normal vertex
-
-     std::vector<MGLfloat> v;
-     for ( size_t p = 0; p < m_customN.size(); ++p )
-     {
-         v.push_back(m_customN[p].x);
-         v.push_back(m_customN[p].y);
-         v.push_back(m_customN[p].z);
-     }
-
-     buffer.genNormalBuffer(v);
-
-
+    
 
 }
 //-*****************************************************************************
@@ -434,7 +441,7 @@ void MeshDrwHelper::makeInvalid()
     m_meshN.reset();
     m_meshIndices.reset();
     m_meshCounts.reset();
-   // m_customN.clear();
+    m_customN.clear();
     //m_colors.clear();
     m_valid = false;
     m_bounds.makeEmpty();

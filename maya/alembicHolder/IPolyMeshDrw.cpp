@@ -56,6 +56,10 @@ IPolyMeshDrw::IPolyMeshDrw( IPolyMesh &iPmesh, std::vector<std::string> path )
     {
         m_polyMesh.getSchema().get( m_samp );
     }
+
+    
+      
+
     m_boundsProp = m_polyMesh.getSchema().getSelfBoundsProperty();
 
     // The object has already set up the min time and max time of
@@ -114,6 +118,29 @@ void IPolyMeshDrw::setTime( chrono_t iSeconds )
         else if ( m_polyMesh.getSchema().getNumSamples() > 0 )
         {
             m_polyMesh.getSchema().get( m_samp, m_ss );
+            
+            IN3fGeomParam normParam = m_polyMesh.getSchema().getNormalsParam();
+
+            if(normParam.valid())
+            {
+                switch ( normParam.getScope() )
+                {
+                    case kVaryingScope:
+                    case kVertexScope:
+                    {
+                        m_normal_samp = normParam.getExpandedValue(m_ss);
+                        break;
+                    }
+                    case kFacevaryingScope:
+                    {
+                        m_normal_samp = normParam.getIndexedValue(m_ss);
+                        break;
+                    }
+
+                }
+                
+            }
+
         }
 
         m_bounds.makeEmpty();
@@ -137,8 +164,29 @@ void IPolyMeshDrw::updateData()
     Int32ArraySamplePtr indices = m_samp.getFaceIndices();
     Int32ArraySamplePtr counts = m_samp.getFaceCounts();
 
+    N3fArraySamplePtr normals;
+    
+    if(m_normal_samp.valid())
+    {
+        
+        switch ( m_normal_samp.getScope() )
+        {
+            case kVaryingScope:
+            case kVertexScope:
+            {
+                normals =  m_normal_samp.getVals();
+                break;
+            }
+            case kFacevaryingScope:
+            {
+                //unsupported yet.
+                break;
+            }
+        }
+    }
+
     // update the mesh
-    m_drwHelper.update( P, V3fArraySamplePtr(),
+    m_drwHelper.update( P, normals,
                             indices, counts, getBounds() );
 
     if ( !m_drwHelper.valid() )
