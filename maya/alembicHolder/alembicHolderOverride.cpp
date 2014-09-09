@@ -100,7 +100,6 @@ MBoundingBox AlembicHolderOverride::boundingBox(
         const MDagPath& objPath,
         const MDagPath& cameraPath) const
 {
-
     MBoundingBox bbox = MBoundingBox(MPoint(-1.0f, -1.0f, -1.0f), MPoint(1.0f, 1.0f, 1.0f));
 
     MStatus status;
@@ -116,6 +115,11 @@ MBoundingBox AlembicHolderOverride::boundingBox(
     return bbox;
 
 }
+
+bool AlembicHolderOverride::disableInternalBoundingBoxDraw() const
+{
+    return true;
+} 
 
 
 MUserData* AlembicHolderOverride::prepareForDraw(
