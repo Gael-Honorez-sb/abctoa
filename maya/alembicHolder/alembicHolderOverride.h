@@ -16,6 +16,9 @@ public:
 
     virtual MHWRender::DrawAPI supportedDrawAPIs() const;
 
+    
+    virtual bool disableInternalBoundingBoxDraw() const;
+
     virtual bool isBounded(
         const MDagPath& objPath,
         const MDagPath& cameraPath) const;
