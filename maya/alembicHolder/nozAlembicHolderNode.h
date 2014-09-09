@@ -139,6 +139,7 @@ public:
     virtual void draw(const MDrawRequest & request, M3dView & view) const;
 
     void drawBoundingBox( const MDrawRequest & request, M3dView & view ) const;
+    void drawingMeshes( std::string sceneKey, CAlembicDatas * cache, std::string selectionKey) const;
     virtual bool select(MSelectInfo &selectInfo, MSelectionList &selectionList,
             MPointArray &worldSpaceSelectPts) const;
 
