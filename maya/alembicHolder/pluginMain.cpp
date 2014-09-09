@@ -22,6 +22,16 @@
 MString    drawDbClassification("drawdb/geometry/alembicHolder");
 MString    drawRegistrantId("AlembicHolderPlugin");
 
+#ifdef WIN32
+#define EXTERN_DECL __declspec( dllexport )
+#else
+#define EXTERN_DECL extern
+#endif
+
+EXTERN_DECL MStatus initializePlugin( MObject obj );
+EXTERN_DECL MStatus uninitializePlugin( MObject obj );
+
+
 MStatus initializePlugin( MObject obj )
 {
     MStatus   status;
