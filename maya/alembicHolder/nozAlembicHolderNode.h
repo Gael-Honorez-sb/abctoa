@@ -48,7 +48,7 @@ public:
        bool m_abcdirty;
        std::string m_currscenekey;
        int m_bbmode;
-       float time;
+       double time;
 
        //BufferObject buffer;
 
@@ -86,7 +86,7 @@ public:
 
     virtual void copyInternalData( MPxNode* srcNode );
 
-    double setHolderTime() const;
+    void setHolderTime() const;
 
     static  void*       creator();
     static  MStatus     initialize();

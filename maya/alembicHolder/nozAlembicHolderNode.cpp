@@ -397,14 +397,14 @@ MStatus nozAlembicHolder::compute( const MPlug& plug, MDataBlock& block )
         MString objectPath = block.inputValue(aObjectPath).asString();
         MString selectionPath = block.inputValue(aSelectionPath).asString();
 
-        float time = block.inputValue(aTime).asFloat() + block.inputValue(aTimeOffset).asFloat();
+        MTime time = block.inputValue(aTime).asTime() + block.inputValue(aTimeOffset).asTime(); 
 
         bool hasToReload = false;
 
-        if (fGeometry.time != time)
+        if (fGeometry.time != time.value())
         {
             fGeometry.m_abcdirty = true;
-            fGeometry.time = time;
+            fGeometry.time = time.value();
             hasToReload = true;
         }
 
