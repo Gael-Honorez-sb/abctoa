@@ -187,7 +187,6 @@ MBoundingBox nozAlembicHolder::boundingBox() const
         bbox = geom->bbox;
     else
         cout << "Geom not valid" << endl;
-
     return bbox;
 
 }
@@ -442,6 +441,9 @@ MStatus nozAlembicHolder::compute( const MPlug& plug, MDataBlock& block )
                 bb = CAlembicDatas::abcSceneManager.getScene(key)->getBounds();
                 fGeometry.bbox.expand(MPoint(bb.min.x, bb.min.y, bb.min.z));
                 fGeometry.bbox.expand(MPoint(bb.max.x, bb.max.y, bb.max.z));
+                // notify viewport 2.0 that we are dirty
+                MHWRender::MRenderer::setGeometryDrawDirty(thisMObject());
+
             }
 
 
