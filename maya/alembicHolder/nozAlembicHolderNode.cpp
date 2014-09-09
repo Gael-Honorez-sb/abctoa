@@ -503,7 +503,7 @@ CAlembicHolderUI::CAlembicHolderUI() {
 void CAlembicHolderUI::getDrawRequests(const MDrawInfo & info,
         bool /*objectAndActiveOnly*/, MDrawRequestQueue & queue) {
 
-    if(MGlobal::mayaState() == MGlobal::kInteractive)
+    if(MGlobal::mayaState() != MGlobal::kInteractive)
         return;
 
     MDrawData data;
