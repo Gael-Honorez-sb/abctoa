@@ -62,18 +62,19 @@ public:
     // This is a "full update" of all parameters.
     // If N is empty, normals will be computed.
     void update( P3fArraySamplePtr iP,
-                 V3fArraySamplePtr iN,
+                 N3fArraySamplePtr iN,
                  Int32ArraySamplePtr iIndices,
                  Int32ArraySamplePtr iCounts,
                  Abc::Box3d iBounds = Abc::Box3d() );
 
     // Update just positions and possibly normals
     void update( P3fArraySamplePtr iP,
-                 V3fArraySamplePtr iN,
+                 N3fArraySamplePtr iN,
                  Abc::Box3d iBounds = Abc::Box3d() );
 
     // Update just normals
-    void updateNormals( V3fArraySamplePtr iN );
+    void pushNormals();
+    void updateNormals( N3fArraySamplePtr iN );
 
     void updateArbs(Alembic::Abc::ICompoundProperty & iParent,
                      Int32ArraySamplePtr iIndices,
@@ -101,7 +102,7 @@ protected:
     typedef std::vector<Tri> TriArray;
 
     P3fArraySamplePtr m_meshP;
-    V3fArraySamplePtr m_meshN;
+    N3fArraySamplePtr m_meshN;
     Int32ArraySamplePtr m_meshIndices;
     Int32ArraySamplePtr m_meshCounts;
 
