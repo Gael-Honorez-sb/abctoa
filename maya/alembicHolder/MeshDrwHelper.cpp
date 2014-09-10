@@ -85,6 +85,7 @@ void MeshDrwHelper::update( P3fArraySamplePtr iP,
     // Okay, if we're here, the indices are not equal or the counts
     // are not equal or the P-array size changed.
     // So we can clobber those three, but leave N alone for now.
+    m_triangles.clear ();
     m_meshP = iP;
     m_meshIndices = iIndices;
     m_meshCounts = iCounts;
@@ -177,8 +178,6 @@ void MeshDrwHelper::update( P3fArraySamplePtr iP,
             vidx.push_back(( unsigned int )(*m_meshIndices)[faceIndexBegin+1]);
             vidx.push_back(( unsigned int )(*m_meshIndices)[faceIndexBegin+2]);
 
-
-
             m_triangles.push_back(
                 Tri( ( unsigned int )(*m_meshIndices)[faceIndexBegin+0],
                      ( unsigned int )(*m_meshIndices)[faceIndexBegin+1],
@@ -228,7 +227,7 @@ void MeshDrwHelper::update( P3fArraySamplePtr iP,
     {
         m_bounds = iBounds;
     }
-
+    
     updateNormals( iN );
 
     pushNormals();
@@ -271,7 +270,6 @@ void MeshDrwHelper::pushNormals()
     else if ( m_customN.size() == m_meshP->size() )
         normals = &(m_customN.front());
 
-
     if(normals != NULL)
     {
         std::vector<MGLfloat> v;
@@ -296,7 +294,7 @@ void MeshDrwHelper::updateNormals( N3fArraySamplePtr iN )
     }
 
     // Now see if we need to calculate normals.
-    if ( ( m_meshN && iN == m_meshN ) || (!iN && m_customN.size() > 0 ))
+    if ( ( m_meshN && iN == m_meshN ) || (isConstant() && m_customN.size() > 0 ))
     {
         return;
     }

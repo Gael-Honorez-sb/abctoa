@@ -80,6 +80,10 @@ public:
                      Int32ArraySamplePtr iIndices,
                      Int32ArraySamplePtr iCounts );
 
+    // This returns constancy.
+    bool isConstant() const { return m_isConstant; }
+    void setConstant( bool isConstant = true ) { m_isConstant = isConstant; }
+
     // This returns validity.
     bool valid() const { return m_valid; }
 
@@ -118,6 +122,7 @@ protected:
     //std::vector<C4f> m_colors;
 
     bool m_valid;
+    bool m_isConstant;
 
     Box3d m_bounds;
 
