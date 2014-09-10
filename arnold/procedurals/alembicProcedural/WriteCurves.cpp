@@ -1,23 +1,21 @@
-
-
 //-*****************************************************************************
 //
 // Copyright (c) 2009-2011,
-// Sony Pictures Imageworks Inc. and
-// Industrial Light & Magic, a division of Lucasfilm Entertainment Company Ltd.
+//  Sony Pictures Imageworks Inc. and
+//  Industrial Light & Magic, a division of Lucasfilm Entertainment Company Ltd.
 //
 // All rights reserved.
 //
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are
 // met:
-// * Redistributions of source code must retain the above copyright
+// *       Redistributions of source code must retain the above copyright
 // notice, this list of conditions and the following disclaimer.
-// * Redistributions in binary form must reproduce the above
+// *       Redistributions in binary form must reproduce the above
 // copyright notice, this list of conditions and the following disclaimer
 // in the documentation and/or other materials provided with the
 // distribution.
-// * Neither the name of Sony Pictures Imageworks, nor
+// *       Neither the name of Sony Pictures Imageworks, nor
 // Industrial Light & Magic, nor the names of their contributors may be used
 // to endorse or promote products derived from this software without specific
 // prior written permission.
@@ -48,12 +46,14 @@
 #include <ai.h>
 #include <sstream>
 
+#include <boost/regex.hpp>
+// #include <boost/thread.hpp>
 //-*****************************************************************************
 
 #if AI_VERSION_ARCH_NUM == 3
-#if AI_VERSION_MAJOR_NUM < 4
-#define AiNodeGetNodeEntry(node) ((node)->base_node)
-#endif
+    #if AI_VERSION_MAJOR_NUM < 4
+        #define AiNodeGetNodeEntry(node)   ((node)->base_node)
+    #endif
 #endif
 
 //-*****************************************************************************
@@ -84,13 +84,13 @@ void ProcessIndexedBuiltinParam(
         size_t elementSize)
 {
     if ( !param.valid() ) { return; }
-
+    
     bool isFirstSample = true;
     for ( SampleTimeSet::iterator I = sampleTimes.begin();
           I != sampleTimes.end(); ++I, isFirstSample = false)
     {
-        ISampleSelector sampleSelector( *I );
-
+        ISampleSelector sampleSelector( *I );        
+        
         switch ( param.getScope() )
         {
         case kVaryingScope:
@@ -98,27 +98,27 @@ void ProcessIndexedBuiltinParam(
         {
             // a value per-point, idxs should be the same as vidxs
             // so we'll leave it empty
-
+            
             // we'll get the expanded form here
             typename geomParamT::Sample sample = param.getExpandedValue(
                     sampleSelector);
-
+            
             size_t footprint = sample.getVals()->size() * elementSize;
-
+            
             values.reserve( values.size() + footprint );
             values.insert( values.end(),
                     (float32_t*) sample.getVals()->get(),
                     ((float32_t*) sample.getVals()->get()) + footprint );
-
+            
             break;
         }
         case kFacevaryingScope:
         {
             // get the indexed form and feed to nidxs
-
+            
             typename geomParamT::Sample sample = param.getIndexedValue(
                     sampleSelector);
-
+            
             if ( isFirstSample )
             {
                 idxs.reserve( sample.getIndices()->size() );
@@ -127,23 +127,23 @@ void ProcessIndexedBuiltinParam(
                         sample.getIndices()->get() +
                                 sample.getIndices()->size() );
             }
-
+            
             size_t footprint = sample.getVals()->size() * elementSize;
             values.reserve( values.size() + footprint );
             values.insert( values.end(),
                     (const float32_t*) sample.getVals()->get(),
                     ((const float32_t*) sample.getVals()->get()) + footprint );
-
+            
             break;
         }
         default:
             break;
         }
-
-
+        
+        
     }
-
-
+    
+    
 }
 
 //-*****************************************************************************
@@ -170,12 +170,13 @@ AtNode * ProcessCurvesBase(
     {
         return NULL;
     }
-
+    
 
     // Get the time samples for this geo
 
-    Alembic::AbcGeom::ICurvesSchema &ps = prim.getSchema();
+    Alembic::AbcGeom::ICurvesSchema  &ps = prim.getSchema();
     TimeSamplingPtr ts = ps.getTimeSampling();
+   
 
     if ( ps.getTopologyVariance() != kHeterogenousTopology )
     {
@@ -187,13 +188,13 @@ AtNode * ProcessCurvesBase(
     }
 
     std::string name = args.nameprefix + prim.getFullName();
-
+    
     // do custom attributes and assignments
-
+           
     AtNode * instanceNode = NULL;
-
+    
     std::string cacheId;
-
+    
     SampleTimeSet singleSampleTimes;
     singleSampleTimes.insert( ts->getFloorIndex(args.frame / args.fps, ps.getNumSamples()).second );
 
@@ -209,7 +210,7 @@ AtNode * ProcessCurvesBase(
         const PropertyHeader * tagsHeader = arbGeomParams.getPropertyHeader("mtoa_constant_tags");
         if (IStringGeomParam::matches( *tagsHeader ))
         {
-          IStringGeomParam param( arbGeomParams, "mtoa_constant_tags" );
+          IStringGeomParam param( arbGeomParams,  "mtoa_constant_tags" );
           if ( param.valid() )
           {
             IStringGeomParam::prop_type::sample_ptr_type valueSample =
@@ -229,7 +230,7 @@ AtNode * ProcessCurvesBase(
         }
       }
     }
-
+    
     // overrides that can't be applied on instances
     // we create a hash from that.
     std::string hashAttributes("@");
@@ -266,16 +267,16 @@ AtNode * ProcessCurvesBase(
 
         if(overrides.size() > 0)
         {
-          for( Json::ValueIterator itr = overrides.begin() ; itr != overrides.end() ; itr++ )
+          for( Json::ValueIterator itr = overrides.begin() ; itr != overrides.end() ; itr++ ) 
           {
             std::string attribute = itr.key().asString();
 
-            if (attribute=="smoothing"
-              || attribute=="opaque"
+            if (attribute=="smoothing" 
+              || attribute=="opaque" 
               || attribute=="basis"
-              || attribute=="mode"
-              || attribute=="min_pixel_width"
-              || attribute=="max_subdivs"
+              || attribute=="mode"                
+              || attribute=="min_pixel_width"                
+              || attribute=="max_subdivs" 
               || attribute=="invert_normals")
             {
               Json::Value val = args.overrideRoot[*it][itr.key().asString()];
@@ -287,32 +288,32 @@ AtNode * ProcessCurvesBase(
     }
 
     hashAttributes += writer.write(rootEncode);
-
-    if ( args.makeInstance )
+   
+    if ( args.makeInstance  )
     {
         std::ostringstream buffer;
         AbcA::ArraySampleKey sampleKey;
-
-
+        
+        
         for ( SampleTimeSet::iterator I = sampleTimes.begin();
                 I != sampleTimes.end(); ++I )
         {
             ISampleSelector sampleSelector( *I );
             ps.getPositionsProperty().getKey(sampleKey, sampleSelector);
-
+            
             buffer << GetRelativeSampleTime( args, (*I) ) << ":";
             sampleKey.digest.print(buffer);
             buffer << ":";
         }
-
+        
         buffer << "@" << hash(hashAttributes);
-
+        
         cacheId = buffer.str();
-
+        
         instanceNode = AiNode( "ginstance" );
         AiNodeSetStr( instanceNode, "name", name.c_str() );
         args.createdNodes.push_back(instanceNode);
-
+        
         AiNodeSetBool( instanceNode, "inherit_xform", false );
 
         if ( args.proceduralNode )
@@ -324,20 +325,44 @@ AtNode * ProcessCurvesBase(
         {
             AiNodeSetByte( instanceNode, "visibility", AI_RAY_ALL );
         }
-
+        
         ApplyTransformation( instanceNode, xformSamples, args );
-
+        
         // adding arbitary parameters
 
         AddArbitraryGeomParams( arbGeomParams, frameSelector, instanceNode );
 
         NodeCache::iterator I = g_meshCache.find(cacheId);
 
+        if (args.linkOverride)
+        {
+            ApplyOverrides(name, instanceNode, tags,  args);
+        }
+
+        // If the current node has a user attribute called tags, parse it and add these tags to the tags list
+        if (AiNodeLookUpUserParameter(instanceNode, "tags") != NULL)
+        {
+          Json::Value jtags;
+          Json::Reader reader;
+
+          if(reader.parse( AiNodeGetStr(instanceNode, "tags"), jtags))
+          {
+            for( Json::ValueIterator itr = jtags.begin() ; itr != jtags.end() ; itr++ )
+            { 
+
+              if ( std::find(tags.begin(), tags.end(), jtags[itr.key().asUInt()].asString()) == tags.end() )
+              {
+                tags.push_back(jtags[itr.key().asUInt()].asString());
+              }
+            }
+          }
+        }
+
         // start param overrides on instance
         if(args.linkOverride)
         {
             ApplyOverrides(name, instanceNode, tags, args );
-        }
+        }   
 
         // shader assignation
         if (nodeHasParameter( instanceNode, "shader" ) )
@@ -353,15 +378,15 @@ AtNode * ProcessCurvesBase(
                AiNodeSetArray(instanceNode, "shader", AiArrayCopy(shaders));
           }
         } // end shader assignment
-
-        if ( I != g_meshCache.end() )
+        
+        if ( I != g_meshCache.end() ) 
         {
            AiNodeSetPtr(instanceNode, "node", (*I).second );
            return NULL;
         }
 
     } // end makeinstance
-
+    
     size_t numSampleTimes = sampleTimes.size();
     size_t numCurves;
     size_t pSize;
@@ -379,7 +404,7 @@ AtNode * ProcessCurvesBase(
     const char * modeCurve = "ribbon";
     if (AiNodeLookUpUserParameter(args.proceduralNode, "modeCurve") !=NULL )
       modeCurve = AiNodeGetStr(args.proceduralNode, "modeCurve");
-
+    
     const char * basis = NULL;
 
     for ( SampleTimeSet::iterator I = sampleTimes.begin();
@@ -389,17 +414,17 @@ AtNode * ProcessCurvesBase(
         Alembic::AbcGeom::ICurvesSchema::Sample sample = ps.getValue( sampleSelector );
 
         if ( isFirstSample )
-        {
+        {                   
 
-            numCurves = sample.getNumCurves();
+            numCurves = sample.getNumCurves();  
             size_t vidxSize = sample.getCurvesNumVertices()->size();
-            nVertices = sample.getCurvesNumVertices();
+            nVertices = sample.getCurvesNumVertices();                 
             vidxs.reserve( vidxSize );
 
             BasisType basisType = sample.getBasis();
             if ( basisType != kNoBasis )
             {
-
+                
                 switch ( basisType )
                 {
                 case kBezierBasis:
@@ -422,9 +447,9 @@ AtNode * ProcessCurvesBase(
                 }
             }
         }
+        
 
-
-
+        
         if(numSampleTimes == 1 && (args.shutterOpen != args.shutterClose) && (ps.getVelocitiesProperty().valid()) && isFirstSample )
         {
             float scaleVelocity = 1.0f;
@@ -433,7 +458,7 @@ AtNode * ProcessCurvesBase(
 
             Alembic::Abc::V3fArraySamplePtr velptr = sample.getVelocities();
             Alembic::Abc::P3fArraySamplePtr v3ptr = sample.getPositions();
-            pSize = sample.getPositions()->size();
+            pSize = sample.getPositions()->size(); 
             vlist.resize(pSize*3*2);
             numSampleTimes = 2;
 
@@ -441,7 +466,7 @@ AtNode * ProcessCurvesBase(
 
             for ( size_t vId = 0; vId < pSize; ++vId )
             {
-
+                
                 Alembic::Abc::V3f posAtOpen = ((*v3ptr)[vId] + (*velptr)[vId] * scaleVelocity *-timeoffset);
                 vlist[3*vId + 0] = posAtOpen.x;
                 vlist[3*vId + 1] = posAtOpen.y;
@@ -451,9 +476,9 @@ AtNode * ProcessCurvesBase(
                 Alembic::Abc::V3f posAtEnd = ((*v3ptr)[vId] + (*velptr)[vId] * scaleVelocity *(1.0f-timeoffset));
                 vlist[3*vId + 3*pSize + 0] = posAtEnd.x;
                 vlist[3*vId + 3*pSize + 1] = posAtEnd.y;
-                vlist[3*vId + 3*pSize + 2] = posAtEnd.z;
+                vlist[3*vId + 3*pSize + 2] = posAtEnd.z;     
 
-                // radius.push_back(radiusCurve);
+                // radius.push_back(radiusCurve);  
             }
         }
         else
@@ -476,15 +501,15 @@ AtNode * ProcessCurvesBase(
             singleSampleTimes,
             fullradlist,
             radidxs,
-            1);
+            1);   
 
 
 
-    // need to pop out the values from radius so
+    // need to pop out the values from radius so 
     // they make up 2 less values for each curve
 
     // get the points per curve
-    AtArray* curveNumPoints = AiArrayAllocate( numCurves , 1, AI_TYPE_UINT);
+    AtArray* curveNumPoints = AiArrayAllocate( numCurves , 1, AI_TYPE_UINT);  
 
     unsigned int w_end = 0;
 
@@ -495,14 +520,14 @@ AtNode * ProcessCurvesBase(
 
         AiArraySetUInt(curveNumPoints, currentCurve, c_verts);
 
-        // as splines require two less vtx widths per curve we crop out the
+        // as splines require two less vtx widths per curve we crop out the 
         // second and second to last width before outputing to radlist vector
         //
-        // This is actually incorrect this is just because the first and last
-        // vtx are not expected to be rendered in a b-spline.
-        // We need to change it so we add a vtx to the start/end rather than
+        // This is actually incorrect this is just because the first and last 
+        // vtx are not expected to be rendered in a b-spline. 
+        // We need to change it so we add a vtx to the start/end rather than 
         // removing data from the radius
-
+        
         if ( !fullradlist.empty() )
         {
           unsigned int w_start = w_end;
@@ -526,7 +551,7 @@ AtNode * ProcessCurvesBase(
     {
 
       curveWidths = AiArrayAllocate(static_cast<unsigned int>( radlist.size() ),
-                                           1, AI_TYPE_FLOAT);
+                                           1, AI_TYPE_FLOAT); 
       for (unsigned int i = 0; i < radlist.size() ; ++i)
       {
           AiArraySetFlt(curveWidths, i, radlist[i]);
@@ -535,13 +560,13 @@ AtNode * ProcessCurvesBase(
     }
     else
     {
-      // write out as uniform values, need to be more clever
-      // with this, at the moment we assume all the curves are
+      // write out as uniform values, need to be more clever 
+      // with this, at the moment we assume all the curves are 
       // the same number of verts
       curveWidths = AiArrayAllocate(static_cast<unsigned int>( pSize-(numCurves*2) ),
-                                           1, AI_TYPE_FLOAT);
+                                           1, AI_TYPE_FLOAT); 
 
-      for ( size_t PId = 0; PId < pSize-(numCurves*2) ; ++PId )
+      for ( size_t PId = 0; PId < pSize-(numCurves*2) ; ++PId ) 
       {
           AiArraySetFlt(curveWidths, PId, radiusCurve);
       }
@@ -554,11 +579,11 @@ AtNode * ProcessCurvesBase(
     // std::vector<unsigned int> uvidxs;
 
     // ProcessIndexedBuiltinParam(
-    // cs.getUVsParam(), // getUVsPAram looks for "uvs" as a float2 array (V2f), currently not exported from AbcExport
-    // singleSampleTimes,
-    // uvlist,
-    // uvidxs,
-    // 2);
+    //         cs.getUVsParam(), // getUVsPAram looks for "uvs" as a float2 array (V2f), currently not exported from AbcExport
+    //         singleSampleTimes,
+    //         uvlist,
+    //         uvidxs,
+    //         2);   
 
     AtNode* curvesNode = AiNode( "curves" );
 
@@ -593,17 +618,17 @@ AtNode * ProcessCurvesBase(
         const Json::Value overrides = args.overrideRoot[*it];
         if(overrides.size() > 0)
         {
-          for( Json::ValueIterator itr = overrides.begin() ; itr != overrides.end() ; itr++ )
+          for( Json::ValueIterator itr = overrides.begin() ; itr != overrides.end() ; itr++ ) 
           {
             std::string attribute = itr.key().asString();
             AiMsgDebug("[ABC] Checking attribute %s for shape %s", attribute.c_str(), name.c_str());
 
-            if (attribute=="smoothing"
-              || attribute=="opaque"
+            if (attribute=="smoothing" 
+              || attribute=="opaque" 
               || attribute=="basis"
-              || attribute=="mode"
-              || attribute=="min_pixel_width"
-              || attribute=="max_subdivs"
+              || attribute=="mode"                
+              || attribute=="min_pixel_width"                
+              || attribute=="max_subdivs" 
               || attribute=="invert_normals")
             {
               // check if the attribute exists ...
@@ -614,22 +639,22 @@ AtNode * ProcessCurvesBase(
               {
                 AiMsgDebug("[ABC] attribute %s exists on shape", attribute.c_str());
                 Json::Value val = args.overrideRoot[*it][itr.key().asString()];
-                if( val.isString() )
+                if( val.isString() ) 
                   AiNodeSetStr(curvesNode, attribute.c_str(), val.asCString());
-                else if( val.isBool() )
+                else if( val.isBool() ) 
                   AiNodeSetBool(curvesNode, attribute.c_str(), val.asBool());
-                else if( val.isInt() )
+                else if( val.isInt() ) 
                 {
                   //make the difference between Byte & int!
                   int typeEntry = AiParamGetType(paramEntry);
                   if(typeEntry == AI_TYPE_BYTE)
                     AiNodeSetByte(curvesNode, attribute.c_str(), val.asInt());
-                  else
+                  else 
                     AiNodeSetInt(curvesNode, attribute.c_str(), val.asInt());
                 }
-                else if( val.isUInt() )
+                else if( val.isUInt() ) 
                   AiNodeSetUInt(curvesNode, attribute.c_str(), val.asUInt());
-                else if( val.isDouble() )
+                else if( val.isDouble() ) 
                   AiNodeSetFlt(curvesNode, attribute.c_str(), val.asDouble());
               }
             }
@@ -654,8 +679,8 @@ AtNode * ProcessCurvesBase(
 
     // the point positions for the curves
     // AiNodeSetArray(curvesNode, "points",
-    // AiArrayConvert(vidxs.size(), 1, AI_TYPE_POINT,
-    // (void*)&vidxs[0]));
+    //       AiArrayConvert(vidxs.size(), 1, AI_TYPE_POINT,
+    //               (void*)&vidxs[0]));
 
     AiNodeSetArray(curvesNode, "points",
           AiArrayConvert( vlist.size() / sampleTimes.size(),
@@ -697,26 +722,50 @@ AtNode * ProcessCurvesBase(
 
     if ( instanceNode == NULL )
     {
-      if ( xformSamples )
-      {
+        if ( xformSamples )
+        {
           ApplyTransformation( curvesNode, xformSamples, args );
-      }
-              // shader assignation
-      if (nodeHasParameter( curvesNode, "shader" ) )
-      {
-        if(args.linkShader)
-        {
-          ApplyShaders(name, curvesNode, tags, args);
         }
-        else
+        
+        if (args.linkOverride)
         {
-          AtArray* shaders = AiNodeGetArray(args.proceduralNode, "shader");
-          if (shaders->nelements != 0)
-             AiNodeSetArray(curvesNode, "shader", AiArrayCopy(shaders));
+            ApplyOverrides(name, curvesNode, tags,  args);
         }
-      } // end shader assignment
 
-      return curvesNode;
+        // If the current node has a user attribute called tags, parse it and add these tags to the tags list
+        if (AiNodeLookUpUserParameter(curvesNode, "tags") != NULL)
+        {
+          Json::Value jtags;
+          Json::Reader reader;
+
+          if(reader.parse( AiNodeGetStr(curvesNode, "tags"), jtags))
+          {
+            for( Json::ValueIterator itr = jtags.begin() ; itr != jtags.end() ; itr++ )
+            { 
+
+              if ( std::find(tags.begin(), tags.end(), jtags[itr.key().asUInt()].asString()) == tags.end() )
+              {
+                tags.push_back(jtags[itr.key().asUInt()].asString());
+              }
+            }
+          }
+        }
+              // shader assignation
+        if (nodeHasParameter( curvesNode, "shader" ) )
+        {
+            if(args.linkShader)
+            {
+              ApplyShaders(name, curvesNode, tags, args);
+            }
+            else
+            {
+              AtArray* shaders = AiNodeGetArray(args.proceduralNode, "shader");
+              if (shaders->nelements != 0)
+                 AiNodeSetArray(curvesNode, "shader", AiArrayCopy(shaders));
+            }
+        } // end shader assignment
+
+        return curvesNode;
     }
     else
     {
@@ -728,7 +777,7 @@ AtNode * ProcessCurvesBase(
 
     }
     // }
-
+    
 }
 
 //-*************************************************************************
@@ -739,10 +788,10 @@ void ProcessCurves( ICurves &curves, ProcArgs &args,
     SampleTimeSet sampleTimes;
     std::vector<AtPoint> vidxs;
     std::vector<float> radius;
-
+    
     AtNode * curvesNode = ProcessCurvesBase(
             curves, args, sampleTimes, vidxs, radius, xformSamples);
-
+    
     // This is a valid condition for the second instance onward and just
     // means that we don't need to do anything further.
     if ( !curvesNode )
@@ -750,3 +799,4 @@ void ProcessCurves( ICurves &curves, ProcArgs &args,
         return;
     }
 }
+
