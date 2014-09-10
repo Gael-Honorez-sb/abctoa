@@ -109,8 +109,6 @@ MBoundingBox AlembicHolderOverride::boundingBox(
         CAlembicDatas* geom = dynamic_cast<nozAlembicHolder*>(node.userNode())->alembicData();
         if(geom != NULL)
             bbox = geom->bbox;
-        else
-            cout << "Geom not valid" << endl;
     }
     return bbox;
 

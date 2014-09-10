@@ -185,8 +185,7 @@ MBoundingBox nozAlembicHolder::boundingBox() const
 
     if(geom != NULL)
         bbox = geom->bbox;
-    else
-        cout << "Geom not valid" << endl;
+
     return bbox;
 
 }
