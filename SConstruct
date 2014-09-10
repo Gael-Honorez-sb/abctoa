@@ -16,6 +16,8 @@ from colorama import init
 init()
 from colorama import Fore, Back, Style
 
+HOLDER_VERSION = get_version()
+ALEMBIC_FOLDER = "AbcToA-%s" % HOLDER_VERSION
 
 ################################################################################
 #   Operating System detection
@@ -129,31 +131,31 @@ vars.AddVariables(
                  '.', PathVariable.PathIsDirCreate),
     PathVariable('TARGET_PLUGIN_PATH',
                  'Path used for installation of the mtoa plugin',
-                 os.path.join('$TARGET_MODULE_PATH', 'plug-ins'), PathVariable.PathIsDirCreate),
+                 os.path.join('$TARGET_MODULE_PATH', ALEMBIC_FOLDER, 'plug-ins'), PathVariable.PathIsDirCreate),
     PathVariable('TARGET_SCRIPTS_PATH',
                  'Path used for installation of scripts',
-                 os.path.join('$TARGET_MODULE_PATH', 'scripts'), PathVariable.PathIsDirCreate),
+                 os.path.join('$TARGET_MODULE_PATH', ALEMBIC_FOLDER, 'scripts'), PathVariable.PathIsDirCreate),
     PathVariable('TARGET_PYTHON_PATH',
                  'Path used for installation of Python scripts',
-                 os.path.join('$TARGET_MODULE_PATH', 'scripts'), PathVariable.PathIsDirCreate),
+                 os.path.join('$TARGET_MODULE_PATH', ALEMBIC_FOLDER, 'scripts'), PathVariable.PathIsDirCreate),
     PathVariable('TARGET_ICONS_PATH',
                  'Path used for installation of icons',
-                 os.path.join('$TARGET_MODULE_PATH', 'icons'), PathVariable.PathIsDirCreate),
+                 os.path.join('$TARGET_MODULE_PATH', ALEMBIC_FOLDER, 'icons'), PathVariable.PathIsDirCreate),
     PathVariable('TARGET_SHADER_PATH',
                  'Path used for installation of arnold shaders',
-                 os.path.join('$TARGET_MODULE_PATH', 'shaders'), PathVariable.PathIsDirCreate),
+                 os.path.join('$TARGET_MODULE_PATH', ALEMBIC_FOLDER, 'shaders'), PathVariable.PathIsDirCreate),
     PathVariable('TARGET_PROCEDURAL_PATH',
                  'Path used for installation of arnold procedurals',
-                 os.path.join('$TARGET_MODULE_PATH', 'procedurals'), PathVariable.PathIsDirCreate),
+                 os.path.join('$TARGET_MODULE_PATH', ALEMBIC_FOLDER, 'procedurals'), PathVariable.PathIsDirCreate),
     PathVariable('TARGET_EXTENSION_PATH',
                  'Path used for installation of mtoa translator extensions',
-                 os.path.join('$TARGET_MODULE_PATH', 'extensions'), PathVariable.PathIsDirCreate),
+                 os.path.join('$TARGET_MODULE_PATH', ALEMBIC_FOLDER, 'extensions'), PathVariable.PathIsDirCreate),
     PathVariable('TARGET_DOC_PATH',
                  'Path for documentation',
-                 os.path.join('$TARGET_MODULE_PATH', 'docs','api'), PathVariable.PathIsDirCreate),
+                 os.path.join('$TARGET_MODULE_PATH', ALEMBIC_FOLDER, 'docs','api'), PathVariable.PathIsDirCreate),
     PathVariable('TARGET_BINARIES',
                  'Path for libraries',
-                 os.path.join('$TARGET_MODULE_PATH', 'bin'), PathVariable.PathIsDirCreate),
+                 os.path.join('$TARGET_MODULE_PATH', ALEMBIC_FOLDER, 'bin'), PathVariable.PathIsDirCreate),
     PathVariable('TOOLS_PATH',
                  'Where to find external tools required for sh',
                  '.', PathVariable.PathIsDir),
@@ -259,6 +261,8 @@ arnold_version    = get_arnold_version(os.path.join(ARNOLD_API_INCLUDE_PATH, 'ai
 maya_version      = get_maya_version(os.path.join(MAYA_INCLUDE_PATH, 'maya', 'MTypes.h'))
 maya_version_base = maya_version[0:4]
 
+env['MAYA_VERSION'] = maya_version_base
+
 if int(maya_version_base) < 2014:
     env['MAYA_2013'] = 1
 
@@ -280,6 +284,8 @@ if system.os() == 'linux':
 elif system.os() == 'windows':
     print 'MSVC version   : %s' % (env['MSVC_VERSION'])
 print 'SCons          : %s' % (SCons.__version__)
+print 'Holder version : %s' % HOLDER_VERSION
+print 'Maya version   : %s' % maya_version_base
 print ''
 
 
@@ -629,9 +635,9 @@ ARNOLD_PROCS = env.SConscript(os.path.join('arnold', 'procedurals', 'SConscript'
 for path in MAYA_PLUGINS:
     if str(path).endswith(SHARED_LIB_SUFFIX):
         if system.os() == 'windows':
-            new = os.path.splitext(str(path))[0] + '.mll'
-            env.Command(new, str(path), Copy("$TARGET", "$SOURCE"))
-        env.Install(TARGET_PLUGIN_PATH, [path])
+            env.Install(TARGET_PLUGIN_PATH, [str(path).replace(".dll", ".mll")])    
+        else:
+            env.Install(TARGET_PLUGIN_PATH, [path])
 
 nprocs = []
 for proc in ARNOLD_PROCS:
@@ -670,6 +676,7 @@ env.Install(env['TARGET_BINARIES'], dylibs)
 
 # install scripts
 scriptfiles = find_files_recursive(os.path.join('maya', 'scripts'), ['.py', '.mel', '.ui'])
+
 env.InstallAs([os.path.join(TARGET_PYTHON_PATH, x) for x in scriptfiles],
               [os.path.join('maya', 'scripts', x) for x in scriptfiles])
 
@@ -692,7 +699,7 @@ if maya_base_version == '2013':
 
 ## Sets release package name based on MtoA version, architecture and compiler used.
 ##
-package_name = "AlembicHolder-" + "-" + system.os() + "-" + maya_base_version
+package_name = "AlembicHolder-" + HOLDER_VERSION + "-" + system.os() + "-Maya" + maya_base_version
 
 if env['MODE'] in ['debug', 'profile']:
     package_name += '-' + env['MODE']
@@ -711,9 +718,10 @@ PACKAGE = env.MakePackage(package_name, MAYA_PLUGINS + MTOA_TRANSLATORS + ARNOLD
 ##
 PACKAGE_FILES = [
 [os.path.join(BUILD_BASE_DIR, 'alembicHolder.mod'), '.'],
-[os.path.join('icons', '*.xpm'), 'icons'],
-[os.path.join('icons', '*.png'), 'icons'],
-[os.path.join(ILMBASE_LIBRARY_PATH, '*%s' % get_library_extension()), 'bin'],
+[os.path.join('icons', '*.xpm'), os.path.join(ALEMBIC_FOLDER,'icons')],
+[os.path.join('icons', '*.png'), os.path.join(ALEMBIC_FOLDER,'icons')],
+#[MAYA_PLUGINS[0], 'plug-ins'],
+[os.path.join(ILMBASE_LIBRARY_PATH, '*%s' % get_library_extension()), os.path.join(ALEMBIC_FOLDER,'bin')],
 #[MTOA_SHADERS[0], 'shaders'],
 ]
 
@@ -721,13 +729,17 @@ PACKAGE_FILES = [
 for p in scriptfiles:
     (d, f) = os.path.split(p)
     PACKAGE_FILES += [
-        [os.path.join('scripts', 'mtoa', p), os.path.join('scripts', 'mtoa', d)]
+        [os.path.join('maya', 'scripts', p), os.path.join(ALEMBIC_FOLDER, 'scripts', d)]
     ]
 
-PACKAGE_FILES.append([os.path.join(BUILD_BASE_DIR, 'alembicProcedural' 'arnold', 'AlembicArnoldProcedural%s' % get_library_extension()), 'procedurals'])
-PACKAGE_FILES.append([os.path.join(BUILD_BASE_DIR, 'extensions' 'abcShader', 'abcShader%s' % get_library_extension()), 'extensions'])
-PACKAGE_FILES.append([os.path.join(BUILD_BASE_DIR, 'alembicProcedural' 'arnold', 'AlembicArnoldProcedural%s' % get_library_extension()), 'extensions'])
-#PACKAGE_FILES.append([os.path.join(BUILD_BASE_DIR, 'alembicProcedural', 'AlembicArnoldProcedural%s' % get_library_extension()), 'procedurals'])
+PACKAGE_FILES.append([os.path.join(BUILD_BASE_DIR, 'procedurals', 'alembicProcedural', 'AlembicArnoldProcedural%s' % get_library_extension()), os.path.join(ALEMBIC_FOLDER, 'procedurals')])
+PACKAGE_FILES.append([os.path.join(BUILD_BASE_DIR, 'extensions', 'abcShader', 'abcShader%s' % get_library_extension()), os.path.join(ALEMBIC_FOLDER, 'extensions')])
+PACKAGE_FILES.append([os.path.join(BUILD_BASE_DIR, 'extensions', 'ABCViewer', 'ABCViewer%s' % get_library_extension()), os.path.join(ALEMBIC_FOLDER, 'extensions')])
+PACKAGE_FILES.append([os.path.join(BUILD_BASE_DIR, 'plugins', 'abcMayaShader', 'abcMayaShader%s' % get_mayalibrary_extension()), os.path.join(ALEMBIC_FOLDER, 'plug-ins')])
+PACKAGE_FILES.append([os.path.join(BUILD_BASE_DIR, 'plugins', 'alembicHolder', 'alembicHolder%s' % get_mayalibrary_extension()), os.path.join(ALEMBIC_FOLDER, 'plug-ins')])
+PACKAGE_FILES.append([os.path.join(BUILD_BASE_DIR, 'shaders', 'abcShader', 'abcShader%s' % get_library_extension()), os.path.join(ALEMBIC_FOLDER, 'shaders')])
+PACKAGE_FILES.append([os.path.join(BUILD_BASE_DIR, 'shaders', 'blackHole', 'blackHole%s' % get_library_extension()), os.path.join(ALEMBIC_FOLDER, 'shaders')])
+
 
 
 # if system.os() == 'windows':

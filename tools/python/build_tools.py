@@ -200,6 +200,19 @@ def get_escaped_path(path):
    else:
       return path
 
+def get_version():
+  f = open(os.path.join('maya', 'alembicHolder', 'Version.h'), 'r')
+  while True: 
+    line = f.readline().lstrip(' \t')
+    if line == "": 
+      break
+    if line.startswith('#define'):
+       tokens = line.split()
+       if tokens[1] == 'HOLDER_VERSION_NUM':
+        return tokens[2]
+
+  return "0"
+
 def make_module(env, target, source):
    # When symbols defined in the plug-in
    if not os.path.exists(os.path.dirname(source[0])) and os.path.dirname(source[0]):
@@ -207,12 +220,23 @@ def make_module(env, target, source):
    f = open(source[0], 'w' )
    # Maya got problems with double digit versions
    # f.write('+ mtoa %s %s\n' % (get_mtoa_version(3), target[0]))
-   f.write('+ alembicHolder %s %s\n' % ('any', target[0]))
+   version = get_version()
+   f.write('+ AbcToA %s %s .\\AbcToA-%s\n' % (version, 'any', version))
    f.write('PATH +:=procedurals\n')
    f.write('PATH +:=bin\n')
    f.write('ARNOLD_PLUGIN_PATH +:=shaders\n')
    f.write('MTOA_EXTENSIONS_PATH +:=extensions\n')
    f.close()
+
+def get_mayalibrary_extension():
+   if system.os() == 'windows':
+      return ".mll"
+   elif system.os() == 'linux':
+      return ".so"
+   elif system.os() == 'darwin':
+      return ".dylib"
+   else:
+      return ""
 
 def get_library_extension():
    if system.os() == 'windows':

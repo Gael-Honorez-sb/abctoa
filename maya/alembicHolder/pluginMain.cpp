@@ -8,6 +8,7 @@
 
 #include "nozAlembicHolderNode.h"
 #include "alembicHolderOverride.h"
+#include "version.h"
 
 #include "cmds/ABCHierarchy.h"
 #include "cmds/ABCGetTags.h"
@@ -18,6 +19,8 @@
 #include <maya/MPxDrawOverride.h>
 #include <maya/MDrawRegistry.h>
 #include <maya/MGlobal.h>
+
+
 
 MString    drawDbClassification("drawdb/geometry/alembicHolder");
 MString    drawRegistrantId("AlembicHolderPlugin");
@@ -35,7 +38,7 @@ EXTERN_DECL MStatus uninitializePlugin( MObject obj );
 MStatus initializePlugin( MObject obj )
 {
     MStatus   status;
-    MFnPlugin plugin( obj, "Nozon", "1.0", "Any");
+    MFnPlugin plugin( obj, HOLDER_VENDOR, ARCH_VERSION, MAYA_VERSION);
 
 
     status = plugin.registerShape( "alembicHolder",
