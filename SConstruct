@@ -246,7 +246,7 @@ HDF5_LIBS = 'hdf5_hl hdf5'
 ILMBASE_LIBS = 'Iex IlmImf Half'
 ALL_ALEMBIC_LIBS = ALEMBIC_LIBS + ' ' + HDF5_LIBS + ' ' + ILMBASE_LIBS
 if system.os() == 'windows':
-    ALL_ALEMBIC_LIBS += ' zlibwapi'
+    ALL_ALEMBIC_LIBS += ' libszip libzlib'
 ALL_ALEMBIC_INCLUDE_PATHS = [ALEMBIC_INCLUDE_PATH,
                              BOOST_INCLUDE_PATH,
                              ILMBASE_INCLUDE_PATH,
