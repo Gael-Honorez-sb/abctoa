@@ -61,6 +61,7 @@ public:
 protected:
     IPolyMesh m_polyMesh;
     IPolyMeshSchema::Sample m_samp;
+    IN3fGeomParam::Sample m_normal_samp;
     IBox3dProperty m_boundsProp;
     MeshDrwHelper m_drwHelper;
     bool m_needtoupdate;
