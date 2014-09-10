@@ -226,8 +226,8 @@ void WalkObject( IObject & parent, const ObjectHeader &ohead, ProcArgs &args,
     {
         ICurves curves( parent, ohead.getName() );
 
-/*        if(isVisibleForArnold(parent, &args))
-            ProcessCurves( curves, args, xformSamples );*/
+        if(isVisibleForArnold(parent, &args))
+            ProcessCurves( curves, args, xformSamples );
 
         nextParentObject = curves;
     }
