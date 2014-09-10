@@ -1,3 +1,17 @@
+/*Abc Shader Exporter
+Copyright (c) 2014, Gaël Honorez, All rights reserved.
+This library is free software; you can redistribute it and/or
+modify it under the terms of the GNU Lesser General Public
+License as published by the Free Software Foundation; either
+version 3.0 of the License, or (at your option) any later version.
+This library is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+Lesser General Public License for more details.
+You should have received a copy of the GNU Lesser General Public
+License along with this library.*/
+
+
 #include "abcManagerCmd.h"
 #include <maya/MArgDatabase.h>
 #include <maya/MGlobal.h>
@@ -24,28 +38,6 @@ MStatus abcManagerCmd::doIt( const MArgList &args) {
       return MStatus::kFailure;
     }
   }
-/*
-  //check if we are in list shader mode
-  if (argData.isFlagSet( "-ls")) {
-    int pass;
-    //are we listing a vertex shader
-    if (argData.isFlagSet( "-vs")) {
-      argData.getFlagArgument( "-vs", 0, pass);
-      if (!node->printVertexShader(pass)) {
-        MGlobal::displayError( MString("No vertex shader available for pass ") + pass);
-        return MStatus::kFailure;
-      }
-    }
-    //are we listing a vertex shader
-    if (argData.isFlagSet( "-ps")) {
-      argData.getFlagArgument( "-ps", 0, pass);
-      if (!node->printPixelShader(pass)) {
-        MGlobal::displayError( MString("No pixel shader available for pass ") + pass);
-        return MStatus::kFailure;
-      }
-    }
-  }
-  */
 
   return MStatus::kSuccess;
 }
