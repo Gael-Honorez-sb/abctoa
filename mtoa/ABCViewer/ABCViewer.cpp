@@ -165,6 +165,7 @@ AtNode* CABCViewerTranslator::ExportProcedural(AtNode* procedural, bool update)
 
         MPlug jsonFile = m_DagNode.findPlug("jsonFile");
         MPlug abcShaders = m_DagNode.findPlug("abcShaders");
+        MPlug uvsArchive = m_DagNode.findPlug("uvsArchive");
         MPlug shadersAssignation = m_DagNode.findPlug("shadersAssignation");
         MPlug attributes = m_DagNode.findPlug("attributes");
         MPlug displacementsAssignation = m_DagNode.findPlug("displacementsAssignation");
@@ -211,7 +212,12 @@ AtNode* CABCViewerTranslator::ExportProcedural(AtNode* procedural, bool update)
             AiNodeDeclare(procedural, "abcShaders", "constant STRING");
             AiNodeSetStr(procedural, "abcShaders", abcShaders.asString().asChar());
         }
-        
+
+        if(uvsArchive.asString() != "")
+        {
+            AiNodeDeclare(procedural, "uvsArchive", "constant STRING");
+            AiNodeSetStr(procedural, "uvsArchive", uvsArchive.asString().asChar());
+        }
 
         if(jsonFile.asString() != "")
         {
@@ -339,6 +345,18 @@ void CABCViewerTranslator::NodeInitializer(CAbTranslator context)
     data.stringDefault = "";
     data.name = "jsonFile";
     data.shortName = "jf";
+    data.channelBox = false;
+    helper.MakeInputString(data);
+
+    data.stringDefault = "";
+    data.name = "abcShaders";
+    data.shortName = "abcs";
+    data.channelBox = false;
+    helper.MakeInputString(data);
+
+    data.stringDefault = "";
+    data.name = "uvsArchive";
+    data.shortName = "uvsa";
     data.channelBox = false;
     helper.MakeInputString(data);
 
