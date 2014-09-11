@@ -69,16 +69,16 @@ class gpucache(object):
         self.tags = cmds.ABCGetTags(self.ABCcache)
 
     def updateShaders(self, shaders):
-        cmds.setAttr(self.shape + ".mtoa_constant_shaderAssignation", json.dumps(shaders), type="string")
+        cmds.setAttr(self.shape + ".shadersAssignation", json.dumps(shaders), type="string")
 
     def updateDisplacements(self, shaders):
-        cmds.setAttr(self.shape + ".mtoa_constant_displacementAssignation", json.dumps(shaders), type="string")
+        cmds.setAttr(self.shape + ".displacementsAssignation", json.dumps(shaders), type="string")
 
     def updateOverrides(self, val):
-        cmds.setAttr(self.shape + ".mtoa_constant_overrides", json.dumps(val), type="string")
+        cmds.setAttr(self.shape + ".attributes", json.dumps(val), type="string")
 
     def updateLayerOverrides(self, val):
-        cmds.setAttr(self.shape + ".mtoa_constant_layerOverrides", json.dumps(val), type="string")
+        cmds.setAttr(self.shape + ".layersOverride", json.dumps(val), type="string")
 
     def updateConnections(self):
         pm.disconnectAttr("%s.shaders" % self.shape)

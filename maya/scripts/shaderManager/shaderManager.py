@@ -583,8 +583,8 @@ class List(QMainWindow, Ui_NAM):
                 self.ABCViewerNode[shape] = gpucache.gpucache(shape, self)
                 cacheAssignations = self.ABCViewerNode[shape].getAssignations()
 
-                if cmds.objExists(str(shape) + ".mtoa_constant_overridefile"):
-                    cur = cmds.getAttr("%s.mtoa_constant_overridefile" % shape)
+                if cmds.objExists(str(shape) + ".jsonFile"):
+                    cur = cmds.getAttr("%s.jsonFile" % shape)
                     try:
                         f = open(cur, "r")
                         allLines = json.load(f)
@@ -601,10 +601,10 @@ class List(QMainWindow, Ui_NAM):
                         pass
 
 
-                if not cmds.objExists(str(shape) + ".mtoa_constant_shaderAssignation"):
-                    cmds.addAttr(shape, ln='mtoa_constant_shaderAssignation', dt='string')
+                if not cmds.objExists(str(shape) + ".shadersAssignation"):
+                    cmds.addAttr(shape, ln='shadersAssignation', dt='string')
                 else:
-                    cur = cmds.getAttr("%s.mtoa_constant_shaderAssignation"  % shape)
+                    cur = cmds.getAttr("%s.shadersAssignation"  % shape)
                     if cur != None and cur != "":
                         try:
                             cacheAssignations.addShaders(json.loads(cur))
@@ -612,11 +612,11 @@ class List(QMainWindow, Ui_NAM):
                             pass
 
 
-                if not cmds.objExists(str( shape )+ ".mtoa_constant_overrides"):
-                    cmds.addAttr(shape, ln='mtoa_constant_overrides', dt='string')
+                if not cmds.objExists(str( shape )+ ".attributes"):
+                    cmds.addAttr(shape, ln='attributes', dt='string')
 
                 else:
-                    cur = cmds.getAttr("%s.mtoa_constant_overrides"  % shape)
+                    cur = cmds.getAttr("%s.attributes"  % shape)
                     if cur != None and cur != "":
                         try:
                             cacheAssignations.addOverrides(json.loads(cur))
@@ -624,10 +624,10 @@ class List(QMainWindow, Ui_NAM):
                             pass
 
 
-                if not cmds.objExists(str(shape) + ".mtoa_constant_displacementAssignation"):
-                    cmds.addAttr(shape, ln='mtoa_constant_displacementAssignation', dt='string')
+                if not cmds.objExists(str(shape) + ".displacementsAssignation"):
+                    cmds.addAttr(shape, ln='displacementsAssignation', dt='string')
                 else:
-                    cur = cmds.getAttr("%s.mtoa_constant_displacementAssignation" % shape)
+                    cur = cmds.getAttr("%s.displacementsAssignation" % shape)
                     if cur != None and cur != "":
                         try:
                             cacheAssignations.addDisplacements(json.loads(cur))
@@ -635,10 +635,10 @@ class List(QMainWindow, Ui_NAM):
                             pass
 
 
-                if not cmds.objExists(str(shape) + ".mtoa_constant_layerOverrides"):
-                    cmds.addAttr(shape, ln='mtoa_constant_layerOverrides', dt='string')
+                if not cmds.objExists(str(shape) + ".layersOverride"):
+                    cmds.addAttr(shape, ln='layersOverride', dt='string')
                 else:
-                    cur = cmds.getAttr("%s.mtoa_constant_layerOverrides"  % shape)
+                    cur = cmds.getAttr("%s.layersOverride"  % shape)
                     if cur != None and cur != "":
                         try:
                             cacheAssignations.addLayers(json.loads(cur))
@@ -647,8 +647,8 @@ class List(QMainWindow, Ui_NAM):
 
                 attrs=["Json","Shaders","Overrides","Displacements"]
                 for attr in attrs:
-                    if not cmds.objExists(str(shape) + ".mtoa_constant_skip%s" % attr):
-                        cmds.addAttr(shape, ln='mtoa_constant_skip%s' % attr, at='bool')
+                    if not cmds.objExists(str(shape) + ".skip%s" % attr):
+                        cmds.addAttr(shape, ln='skip%s' % attr, at='bool')
 
 
     def getCache(self):
