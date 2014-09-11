@@ -221,7 +221,7 @@ def make_module(env, target, source):
    # Maya got problems with double digit versions
    # f.write('+ mtoa %s %s\n' % (get_mtoa_version(3), target[0]))
    version = get_version()
-   f.write('+ AbcToA %s %s .\\AbcToA-%s\n' % (version, 'any', version))
+   f.write('+ AbcToA %s .\\AbcToA-%s\n' % (version, version))
    f.write('PATH +:=procedurals\n')
    f.write('PATH +:=bin\n')
    f.write('ARNOLD_PLUGIN_PATH +:=shaders\n')
