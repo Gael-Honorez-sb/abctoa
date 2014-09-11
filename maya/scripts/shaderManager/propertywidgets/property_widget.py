@@ -1,6 +1,6 @@
 
-from PyQt4.QtGui import *
-from PyQt4.QtCore import *
+from PySide.QtGui import *
+from PySide.QtCore import *
 #from argu_common import *
 
 from arnold import *
@@ -17,7 +17,7 @@ class PropertyWidget(QFrame):
    POINT = 1
    POINT2 = 2
 
-   propertyChanged = pyqtSignal(dict)
+   propertyChanged = Signal(dict)
 
    def __init__(self, paramname, parent = None):
       QFrame.__init__(self, parent)

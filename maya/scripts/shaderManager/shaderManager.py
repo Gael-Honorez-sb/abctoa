@@ -16,61 +16,56 @@
 # GNU General Public License for more details.
 #-------------------------------------------------------------------------------
 
-import site
 import os
+import shiboken
+
 
 d = os.path.dirname(__file__)
-
-try:
-    import sip
-except:
-    site.addsitedir(os.path.join(os.path.dirname(d), "site_pyQt4"))
-    import sip
-
-sip.setapi('QProcess', 2)
-sip.setapi('QString', 2)
 
 import json
 from arnold import *
 
-from PyQt4 import QtGui, QtCore
-from PyQt4.QtGui import *
-from PyQt4.QtCore import *
-
+from PySide import QtGui, QtCore, QtUiTools
+from PySide.QtGui import *
+from PySide.QtCore import *
 
 from gpucache import gpucache, treeitem
 reload(treeitem)
 from propertywidgets.property_editorByType import PropertyEditor
 
+from ui.UI_ABCHierarchy import *
+
 import maya.cmds as cmds
 import maya.mel as mel
 
 from maya.OpenMaya import MObjectHandle, MDGMessage, MMessage, MFnDependencyNode
+import maya.OpenMayaUI as apiUI
 
 cmds.loadPlugin('alembicHolder.mll', qt=1)
 
-from PyQt4 import uic
+#list_form, list_base = uic.loadUiType()
 
 
-
-list_form, list_base = uic.loadUiType( os.path.join(d,'ui/UI_ABCHierarchy.ui'))
 
 
 def getMayaWindow():
-    try:
-        import maya.OpenMayaUI as apiUI
-        ptr = apiUI.MQtUtil.mainWindow()
-        return sip.wrapinstance(long(ptr), QtCore.QObject)
-    except:
-        return None
+    """
+    Get the main Maya window as a QtGui.QMainWindow instance
+    @return: QtGui.QMainWindow instance of the top level Maya windows
+    """
+    ptr = apiUI.MQtUtil.mainWindow()
+    if ptr is not None:
+        return shiboken.wrapInstance(long(ptr), QtGui.QMainWindow)
 
-class List(list_form, list_base):
-    def __init__(self, parent=getMayaWindow()):
+print type(Ui_NAM)
+class List(QMainWindow, Ui_NAM):
+    def __init__(self, parent=None):
         super(List, self).__init__(parent)
         if not AiUniverseIsActive():
             AiBegin()
 
         self.setupUi(self)
+
         self.shadersFromFile = []
         self.displaceFromFile = []
 
