@@ -26,6 +26,18 @@ License along with this library.*/
 #include <maya/MStringResourceId.h>
 
 
+#ifdef WIN32
+#define EXTERN_DECL __declspec( dllexport )
+#else
+#define EXTERN_DECL extern
+#endif
+
+
+
+EXTERN_DECL MStatus initializePlugin( MObject obj );
+EXTERN_DECL MStatus uninitializePlugin( MObject obj );
+
+
 #define ARNOLD_CLASSIFY( classification ) (MString("rendernode/arnold/") + classification)
 const MString ARNOLD_SWATCH("ArnoldRenderSwatch");
 //
