@@ -102,7 +102,7 @@ struct ProcArgs
 
     bool linkShader;
     bool linkDisplacement;
-    bool linkOverride;
+    bool linkAttributes;
 
     std::string ns;
 
@@ -111,8 +111,8 @@ struct ProcArgs
 
     std::map<std::string, AtNode*> shaders;
     std::map<std::string, AtNode*> displacements;
-    std::vector<std::string> overrides;
-    Json::Value overrideRoot;
+    std::vector<std::string> attributes;
+    Json::Value attributesRoot;
 
     bool useAbcShaders;
     Alembic::AbcGeom::IObject materialsObject;

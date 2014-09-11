@@ -243,7 +243,7 @@ AtNode * ProcessPointsBase(
         NodeCache::iterator I = g_meshCache.find(cacheId);
 
         // parameters overrides
-        if(args.linkOverride)
+        if(args.linkAttributes)
             ApplyOverrides(name, instanceNode, tags, args);
 
         // shader assignation

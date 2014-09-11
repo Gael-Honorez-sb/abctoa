@@ -237,37 +237,37 @@ AtNode * ProcessCurvesBase(
     Json::FastWriter writer;
     Json::Value rootEncode;
 
-    if(args.linkOverride)
+    if(args.linkAttributes)
     {
       bool foundInPath = false;
-      for(std::vector<std::string>::iterator it=args.overrides.begin(); it!=args.overrides.end(); ++it)
+      for(std::vector<std::string>::iterator it=args.attributes.begin(); it!=args.attributes.end(); ++it)
       {
-        Json::Value overrides;
+        Json::Value attributes;
         if(it->find("/") != string::npos)
         {
           if(name.find(*it) != string::npos)
           {
-            overrides = args.overrideRoot[*it];
+            attributes = args.attributesRoot[*it];
             foundInPath = true;
           }
 
         }
         else if(matchPattern(name,*it)) // based on wildcard expression
         {
-            overrides = args.overrideRoot[*it];
+            attributes = args.attributesRoot[*it];
             foundInPath = true;
         }
         else if(foundInPath == false)
         {
           if (std::find(tags.begin(), tags.end(), *it) != tags.end())
           {
-            overrides = args.overrideRoot[*it];
+            attributes = args.attributesRoot[*it];
           }
         }
 
-        if(overrides.size() > 0)
+        if(attributes.size() > 0)
         {
-          for( Json::ValueIterator itr = overrides.begin() ; itr != overrides.end() ; itr++ ) 
+          for( Json::ValueIterator itr = attributes.begin() ; itr != attributes.end() ; itr++ ) 
           {
             std::string attribute = itr.key().asString();
 
@@ -279,7 +279,7 @@ AtNode * ProcessCurvesBase(
               || attribute=="max_subdivs" 
               || attribute=="invert_normals")
             {
-              Json::Value val = args.overrideRoot[*it][itr.key().asString()];
+              Json::Value val = args.attributesRoot[*it][itr.key().asString()];
               rootEncode[attribute]=val;
             }
           }
@@ -334,7 +334,7 @@ AtNode * ProcessCurvesBase(
 
         NodeCache::iterator I = g_meshCache.find(cacheId);
 
-        if (args.linkOverride)
+        if (args.linkAttributes)
         {
             ApplyOverrides(name, instanceNode, tags,  args);
         }
@@ -359,7 +359,7 @@ AtNode * ProcessCurvesBase(
         }
 
         // start param overrides on instance
-        if(args.linkOverride)
+        if(args.linkAttributes)
         {
             ApplyOverrides(name, instanceNode, tags, args );
         }   
@@ -609,16 +609,16 @@ AtNode * ProcessCurvesBase(
     }
 
     // Attribute overrides. We assume instance mode all the time here.
-    if(args.linkOverride)
+    if(args.linkAttributes)
     {
-    for(std::vector<std::string>::iterator it=args.overrides.begin(); it!=args.overrides.end(); ++it)
+    for(std::vector<std::string>::iterator it=args.attributes.begin(); it!=args.attributes.end(); ++it)
     {
       if(name.find(*it) != string::npos || std::find(tags.begin(), tags.end(), *it) != tags.end() || matchPattern(name,*it))
       {
-        const Json::Value overrides = args.overrideRoot[*it];
-        if(overrides.size() > 0)
+        const Json::Value attributes = args.attributesRoot[*it];
+        if(attributes.size() > 0)
         {
-          for( Json::ValueIterator itr = overrides.begin() ; itr != overrides.end() ; itr++ ) 
+          for( Json::ValueIterator itr = attributes.begin() ; itr != attributes.end() ; itr++ ) 
           {
             std::string attribute = itr.key().asString();
             AiMsgDebug("[ABC] Checking attribute %s for shape %s", attribute.c_str(), name.c_str());
@@ -638,7 +638,7 @@ AtNode * ProcessCurvesBase(
               if ( paramEntry != NULL)
               {
                 AiMsgDebug("[ABC] attribute %s exists on shape", attribute.c_str());
-                Json::Value val = args.overrideRoot[*it][itr.key().asString()];
+                Json::Value val = args.attributesRoot[*it][itr.key().asString()];
                 if( val.isString() ) 
                   AiNodeSetStr(curvesNode, attribute.c_str(), val.asCString());
                 else if( val.isBool() ) 
@@ -727,7 +727,7 @@ AtNode * ProcessCurvesBase(
           ApplyTransformation( curvesNode, xformSamples, args );
         }
         
-        if (args.linkOverride)
+        if (args.linkAttributes)
         {
             ApplyOverrides(name, curvesNode, tags,  args);
         }

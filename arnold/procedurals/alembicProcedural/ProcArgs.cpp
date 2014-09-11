@@ -56,7 +56,7 @@ ProcArgs::ProcArgs( const char * paramStr )
  , proceduralNode(0)
  , linkShader(false)
  , linkDisplacement(false)
- , linkOverride(false)
+ , linkAttributes(false)
  , useUvArchive(false)
  , useAbcShaders(false)
 {
@@ -160,7 +160,7 @@ ProcArgs::ProcArgs( const char * paramStr )
             ++i;
             if ( i < tokens.size() )
             {
-               subdivPixelError = atoi( tokens[i].c_str() );
+               subdivPixelError = atof( tokens[i].c_str() );
             }
         }
         else if ( token == "-subdivuvsmoothing" )
