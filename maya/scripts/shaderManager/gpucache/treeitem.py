@@ -16,7 +16,7 @@
 # GNU General Public License for more details.
 #-------------------------------------------------------------------------------
 
-from PyQt4 import QtGui, QtCore
+from PySide import QtGui, QtCore
 import os
 import functools
 

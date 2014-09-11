@@ -1,6 +1,6 @@
 
-from PyQt4.QtGui import *
-from PyQt4.QtCore import *
+from PySide.QtGui import *
+from PySide.QtCore import *
 from shaderManager.propertywidgets.property_widget_bool import PropertyWidgetBool
 from shaderManager.propertywidgets.property_widget_bool2 import PropertyWidgetBool2
 from shaderManager.propertywidgets.property_widget_color import *
@@ -21,9 +21,9 @@ PROPERTY_BLACK_LIST = {
 }
 
 class PropertyEditor(QWidget):
-    propertyChanged = pyqtSignal(dict)
-    setPropertyValue = pyqtSignal(dict)
-    reset = pyqtSignal()
+    propertyChanged = Signal(dict)
+    setPropertyValue = Signal(dict)
+    reset = Signal()
     def __init__(self, mainEditor, nodetype, parent = None):
         QWidget.__init__(self, parent)
         mainLayout = QVBoxLayout()
