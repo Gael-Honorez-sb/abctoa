@@ -1,7 +1,7 @@
 
 # -*- coding: utf-8 -*-
 # Alembic Holder
-# Copyright (c) 2014, Gaël Honorez, All rights reserved.
+# Copyright (c) 2014, Gael Honorez, All rights reserved.
 # This library is free software; you can redistribute it and/or
 # modify it under the terms of the GNU Lesser General Public
 # License as published by the Free Software Foundation; either
