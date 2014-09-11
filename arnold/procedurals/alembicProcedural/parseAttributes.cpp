@@ -1,5 +1,5 @@
 
-#include "parseOverrides.h"
+#include "parseAttributes.h"
 #include <pystring.h>
 
 namespace
@@ -15,25 +15,25 @@ bool isVisible(IObject child, IXformSchema xs, ProcArgs* args)
         // check if the object is not forced to be visible
         std::string name = args->nameprefix + child.getFullName();
 
-        if(args->linkOverride)
+        if(args->linkAttributes)
         {
-            for(std::vector<std::string>::iterator it=args->overrides.begin(); it!=args->overrides.end(); ++it)
+            for(std::vector<std::string>::iterator it=args->attributes.begin(); it!=args->attributes.end(); ++it)
             {
-                    Json::Value overrides;
+                    Json::Value attributes;
                     if(it->find("/") != string::npos)
                         if(name.find(*it) != string::npos)
-                            overrides = args->overrideRoot[*it];
+                            attributes = args->attributesRoot[*it];
 
 
-                    if(overrides.size() > 0)
+                    if(attributes.size() > 0)
                     {
-                        for( Json::ValueIterator itr = overrides.begin() ; itr != overrides.end() ; itr++ )
+                        for( Json::ValueIterator itr = attributes.begin() ; itr != attributes.end() ; itr++ )
                         {
                             std::string attribute = itr.key().asString();
                             if (attribute == "forceVisible")
                             {
 
-                                bool vis = args->overrideRoot[*it][itr.key().asString()].asBool();
+                                bool vis = args->attributesRoot[*it][itr.key().asString()].asBool();
                                 if(vis)
                                     return true;
                                 else
@@ -90,25 +90,25 @@ bool isVisibleForArnold(IObject child, ProcArgs* args)
     AtUInt16 minVis = AI_RAY_ALL & ~(AI_RAY_GLOSSY|AI_RAY_DIFFUSE|AI_RAY_REFRACTED|AI_RAY_REFLECTED|AI_RAY_SHADOW|AI_RAY_CAMERA);
     std::string name = args->nameprefix + child.getFullName();
 
-    if(args->linkOverride)
+    if(args->linkAttributes)
     {
-        for(std::vector<std::string>::iterator it=args->overrides.begin(); it!=args->overrides.end(); ++it)
+        for(std::vector<std::string>::iterator it=args->attributes.begin(); it!=args->attributes.end(); ++it)
         {
-                Json::Value overrides;
+                Json::Value attributes;
                 if(it->find("/") != string::npos)
                     if(name.find(*it) != string::npos)
-                        overrides = args->overrideRoot[*it];
+                        attributes = args->attributesRoot[*it];
 
 
-                if(overrides.size() > 0)
+                if(attributes.size() > 0)
                 {
-                    for( Json::ValueIterator itr = overrides.begin() ; itr != overrides.end() ; itr++ )
+                    for( Json::ValueIterator itr = attributes.begin() ; itr != attributes.end() ; itr++ )
                     {
                         std::string attribute = itr.key().asString();
                         if (attribute == "visibility")
                         {
 
-                            AtUInt16 vis = args->overrideRoot[*it][itr.key().asString()].asInt();
+                            AtUInt16 vis = args->attributesRoot[*it][itr.key().asString()].asInt();
                             if(vis <= minVis)
                             {
                                 AiMsgDebug("Object %s is invisible", name.c_str());
@@ -128,11 +128,11 @@ bool isVisibleForArnold(IObject child, ProcArgs* args)
 }
 
 
-void OverrideProperties(Json::Value & jroot, Json::Value jrootOverrides)
+void OverrideProperties(Json::Value & jroot, Json::Value jrootAttributes)
 {
-    for( Json::ValueIterator itr = jrootOverrides.begin() ; itr != jrootOverrides.end() ; itr++ )
+    for( Json::ValueIterator itr = jrootAttributes.begin() ; itr != jrootAttributes.end() ; itr++ )
     {
-        const Json::Value paths = jrootOverrides[itr.key().asString()];
+        const Json::Value paths = jrootAttributes[itr.key().asString()];
         for( Json::ValueIterator overPath = paths.begin() ; overPath != paths.end() ; overPath++ )
         {
             Json::Value attr = paths[overPath.key().asString()];

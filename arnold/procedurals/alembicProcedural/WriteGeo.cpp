@@ -265,31 +265,31 @@ AtNode * ProcessPolyMeshBase(
 
     bool objectMatte = false;
 
-    if(args.linkOverride)
+    if(args.linkAttributes)
     {
         bool foundInPath = false;
-        for(std::vector<std::string>::iterator it=args.overrides.begin(); it!=args.overrides.end(); ++it)
+        for(std::vector<std::string>::iterator it=args.attributes.begin(); it!=args.attributes.end(); ++it)
         {
             Json::Value overrides;
             if(it->find("/") != string::npos)
             {
                 if(name.find(*it) != string::npos)
                 {
-                    overrides = args.overrideRoot[*it];
+                    overrides = args.attributesRoot[*it];
                     foundInPath = true;
                 }
 
             }
             else if(matchPattern(name,*it)) // based on wildcard expression
             {
-                overrides = args.overrideRoot[*it];
+                overrides = args.attributesRoot[*it];
                 foundInPath = true;
             }
             else if(foundInPath == false)
             {
                 if (std::find(tags.begin(), tags.end(), *it) != tags.end())
                 {
-                    overrides = args.overrideRoot[*it];
+                    overrides = args.attributesRoot[*it];
                 }
             }
             if(overrides.size() > 0)
@@ -300,7 +300,7 @@ AtNode * ProcessPolyMeshBase(
 
                     if (attribute == "matte")
                     {
-                        objectMatte = args.overrideRoot[*it][itr.key().asString()].asBool();
+                        objectMatte = args.attributesRoot[*it][itr.key().asString()].asBool();
                     }
 
                     if (attribute=="smoothing"
@@ -315,7 +315,7 @@ AtNode * ProcessPolyMeshBase(
                         || attribute=="disp_autobump"
                         || attribute=="invert_normals")
                     {
-                        Json::Value val = args.overrideRoot[*it][itr.key().asString()];
+                        Json::Value val = args.attributesRoot[*it][itr.key().asString()];
 
                         rootEncode[attribute]=val;
                     }
@@ -383,7 +383,7 @@ AtNode * ProcessPolyMeshBase(
 
         NodeCache::iterator I = g_meshCache.find(cacheId);
         // parameters overrides
-        if(args.linkOverride)
+        if(args.linkAttributes)
             ApplyOverrides(name, instanceNode, tags, args);
 
         // shader assignation
@@ -557,13 +557,13 @@ AtNode * ProcessPolyMeshBase(
     args.createdNodes.push_back(meshNode);
 
     // Attribute overrides. We assume instance mode all the time here.
-    if(args.linkOverride)
+    if(args.linkAttributes)
     {
-        for(std::vector<std::string>::iterator it=args.overrides.begin(); it!=args.overrides.end(); ++it)
+        for(std::vector<std::string>::iterator it=args.attributes.begin(); it!=args.attributes.end(); ++it)
         {
             if(name.find(*it) != string::npos || std::find(tags.begin(), tags.end(), *it) != tags.end() || matchPattern(name,*it))
             {
-                const Json::Value overrides = args.overrideRoot[*it];
+                const Json::Value overrides = args.attributesRoot[*it];
                 if(overrides.size() > 0)
                 {
                     for( Json::ValueIterator itr = overrides.begin() ; itr != overrides.end() ; itr++ )
@@ -590,7 +590,7 @@ AtNode * ProcessPolyMeshBase(
                             if ( paramEntry != NULL)
                             {
                                 //AiMsgDebug("attribute %s exists on shape", attribute.c_str());
-                                Json::Value val = args.overrideRoot[*it][itr.key().asString()];
+                                Json::Value val = args.attributesRoot[*it][itr.key().asString()];
                                 if( val.isString() )
                                     AiNodeSetStr(meshNode, attribute.c_str(), val.asCString());
                                 else if( val.isBool() )

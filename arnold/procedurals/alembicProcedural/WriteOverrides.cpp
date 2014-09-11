@@ -46,28 +46,28 @@
 void ApplyOverrides(std::string name, AtNode* node, std::vector<std::string> tags, ProcArgs & args)
 {
     bool foundInPath = false;
-    for(std::vector<std::string>::iterator it=args.overrides.begin(); it!=args.overrides.end(); ++it)
+    for(std::vector<std::string>::iterator it=args.attributes.begin(); it!=args.attributes.end(); ++it)
     {
         Json::Value overrides;
         if(it->find("/") != std::string::npos)
         {
             if(name.find(*it) != std::string::npos)
             {
-                overrides = args.overrideRoot[*it];
+                overrides = args.attributesRoot[*it];
                 foundInPath = true;
             }
 
         }
         else if(matchPattern(name,*it)) // based on wildcard expression
         {
-            overrides = args.overrideRoot[*it];
+            overrides = args.attributesRoot[*it];
             foundInPath = true;
         }
         else if(foundInPath == false)
         {
             if (std::find(tags.begin(), tags.end(), *it) != tags.end())
             {
-                overrides = args.overrideRoot[*it];
+                overrides = args.attributesRoot[*it];
             }
         }
         if(overrides.size() > 0)
@@ -80,7 +80,7 @@ void ApplyOverrides(std::string name, AtNode* node, std::vector<std::string> tag
 
                 if ( paramEntry != NULL)
                 {
-                    Json::Value val = args.overrideRoot[*it][itr.key().asString()];
+                    Json::Value val = args.attributesRoot[*it][itr.key().asString()];
                     if( val.isString() )
                         AiNodeSetStr(node, attribute.c_str(), val.asCString());
                     else if( val.isBool() )
