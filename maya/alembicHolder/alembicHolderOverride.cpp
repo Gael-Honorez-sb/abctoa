@@ -304,9 +304,9 @@ void AlembicHolderOverride::draw(const MHWRender::MDrawContext& context, const M
                 glPolygonMode(GL_FRONT_AND_BACK, MGL_LINE);
                 if (cache->abcSceneManager.hasKey(sceneKey))
                     if(selectionKey != "")
-                        cache->abcSceneManager.getScene(sceneKey)->drawOnly(cache->abcSceneState, selectionKey);
+                        cache->abcSceneManager.getScene(sceneKey)->drawOnly(cache->abcSceneState, selectionKey, std::map<std::string, MColor>());
                     else
-                        cache->abcSceneManager.getScene(sceneKey)->draw(cache->abcSceneState);
+                        cache->abcSceneManager.getScene(sceneKey)->draw(cache->abcSceneState, std::map<std::string, MColor>());
                 glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
             }
         }
@@ -332,9 +332,9 @@ void AlembicHolderOverride::draw(const MHWRender::MDrawContext& context, const M
             if (cache->abcSceneManager.hasKey(sceneKey))
             {
                 if(selectionKey != "")
-                    cache->abcSceneManager.getScene(sceneKey)->drawOnly(cache->abcSceneState, selectionKey);
+                    cache->abcSceneManager.getScene(sceneKey)->drawOnly(cache->abcSceneState, selectionKey, cache->shaderColors);
                 else
-                    cache->abcSceneManager.getScene(sceneKey)->draw(cache->abcSceneState);
+                    cache->abcSceneManager.getScene(sceneKey)->draw(cache->abcSceneState, cache->shaderColors);
             }
 
 
