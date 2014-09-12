@@ -112,22 +112,23 @@ public:
 
 private:
     CAlembicDatas        fGeometry;
-    static  MObject     aAbcFile;
-    static  MObject     aObjectPath;
-//    static  MObject     aBooleanAttr; // example boolean attribute
-    static  MObject     aTime;
-    static  MObject     aTimeOffset;
-    static  MObject        aSelectionPath;
-    static  MObject     aShaderPath;
-    static    MObject        aUpdateCache;
-    static    MObject        aBoundMin;
-    static    MObject        aBoundMinX;
-    static    MObject        aBoundMinY;
-    static    MObject        aBoundMinZ;
-    static    MObject        aBoundMax;
-    static    MObject        aBoundMaxX;
-    static    MObject        aBoundMaxY;
-    static    MObject        aBoundMaxZ;
+    static    MObject    aAbcFile;
+    static    MObject    aObjectPath;
+//    static  MObject    aBooleanAttr; // example boolean attribute
+    static    MObject    aTime;
+    static    MObject    aTimeOffset;
+    static    MObject    aSelectionPath;
+    static    MObject    aShaderPath;
+    static    MObject    aForceReload;
+    static    MObject    aUpdateCache;
+    static    MObject    aBoundMin;
+    static    MObject    aBoundMinX;
+    static    MObject    aBoundMinY;
+    static    MObject    aBoundMinZ;
+    static    MObject    aBoundMax;
+    static    MObject    aBoundMaxX;
+    static    MObject    aBoundMaxY;
+    static    MObject    aBoundMaxZ;
 
 public:
     static  MTypeId     id;
