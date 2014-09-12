@@ -43,26 +43,27 @@ License along with this library.*/
 #include <maya/MDagPath.h>
 #include <maya/MNodeMessage.h>
 
+#include <json/json.h>
+
 #include <iostream>
 
 class CAlembicDatas
 {
 public:
     CAlembicDatas();
-       MBoundingBox bbox;
-       int token;
-       bool m_abcdirty;
-       std::string m_currscenekey;
-       int m_bbmode;
-       double time;
+    MBoundingBox bbox;
+    int token;
+    bool m_abcdirty;
+    std::string m_currscenekey;
+    int m_bbmode;
+    double time;
 
-       //BufferObject buffer;
+    //BufferObject buffer;
 
-       static SimpleAbcViewer::SceneState   abcSceneState;
+    static SimpleAbcViewer::SceneState   abcSceneState;
+    static SimpleAbcViewer::SceneManager abcSceneManager;
 
-       static SimpleAbcViewer::SceneManager abcSceneManager;
-
-
+    std::map<std::string, MColor> shaderColors;
 };
 
 
