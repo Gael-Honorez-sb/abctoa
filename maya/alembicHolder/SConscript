@@ -1,0 +1,29 @@
+# vim: filetype=python
+
+## load our own python modules
+import system
+from build_tools import find_files_recursive
+
+import os
+
+# import build env
+Import('plugin_env')
+local_env = plugin_env.Clone()
+
+# Automatically add all source and include files found in the source path
+src_base_dir  = os.path.join(local_env['ROOT_DIR'], 'maya', 'alembicHolder')
+source_files  = find_files_recursive(src_base_dir, ['.c', '.cpp'])
+include_files = find_files_recursive(src_base_dir, ['.h'])
+
+JSON_INCLUDE_PATH = local_env['JSON_INCLUDE_PATH']
+JSON_LIBRARY_PATH = local_env['JSON_LIBRARY_PATH']
+BOOST_LIBRARY_PATH = local_env['BOOST_LIBRARY_PATH']
+
+local_env.Append(CPPPATH = [JSON_INCLUDE_PATH])
+local_env.Append(LIBPATH = [JSON_LIBRARY_PATH, BOOST_LIBRARY_PATH])
+local_env.Append(LIBS = ["json"] )
+
+
+MAYA_VIEWER = local_env.SharedLibrary('alembicHolder', source_files, LIBPREFIX='')
+
+Return('MAYA_VIEWER')
