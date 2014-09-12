@@ -80,6 +80,10 @@ bool findShaderColor(MString shaderName, MColor & shaderColor)
         colorPlug.child(0).getValue( shaderColor.r );
         colorPlug.child(1).getValue( shaderColor.g );
         colorPlug.child(2).getValue( shaderColor.b );
+
+        if( shaderColor.r == 0.0f &&  shaderColor.g == 0.0f &&  shaderColor.b == 0.0f)
+            return false;
+
         return true;
     }
 

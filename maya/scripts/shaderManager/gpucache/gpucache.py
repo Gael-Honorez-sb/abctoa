@@ -65,6 +65,7 @@ class gpucache(object):
 
     def updateShaders(self, shaders):
         cmds.setAttr(self.shape + ".shadersAssignation", json.dumps(shaders), type="string")
+        cmds.setAttr(self.shape + ".forceReload", 1)
 
     def updateDisplacements(self, shaders):
         cmds.setAttr(self.shape + ".displacementsAssignation", json.dumps(shaders), type="string")

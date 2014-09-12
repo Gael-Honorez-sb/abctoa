@@ -83,6 +83,7 @@ MObject nozAlembicHolder::aTime;
 MObject nozAlembicHolder::aTimeOffset;
 MObject nozAlembicHolder::aShaderPath;
 MObject nozAlembicHolder::aUpdateCache;
+MObject nozAlembicHolder::aForceReload;
 
 // for bbox
 MObject nozAlembicHolder::aBoundMin;
@@ -297,6 +298,9 @@ MStatus nozAlembicHolder::initialize() {
     aUpdateCache = nAttr.create("updateCache", "upc", MFnNumericData::kInt, 0);
     nAttr.setHidden(true);
 
+    aForceReload = nAttr.create("forceReload", "frel", MFnNumericData::kBoolean, false, &stat);
+    nAttr.setDefault(false);
+    nAttr.setKeyable(false);
 
     aBoundMinX = nAttr.create( "outBoundMinX", "obminx", MFnNumericData::kFloat, 0, &stat);
     nAttr.setWritable( false );
@@ -335,6 +339,7 @@ MStatus nozAlembicHolder::initialize() {
     addAttribute( aAbcFile);
     addAttribute( aObjectPath);
     addAttribute( aSelectionPath);
+    addAttribute(aForceReload);
     addAttribute( aShaderPath);
     addAttribute( aTime);
     addAttribute( aTimeOffset);
@@ -342,6 +347,7 @@ MStatus nozAlembicHolder::initialize() {
     addAttribute( aBoundMin);
     addAttribute( aBoundMax);
 
+    attributeAffects ( aForceReload, aUpdateCache );
     attributeAffects ( aAbcFile, aUpdateCache );
     attributeAffects ( aObjectPath, aUpdateCache );
     attributeAffects ( aSelectionPath, aUpdateCache );
@@ -478,6 +484,7 @@ MStatus nozAlembicHolder::compute( const MPlug& plug, MDataBlock& block )
 
         }
 
+        block.outputValue(aForceReload).setBool(false);
     }
     else
     {
