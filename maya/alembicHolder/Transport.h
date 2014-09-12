@@ -49,9 +49,9 @@ public:
     Transport( const std::string &iAbcFileName,
                chrono_t iFps );
 
-    void draw( SceneState &iState  )
+    void draw( SceneState &iState, std::map<std::string, MColor> shaderColors  )
     {
-        return m_scene.draw( iState  );
+        return m_scene.draw( iState, shaderColors );
     }
 
     Box3d getBounds() const

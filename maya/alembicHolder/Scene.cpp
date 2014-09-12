@@ -176,7 +176,7 @@ void Scene::setSelectionPath(std::string path)
 }
 
 //-*****************************************************************************
-void Scene::draw( SceneState &s_state )
+void Scene::draw( SceneState &s_state, std::map<std::string, MColor> shaderColors )
 {
 
    static MGLFunctionTable *gGLFT = NULL;
@@ -201,12 +201,13 @@ void Scene::draw( SceneState &s_state )
     dctx.setWorldToCamera( currentMatrix );
     dctx.setPointSize( s_state.pointSize );
     dctx.setSelection("");
+    dctx.setShaderColors(shaderColors);
 
     m_drawable->draw( dctx );
 
 }
 
-void Scene::drawOnly( SceneState &s_state, std::string selection )
+void Scene::drawOnly( SceneState &s_state, std::string selection, std::map<std::string, MColor> shaderColors)
 {
        static MGLFunctionTable *gGLFT = NULL;
        if (gGLFT == NULL)
@@ -230,6 +231,7 @@ void Scene::drawOnly( SceneState &s_state, std::string selection )
         dctx.setWorldToCamera( currentMatrix );
         dctx.setPointSize( s_state.pointSize );
         dctx.setSelection(selection);
+        dctx.setShaderColors(shaderColors);
         m_drawable->draw( dctx );
 
 }

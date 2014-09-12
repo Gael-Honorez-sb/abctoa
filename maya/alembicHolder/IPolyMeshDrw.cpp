@@ -209,6 +209,8 @@ void IPolyMeshDrw::draw( const DrawContext &iCtx )
         return;
     }
 
+
+
     if(iCtx.getSelection() != "")
     {
         std::string pathSel = iCtx.getSelection();
@@ -219,6 +221,26 @@ void IPolyMeshDrw::draw( const DrawContext &iCtx )
         }else
             return;
     }
+    std::map<std::string, MColor> shaderColors = iCtx.getShaderColors();
+    MColor objColor(.7, .7,.7, 1.0);
+
+    bool foundInPath = false;
+    for(std::map<std::string, MColor>::iterator it = shaderColors.begin(); it != shaderColors.end(); ++it)
+    {
+        //check both path & tag
+        if(it->first.find("/") != std::string::npos)
+        {
+            if(m_polyMesh.getFullName().find(it->first) != std::string::npos)
+            {
+                objColor = it->second;
+                foundInPath = true;
+            }
+        }
+    }
+    
+
+    if(shaderColors.size() > 0)
+        gGLFT->glColor4f(objColor.r, objColor.g, objColor.b, 1.0f);
 
     if (m_needtoupdate)
         updateData();

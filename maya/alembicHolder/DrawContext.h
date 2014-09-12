@@ -70,12 +70,16 @@ public:
     const std::string &getSelection() const {return m_selectionPath;}
     void setSelection( const std::string & path) {m_selectionPath = path;}
 
+    // for coloring
+    void setShaderColors(const std::map<std::string, MColor> color) {m_shaderColors = color;}
+    const std::map<std::string, MColor> getShaderColors() const {return m_shaderColors;}
 
 protected:
     M44d m_localToWorld;
     M44d m_worldToCamera;
     float m_pointSize;
     std::string m_selectionPath;
+    std::map<std::string, MColor> m_shaderColors;
 };
 
 } // End namespace SimpleAbcViewer

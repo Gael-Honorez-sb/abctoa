@@ -15,6 +15,7 @@ License along with this library.*/
 #include <maya/MCommandResult.h>
 
 #include "nozAlembicHolderNode.h"
+#include "parseJsonShaders.h"
 
 #include <maya/MPlug.h>
 #include <maya/MPlugArray.h>
@@ -41,6 +42,7 @@ License along with this library.*/
 
 #include <stdio.h>
 #include <map>
+
 
 
 #include <maya/MHardwareRenderer.h>
@@ -391,6 +393,26 @@ MStatus nozAlembicHolder::compute( const MPlug& plug, MDataBlock& block )
 {
     if (plug == aUpdateCache)
     {
+        MStatus status;
+        MFnDagNode fn(thisMObject());
+        // Try to parse JSON Shader assignation here.
+         MPlug shaderAssignation = fn.findPlug("shadersAssignation", status);
+        
+        if(status)
+        {
+            bool parsingSuccessful = false;
+            MString jsonAssign = block.inputValue(shaderAssignation).asString();
+            if(jsonAssign != "")
+            {
+                std::cout << "json : " << jsonAssign << std::endl;
+                Json::Value jroot;
+                Json::Reader reader;
+                parsingSuccessful = reader.parse( jsonAssign.asChar(), jroot, false );
+                if(parsingSuccessful)
+                    ParseShaders(jroot, fGeometry.shaderColors);
+            }
+        }
+
 
         MString file = block.inputValue(aAbcFile).asString();
         MFileObject fileObject;
@@ -625,7 +647,7 @@ void CAlembicHolderUI::draw(const MDrawRequest & request, M3dView & view) const
         {
             gGLFT->glPolygonMode(GL_FRONT_AND_BACK, MGL_LINE);
             gGLFT->glPushMatrix();
-            cache->abcSceneManager.getScene(sceneKey)->draw(cache->abcSceneState);
+            cache->abcSceneManager.getScene(sceneKey)->draw(cache->abcSceneState, std::map<std::string, MColor>());
             gGLFT->glPopMatrix();
             gGLFT->glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
         }
@@ -647,7 +669,7 @@ void CAlembicHolderUI::draw(const MDrawRequest & request, M3dView & view) const
         case kDrawWireframeOnShaded:
             gGLFT->glPolygonMode(GL_FRONT_AND_BACK, MGL_LINE);
             gGLFT->glPushMatrix();
-            cache->abcSceneManager.getScene(sceneKey)->drawOnly(cache->abcSceneState, selectionKey);
+            cache->abcSceneManager.getScene(sceneKey)->drawOnly(cache->abcSceneState, selectionKey, std::map<std::string, MColor>());
             gGLFT->glPopMatrix();
             gGLFT->glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
             break;
@@ -687,23 +709,23 @@ void CAlembicHolderUI::drawingMeshes( std::string sceneKey, CAlembicDatas * cach
         glLightModeli(MGL_LIGHT_MODEL_TWO_SIDE, 0);
         glCullFace(MGL_FRONT);
         if(selectionKey != "")
-            cache->abcSceneManager.getScene(sceneKey)->drawOnly(cache->abcSceneState, selectionKey);
+            cache->abcSceneManager.getScene(sceneKey)->drawOnly(cache->abcSceneState, selectionKey, cache->shaderColors);
         else
-            cache->abcSceneManager.getScene(sceneKey)->draw(cache->abcSceneState);
+            cache->abcSceneManager.getScene(sceneKey)->draw(cache->abcSceneState, cache->shaderColors);
         glCullFace(MGL_BACK);
         if(selectionKey != "")
-            cache->abcSceneManager.getScene(sceneKey)->drawOnly(cache->abcSceneState, selectionKey);
+            cache->abcSceneManager.getScene(sceneKey)->drawOnly(cache->abcSceneState, selectionKey, cache->shaderColors);
         else
-            cache->abcSceneManager.getScene(sceneKey)->draw(cache->abcSceneState);
+            cache->abcSceneManager.getScene(sceneKey)->draw(cache->abcSceneState, cache->shaderColors);
         gGLFT->glLightModeli(MGL_LIGHT_MODEL_TWO_SIDE, 1);
         glDisable(MGL_CULL_FACE);
     }
     else
     {
         if(selectionKey != "")
-            cache->abcSceneManager.getScene(sceneKey)->drawOnly(cache->abcSceneState, selectionKey);
+            cache->abcSceneManager.getScene(sceneKey)->drawOnly(cache->abcSceneState, selectionKey, cache->shaderColors);
         else
-            cache->abcSceneManager.getScene(sceneKey)->draw(cache->abcSceneState);
+            cache->abcSceneManager.getScene(sceneKey)->draw(cache->abcSceneState, cache->shaderColors);
     }
     gGLFT->glPopMatrix();
 }
