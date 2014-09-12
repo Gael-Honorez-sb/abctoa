@@ -18,12 +18,10 @@ License along with this library.*/
 
 #include <maya/MFnPlugin.h>
 
-#include <maya/MIOStream.h>
-#include <maya/MSceneMessage.h>
+
+//#include <maya/MSceneMessage.h>
 #include <maya/MGlobal.h>
 #include <maya/MString.h>
-#include <maya/MStringResource.h>
-#include <maya/MStringResourceId.h>
 
 
 #ifdef WIN32
@@ -32,21 +30,12 @@ License along with this library.*/
 #define EXTERN_DECL extern
 #endif
 
-
-
 EXTERN_DECL MStatus initializePlugin( MObject obj );
 EXTERN_DECL MStatus uninitializePlugin( MObject obj );
 
 
 #define ARNOLD_CLASSIFY( classification ) (MString("rendernode/arnold/") + classification)
 const MString ARNOLD_SWATCH("ArnoldRenderSwatch");
-//
-// static variables for holding the callback IDs
-//
-//MCallbackId openCallback;
-//MCallbackId importCallback;
-//MCallbackId referenceCallback;
-
 
 MStatus initializePlugin( MObject obj )
 //

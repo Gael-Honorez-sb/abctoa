@@ -635,7 +635,9 @@ ARNOLD_PROCS = env.SConscript(os.path.join('arnold', 'procedurals', 'SConscript'
 for path in MAYA_PLUGINS:
     if str(path).endswith(SHARED_LIB_SUFFIX):
         if system.os() == 'windows':
-            env.Install(TARGET_PLUGIN_PATH, [str(path).replace(".dll", ".mll")])    
+            path_new = os.path.splitext(str(path))[0] + '.mll'
+            env.Command(path_new, str(path), Copy("$TARGET", "$SOURCE")) 
+            env.Install(TARGET_PLUGIN_PATH, [path_new])    
         else:
             env.Install(TARGET_PLUGIN_PATH, [path])
 
