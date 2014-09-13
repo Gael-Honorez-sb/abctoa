@@ -42,6 +42,8 @@ License along with this library.*/
 #include <maya/MFnDependencyNode.h>
 #include <maya/MDagPath.h>
 #include <maya/MNodeMessage.h>
+#include <maya/MMatrix.h>
+#include <maya/MFnCamera.h>
 
 #include <json/json.h>
 
@@ -148,6 +150,9 @@ public:
 
     void drawBoundingBox( const MDrawRequest & request, M3dView & view ) const;
     void drawingMeshes( std::string sceneKey, CAlembicDatas * cache, std::string selectionKey) const;
+
+    MPoint getPointAtDepth(MSelectInfo &selectInfo, double    depth) const;
+
     virtual bool select(MSelectInfo &selectInfo, MSelectionList &selectionList,
             MPointArray &worldSpaceSelectPts) const;
 

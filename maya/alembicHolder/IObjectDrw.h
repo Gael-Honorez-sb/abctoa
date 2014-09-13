@@ -63,6 +63,8 @@ public:
 
     virtual Box3d getBounds();
 
+    virtual int getNumTriangles();
+
     virtual void draw( const DrawContext & iCtx );
 
 protected:

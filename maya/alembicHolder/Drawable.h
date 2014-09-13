@@ -76,6 +76,9 @@ public:
     //! currently set time.
     virtual Box3d getBounds() = 0;
 
+    // This function return the number of triangles in the scene
+    virtual int getNumTriangles() = 0;
+
     //! Draw the object (and its children) at the current frame.
     //! ...
     virtual void draw( const DrawContext & iCtx ) = 0;

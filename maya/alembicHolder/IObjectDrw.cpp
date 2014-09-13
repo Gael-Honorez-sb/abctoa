@@ -290,6 +290,23 @@ Box3d IObjectDrw::getBounds()
     return m_bounds;
 }
 
+
+int IObjectDrw::getNumTriangles()
+{
+    if ( !m_object ) { return 0; }
+    int numTriangles = 0;
+    for ( DrawablePtrVec::iterator iter = m_children.begin();
+          iter != m_children.end(); ++iter )
+    {
+        DrawablePtr dptr = (*iter);
+        if ( dptr )
+        {
+            numTriangles += dptr->getNumTriangles();
+        }
+    }
+    return numTriangles;
+}
+
 //-*****************************************************************************
 void IObjectDrw::draw( const DrawContext &iCtx )
 {

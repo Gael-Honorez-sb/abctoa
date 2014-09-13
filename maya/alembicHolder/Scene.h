@@ -91,6 +91,9 @@ public:
 
     void setSelectionPath( std::string selectionPath );
 
+    // for infos
+    int getNumTriangles() const;
+
 protected:
     std::string m_fileName;
     std::string m_objectPath;
