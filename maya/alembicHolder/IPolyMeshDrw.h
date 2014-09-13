@@ -57,6 +57,7 @@ public:
     virtual void updateData();
     virtual Box3d getBounds();
     virtual void draw( const DrawContext & iCtx );
+    virtual int getNumTriangles();
 
 protected:
     IPolyMesh m_polyMesh;

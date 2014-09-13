@@ -200,16 +200,19 @@ void IPolyMeshDrw::updateData()
     m_needtoupdate = false;
 }
 
+int IPolyMeshDrw::getNumTriangles()
+{
+    if ( !valid() || !m_visible)
+        return 0;
+
+    return m_drwHelper.getNumTriangles();
+}
 
 //-*****************************************************************************
 void IPolyMeshDrw::draw( const DrawContext &iCtx )
 {
     if ( !valid() || !m_visible)
-    {
         return;
-    }
-
-
 
     if(iCtx.getSelection() != "")
     {

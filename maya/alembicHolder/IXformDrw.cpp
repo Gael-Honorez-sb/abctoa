@@ -157,6 +157,14 @@ void IXformDrw::setTime( chrono_t iSeconds )
     }
 }
 
+int IXformDrw::getNumTriangles()
+{
+    if ( !valid() ) { return 0; }
+    
+    return IObjectDrw::getNumTriangles();
+
+}
+
 //-*****************************************************************************
 void IXformDrw::draw( const DrawContext & iCtx )
 {
