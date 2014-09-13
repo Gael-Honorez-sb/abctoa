@@ -939,58 +939,56 @@ void CAlembicHolderUI::getDrawRequestsShaded(MDrawRequest& request,
 // 1.0 for the far clipping plane.
 //
 MPoint CAlembicHolderUI::getPointAtDepth(
-	MSelectInfo &selectInfo,
-	double 	depth) const
+    MSelectInfo &selectInfo,
+    double     depth) const
 {
-	MDagPath cameraPath;
-	M3dView view = selectInfo.view();
+    MDagPath cameraPath;
+    M3dView view = selectInfo.view();
 
-	view.getCamera(cameraPath);
-	MStatus status;
-	MFnCamera camera(cameraPath, &status);
+    view.getCamera(cameraPath);
+    MStatus status;
+    MFnCamera camera(cameraPath, &status);
 
-	// Ortho cam maps [0,1] to [near,far] linearly
-	// persp cam has non linear z:
-	//
-	//        fp np
-	// -------------------
-	// 1. fp - d fp + d np
-	//
-	// Maps [0,1] -> [np,fp]. Then using linear mapping to get back to
-	// [0,1] gives.
-	//
-	//       d np
-	// ----------------  for linear mapped distance
-	// fp - d fp + d np
+    // Ortho cam maps [0,1] to [near,far] linearly
+    // persp cam has non linear z:
+    //
+    //        fp np
+    // -------------------
+    // 1. fp - d fp + d np
+    //
+    // Maps [0,1] -> [np,fp]. Then using linear mapping to get back to
+    // [0,1] gives.
+    //
+    //       d np
+    // ----------------  for linear mapped distance
+    // fp - d fp + d np
 
-	if (!camera.isOrtho())
-	{
-		double np = camera.nearClippingPlane();
-		double fp = camera.farClippingPlane();
+    if (!camera.isOrtho())
+    {
+        double np = camera.nearClippingPlane();
+        double fp = camera.farClippingPlane();
 
-		depth *= np / (fp - depth * (fp - np));
-	}
+        depth *= np / (fp - depth * (fp - np));
+    }
 
-	MPoint 	cursor;
-	MVector rayVector;
-	selectInfo.getLocalRay(cursor, rayVector);
-	cursor = cursor * selectInfo.multiPath().inclusiveMatrix();
-	short x,y;
-	view.worldToView(cursor, x, y);
+    MPoint     cursor;
+    MVector rayVector;
+    selectInfo.getLocalRay(cursor, rayVector);
+    cursor = cursor * selectInfo.multiPath().inclusiveMatrix();
+    short x,y;
+    view.worldToView(cursor, x, y);
 
-	MPoint res, neardb, fardb;
-	view.viewToWorld(x,y, neardb, fardb);
-	res = neardb + depth*(fardb-neardb);
+    MPoint res, neardb, fardb;
+    view.viewToWorld(x,y, neardb, fardb);
+    res = neardb + depth*(fardb-neardb);
 
-	return res;
+    return res;
 }
 
 
 bool CAlembicHolderUI::select(MSelectInfo &selectInfo,
         MSelectionList &selectionList, MPointArray &worldSpaceSelectPts) const
 {
-
-
     nozAlembicHolder* shapeNode = (nozAlembicHolder*) surfaceShape();
     CAlembicDatas* geom = shapeNode->alembicData();
     
@@ -1002,12 +1000,21 @@ bool CAlembicHolderUI::select(MSelectInfo &selectInfo,
         return false;
     }
 
-
-
-
-    const bool wireframeSelection =
-        (M3dView::kWireFrame == selectInfo.displayStyle() ||
+    const bool boundingboxSelection =
+        (M3dView::kBoundingBox == selectInfo.displayStyle() ||
          !selectInfo.singleSelection());
+    
+    
+    if (boundingboxSelection)
+    {
+        // We hit the bounding box, so we want the object?
+        MSelectionList item;
+        item.add(selectInfo.selectPath());
+        MPoint xformedPt;
+        selectInfo.addSelection(item, xformedPt, selectionList,
+                worldSpaceSelectPts, mask, false);
+        return true;
+    }
 
 
     std::string sceneKey = shapeNode->getSceneKey();
@@ -1032,10 +1039,11 @@ bool CAlembicHolderUI::select(MSelectInfo &selectInfo,
     }
   
     bool selected = (minZ <= 1.0f);
-	if ( selected ) {
+    if ( selected ) 
+    {
         // Add the selected item to the selection list
 
-		MSelectionList selectionItem;
+        MSelectionList selectionItem;
         {
             MDagPath path = selectInfo.multiPath();
             MStatus lStatus = path.pop();
@@ -1051,18 +1059,18 @@ bool CAlembicHolderUI::select(MSelectInfo &selectInfo,
                 }
             }
             selectionItem.add(path);
-        }		
+        }        
 
-		MPoint worldSpaceselectionPoint =
+        MPoint worldSpaceselectionPoint =
             getPointAtDepth(selectInfo, minZ);
 
-		selectInfo.addSelection(
-			selectionItem,
+        selectInfo.addSelection(
+            selectionItem,
             worldSpaceselectionPoint,
-			selectionList, worldSpaceSelectPts,
-			mask, false );
-	}
+            selectionList, worldSpaceSelectPts,
+            mask, false );
+    }
 
-	return selected;
+    return selected;
 
 }
