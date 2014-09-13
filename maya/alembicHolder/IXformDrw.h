@@ -60,6 +60,8 @@ public:
 
     virtual void draw( const DrawContext & iCtx );
 
+    virtual int getNumTriangles();
+
 protected:
     IXform m_xform;
     M44d m_localToParent;

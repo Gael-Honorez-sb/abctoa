@@ -17,6 +17,9 @@ License along with this library.*/
 #include "nozAlembicHolderNode.h"
 #include "parseJsonShaders.h"
 
+#include "gpuCacheGLPickingSelect.h"
+#include "gpuCacheRasterSelect.h"
+
 #include <maya/MPlug.h>
 #include <maya/MPlugArray.h>
 #include <maya/MDataBlock.h>
@@ -39,10 +42,9 @@ License along with this library.*/
 #include <maya/MHWGeometryUtilities.h>
 #include <maya/MFnMessageAttribute.h>
 #include <maya/MFileObject.h>
-
 #include <stdio.h>
 #include <map>
-
+#include <algorithm>
 
 
 #include <maya/MHardwareRenderer.h>
@@ -410,7 +412,6 @@ MStatus nozAlembicHolder::compute( const MPlug& plug, MDataBlock& block )
             MString jsonAssign = block.inputValue(shaderAssignation).asString();
             if(jsonAssign != "")
             {
-                std::cout << "json : " << jsonAssign << std::endl;
                 Json::Value jroot;
                 Json::Reader reader;
                 parsingSuccessful = reader.parse( jsonAssign.asChar(), jroot, false );
@@ -932,20 +933,144 @@ void CAlembicHolderUI::getDrawRequestsShaded(MDrawRequest& request,
         }
 }
 
+//
+// Returns the point in world space corresponding to a given
+// depth. The depth is specified as 0.0 for the near clipping plane and
+// 1.0 for the far clipping plane.
+//
+MPoint CAlembicHolderUI::getPointAtDepth(
+    MSelectInfo &selectInfo,
+    double     depth) const
+{
+    MDagPath cameraPath;
+    M3dView view = selectInfo.view();
+
+    view.getCamera(cameraPath);
+    MStatus status;
+    MFnCamera camera(cameraPath, &status);
+
+    // Ortho cam maps [0,1] to [near,far] linearly
+    // persp cam has non linear z:
+    //
+    //        fp np
+    // -------------------
+    // 1. fp - d fp + d np
+    //
+    // Maps [0,1] -> [np,fp]. Then using linear mapping to get back to
+    // [0,1] gives.
+    //
+    //       d np
+    // ----------------  for linear mapped distance
+    // fp - d fp + d np
+
+    if (!camera.isOrtho())
+    {
+        double np = camera.nearClippingPlane();
+        double fp = camera.farClippingPlane();
+
+        depth *= np / (fp - depth * (fp - np));
+    }
+
+    MPoint     cursor;
+    MVector rayVector;
+    selectInfo.getLocalRay(cursor, rayVector);
+    cursor = cursor * selectInfo.multiPath().inclusiveMatrix();
+    short x,y;
+    view.worldToView(cursor, x, y);
+
+    MPoint res, neardb, fardb;
+    view.viewToWorld(x,y, neardb, fardb);
+    res = neardb + depth*(fardb-neardb);
+
+    return res;
+}
+
+
 bool CAlembicHolderUI::select(MSelectInfo &selectInfo,
         MSelectionList &selectionList, MPointArray &worldSpaceSelectPts) const
-//
-// Select function. Gets called when the bbox for the object is selected.
-// This function just selects the object without doing any intersection tests.
-//
 {
+    nozAlembicHolder* shapeNode = (nozAlembicHolder*) surfaceShape();
+    CAlembicDatas* geom = shapeNode->alembicData();
+    
+    if(geom == NULL)
+        return false;
 
-    //cout << "select" << endl;
-    MSelectionMask priorityMask(MSelectionMask::kSelectObjectsMask);
-    MSelectionList item;
-    item.add(selectInfo.selectPath());
-    MPoint xformedPt;
-    selectInfo.addSelection(item, xformedPt, selectionList,
-            worldSpaceSelectPts, priorityMask, false);
-    return true;
+    MSelectionMask mask("alembicHolder");
+    if (!selectInfo.selectable(mask)){
+        return false;
+    }
+
+    const bool boundingboxSelection =
+        (M3dView::kBoundingBox == selectInfo.displayStyle() ||
+         !selectInfo.singleSelection());
+    
+    
+    if (boundingboxSelection)
+    {
+        // We hit the bounding box, so we want the object?
+        MSelectionList item;
+        item.add(selectInfo.selectPath());
+        MPoint xformedPt;
+        selectInfo.addSelection(item, xformedPt, selectionList,
+                worldSpaceSelectPts, mask, false);
+        return true;
+    }
+
+
+    std::string sceneKey = shapeNode->getSceneKey();
+
+     GLfloat minZ;
+     {
+         Select* selector;
+
+        size_t numTriangles = geom->abcSceneManager.getScene(sceneKey)->getNumTriangles();
+        const unsigned int bufferSize = (unsigned int)std::min(numTriangles,(size_t)100000);
+        
+        if (numTriangles < 1024)
+            selector = new GLPickingSelect(selectInfo);
+        else
+            selector = new RasterSelect(selectInfo);
+
+        selector->processTriangles(geom, sceneKey, numTriangles);
+        
+        selector->end();
+        minZ = selector->minZ();
+        delete selector;
+    }
+  
+    bool selected = (minZ <= 1.0f);
+    if ( selected ) 
+    {
+        // Add the selected item to the selection list
+
+        MSelectionList selectionItem;
+        {
+            MDagPath path = selectInfo.multiPath();
+            MStatus lStatus = path.pop();
+            while (lStatus == MStatus::kSuccess)
+            {
+                if (path.hasFn(MFn::kTransform))
+                {
+                    break;
+                }
+                else
+                {
+                    lStatus = path.pop();
+                }
+            }
+            selectionItem.add(path);
+        }        
+
+        MPoint worldSpaceselectionPoint =
+            getPointAtDepth(selectInfo, minZ);
+
+        selectInfo.addSelection(
+            selectionItem,
+            worldSpaceselectionPoint,
+            selectionList, worldSpaceSelectPts,
+            mask, false );
+    }
+
+    return selected;
+
 }

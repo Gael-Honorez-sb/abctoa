@@ -26,10 +26,17 @@ License along with this library.*/
 #include <maya/MDrawRegistry.h>
 #include <maya/MGlobal.h>
 
+#include <maya/MStringResource.h>
+#include <maya/MStringResourceId.h>
+
+
+#define kPluginId  "alembicHolder"
+#define kSelectionMenuItemLabel MStringResourceId( kPluginId, "kSelectionMenuItemLabel", "Alembic Holder")
+#define kOutlinerMenuItemLabel MStringResourceId( kPluginId, "kOutlinerMenuItemLabel", "Alembic Holder")
 
 
 MString    drawDbClassification("drawdb/geometry/alembicHolder");
-MString    drawRegistrantId("AlembicHolderPlugin");
+MString    drawRegistrantId("alembicHolder");
 
 #ifdef WIN32
 #define EXTERN_DECL __declspec( dllexport )
@@ -47,7 +54,7 @@ MStatus initializePlugin( MObject obj )
     MFnPlugin plugin( obj, HOLDER_VENDOR, ARCH_VERSION, MAYA_VERSION);
 
 
-    status = plugin.registerShape( "alembicHolder",
+    status = plugin.registerShape( kPluginId,
                 nozAlembicHolder::id,
                 &nozAlembicHolder::creator,
                 &nozAlembicHolder::initialize,
@@ -85,6 +92,40 @@ MStatus initializePlugin( MObject obj )
 
     if(MGlobal::mayaState() == MGlobal::kInteractive)
     {
+        int polyMeshProirity = MSelectionMask::getSelectionTypePriority( "polymesh");
+        bool flag = MSelectionMask::registerSelectionType( "alembicHolder", polyMeshProirity);
+        if (!flag) {
+            status.perror("registerSelectionType");
+            return MS::kFailure;
+        }
+
+        MStatus stat;
+        MString selectionGeomMenuItemLabel =
+            MStringResource::getString(kSelectionMenuItemLabel, stat);
+
+        MString registerMenuItemCMD = "addSelectTypeItem(\"Surface\",\"alembicHolder\",\"";
+        registerMenuItemCMD += selectionGeomMenuItemLabel;
+        registerMenuItemCMD += "\")";
+
+        status = MGlobal::executeCommand(registerMenuItemCMD);
+        if (!status) {
+            status.perror("addSelectTypeItem");
+            return status;
+        }
+
+        MString outlinerGeomMenuItemLabel = MStringResource::getString(kOutlinerMenuItemLabel, stat);
+        MString registerCustomFilterCMD = "addCustomOutlinerFilter(\"alembicHolder\",\"CustomAlembicHolderFilter\",\"";
+        registerCustomFilterCMD += outlinerGeomMenuItemLabel;
+        registerCustomFilterCMD += "\",\"DefaultSubdivObjectsFilter\")";
+
+        status = MGlobal::executeCommand(registerCustomFilterCMD);
+        if (!status) {
+            status.perror("addCustomOutlinerFilter");
+            return status;
+        }
+
+
+
         status = MGlobal::executePythonCommand(MString("import alembicHolder.cmds.registerAlembicHolder;alembicHolder.cmds.registerAlembicHolder.registerAlembicHolder()"), true, false);
         if (!status) {
             status.perror("registerMenu");
@@ -128,6 +169,28 @@ MStatus uninitializePlugin( MObject obj)
 
     if(MGlobal::mayaState() == MGlobal::kInteractive)
     {
+
+        MString unregisterCustomFilterCMD = "deleteCustomOutlinerFilter(\"CustomAlembicHolderFilter\")";
+        status = MGlobal::executeCommand(unregisterCustomFilterCMD);
+        if (!status) {
+            status.perror("deleteCustomOutlinerFilter");
+            return status;
+        }
+
+        MString unregisterMenuItemCMD = "deleteSelectTypeItem(\"Surface\",\"alembicHolder\")";
+        status = MGlobal::executeCommand(unregisterMenuItemCMD);
+        if (!status) {
+            status.perror("deleteSelectTypeItem");
+            return status;
+        }
+
+        bool flag = MSelectionMask::deregisterSelectionType("alembicHolder");
+        if (!flag) {
+            status.perror("deregisterSelectionType");
+            return MS::kFailure;
+        }
+
+
         status = MGlobal::executePythonCommand(MString("import alembicHolder.cmds.unregisterAlembicHolder;alembicHolder.cmds.unregisterAlembicHolder.unregisterAlembicHolder()"), true, false);
         if (!status) {
             status.perror("unregisterMenu");
