@@ -449,6 +449,11 @@ void MeshDrwHelper::makeInvalid()
 
 }
 
+int MeshDrwHelper::getNumTriangles() const
+{
+    return m_triangles.size();
+}
+
 //-*****************************************************************************
 void MeshDrwHelper::computeBounds()
 {

@@ -93,6 +93,8 @@ public:
     // And, finally, this draws.
     void draw( const DrawContext & iCtx) const;
 
+    int getNumTriangles() const;
+
     // This is a weird thing. Just makes the helper invalid
     // by nulling everything out. For internal use.
     void makeInvalid();

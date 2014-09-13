@@ -175,6 +175,13 @@ void Scene::setSelectionPath(std::string path)
     m_selectionPath = path;
 }
 
+int Scene::getNumTriangles() const
+{
+    return m_drawable->getNumTriangles();
+
+}
+
+
 //-*****************************************************************************
 void Scene::draw( SceneState &s_state, std::map<std::string, MColor> shaderColors )
 {
