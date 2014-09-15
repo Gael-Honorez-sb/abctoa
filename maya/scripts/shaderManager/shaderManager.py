@@ -52,7 +52,7 @@ def getMayaWindow():
     if ptr is not None:
         return shiboken.wrapInstance(long(ptr), QtGui.QMainWindow)
 
-print type(Ui_NAM)
+
 class List(QMainWindow, Ui_NAM):
     def __init__(self, parent=None):
         super(List, self).__init__(parent)
@@ -74,7 +74,6 @@ class List(QMainWindow, Ui_NAM):
         self.tags = {}
         self.getNode()
         self.getCache()
-
         self.thisTagItem = None
         self.thisTreeItem = None
 
@@ -133,6 +132,9 @@ class List(QMainWindow, Ui_NAM):
         self.overrideDisps.stateChanged.connect(self.overrideDispsChanged)
         self.overrideShaders.stateChanged.connect(self.overrideShadersChanged)
         self.overrideProps.stateChanged.connect(self.overridePropsChanged)
+
+        self.setCurrentLayer()
+        self.layerChangedJob = cmds.scriptJob( e= ["renderLayerManagerChange",self.setCurrentLayer])
 
 
     def overrideDispsChanged(self, state):
@@ -284,12 +286,21 @@ class List(QMainWindow, Ui_NAM):
         event.accept()
 
     def closeEvent(self, event):
+        print "removing scriptjob"
+        cmds.scriptJob( kill=self.layerChangedJob, force=True)
         for cache in self.ABCViewerNode.values():
             cache.setSelection("")
         print "removing callbacks"
         MMessage.removeCallback( self.newNodeCBMsgId )
         MMessage.removeCallback( self.delNodeCBMsgId )
         return QtGui.QMainWindow.closeEvent(self, event)
+
+    def setCurrentLayer(self):
+        curLayer = cmds.editRenderLayerGlobals(query=1, currentRenderLayer=1)
+        curLayeridx = self.renderLayer.findText(curLayer)
+        if curLayeridx != -1:
+            self.renderLayer.setCurrentIndex(curLayeridx)
+
 
 
     def layerChanged(self, index):
@@ -314,6 +325,10 @@ class List(QMainWindow, Ui_NAM):
         if self.hierarchyWidget.currentItem():
             self.itemCLicked(self.hierarchyWidget.currentItem(), 0, force=True)
 
+        # change it in maya too
+        curLayer = cmds.editRenderLayerGlobals(query=1, currentRenderLayer=1)
+        if curLayer != self.curLayer:
+            cmds.editRenderLayerGlobals( currentRenderLayer=self.curLayer)
 
 
 
