@@ -222,7 +222,8 @@ class assignationGroup(object):
         for paths in self.shaders.values() + self.getDisplacements().values():
             for path in paths:
                 if not path.startswith("/"):
-                    wilds.append(path)
+                    if not path in wilds:
+                        wilds.append(dict(name=path, fromfile=self.fromfile))
         return wilds
 
 

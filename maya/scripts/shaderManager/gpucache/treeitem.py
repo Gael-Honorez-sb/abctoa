@@ -47,18 +47,16 @@ class abcTreeItem(QtGui.QTreeWidgetItem):
         icon = QtGui.QIcon()
 
         d = os.path.dirname(__file__)
-
+        
         if itemType == "Transform":
-
-
-            icon.addFile(os.path.join(d, "../icons/group.png"), QtCore.QSize(22,22))
+            icon.addFile(os.path.join(d, "../../../icons/group.png"), QtCore.QSize(22,22))
         else:
-            icon.addFile(os.path.join(d, "../icons/shape.png"), QtCore.QSize(22,22))
+            icon.addFile(os.path.join(d, "../../../icons/shape.png"), QtCore.QSize(22,22))
 
         self.setIcon(0, icon)
 
         icon2 = QtGui.QIcon()
-        icon2.addFile(os.path.join(d, "../icons/sg.xpm"), QtCore.QSize(25,25))
+        icon2.addFile(os.path.join(d, "../../../icons/sg.xpm"), QtCore.QSize(25,25))
         self.setIcon(1, icon2)
 
 
@@ -137,9 +135,7 @@ class abcTreeItem(QtGui.QTreeWidgetItem):
         menu.popup(QtGui.QCursor.pos())
 
     def importinscene(self):
-        print self.path[-1]
-        print self.cache.ABCcache
-        cmd = 'AbcImport  -ft "^%s$" "%s"' % (self.path[-1], self.cache.ABCcache)
+        cmd = 'AbcImport  -ft "^%s$" "%s"' % (self.path[-1], self.cache.ABCcache.replace(os.path.sep, "/"))
         try:
             mel.eval(cmd)
         except:

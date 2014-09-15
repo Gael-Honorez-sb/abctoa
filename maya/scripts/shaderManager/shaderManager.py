@@ -209,7 +209,7 @@ class List(QMainWindow, UI_ABCHierarchy.Ui_NAM):
 
             if sg:
                 icon = QtGui.QIcon()
-                icon.addFile(os.path.join(d, "icons/sg.xpm"), QtCore.QSize(25,25))
+                icon.addFile(os.path.join(d, "../../icons/sg.xpm"), QtCore.QSize(25,25))
                 item = QtGui.QListWidgetItem(sg)
                 item.setIcon(icon)
                 self.shadersList.addItem(item)
@@ -443,7 +443,7 @@ class List(QMainWindow, UI_ABCHierarchy.Ui_NAM):
     def fillShaderList(self):
         shadersSg = cmds.ls(type="shadingEngine")
         icon = QtGui.QIcon()
-        icon.addFile(os.path.join(d, "icons/sg.xpm"), QtCore.QSize(25,25))
+        icon.addFile(os.path.join(d, "../../icons/sg.xpm"), QtCore.QSize(25,25))
         for sg in shadersSg:
             item = QtGui.QListWidgetItem(sg)
             item.setIcon(icon)
@@ -514,10 +514,11 @@ class List(QMainWindow, UI_ABCHierarchy.Ui_NAM):
 
     def itemDoubleClicked(self, item, column) :
         if item.isWildCard:
-            text, ok = QtGui.QInputDialog.getText(self, 'WildCard expression',  'Enter the expression:', QtGui.QLineEdit.Normal, item.getPath())
-            if ok:
-                #first change the path
-                item.setExpression(text)
+            if not item.protected:
+                text, ok = QtGui.QInputDialog.getText(self, 'WildCard expression',  'Enter the expression:', QtGui.QLineEdit.Normal, item.getPath())
+                if ok:
+                    #first change the path
+                    item.setExpression(text)
 
         else:
             self.expandItem(item)
@@ -576,8 +577,12 @@ class List(QMainWindow, UI_ABCHierarchy.Ui_NAM):
 
             ### CHECK WILDCARD ASSIGNATIONS
 
+            wildsAdded = []
             for wild in cache.assignations.getAllWidcards():
-                self.createWildCard(root, wild)                
+                name = wild["name"]
+                if not name in wildsAdded:
+                    wildsAdded.append(name)
+                    self.createWildCard(root, wild, wild["protected"])                
 
 
     def getShader(self):
@@ -691,7 +696,7 @@ class List(QMainWindow, UI_ABCHierarchy.Ui_NAM):
             self.ABCViewerNode[shape].updateCache()
 
 
-    def createWildCard(self, parentItem, wildcard="*") :
+    def createWildCard(self, parentItem, wildcard="*", protected=False) :
         ''' Create a wilcard assignation item '''
 
         newItem = treeitemWildcard.wildCardItem(parentItem.cache, wildcard, self)
@@ -699,6 +704,7 @@ class List(QMainWindow, UI_ABCHierarchy.Ui_NAM):
         newItem.setChildIndicatorPolicy(QtGui.QTreeWidgetItem.DontShowIndicator)
         parentItem.addChild(newItem)
         newItem.checkShaders(self.getLayer())
+        newItem.protected = protected
 
     def addWildCard(self):
         ''' Add a widldcard expression to the current cache'''
