@@ -28,7 +28,7 @@ import maya.cmds as cmds
 class abcTreeItem(QtGui.QTreeWidgetItem):
     def __init__(self, cache, path, itemType, parent=None, *args, **kwargs):
         QtGui.QTreeWidgetItem.__init__(self, *args, **kwargs)
-        self.parent = parent
+        self.interface = parent
         self.cache = cache
         self.path = path
 
@@ -40,7 +40,7 @@ class abcTreeItem(QtGui.QTreeWidgetItem):
         else:
             self.setText(0, self.path[-1])
 
-        #self.parent.hierarchyWidget.resizeColumnToContents(0)
+        #self.interface.hierarchyWidget.resizeColumnToContents(0)
 
         icon = QtGui.QIcon()
 
@@ -77,8 +77,8 @@ class abcTreeItem(QtGui.QTreeWidgetItem):
         self.assignDisplacement()
 
     def pressed(self):
-        menu = QtGui.QMenu(self.parent)
-        shader = self.parent.getShader()
+        menu = QtGui.QMenu(self.interface)
+        shader = self.interface.getShader()
         if shader:
             if  cmds.nodeType(shader) == "displacementShader":
                 assignDisplacement = QtGui.QAction("Assign %s" % shader, menu)
@@ -112,14 +112,14 @@ class abcTreeItem(QtGui.QTreeWidgetItem):
 
         path = self.getPath()
         menu.addSeparator()
-        shader = self.cache.assignations.getShader(path, self.parent.getLayer())
+        shader = self.cache.assignations.getShader(path, self.interface.getLayer())
         if shader:
             deassignShader = QtGui.QAction("Deassign %s" % shader["shader"], menu)
             deassignShader.triggered.connect(self.deassignShader)
             menu.addAction(deassignShader)
 
         menu.addSeparator()
-        shader = self.cache.assignations.getDisplace(path, self.parent.getLayer())
+        shader = self.cache.assignations.getDisplace(path, self.interface.getLayer())
         if shader:
                 deassignShader = QtGui.QAction("Deassign displace %s" % shader["shader"], menu)
                 deassignShader.triggered.connect(self.deassignDisplace)
@@ -148,21 +148,21 @@ class abcTreeItem(QtGui.QTreeWidgetItem):
         self.cache.assignDisplacement(path, shaderName)
 
 
-        selectedItems = self.parent.hierarchyWidget.selectedItems()
+        selectedItems = self.interface.hierarchyWidget.selectedItems()
         if len(selectedItems) > 1:
             for item in selectedItems:
                 if item != self:
                     item.cache.assignDisplacement(item.getPath(), shaderName)
 
 
-        self.parent.checkShaders(self.parent.getLayer())
+        self.interface.checkShaders(self.interface.getLayer())
 
 
     def assignShader(self):
 
         if not cmds.objExists(str(self.shaderToAssign)):
             if self.shaderToAssign.endswith("SG") and cmds.objExists(str(self.shaderToAssign)[:-2]):
-                    self.shaderToAssign = self.parent.createSG(str(self.shaderToAssign)[:-2])
+                    self.shaderToAssign = self.interface.createSG(str(self.shaderToAssign)[:-2])
             else:
                 return
 
@@ -171,15 +171,15 @@ class abcTreeItem(QtGui.QTreeWidgetItem):
         self.cache.assignShader(path, self.shaderToAssign)
 
 
-        selectedItems = self.parent.hierarchyWidget.selectedItems()
+        selectedItems = self.interface.hierarchyWidget.selectedItems()
         if len(selectedItems) > 1:
             for item in selectedItems:
                 if item != self:
                     item.cache.assignShader(item.getPath(), self.shaderToAssign)
 
 
-        self.parent.checkShaders(self.parent.getLayer())
-        self.parent.hierarchyWidget.resizeColumnToContents(1)
+        self.interface.checkShaders(self.interface.getLayer())
+        self.interface.hierarchyWidget.resizeColumnToContents(1)
 
 
     def deassignDisplace(self):
@@ -188,16 +188,16 @@ class abcTreeItem(QtGui.QTreeWidgetItem):
         self.cache.assignDisplacement(path, None)
 
 
-        selectedItems = self.parent.hierarchyWidget.selectedItems()
+        selectedItems = self.interface.hierarchyWidget.selectedItems()
         if len(selectedItems) > 1:
             for item in selectedItems:
                 if item != self:
                     item.cache.assignDisplacement(item.getPath(), None)
 
 
-        self.parent.checkShaders(self.parent.getLayer())
+        self.interface.checkShaders(self.interface.getLayer())
 
-        self.parent.hierarchyWidget.resizeColumnToContents(2)
+        self.interface.hierarchyWidget.resizeColumnToContents(2)
 
 
     def deassignShader(self):
@@ -206,15 +206,15 @@ class abcTreeItem(QtGui.QTreeWidgetItem):
         self.cache.assignShader(path, None)
 
 
-        selectedItems = self.parent.hierarchyWidget.selectedItems()
+        selectedItems = self.interface.hierarchyWidget.selectedItems()
         if len(selectedItems) > 1:
             for item in selectedItems:
                 if item != self:
                     item.cache.assignShader(item.getPath(), None)
 
 
-        self.parent.checkShaders(self.parent.getLayer())
-        self.parent.hierarchyWidget.resizeColumnToContents(1)
+        self.interface.checkShaders(self.interface.getLayer())
+        self.interface.hierarchyWidget.resizeColumnToContents(1)
 
     def checkShaders(self, layer=None):
         path = self.getPath()

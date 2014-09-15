@@ -24,8 +24,9 @@ from PySide import QtGui, QtCore
 from PySide.QtGui import *
 from PySide.QtCore import *
 
-from gpucache import gpucache, treeitem
+from gpucache import gpucache, treeitem, treeitemWildcard
 reload(treeitem)
+reload(treeitemWildcard)
 reload(gpucache)
 from propertywidgets.property_editorByType import PropertyEditor
 
@@ -129,6 +130,10 @@ class List(QMainWindow, UI_ABCHierarchy.Ui_NAM):
         self.overrideDisps.stateChanged.connect(self.overrideDispsChanged)
         self.overrideShaders.stateChanged.connect(self.overrideShadersChanged)
         self.overrideProps.stateChanged.connect(self.overridePropsChanged)
+
+
+        #Widcard management
+        self.wildCardButton.pressed.connect(self.addWildCard)
 
         self.setCurrentLayer()
         self.layerChangedJob = cmds.scriptJob( e= ["renderLayerManagerChange",self.setCurrentLayer])
@@ -241,8 +246,12 @@ class List(QMainWindow, UI_ABCHierarchy.Ui_NAM):
 
         self.shaderCLicked(selected)
 
+        itemData = QtCore.QByteArray()
+        dataStream = QtCore.QDataStream(itemData, QtCore.QIODevice.WriteOnly)
+        dataStream << QtCore.QByteArray(str(selected.text()))
+
         mimeData = QtCore.QMimeData()
-        mimeData.setData("application/x-shader", selected.text())
+        mimeData.setData("application/x-shader", itemData)
         drag = QtGui.QDrag(self)
         drag.setMimeData(mimeData)
 
@@ -263,10 +272,17 @@ class List(QMainWindow, UI_ABCHierarchy.Ui_NAM):
             event.ignore()
 
     def newhierarchyWidgetDropEvent(self, event):
-        data = event.mimeData()
-        selected = data.retrieveData("application/x-shader", QtCore.QVariant.TextFormat)
+        mime = event.mimeData()
+        itemData = mime.data("application/x-shader")
+        dataStream = QtCore.QDataStream(itemData, QtCore.QIODevice.ReadOnly)
+
+        shader = QtCore.QByteArray()
+        dataStream >> shader
+
+        print shader, str(shader)
+        shader = str(shader)
         items = []
-        shader = selected.toString()
+        
         selectedItems = self.hierarchyWidget.selectedItems()
 
         item = self.hierarchyWidget.itemFromIndex(self.hierarchyWidget.indexAt(event.pos()))
@@ -399,6 +415,8 @@ class List(QMainWindow, UI_ABCHierarchy.Ui_NAM):
 
             item = self.hierarchyWidget.currentItem()
             curPath = item.getPath()
+            if curPath is None:
+                return
             cache = item.cache
             layer = self.getLayer()
             cache.updateOverride(propName, default, value, curPath, layer)
@@ -659,7 +677,32 @@ class List(QMainWindow, UI_ABCHierarchy.Ui_NAM):
 
 
     def getCache(self):
-        tags = []
         for shape in self.ABCViewerNode:
             self.ABCViewerNode[shape].updateCache()
 
+
+    def createWildCard(self, parentItem) :
+        ''' Create a wilcard assignation item '''
+
+        newItem = treeitemWildcard.wildCardItem(parentItem.cache, "*", self)
+        parentItem.cache.itemsTree.append(newItem)
+        newItem.setChildIndicatorPolicy(QtGui.QTreeWidgetItem.DontShowIndicator)
+        parentItem.addChild(newItem)
+
+    def addWildCard(self):
+        ''' Add a widldcard expression to the current cache'''
+        
+        # first get the current cache
+        item = self.hierarchyWidget.currentItem()
+        if item is None:
+            return
+
+        # and the top level ancestor..
+        if item is not None:
+            while 1:
+                pitem = item.parent()
+                if pitem is None:
+                    break
+                item = pitem
+
+        self.createWildCard(item)
