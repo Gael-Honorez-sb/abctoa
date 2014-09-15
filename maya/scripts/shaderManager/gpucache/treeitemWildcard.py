@@ -12,7 +12,6 @@
 # License along with this library.
 
 from PySide import QtGui, QtCore
-import os
 import functools
 
 import maya.mel as mel
@@ -25,51 +24,56 @@ import maya.cmds as cmds
 #     def sizeHint(self, option, index):
 #         return QtGui.QSize(32,32)
 
-class abcTreeItem(QtGui.QTreeWidgetItem):
-    def __init__(self, cache, path, itemType, parent=None, *args, **kwargs):
+class wildCardItem(QtGui.QTreeWidgetItem):
+    def __init__(self, cache, expression, parent=None, *args, **kwargs):
         QtGui.QTreeWidgetItem.__init__(self, *args, **kwargs)
         self.interface = parent
         self.cache = cache
-        self.path = path
-
-        self.isWildCard = False
+        self.expression = expression
 
         self.cacheAssignations = self.cache.getAssignations()
 
         self.shaderToAssign = ""
-        if len(self.path) == 0:
-            self.setText(0, "/%s" % os.path.basename(self.cache.ABCcache))
-        else:
-            self.setText(0, self.path[-1])
 
-        #self.interface.hierarchyWidget.resizeColumnToContents(0)
+        self.isWildCard = True
 
-        icon = QtGui.QIcon()
-
-        d = os.path.dirname(__file__)
-
-        if itemType == "Transform":
-
-
-            icon.addFile(os.path.join(d, "../icons/group.png"), QtCore.QSize(22,22))
-        else:
-            icon.addFile(os.path.join(d, "../icons/shape.png"), QtCore.QSize(22,22))
-
-        self.setIcon(0, icon)
-
-        icon2 = QtGui.QIcon()
-        icon2.addFile(os.path.join(d, "../icons/sg.xpm"), QtCore.QSize(25,25))
-        self.setIcon(1, icon2)
-
+        self.setText(0, "\"%s\"" % self.expression)
 
     def removeAssigns(self):
         self.setText(1, "")
         self.setText(2, "")
 
+    def setExpression(self, text):
+        path = self.getPath()
+        # save current assignaitions
+        shader = self.cache.assignations.getShader(path, self.interface.getLayer())
+        displacement = self.cache.assignations.getDisplace(path, self.interface.getLayer())
+
+        print shader, displacement
+        # remove previous assignations
+        self.cache.assignDisplacement(path, None)
+        self.cache.assignShader(path, None)
+        
+        # change the path
+        self.expression = text
+        self.setText(0, "\"%s\"" % self.expression)
+
+        # reassign the shaders
+        if shader:
+            self.cache.assignShader(self.expression, shader["shader"])
+        if displacement:
+            self.cache.assignDisplacement(self.expression, displacement["shader"])
+
+        self.interface.checkShaders(self.interface.getLayer())
+        self.interface.hierarchyWidget.resizeColumnToContents(1)
+        self.interface.hierarchyWidget.resizeColumnToContents(2)
+
+
     def getPath(self):
-        return "/" + "/".join(self.path)
+        return self.expression
 
-
+    def getAssignation(self):
+        return self.expression
 
     def assignShaderFromFile(self, shader):
         self.shaderToAssign = shader
@@ -127,12 +131,6 @@ class abcTreeItem(QtGui.QTreeWidgetItem):
                 deassignShader = QtGui.QAction("Deassign displace %s" % shader["shader"], menu)
                 deassignShader.triggered.connect(self.deassignDisplace)
                 menu.addAction(deassignShader)
-
-        menu.addSeparator()
-        importinscene= QtGui.QAction("Import in Scene", menu)
-        importinscene.triggered.connect(self.importinscene)
-        menu.addAction(importinscene)
-
 
         menu.popup(QtGui.QCursor.pos())
 
@@ -221,6 +219,7 @@ class abcTreeItem(QtGui.QTreeWidgetItem):
 
     def checkShaders(self, layer=None):
         path = self.getPath()
+
         shader = self.cacheAssignations.getShader(path, layer)
         displace = self.cacheAssignations.getDisplace(path, layer)
 

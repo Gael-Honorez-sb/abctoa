@@ -104,6 +104,6 @@ class gpucache(object):
 
     def setToPath(self, topath):
         cmds.setAttr("%s.cacheGeomPath" % self.shape, str(topath).replace("/", "|"), type="string")
-        for item in self.itemsTree:
-            if item.getPath() != topath:
-                item.setCheckState(0, QtCore.Qt.Unchecked)
+        # for item in self.itemsTree:
+        #     if item.getPath() != topath:
+        #         item.setCheckState(0, QtCore.Qt.Unchecked)

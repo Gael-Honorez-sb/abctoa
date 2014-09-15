@@ -12,6 +12,9 @@
 # License along with this library.
 
 from pprint import pprint
+import fnmatch
+import re
+
 class assignationGroup(object):
     def __init__(self, parent=None, fromFile = False):
         self.parent = parent
@@ -67,6 +70,16 @@ class assignationGroup(object):
         if foundShader:
             return self.createShaderEntity(foundShader, inherited=True)
 
+
+        ### if we go this far, we didn't find any shader. We are iterating over the wildcards.
+        wildShaders = self.getWildShaders()
+        for shader in wildShaders:
+            for wildcard in wildShaders[shader]:
+                pattern = fnmatch.translate(wildcard)
+            if re.match(pattern, path):
+                return self.createShaderEntity(shader, inherited=True)
+
+
         #print "found shader", foundPath, foundShader
         return None
 
@@ -87,6 +100,15 @@ class assignationGroup(object):
 
         if foundShader:
             return self.createShaderEntity(foundShader, inherited=True)
+
+
+        ### if we go this far, we didn't find any shader. We are iterating over the wildcards.
+        wildShaders = self.getWildDisplacements()
+        for shader in wildShaders:
+            for wildcard in wildShaders[shader]:
+                pattern = fnmatch.translate(wildcard)
+            if re.match(pattern, path):
+                return self.createShaderEntity(shader, inherited=True)
 
         return None
 
@@ -170,6 +192,39 @@ class assignationGroup(object):
 
     def getShaders(self):
         return self.shaders
+
+    def getWildShaders(self):
+        wildShaders = {}
+        for shader in self.shaders:
+            for paths in self.shaders[shader]:
+                for path in paths:
+                    if not path.startswith("/"):
+                        if not shader in wildShaders:
+                            wildShaders[shader] = []    
+                        wildShaders[shader].append(path)
+
+        return wildShaders
+
+    def getWildDisplacements(self):
+        wildShaders = {}
+        for shader in self.displacements:
+            for paths in self.displacements[shader]:
+                for path in paths:
+                    if not path.startswith("/"):
+                        if not shader in wildShaders:
+                            wildShaders[shader] = []    
+                        wildShaders[shader].append(path)
+
+        return wildShaders
+
+    def getWildCards(self):
+        wilds = []
+        for paths in self.shaders.values() + self.getDisplacements().values():
+            for path in paths:
+                if not path.startswith("/"):
+                    wilds.append(path)
+        return wilds
+
 
     def getDisplacements(self):
         return self.displacements

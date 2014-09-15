@@ -114,6 +114,9 @@ class cacheAssignations(object):
     def getAllShaders(self):
         return self.mainAssignations.getShaders().keys()  + self.layers.getShaders()
 
+    def getAllWidcards(self):
+        return self.mainAssignations.getWildCards() + self.layers.getWildCards()
+
     def getAllDisplacements(self):
         return self.mainAssignations.getDisplacements().keys() + self.layers.getDisplacements()
 

@@ -513,16 +513,24 @@ class List(QMainWindow, UI_ABCHierarchy.Ui_NAM):
         self.expandItem(item)
 
     def itemDoubleClicked(self, item, column) :
-        self.expandItem(item)
+        if item.isWildCard:
+            text, ok = QtGui.QInputDialog.getText(self, 'WildCard expression',  'Enter the expression:', QtGui.QLineEdit.Normal, item.getPath())
+            if ok:
+                #first change the path
+                item.setExpression(text)
+
+        else:
+            self.expandItem(item)
 
     def expandItem(self, item) :
         items = cmds.ABCHierarchy(item.cache.ABCcache, item.getPath().replace("/", "|"))
+        print items
         if items != None :
             self.createBranch(item, items)
         else :
             item.setChildIndicatorPolicy(QtGui.QTreeWidgetItem.DontShowIndicator)
 
-    def createBranch(self, parentItem, abcchild, selected = QtCore.Qt.Unchecked, hierarchy = False, p = "/") :
+    def createBranch(self, parentItem, abcchild, hierarchy = False, p = "/") :
         for item in abcchild :
             itemType = item.split(":")[0]
             itemName = item.split(":")[-1]
@@ -539,8 +547,8 @@ class List(QMainWindow, UI_ABCHierarchy.Ui_NAM):
 
                 newItem.checkShaders(self.getLayer())
 
-                newItem.setCheckState(0, selected)
-                newItem.setChildIndicatorPolicy(QtGui.QTreeWidgetItem.DontShowIndicator)
+                #newItem.setCheckState(0, selected)
+                newItem.setChildIndicatorPolicy(QtGui.QTreeWidgetItem.ShowIndicator)
                 parentItem.addChild(newItem)
 
                 if hierarchy == True :
@@ -552,7 +560,7 @@ class List(QMainWindow, UI_ABCHierarchy.Ui_NAM):
                 firstLevel = cmds.ABCHierarchy(cache.ABCcache)
 
                 root = treeitem.abcTreeItem(cache, [], "Transform", self)
-                root.setCheckState(0, QtCore.Qt.Unchecked)
+                #root.setCheckState(0, QtCore.Qt.Unchecked)
                 root.checkShaders(self.getLayer())
                 cache.itemsTree.append(root)
 
@@ -560,13 +568,16 @@ class List(QMainWindow, UI_ABCHierarchy.Ui_NAM):
                     if cache.ABCcurPath != "/" :
                         paths = cache.ABCcurPath.split("/")
                         if len(paths) > 0 :
-                            self.createBranch(root, paths[1:], QtCore.Qt.Checked, True)
-                    else:
-                        root.setCheckState(0, QtCore.Qt.Checked)
+                            self.createBranch(root, paths[1:], True)
 
                 self.hierarchyWidget.addTopLevelItem(root)
                 self.createBranch(root,firstLevel)
                 root.setExpanded(1)
+
+            ### CHECK WILDCARD ASSIGNATIONS
+
+            for wild in cache.assignations.getAllWidcards():
+                self.createWildCard(root, wild)                
 
 
     def getShader(self):
@@ -675,19 +686,19 @@ class List(QMainWindow, UI_ABCHierarchy.Ui_NAM):
                     if not cmds.objExists(str(shape) + ".skip%s" % attr):
                         cmds.addAttr(shape, ln='skip%s' % attr, at='bool')
 
-
     def getCache(self):
         for shape in self.ABCViewerNode:
             self.ABCViewerNode[shape].updateCache()
 
 
-    def createWildCard(self, parentItem) :
+    def createWildCard(self, parentItem, wildcard="*") :
         ''' Create a wilcard assignation item '''
 
-        newItem = treeitemWildcard.wildCardItem(parentItem.cache, "*", self)
+        newItem = treeitemWildcard.wildCardItem(parentItem.cache, wildcard, self)
         parentItem.cache.itemsTree.append(newItem)
         newItem.setChildIndicatorPolicy(QtGui.QTreeWidgetItem.DontShowIndicator)
         parentItem.addChild(newItem)
+        newItem.checkShaders(self.getLayer())
 
     def addWildCard(self):
         ''' Add a widldcard expression to the current cache'''
