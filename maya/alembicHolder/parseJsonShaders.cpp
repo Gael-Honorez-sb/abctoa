@@ -71,7 +71,6 @@ bool findShaderColor(MString shaderName, MColor & shaderColor)
         if (status == MS::kFailure)
             return false;
             
-        MColor shaderColor;
         MPlugArray cc;
         colorPlug.connectedTo( cc, true /* asDst */, false );
         if ( cc.length() > 0 )
