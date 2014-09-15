@@ -48,7 +48,6 @@ class wildCardItem(treeitem.abcTreeItem):
         icon2.addFile(os.path.join(d, "../../../icons/sg.xpm"), QtCore.QSize(25,25))
         self.setIcon(1, icon2)
 
-
     def removeAssigns(self):
         self.setText(1, "")
         self.setText(2, "")
@@ -56,7 +55,7 @@ class wildCardItem(treeitem.abcTreeItem):
     def setExpression(self, text):
         if self.protected:
             return
-            
+
         path = self.getPath()
         # save current assignaitions
         shader = self.cache.assignations.getShader(path, self.interface.getLayer())

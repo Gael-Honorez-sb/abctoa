@@ -223,7 +223,7 @@ class assignationGroup(object):
             for path in paths:
                 if not path.startswith("/"):
                     if not path in wilds:
-                        wilds.append(dict(name=path, fromfile=self.fromfile))
+                        wilds.append(dict(name=path, fromfile=self.fromFile))
         return wilds
 
 

@@ -582,7 +582,7 @@ class List(QMainWindow, UI_ABCHierarchy.Ui_NAM):
                 name = wild["name"]
                 if not name in wildsAdded:
                     wildsAdded.append(name)
-                    self.createWildCard(root, wild, wild["protected"])                
+                    self.createWildCard(root, name, wild["fromfile"])                
 
 
     def getShader(self):
