@@ -12,7 +12,7 @@
 # License along with this library.
 
 from shaderManager.assignations._assignations import cacheAssignations
-
+from PySide import QtCore
 
 import json
 import maya.cmds as cmds
@@ -106,4 +106,4 @@ class gpucache(object):
         cmds.setAttr("%s.cacheGeomPath" % self.shape, str(topath).replace("/", "|"), type="string")
         for item in self.itemsTree:
             if item.getPath() != topath:
-                item.setCheckState(0, False)
+                item.setCheckState(0, QtCore.Qt.Unchecked)

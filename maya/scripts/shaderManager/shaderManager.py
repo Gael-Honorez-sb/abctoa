@@ -26,21 +26,18 @@ from PySide.QtCore import *
 
 from gpucache import gpucache, treeitem
 reload(treeitem)
+reload(gpucache)
 from propertywidgets.property_editorByType import PropertyEditor
 
-from ui.UI_ABCHierarchy import *
+from ui import UI_ABCHierarchy
+reload(UI_ABCHierarchy)
+
 
 import maya.cmds as cmds
 import maya.mel as mel
 
 from maya.OpenMaya import MObjectHandle, MDGMessage, MMessage, MFnDependencyNode
 import maya.OpenMayaUI as apiUI
-
-cmds.loadPlugin('alembicHolder.mll', qt=1)
-
-#list_form, list_base = uic.loadUiType()
-
-
 
 
 def getMayaWindow():
@@ -53,7 +50,7 @@ def getMayaWindow():
         return shiboken.wrapInstance(long(ptr), QtGui.QMainWindow)
 
 
-class List(QMainWindow, Ui_NAM):
+class List(QMainWindow, UI_ABCHierarchy.Ui_NAM):
     def __init__(self, parent=None):
         super(List, self).__init__(parent)
         if not AiUniverseIsActive():
@@ -67,7 +64,7 @@ class List(QMainWindow, Ui_NAM):
         self.curLayer = None
         # self.listTagsWidget = tagTree(self)
         # self.tagGroup.layout().addWidget(self.listTagsWidget)
-        self.tagGroup.setVisible(0)
+        #self.tagGroup.setVisible(0)
 
         self.shaderToAssign = None
         self.ABCViewerNode = {}
@@ -448,7 +445,7 @@ class List(QMainWindow, Ui_NAM):
 
         self.lastClick = 1
 
-        if self.thisTreeItem == item and force==False:
+        if self.thisTreeItem is item and force==False:
             self.propertyEditing = False
             return
         self.thisTreeItem = item
@@ -505,9 +502,9 @@ class List(QMainWindow, Ui_NAM):
         if items != None :
             self.createBranch(item, items)
         else :
-            item.setChildIndicatorPolicy(1)
+            item.setChildIndicatorPolicy(QtGui.QTreeWidgetItem.DontShowIndicator)
 
-    def createBranch(self, parentItem, abcchild, selected = 0, hierarchy = False, p = "/") :
+    def createBranch(self, parentItem, abcchild, selected = QtCore.Qt.Unchecked, hierarchy = False, p = "/") :
         for item in abcchild :
             itemType = item.split(":")[0]
             itemName = item.split(":")[-1]
@@ -525,7 +522,7 @@ class List(QMainWindow, Ui_NAM):
                 newItem.checkShaders(self.getLayer())
 
                 newItem.setCheckState(0, selected)
-                newItem.setChildIndicatorPolicy(0)
+                newItem.setChildIndicatorPolicy(QtGui.QTreeWidgetItem.DontShowIndicator)
                 parentItem.addChild(newItem)
 
                 if hierarchy == True :
@@ -537,7 +534,7 @@ class List(QMainWindow, Ui_NAM):
                 firstLevel = cmds.ABCHierarchy(cache.ABCcache)
 
                 root = treeitem.abcTreeItem(cache, [], "Transform", self)
-                root.setCheckState(0, 0)
+                root.setCheckState(0, QtCore.Qt.Unchecked)
                 root.checkShaders(self.getLayer())
                 cache.itemsTree.append(root)
 
@@ -545,9 +542,9 @@ class List(QMainWindow, Ui_NAM):
                     if cache.ABCcurPath != "/" :
                         paths = cache.ABCcurPath.split("/")
                         if len(paths) > 0 :
-                            self.createBranch(root, paths[1:], 2, True)
+                            self.createBranch(root, paths[1:], QtCore.Qt.Checked, True)
                     else:
-                        root.setCheckState(0, 2)
+                        root.setCheckState(0, QtCore.Qt.Checked)
 
                 self.hierarchyWidget.addTopLevelItem(root)
                 self.createBranch(root,firstLevel)
