@@ -25,7 +25,6 @@ Debug
 x64
 *.log
 *.css
-*.png
 *.gif
 *.old
 *.pyd
