@@ -32,6 +32,8 @@ class abcTreeItem(QtGui.QTreeWidgetItem):
         self.cache = cache
         self.path = path
 
+        self.isWildCard = False
+
         self.cacheAssignations = self.cache.getAssignations()
 
         self.shaderToAssign = ""
@@ -66,6 +68,7 @@ class abcTreeItem(QtGui.QTreeWidgetItem):
 
     def getPath(self):
         return "/" + "/".join(self.path)
+
 
 
     def assignShaderFromFile(self, shader):
@@ -218,7 +221,6 @@ class abcTreeItem(QtGui.QTreeWidgetItem):
 
     def checkShaders(self, layer=None):
         path = self.getPath()
-
         shader = self.cacheAssignations.getShader(path, layer)
         displace = self.cacheAssignations.getDisplace(path, layer)
 
@@ -270,7 +272,7 @@ class abcTreeItem(QtGui.QTreeWidgetItem):
                 self.setForeground(2, QtCore.Qt.white)
 
             font = QtGui.QFont()
-            if shader.get("inherited", False):
+            if displace.get("inherited", False):
                 self.setForeground(2, QtCore.Qt.darkGray)
                 font.setItalic(1)
                 font.setBold (0)

@@ -154,3 +154,9 @@ class Layers(object):
         for layer in self.layers:
             shaders += self.layers[layer].assignation.getDisplacements().keys()
         return shaders
+
+    def getWildCards(self):
+        wilds = []
+        for layer in self.layers:
+            wilds += self.layers[layer].assignation.getAllWidcards()
+        return wilds        
