@@ -344,7 +344,6 @@ Abc::chrono_t GetRelativeSampleTime( ProcArgs &args, Abc::chrono_t sampleTime)
 
     chrono_t frameTime = args.frame / args.fps;
 
-    //blurByFrame is a fix for mtoa
     Abc::chrono_t result = (( sampleTime - frameTime ) * args.fps);
 
     if ( fabs( result ) < epsilon )
