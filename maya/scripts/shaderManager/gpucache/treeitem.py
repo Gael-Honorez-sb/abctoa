@@ -223,6 +223,9 @@ class abcTreeItem(QtGui.QTreeWidgetItem):
                     self.shaderToAssign = self.interface.createSG(str(self.shaderToAssign)[:-2])
             else:
                 return
+        
+        if not cmds.nodeType(self.shaderToAssign) == "shadingEngine":
+            self.shaderToAssign = self.interface.createSG(str(self.shaderToAssign))
 
         path = self.getPath()
 
