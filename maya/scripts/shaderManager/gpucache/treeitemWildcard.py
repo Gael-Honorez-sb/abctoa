@@ -20,6 +20,11 @@ import maya.cmds as cmds
 
 import treeitem
 
+TRANSFORM = 1
+SHAPE = 2
+SHADER = 3
+WILDCARD = 4
+
 # Herited from normal tree item.
 class wildCardItem(treeitem.abcTreeItem):
     def __init__(self, cache, expression, parent=None, *args, **kwargs):
@@ -34,19 +39,16 @@ class wildCardItem(treeitem.abcTreeItem):
 
         self.isWildCard = True
         self.protected = False
+        self.hasChildren = False
 
-        self.setText(0, "\"%s\"" % self.expression)
+        self.displayPath = "\"%s\"" % self.expression
 
-        d = os.path.dirname(__file__)        
+        self.icon = 4
 
-        icon = QtGui.QIcon()
-        icon.addFile(os.path.join(d, "../../../icons/wildcard.png"), QtCore.QSize(22,22))
-        self.setIcon(0, icon)
-
-
-        icon2 = QtGui.QIcon()
-        icon2.addFile(os.path.join(d, "../../../icons/sg.xpm"), QtCore.QSize(25,25))
-        self.setIcon(1, icon2)
+        self.shaderText = ""
+        self.displaceText = ""
+        self.attributeText = ""
+                
 
     def removeAssigns(self):
         self.setText(1, "")
@@ -67,7 +69,7 @@ class wildCardItem(treeitem.abcTreeItem):
         
         # change the path
         self.expression = text
-        self.setText(0, "\"%s\"" % self.expression)
+        self.displayPath = "\"%s\"" % self.expression
 
         # reassign the shaders
         if shader:

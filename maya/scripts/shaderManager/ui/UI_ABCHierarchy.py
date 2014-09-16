@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'UI_ABCHierarchy.ui'
 #
-# Created: Mon Sep 15 15:23:23 2014
+# Created: Tue Sep 16 10:25:11 2014
 #      by: pyside-uic 0.2.15 running on PySide 1.2.1
 #
 # WARNING! All changes made in this file will be lost!

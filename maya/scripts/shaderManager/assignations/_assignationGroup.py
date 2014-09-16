@@ -79,8 +79,6 @@ class assignationGroup(object):
             if re.match(pattern, path):
                 return self.createShaderEntity(shader, inherited=True)
 
-
-        #print "found shader", foundPath, foundShader
         return None
 
     def getDisplaceFromPath(self, path):
@@ -118,6 +116,26 @@ class assignationGroup(object):
     def getOverridesFromPath(self, path):
         if path in self.overrides:
             return self.createOverrideEntity(self.overrides[path])
+
+        foundAttribute = None
+        foundPath = ""
+        for attributepath in self.overrides:
+            if attributepath in path:
+                if attributepath > foundPath:
+                    foundPath = attributepath
+                    foundAttribute = self.overrides[attributepath]
+
+        if foundAttribute:
+            return self.createOverrideEntity(foundAttribute, inherited=True)
+
+        ### if we go this far, we didn't find any shader. We are iterating over the wildcards.            
+        wildAttributes = self.getWildAttributes()
+        for wildcard in wildAttributes:
+            pattern = fnmatch.translate(wildcard)
+            if re.match(pattern, path):
+                return self.createOverrideEntity(wildAttributes[wildcard], inherited=True)
+
+
         return None
 
     def getOverrideValue(self, path, prop):
@@ -130,8 +148,8 @@ class assignationGroup(object):
     def createShaderEntity(self, shader, inherited= False):
         return dict(shader=shader, fromfile=self.fromFile, inherited = inherited)
 
-    def createOverrideEntity(self, overrides):
-        return dict(overrides=overrides, fromfile=self.fromFile)
+    def createOverrideEntity(self, overrides, inherited = False):
+        return dict(overrides=overrides, fromfile=self.fromFile, inherited = inherited)
 
     def assignShader(self, path, shader):
         toRemove = []
@@ -196,26 +214,32 @@ class assignationGroup(object):
     def getWildShaders(self):
         wildShaders = {}
         for shader in self.shaders:
-            for paths in self.shaders[shader]:
-                for path in paths:
-                    if not path.startswith("/"):
-                        if not shader in wildShaders:
-                            wildShaders[shader] = []    
-                        wildShaders[shader].append(path)
+            for path in self.shaders[shader]:
+                if not path.startswith("/"):
+                    if not shader in wildShaders:
+                        wildShaders[shader] = []    
+                    wildShaders[shader].append(path)
 
         return wildShaders
 
     def getWildDisplacements(self):
         wildShaders = {}
         for shader in self.displacements:
-            for paths in self.displacements[shader]:
-                for path in paths:
-                    if not path.startswith("/"):
-                        if not shader in wildShaders:
-                            wildShaders[shader] = []    
-                        wildShaders[shader].append(path)
+            for path in self.displacements[shader]:
+                if not path.startswith("/"):
+                    if not shader in wildShaders:
+                        wildShaders[shader] = []    
+                    wildShaders[shader].append(path)
 
         return wildShaders
+
+    def getWildAttributes(self):
+        wildAttributes = {}
+        for path in self.overrides:
+            if not path.startswith("/"):
+                wildAttributes[path] = self.overrides[path]
+
+        return wildAttributes
 
     def getWildCards(self):
         wilds = []
