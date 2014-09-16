@@ -25,6 +25,11 @@ import maya.cmds as cmds
 #     def sizeHint(self, option, index):
 #         return QtGui.QSize(32,32)
 
+TRANSFORM = 1
+SHAPE = 2
+SHADER = 3
+WILDCARD = 4
+
 class abcTreeItem(QtGui.QTreeWidgetItem):
     def __init__(self, cache, path, itemType, parent=None, *args, **kwargs):
         QtGui.QTreeWidgetItem.__init__(self, *args, **kwargs)
@@ -33,36 +38,86 @@ class abcTreeItem(QtGui.QTreeWidgetItem):
         self.path = path
 
         self.isWildCard = False
+        self.hasChildren = False
 
         self.cacheAssignations = self.cache.getAssignations()
 
+        self.displayPath = ""
+
         self.shaderToAssign = ""
         if len(self.path) == 0:
-            self.setText(0, "/%s" % os.path.basename(self.cache.ABCcache))
+
+            self.displayPath = "/%s" % os.path.basename(self.cache.ABCcache)
         else:
-            self.setText(0, self.path[-1])
+            self.displayPath = self.path[-1]
 
         #self.interface.hierarchyWidget.resizeColumnToContents(0)
 
-        icon = QtGui.QIcon()
-
-        d = os.path.dirname(__file__)
+        self.icon = None
         
         if itemType == "Transform":
-            icon.addFile(os.path.join(d, "../../../icons/group.png"), QtCore.QSize(22,22))
+            self.icon= TRANSFORM
         else:
-            icon.addFile(os.path.join(d, "../../../icons/shape.png"), QtCore.QSize(22,22))
+            self.icon = SHAPE
 
-        self.setIcon(0, icon)
+        self.shaderText = ""
+        self.displaceText = ""
+        self.attributeText = ""
 
-        icon2 = QtGui.QIcon()
-        icon2.addFile(os.path.join(d, "../../../icons/sg.xpm"), QtCore.QSize(25,25))
-        self.setIcon(1, icon2)
+        #self.setIcon(0, icon)
+
+        # icon2 = QtGui.QIcon()
+        # icon2.addFile(os.path.join(d, "../../../icons/sg.xpm"), QtCore.QSize(25,25))
+        # self.setIcon(1, icon2)
+
+    def setHasChildren(self, hasChildren):
+        self.hasChildren = hasChildren
+
+    def hasChidren(self):
+        return self.hasChildren
+
+    def getDisplayPath(self):
+        return self.displayPath
+
+    def display(self, column):
+        if column == 0 :
+            text = self.getDisplayPath()
+
+            if self.icon == SHAPE or self.icon == WILDCARD:    
+                ### display all attributes
+                text += "<br>" + self.attributeText
+
+            return text
+
+        if column == 1 :
+            return self.shaderText
+
+        if column == 2 :
+            return self.displaceText
+        
+        #shaderFromMainLayer = False
+        #if shader.get("fromfile", False) or shaderFromMainLayer:
+
+
+    def getIcon(self, column):
+        if column == 0 :
+            return self.icon
+        else:
+            return SHADER
+ 
+    def data(self, column, role):
+        if role == QtCore.Qt.DisplayRole:
+            return self.display(column)  
+        elif role == QtCore.Qt.UserRole :
+            return self.getIcon(column)
+        return super(abcTreeItem, self).data(column, role)
 
 
     def removeAssigns(self):
         self.setText(1, "")
+        self.shaderText = ""
         self.setText(2, "")
+        self.displaceText = ""
 
     def getPath(self):
         return "/" + "/".join(self.path)
@@ -222,7 +277,7 @@ class abcTreeItem(QtGui.QTreeWidgetItem):
 
         shaderFromMainLayer = False
         displaceFromMainLayer = False
-        layerOverrides = None
+
         if layer:
             layerOverrides = self.cacheAssignations.getLayerOverrides(layer)
             if not layerOverrides:
@@ -233,16 +288,20 @@ class abcTreeItem(QtGui.QTreeWidgetItem):
             if shader:
                 shaderFromMainLayer = True
 
-
         if not displace and layer != None and layerOverrides["removeDisplacements"] == False:
             displace = self.cacheAssignations.getDisplace(path, None)
             if displace:
                 displaceFromMainLayer = True
 
+       
+
         if shader:
             self.setText(1, shader.get("shader"))
+            self.shaderText = shader.get("shader")
+
             if shader.get("fromfile", False) or shaderFromMainLayer:
                 self.setForeground(1, QtCore.Qt.darkGray)
+                self.shaderText = "<font color='#848484'>%s</font>" % self.shaderText
             else:
                 self.setForeground(1, QtCore.Qt.white)
 
@@ -251,19 +310,27 @@ class abcTreeItem(QtGui.QTreeWidgetItem):
                 self.setForeground(1, QtCore.Qt.darkGray)
                 font.setItalic(1)
                 font.setBold (0)
+                self.shaderText = "<font color='#848484'><i>%s</i></font>" % self.shaderText
             else:
                 font.setItalic(0)
                 font.setBold (1)
+                self.shaderText = "<b>%s</b>" % self.shaderText
             self.setFont( 1,  font )
+
+            
 
         else:
             self.setText(1, "")
+            self.shaderText = ""
 
 
         if displace:
             self.setText(2, displace.get("shader"))
+            self.displaceText = displace.get("shader")
+
             if displace.get("fromfile", False) or displaceFromMainLayer:
                 self.setForeground(2, QtCore.Qt.darkGray)
+                self.shaderText = "<font color='#848484'>%s</font>" % self.displaceText
             else:
                 self.setForeground(2, QtCore.Qt.white)
 
@@ -272,10 +339,63 @@ class abcTreeItem(QtGui.QTreeWidgetItem):
                 self.setForeground(2, QtCore.Qt.darkGray)
                 font.setItalic(1)
                 font.setBold (0)
+                self.shaderText = "<font color='#848484'><i>%s</i></font>" % self.displaceText
             else:
                 font.setItalic(0)
                 font.setBold (1)
+                self.shaderText = "<b>%s</b>" % self.displaceText
+
             self.setFont( 2,  font )
+            
 
         else:
             self.setText(2, "")
+            self.displaceText = ""
+
+
+
+    def checkProperties(self, layer=None):
+        path = self.getPath()
+        attributes = self.cacheAssignations.getOverrides(path, layer)
+        attributesFromMainLayer = False
+        layerOverrides = None
+
+        if layer:
+            layerOverrides = self.cacheAssignations.getLayerOverrides(layer)
+            if not layerOverrides:
+                layerOverrides = dict(removeDisplacements=False, removeProperties=False, removeShaders=False)            
+        
+        if not attributes and layer != None and layerOverrides["removeProperties"] == False:
+            attributes = self.cacheAssignations.getShader(path, None)
+            if attributes:
+                attributesFromMainLayer = True    
+
+        if attributes:
+            self.attributeText = ""
+            attributeTextTooltip = "<u><b>Attributes:</u><b><br>"
+            fromFile = False
+            inherited = attributes.get("inherited", False)
+
+            if attributes.get("fromfile", False) or attributesFromMainLayer:
+                fromFile = True
+
+            attributesList = attributes.get("overrides", [])
+
+            for attribute in attributesList:
+                color = "#FFFFFF"
+                colortip = "#000000"
+                if fromFile or inherited:
+                    color = "#848484"
+                    colortip = "#848484"
+                tag = "b"
+                if inherited:
+                    tag= "i"
+
+                self.attributeText += "<br><font color='%s'><%s><u>%s</u> : %s</%s></font>" % (color, tag, attribute, str(attributesList[attribute]), tag)
+                attributeTextTooltip += "<br><font color='%s'><%s>%s : %s</%s></font>" % (colortip, tag, attribute, str(attributesList[attribute]), tag)
+
+        else:
+            self.attributeText = ""
+            attributeTextTooltip = ""
+
+        self.setToolTip(0, attributeTextTooltip)        

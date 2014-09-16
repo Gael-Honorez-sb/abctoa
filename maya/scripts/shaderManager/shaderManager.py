@@ -24,9 +24,10 @@ from PySide import QtGui, QtCore
 from PySide.QtGui import *
 from PySide.QtCore import *
 
-from gpucache import gpucache, treeitem, treeitemWildcard
+from gpucache import gpucache, treeitem, treeDelegate 
 reload(treeitem)
 reload(treeitemWildcard)
+reload(treeDelegate)
 reload(gpucache)
 from propertywidgets.property_editorByType import PropertyEditor
 
@@ -100,6 +101,8 @@ class List(QMainWindow, UI_ABCHierarchy.Ui_NAM):
         self.hierarchyWidget.setColumnWidth(0,200)
         self.hierarchyWidget.setColumnWidth(1,300)
         self.hierarchyWidget.setColumnWidth(2,300)
+
+        self.hierarchyWidget.setItemDelegate(treeDelegate.treeDelegate(self))
 
         self.populate()
 
@@ -279,7 +282,6 @@ class List(QMainWindow, UI_ABCHierarchy.Ui_NAM):
         shader = QtCore.QByteArray()
         dataStream >> shader
 
-        print shader, str(shader)
         shader = str(shader)
         items = []
         
@@ -353,6 +355,7 @@ class List(QMainWindow, UI_ABCHierarchy.Ui_NAM):
         for item in items:
             item.removeAssigns()
             item.checkShaders(self.getLayer())
+            item.checkProperties(self.getLayer())
 
 
     def visitTree(self, items, treeitem):
@@ -417,10 +420,13 @@ class List(QMainWindow, UI_ABCHierarchy.Ui_NAM):
             curPath = item.getPath()
             if curPath is None:
                 return
+
             cache = item.cache
             layer = self.getLayer()
             cache.updateOverride(propName, default, value, curPath, layer)
             self.updatePropertyColor(cache, layer, propName, curPath)
+
+            self.checkProperties(self.getLayer())
 
         elif self.lastClick == 2:
             item = self.listTagsWidget.currentItem()
@@ -524,21 +530,34 @@ class List(QMainWindow, UI_ABCHierarchy.Ui_NAM):
             self.expandItem(item)
 
     def expandItem(self, item) :
-        items = cmds.ABCHierarchy(item.cache.ABCcache, item.getPath().replace("/", "|"))
-        print items
-        if items != None :
-            self.createBranch(item, items)
-        else :
-            item.setChildIndicatorPolicy(QtGui.QTreeWidgetItem.DontShowIndicator)
+        expandAll = False
+        modifiers = QtGui.QApplication.keyboardModifiers()
+        if modifiers == QtCore.Qt.ShiftModifier:
+            expandAll = True
+
+        if item.hasChidren():
+            items = cmds.ABCHierarchy(item.cache.ABCcache, item.getPath().replace("/", "|"))
+            if items != None :
+                createdItems = self.createBranch(item, items)
+                if expandAll :
+                    for i in createdItems:
+                        self.hierarchyWidget.expandItem(i)
+                        self.expandItem(i)
+            
+            return
+
+
+        item.setChildIndicatorPolicy(QtGui.QTreeWidgetItem.DontShowIndicator)
 
     def createBranch(self, parentItem, abcchild, hierarchy = False, p = "/") :
+        createdItems = []
         for item in abcchild :
             itemType = item.split(":")[0]
             itemName = item.split(":")[-1]
 
             itemExists = False
             for i in xrange(0, parentItem.childCount()) :
-                text = parentItem.child(i).text(0)
+                text = parentItem.child(i).getDisplayPath()
                 if str(text) == str(itemName) :
                     itemExists = True
 
@@ -547,13 +566,25 @@ class List(QMainWindow, UI_ABCHierarchy.Ui_NAM):
                 parentItem.cache.itemsTree.append(newItem)
 
                 newItem.checkShaders(self.getLayer())
+                newItem.checkProperties(self.getLayer())
+               
+                # check if the item has chidren, but go no further...
+                childsItems = cmds.ABCHierarchy(newItem.cache.ABCcache, newItem.getPath().replace("/", "|"))
+                if childsItems:
+                    newItem.setChildIndicatorPolicy(QtGui.QTreeWidgetItem.ShowIndicator)
+                    newItem.setHasChildren(True)
+                else:
+                    newItem.setHasChildren(False)
 
-                #newItem.setCheckState(0, selected)
-                newItem.setChildIndicatorPolicy(QtGui.QTreeWidgetItem.ShowIndicator)
                 parentItem.addChild(newItem)
 
                 if hierarchy == True :
                     parentItem = newItem
+
+                self.hierarchyWidget.resizeColumnToContents(0)
+                createdItems.append(newItem)
+
+        return createdItems
 
     def populate(self) :
         for cache in self.ABCViewerNode.values():
@@ -563,6 +594,8 @@ class List(QMainWindow, UI_ABCHierarchy.Ui_NAM):
                 root = treeitem.abcTreeItem(cache, [], "Transform", self)
                 #root.setCheckState(0, QtCore.Qt.Unchecked)
                 root.checkShaders(self.getLayer())
+                root.checkProperties(self.getLayer())
+
                 cache.itemsTree.append(root)
 
                 if cache.ABCcurPath != None :
@@ -606,6 +639,13 @@ class List(QMainWindow, UI_ABCHierarchy.Ui_NAM):
             if cache.cache != "":
                 for item in cache.itemsTree:
                     item.checkShaders(layer)
+
+    def checkProperties(self, layer=None):
+        for cache in self.ABCViewerNode.values():
+            if cache.cache != "":
+                for item in cache.itemsTree:
+                    item.checkProperties(layer)
+
 
 
     def getNode(self):
@@ -703,7 +743,10 @@ class List(QMainWindow, UI_ABCHierarchy.Ui_NAM):
         parentItem.cache.itemsTree.append(newItem)
         newItem.setChildIndicatorPolicy(QtGui.QTreeWidgetItem.DontShowIndicator)
         parentItem.addChild(newItem)
+        
         newItem.checkShaders(self.getLayer())
+        newItem.checkProperties(self.getLayer())
+
         newItem.protected = protected
 
     def addWildCard(self):
