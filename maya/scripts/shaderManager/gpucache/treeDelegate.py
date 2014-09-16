@@ -24,11 +24,21 @@ class treeDelegate(QtGui.QStyledItemDelegate):
         QtGui.QStyledItemDelegate.__init__(self, *args, **kwargs)
 
     def paint(self, painter, option, index, *args, **kwargs):
-        self.initStyleOption(option, index)
-                
-        text = index.data(QtCore.Qt.DisplayRole)
+        
+        options = QtGui.QStyleOptionViewItemV4(option)
 
+        self.initStyleOption(options, index)
+        
+
+
+        style = options.widget.style() if options.widget else  QtGui.QApplication.style()
+
+        options.text = ""
+        style.drawControl(style.CE_ItemViewItem, options, painter, options.widget)
+
+        text = index.data(QtCore.Qt.DisplayRole)
         fieldType = index.data(QtCore.Qt.UserRole)
+
         d = os.path.dirname(__file__)
 
         if fieldType == 1:
@@ -41,6 +51,10 @@ class treeDelegate(QtGui.QStyledItemDelegate):
             iconfile = os.path.join(d, "../../../icons/wildcard.png")
 
         painter.save()
+
+        if options.state & QtGui.QStyle.State_MouseOver:
+            painter.fillRect(option.rect, QtGui.QColor("#202020"))
+            #painter.fillRect(option.rect, painter.brush())
         
         html = QtGui.QTextDocument()
         html.setHtml(text)
@@ -66,10 +80,9 @@ class treeDelegate(QtGui.QStyledItemDelegate):
         text = index.data(QtCore.Qt.DisplayRole)
         html = QtGui.QTextDocument()
         html.setHtml(text)
-
         height = max(html.size().height() + 10, 35)
-
         if text != "":
-            return QtCore.QSize(option.rect.left() + html.size().width()+22+10, height)
+            return QtCore.QSize(option.rect.left() + html.size().width()+22+10+50, height)
         else :
             return QtCore.QSize(35, height)
+

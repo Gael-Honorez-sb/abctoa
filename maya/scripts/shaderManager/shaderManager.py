@@ -11,6 +11,7 @@
 # You should have received a copy of the GNU Lesser General Public
 # License along with this library.
 
+
 import os
 import shiboken
 
@@ -108,11 +109,16 @@ class List(QMainWindow, UI_ABCHierarchy.Ui_NAM):
 
         self.curPath = ""
         self.ABCcurPath = ""
+
         self.hierarchyWidget.itemDoubleClicked.connect(self.itemDoubleClicked)
         self.hierarchyWidget.itemExpanded.connect(self.requireItemExpanded)
         self.hierarchyWidget.itemCollapsed.connect(self.requireItemCollapse)
         self.hierarchyWidget.itemClicked.connect(self.itemCLicked)
         self.hierarchyWidget.itemPressed.connect(self.itemPressed)
+
+
+
+        
 
         #self.shadersList.startDrag = self.newshadersListStartDrag
         self.shadersList.itemPressed.connect(self.shaderCLicked)
