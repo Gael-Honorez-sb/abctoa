@@ -17,7 +17,6 @@ License along with this library.*/
 #define _nozAlembicHolderNode
 
 #include "Foundation.h"
-#include "Transport.h"
 #include "Scene.h"
 #include "SceneManager.h"
 
