@@ -216,12 +216,18 @@ void IPolyMeshDrw::draw( const DrawContext &iCtx )
 
     if(iCtx.getSelection() != "")
     {
+        bool foundInPath = false;
+
         std::string pathSel = iCtx.getSelection();
         if(pathSel.find("/") != std::string::npos)
         {
-            if(m_polyMesh.getFullName().find(pathSel) == std::string::npos)
-                return;
-        }else
+            if(m_polyMesh.getFullName().find(pathSel) != std::string::npos)
+                foundInPath = true;
+        }
+        else if(matchPattern(m_polyMesh.getFullName(), pathSel)) // based on wildcard expression
+            foundInPath = true;
+
+        if(!foundInPath)
             return;
     }
     std::map<std::string, MColor> shaderColors = iCtx.getShaderColors();
@@ -238,6 +244,11 @@ void IPolyMeshDrw::draw( const DrawContext &iCtx )
                 objColor = it->second;
                 foundInPath = true;
             }
+        }
+        else if(matchPattern(m_polyMesh.getFullName(),it->first)) // based on wildcard expression
+        {
+            objColor = it->second;
+            foundInPath = true;
         }
     }
     
