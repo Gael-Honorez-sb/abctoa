@@ -98,6 +98,26 @@ class Layers(object):
                 self.writeLayer()
 
 
+    def removeShader(self, shader):
+        ''' remove a shader '''
+        for layer in self.layers:
+            self.layers[layer].assignation.removeShader(shader)
+
+    def removeDisplacement(self, shader):
+        ''' remove a displacement shader '''
+        for layer in self.layers:
+            self.layers[layer].assignation.removeDisplacement(shader) 
+
+    def renameShader(self, oldname, newname):
+        ''' rename a shader '''
+        for layer in self.layers:
+            self.layers[layer].assignation.renameShader(oldname, newname)
+
+    def renameDisplacement(self, oldname, newname):
+        ''' rename a displacement shader '''
+        for layer in self.layers:
+            self.layers[layer].assignation.renameDisplacement(oldname, newname)
+
     def assignShader(self, layer, path, shader):
         if layer in self.layers:
             self.layers[layer].assignShader(path, shader)

@@ -39,7 +39,7 @@ reload(UI_ABCHierarchy)
 import maya.cmds as cmds
 import maya.mel as mel
 
-from maya.OpenMaya import MObjectHandle, MDGMessage, MMessage, MFnDependencyNode
+from maya.OpenMaya import MObjectHandle, MDGMessage, MMessage, MNodeMessage, MFnDependencyNode, MObject
 import maya.OpenMayaUI as apiUI
 
 
@@ -124,7 +124,13 @@ class List(QMainWindow, UI_ABCHierarchy.Ui_NAM):
         self.shadersList.itemPressed.connect(self.shaderCLicked)
         self.shadersList.mouseMoveEvent = self.newshadersListmouseMoveEvent
 
-        self.fillShaderList()
+
+        self.displacementList.itemPressed.connect(self.shaderCLicked)
+        self.displacementList.mouseMoveEvent = self.newdisplaceListmouseMoveEvent
+
+        self.refreshShadersBtn.pressed.connect(self.refreshShaders)
+
+        self.refreshShaders()
 
         if AiUniverseIsActive() and AiRendering() == False:
              AiEnd()
@@ -132,8 +138,10 @@ class List(QMainWindow, UI_ABCHierarchy.Ui_NAM):
 
         self.getLayers()
         self.renderLayer.currentIndexChanged.connect(self.layerChanged)
+        self.NodeNameMsgId  = MNodeMessage.addNameChangedCallback( MObject(), self.nameChangedCB )
         self.newNodeCBMsgId = MDGMessage.addNodeAddedCallback( self.newNodeCB )
         self.delNodeCBMsgId = MDGMessage.addNodeRemovedCallback( self.delNodeCB )
+
         self.disableLayerOverrides()
 
         self.overrideDisps.stateChanged.connect(self.overrideDispsChanged)
@@ -146,6 +154,7 @@ class List(QMainWindow, UI_ABCHierarchy.Ui_NAM):
 
         self.setCurrentLayer()
         self.layerChangedJob = cmds.scriptJob( e= ["renderLayerManagerChange",self.setCurrentLayer])
+
 
 
     def overrideDispsChanged(self, state):
@@ -202,26 +211,62 @@ class List(QMainWindow, UI_ABCHierarchy.Ui_NAM):
         return sg
 
 
+    def nameChangedCB(self, node, prevName, client):
+        ''' Callback when a node is renamed '''
+        mobject = MObjectHandle( node ).object()
+        nodeFn = MFnDependencyNode ( mobject )
+        nodeName = nodeFn.name()
+
+        if cmds.nodeType(nodeName) == "shadingEngine":
+            items = self.shadersList.findItems(prevName, QtCore.Qt.MatchExactly)
+            for item in items:
+                item.setText(nodeName)
+
+            # renaming shaders in caches
+            for cache in self.ABCViewerNode.values():
+                cache.renameShader(prevName, nodeName)
+            self.checkShaders()
+
+        if cmds.nodeType(nodeName) == "displacementShader":
+            items = self.displacementList.findItems(prevName, QtCore.Qt.MatchExactly)
+            for item in items:
+                item.setText(nodeName)
+
+            # renaming shaders in caches
+            for cache in self.ABCViewerNode.values():
+                cache.renameDisplacement(prevName, nodeName)
+            self.checkShaders()
+
     def newNodeCB(self, newNode, data ):
         ''' Callback when creating a new node '''
+
         mobject = MObjectHandle( newNode ).object()
         nodeFn = MFnDependencyNode ( mobject )
         nodeName = nodeFn.name()
         if cmds.getClassification(cmds.nodeType(nodeName), satisfies="shader"):
-            #check if SG exists. If not, we create it.
-            SGs = cmds.listConnections( nodeName, d=True, s=False, type="shadingEngine")
-            sg = None
-            if not SGs:
-                sg = self.createSG(nodeName)
-            else:
-                sg = SGs[0]
-
-            if sg:
+            if cmds.nodeType(nodeName) == "displacementShader":
                 icon = QtGui.QIcon()
                 icon.addFile(os.path.join(d, "../../icons/sg.xpm"), QtCore.QSize(25,25))
-                item = QtGui.QListWidgetItem(sg)
+                item = QtGui.QListWidgetItem(nodeName)
                 item.setIcon(icon)
-                self.shadersList.addItem(item)
+                self.displacementList.addItem(item)
+            else:
+
+                #check if SG exists. If not, we create it.
+                SGs = cmds.listConnections( nodeName, d=True, s=False, type="shadingEngine")
+                print SGs
+                sg = None
+                if not SGs:
+                    sg = self.createSG(nodeName)
+                else:
+                    sg = SGs[0]
+
+                if sg:
+                    icon = QtGui.QIcon()
+                    icon.addFile(os.path.join(d, "../../icons/sg.xpm"), QtCore.QSize(25,25))
+                    item = QtGui.QListWidgetItem(sg)
+                    item.setIcon(icon)
+                    self.shadersList.addItem(item)
 
     def delNodeCB(self, node, data ):
         ''' Callback when a node has been deleted '''
@@ -233,19 +278,39 @@ class List(QMainWindow, UI_ABCHierarchy.Ui_NAM):
             for item in items:
                 self.shadersList.takeItem(self.shadersList.row(item))
 
+            # remove shaders from caches
+            for cache in self.ABCViewerNode.values():
+                cache.removeShader(nodeName)
+
+        if cmds.nodeType(nodeName) == "displacementShader":
+            items = self.displacementList.findItems(nodeName, QtCore.Qt.MatchExactly)
+            for item in items:
+                self.displacementList.takeItem(self.displacementList.row(item))   
+
+            # remove shaders from caches
+            for cache in self.ABCViewerNode.values():
+                cache.removeDisplacement(nodeName)
+
+        self.checkShaders()
+
     def shaderCLicked(self, item):
         shader = item.text()
         if shader:
             if cmds.objExists(shader):
-                conn = cmds.connectionInfo(shader +".surfaceShader", sourceFromDestination=True)
-                if conn:
-                    cmds.select(conn, r=1, ne=1)
-                else:
+                try:
+                    conn = cmds.connectionInfo(shader +".surfaceShader", sourceFromDestination=True)
+                    if conn:
+                        cmds.select(conn, r=1, ne=1)
+                    else:
+                        cmds.select(shader, r=1, ne=1)
+                except:
                     cmds.select(shader, r=1, ne=1)
-
 
     def newshadersListmouseMoveEvent(self, event):
         self.newshadersListStartDrag(event)
+
+    def newdisplaceListmouseMoveEvent(self, event):
+        self.newdisplaceListStartDrag(event)
 
     def newshadersListStartDrag(self, event):
         index = self.shadersList.indexAt(event.pos())
@@ -268,21 +333,51 @@ class List(QMainWindow, UI_ABCHierarchy.Ui_NAM):
         drag.setHotSpot(QtCore.QPoint(0,0))
         drag.start(QtCore.Qt.MoveAction)
 
+    def newdisplaceListStartDrag(self, event):
+        index = self.displacementList.indexAt(event.pos())
+        if not index.isValid():
+            return
+        selected = self.displacementList.itemFromIndex(index)
+
+        self.shaderCLicked(selected)
+
+        itemData = QtCore.QByteArray()
+        dataStream = QtCore.QDataStream(itemData, QtCore.QIODevice.WriteOnly)
+        dataStream << QtCore.QByteArray(str(selected.text()))
+
+        mimeData = QtCore.QMimeData()
+        mimeData.setData("application/x-displacement", itemData)
+        drag = QtGui.QDrag(self)
+        drag.setMimeData(mimeData)
+
+        drag.setPixmap(self.displacementList.itemAt(event.pos()).icon().pixmap(50,50))
+        drag.setHotSpot(QtCore.QPoint(0,0))
+        drag.start(QtCore.Qt.MoveAction)
+
     def newhierarchyWidgetdragEnterEvent(self, event):
-        if event.mimeData().hasFormat("application/x-shader"):
+        if event.mimeData().hasFormat("application/x-shader") or event.mimeData().hasFormat("application/x-displacement"):
             event.accept()
         else:
             event.ignore()
 
     def newhierarchyWidgetdragMoveEvent(self, event):
-        if event.mimeData().hasFormat("application/x-shader"):
+        if event.mimeData().hasFormat("application/x-shader") or event.mimeData().hasFormat("application/x-displacement"):
             event.accept()
         else:
             event.ignore()
 
     def newhierarchyWidgetDropEvent(self, event):
         mime = event.mimeData()
-        itemData = mime.data("application/x-shader")
+        itemData = None
+        mode = 0
+        
+        if mime.hasFormat("application/x-shader"):
+            mode = 0
+            itemData = mime.data("application/x-shader")
+        elif mime.hasFormat("application/x-displacement"):
+            mode = 1
+            itemData = mime.data("application/x-displacement")
+
         dataStream = QtCore.QDataStream(itemData, QtCore.QIODevice.ReadOnly)
 
         shader = QtCore.QByteArray()
@@ -302,8 +397,11 @@ class List(QMainWindow, UI_ABCHierarchy.Ui_NAM):
 
         for item in items:
             item.shaderToAssign = shader
-            item.assignShader()
-
+            if mode == 0:
+                item.assignShader()
+            elif mode == 1:
+                item.assignDisplacement()
+               
         event.accept()
 
     def closeEvent(self, event):
@@ -314,6 +412,7 @@ class List(QMainWindow, UI_ABCHierarchy.Ui_NAM):
         print "removing callbacks"
         MMessage.removeCallback( self.newNodeCBMsgId )
         MMessage.removeCallback( self.delNodeCBMsgId )
+        MNodeMessage.removeCallback( self.NodeNameMsgId )
         return QtGui.QMainWindow.closeEvent(self, event)
 
     def setCurrentLayer(self):
@@ -453,13 +552,30 @@ class List(QMainWindow, UI_ABCHierarchy.Ui_NAM):
 
 
     def fillShaderList(self):
-        shadersSg = cmds.ls(type="shadingEngine")
+        self.shadersList.clear()
+        shadersSg = cmds.ls(type="shadingEngine")      
         icon = QtGui.QIcon()
         icon.addFile(os.path.join(d, "../../icons/sg.xpm"), QtCore.QSize(25,25))
         for sg in shadersSg:
+            conn = cmds.connectionInfo(sg +".surfaceShader", sourceFromDestination=True)
+            if conn:
+                item = QtGui.QListWidgetItem(sg)
+                item.setIcon(icon)
+                self.shadersList.addItem(item)
+
+    def fillDisplacementList(self):
+        self.displacementList.clear()
+        displaces = cmds.ls(type="displacementShader")
+        icon = QtGui.QIcon()
+        icon.addFile(os.path.join(d, "../../icons/displacement.xpm"), QtCore.QSize(25,25))
+        for sg in displaces:
             item = QtGui.QListWidgetItem(sg)
             item.setIcon(icon)
-            self.shadersList.addItem(item)
+            self.displacementList.addItem(item)
+
+    def refreshShaders(self):
+        self.fillShaderList()
+        self.fillDisplacementList()
 
     def getLayer(self):
         if self.curLayer != "defaultRenderLayer":

@@ -151,6 +151,28 @@ class assignationGroup(object):
     def createOverrideEntity(self, overrides, inherited = False):
         return dict(overrides=overrides, fromfile=self.fromFile, inherited = inherited)
 
+    def removeShader(self, shader):
+        ''' remove a shader from all paths '''
+        if shader in self.shaders:
+            del self.shaders[shader]
+
+    def removeDisplacement(self, shader):
+        ''' remove a displacement shader from all paths '''
+        if shader in self.displacements:
+            del self.displacements[shader]
+
+    def renameShader(self, oldname, newname):
+        ''' rename a shader  '''
+        if oldname in self.shaders:
+            self.shaders[newname] = self.shaders[oldname]
+            del self.shaders[oldname]
+
+    def renameDisplacement(self, oldname, newname):
+        ''' rename a displacement shader  '''
+        if oldname in self.displacements:
+            self.displacements[newname] = self.displacements[oldname]
+            del self.displacements[oldname]
+
     def assignShader(self, path, shader):
         toRemove = []
 

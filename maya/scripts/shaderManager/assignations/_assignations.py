@@ -228,3 +228,34 @@ class cacheAssignations(object):
 
         self.parent.updateConnections()
 
+    def removeShader(self, shader):
+        ''' remove a shader '''
+        self.mainAssignations.removeShader(shader)
+        self.layers.removeShader(shader)
+
+        self.parent.updateShaders(self.mainAssignations.getShaders())
+        self.parent.updateConnections()
+
+    def removeDisplacement(self, shader):
+        ''' remove a displacement shader '''
+        self.mainAssignations.removeDisplacement(shader) 
+        self.layers.removeDisplacement(shader)
+
+        self.parent.updateDisplacements(self.mainAssignations.getDisplacements())
+        self.parent.updateConnections()
+
+    def renameShader(self, oldname, newname):
+        ''' rename a shader '''
+        self.mainAssignations.renameShader(oldname, newname)
+        self.layers.renameShader(oldname, newname)
+
+        self.parent.updateShaders(self.mainAssignations.getShaders())
+        self.parent.updateConnections()
+
+    def renameDisplacement(self, oldname, newname):
+        ''' rename a displacement shader '''
+        self.mainAssignations.renameDisplacement(oldname, newname)
+        self.layers.renameDisplacement(oldname, newname)
+        
+        self.parent.updateDisplacements(self.mainAssignations.getDisplacements())
+        self.parent.updateConnections()        
