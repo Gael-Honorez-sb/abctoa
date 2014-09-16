@@ -25,7 +25,7 @@ from PySide import QtGui, QtCore
 from PySide.QtGui import *
 from PySide.QtCore import *
 
-from gpucache import gpucache, treeitem, treeDelegate 
+from gpucache import gpucache, treeitem, treeDelegate, treeitemWildcard
 reload(treeitem)
 reload(treeitemWildcard)
 reload(treeDelegate)
