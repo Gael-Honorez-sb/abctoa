@@ -399,3 +399,5 @@ class abcTreeItem(QtGui.QTreeWidgetItem):
             attributeTextTooltip = ""
 
         self.setToolTip(0, attributeTextTooltip)        
+
+        self.interface.hierarchyWidget.resizeColumnToContents(0)
