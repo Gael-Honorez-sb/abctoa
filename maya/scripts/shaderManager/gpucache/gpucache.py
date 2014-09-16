@@ -55,6 +55,21 @@ class gpucache(object):
         layer = self.parent.getLayer()
         self.assignations.assignDisplacement(layer, path, shader)
 
+    def removeShader(self, shader):
+        ''' remove a shader '''
+        self.assignations.removeShader(shader)
+
+    def removeDisplacement(self, shader):
+        ''' remove a displacement shader '''
+        self.assignations.removeDisplacement(shader)                
+
+    def renameShader(self, oldname, newname):
+        ''' rename a shader '''
+        self.assignations.renameShader(oldname, newname)
+
+    def renameDisplacement(self, oldname, newname):
+        ''' rename a displacement shader '''
+        self.assignations.renameDisplacement(oldname, newname)
 
     def updateCache(self):
         self.ABCcache =  cmds.getAttr("%s.cacheFileName" % self.shape)

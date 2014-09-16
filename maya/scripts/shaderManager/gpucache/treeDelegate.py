@@ -18,6 +18,7 @@ TRANSFORM = 1
 SHAPE = 2
 SHADER = 3
 WILDCARD = 4
+DISPLACE = 5
 
 class treeDelegate(QtGui.QStyledItemDelegate):
     def __init__(self, *args, **kwargs):
@@ -41,14 +42,16 @@ class treeDelegate(QtGui.QStyledItemDelegate):
 
         d = os.path.dirname(__file__)
 
-        if fieldType == 1:
+        if fieldType == TRANSFORM:
             iconfile = os.path.join(d, "../../../icons/group.png")
-        elif fieldType == 2:
+        elif fieldType == SHAPE:
             iconfile = os.path.join(d, "../../../icons/shape.png")
-        elif fieldType == 3:
+        elif fieldType == SHADER:
             iconfile = os.path.join(d, "../../../icons/sg.xpm")
-        elif fieldType == 4:
+        elif fieldType == WILDCARD:
             iconfile = os.path.join(d, "../../../icons/wildcard.png")
+        elif fieldType == DISPLACE:
+            iconfile = os.path.join(d, "../../../icons/displacement.xpm")
 
         painter.save()
 

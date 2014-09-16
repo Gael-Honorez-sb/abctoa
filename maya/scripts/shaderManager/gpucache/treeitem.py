@@ -29,6 +29,7 @@ TRANSFORM = 1
 SHAPE = 2
 SHADER = 3
 WILDCARD = 4
+DISPLACE = 5
 
 class abcTreeItem(QtGui.QTreeWidgetItem):
     def __init__(self, cache, path, itemType, parent=None, *args, **kwargs):
@@ -89,12 +90,13 @@ class abcTreeItem(QtGui.QTreeWidgetItem):
 
             return text
 
-        if column == 1 :
+        elif column == 1 :
             return self.shaderText
 
-        if column == 2 :
+        elif column == 2 :
             return self.displaceText
         
+
         #shaderFromMainLayer = False
         #if shader.get("fromfile", False) or shaderFromMainLayer:
 
@@ -102,6 +104,8 @@ class abcTreeItem(QtGui.QTreeWidgetItem):
     def getIcon(self, column):
         if column == 0 :
             return self.icon
+        if column == 2:
+            return DISPLACE
         else:
             return SHADER
  
@@ -326,11 +330,11 @@ class abcTreeItem(QtGui.QTreeWidgetItem):
 
         if displace:
             self.setText(2, displace.get("shader"))
-            self.displaceText = displace.get("shader")
+            self.displaceText = displace.get("shader").replace(".message", "")
 
             if displace.get("fromfile", False) or displaceFromMainLayer:
                 self.setForeground(2, QtCore.Qt.darkGray)
-                self.shaderText = "<font color='#848484'>%s</font>" % self.displaceText
+                self.displaceText = "<font color='#848484'>%s</font>" % self.displaceText
             else:
                 self.setForeground(2, QtCore.Qt.white)
 
@@ -339,11 +343,11 @@ class abcTreeItem(QtGui.QTreeWidgetItem):
                 self.setForeground(2, QtCore.Qt.darkGray)
                 font.setItalic(1)
                 font.setBold (0)
-                self.shaderText = "<font color='#848484'><i>%s</i></font>" % self.displaceText
+                self.displaceText = "<font color='#848484'><i>%s</i></font>" % self.displaceText
             else:
                 font.setItalic(0)
                 font.setBold (1)
-                self.shaderText = "<b>%s</b>" % self.displaceText
+                self.displaceText = "<b>%s</b>" % self.displaceText
 
             self.setFont( 2,  font )
             
