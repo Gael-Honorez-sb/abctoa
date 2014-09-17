@@ -40,7 +40,6 @@ bool getNamedObj( IObject & iObjTop, const std::string &objectPath)
     if ( nextChildHeader != NULL )
     {
         iObjTop = nextParentObject;
-        std::cout << "Found : "<<iObjTop.getFullName() << std::endl;
         return true;
     }
 
