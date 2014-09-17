@@ -51,9 +51,9 @@ class Layers(object):
             return self.layers[layer].getAssignation().getDisplaceFromPath(path)
         return None
 
-    def getOverridesFromPath(self, path, layer):
+    def getOverridesFromPath(self, path, layer, onlyInherited=False):
         if layer in self.layers:
-            return self.layers[layer].getAssignation().getOverridesFromPath(path)
+            return self.layers[layer].getAssignation().getOverridesFromPath(path, onlyInherited=onlyInherited)
         return None
 
     def getLayerOverrides(self, layer):
@@ -178,5 +178,5 @@ class Layers(object):
     def getWildCards(self):
         wilds = []
         for layer in self.layers:
-            wilds += self.layers[layer].assignation.getAllWidcards()
+            wilds += self.layers[layer].assignation.getWildCards()
         return wilds        
