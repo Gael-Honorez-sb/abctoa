@@ -114,6 +114,8 @@ class assignationGroup(object):
         return self.overrides
 
     def getOverridesFromPath(self, path):
+        ''' Get all overrides of a path (inherited included) '''
+
         if path in self.overrides:
             return self.createOverrideEntity(self.overrides[path])
 
