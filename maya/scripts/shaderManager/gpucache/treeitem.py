@@ -363,32 +363,35 @@ class abcTreeItem(QtGui.QTreeWidgetItem):
 
     def checkProperties(self, layer=None):
         path = self.getPath()
-        attributes = self.cacheAssignations.getOverrides(path, layer)
-        attributesFromMainLayer = False
         layerOverrides = None
 
+        attributes = {}
         if layer:
             layerOverrides = self.cacheAssignations.getLayerOverrides(layer)
             if not layerOverrides:
-                layerOverrides = dict(removeDisplacements=False, removeProperties=False, removeShaders=False)            
-        
-        if not attributes and layer != None and layerOverrides["removeProperties"] == False:
-            attributes = self.cacheAssignations.getShader(path, None)
-            if attributes:
-                attributesFromMainLayer = True    
+                layerOverrides = dict(removeDisplacements=False, removeProperties=False, removeShaders=False)
 
-        if attributes:
+            if layerOverrides["removeProperties"] == False:
+                attributes = self.cacheAssignations.getOverrides(path, layer)
+            else:
+                attributes = self.cacheAssignations.getOverrides(path, None)
+
+        else:
+            attributes = self.cacheAssignations.getOverrides(path, None)
+        
+        self.attributeText = ""
+        attributeTextTooltip = ""
+
+        if len(attributes) != 0:
             self.attributeText = ""
             attributeTextTooltip = "<u><b>Attributes:</u><b><br>"
-            fromFile = False
-            inherited = attributes.get("inherited", False)
+            for attr in attributes:
+                fromFile = attributes[attr].get("fromfile", False)
+                inherited = attributes[attr].get("inherited", False)
 
-            if attributes.get("fromfile", False) or attributesFromMainLayer:
-                fromFile = True
+                attributeValue = str(attributes[attr].get("override", ""))
 
-            attributesList = attributes.get("overrides", [])
 
-            for attribute in attributesList:
                 color = "#FFFFFF"
                 colortip = "#000000"
                 if fromFile or inherited:
@@ -398,13 +401,9 @@ class abcTreeItem(QtGui.QTreeWidgetItem):
                 if inherited:
                     tag= "i"
 
-                self.attributeText += "<br><font color='%s'><%s><u>%s</u> : %s</%s></font>" % (color, tag, attribute, str(attributesList[attribute]), tag)
-                attributeTextTooltip += "<br><font color='%s'><%s>%s : %s</%s></font>" % (colortip, tag, attribute, str(attributesList[attribute]), tag)
+                self.attributeText += "<br><font color='%s'><%s><u>%s</u> : %s</%s></font>" % (color, tag, attr, attributeValue, tag)
+                attributeTextTooltip += "<br><font color='%s'><%s>%s : %s</%s></font>" % (colortip, tag, attr, attributeValue, tag)
 
-        else:
-            self.attributeText = ""
-            attributeTextTooltip = ""
 
-        self.setToolTip(0, attributeTextTooltip)        
-
+        self.setToolTip(0, attributeTextTooltip)
         self.interface.hierarchyWidget.resizeColumnToContents(0)

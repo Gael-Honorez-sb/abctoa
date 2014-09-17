@@ -113,32 +113,39 @@ class assignationGroup(object):
     def getOverrides(self):
         return self.overrides
 
+
     def getOverridesFromPath(self, path):
         ''' Get all overrides of a path (inherited included) '''
 
-        if path in self.overrides:
-            return self.createOverrideEntity(self.overrides[path])
+        concatenedOverrides = {}
 
-        foundAttribute = None
-        foundPath = ""
-        for attributepath in self.overrides:
-            if attributepath in path:
-                if attributepath > foundPath:
-                    foundPath = attributepath
-                    foundAttribute = self.overrides[attributepath]
+        # we start with the wildcard as they are the most generic one.
+        # They will eventually get overridden by the specific ones.
 
-        if foundAttribute:
-            return self.createOverrideEntity(foundAttribute, inherited=True)
-
-        ### if we go this far, we didn't find any shader. We are iterating over the wildcards.            
         wildAttributes = self.getWildAttributes()
-        for wildcard in wildAttributes:
+        for wildcard in sorted(wildAttributes):
+            # by sorting, we are iterating from the smaller to biggest wildcard. 
             pattern = fnmatch.translate(wildcard)
             if re.match(pattern, path):
-                return self.createOverrideEntity(wildAttributes[wildcard], inherited=True)
+                overrides = wildAttributes[wildcard]
+                for attr in overrides:
+                    concatenedOverrides[attr] = self.createOverrideEntity(overrides[attr], inherited=True)
+
+        for attributepath in sorted(self.overrides):
+            # by sorting, we are iterating from the smaller to biggest attr. 
+            if attributepath in path:
+                overrides = self.overrides[attributepath]
+                for attr in overrides:
+                    concatenedOverrides[attr] = self.createOverrideEntity(overrides[attr], inherited=True)
 
 
-        return None
+        # finally, we iterate over our own path if possible
+        if path in self.overrides:
+            overrides = self.overrides[path]
+            for attr in overrides:
+                concatenedOverrides[attr] = self.createOverrideEntity(overrides[attr])
+
+        return concatenedOverrides
 
     def getOverrideValue(self, path, prop):
         if path in self.overrides:
@@ -150,8 +157,8 @@ class assignationGroup(object):
     def createShaderEntity(self, shader, inherited= False):
         return dict(shader=shader, fromfile=self.fromFile, inherited = inherited)
 
-    def createOverrideEntity(self, overrides, inherited = False):
-        return dict(overrides=overrides, fromfile=self.fromFile, inherited = inherited)
+    def createOverrideEntity(self, override, inherited = False):
+        return dict(override=override, fromfile=self.fromFile, inherited = inherited)
 
     def removeShader(self, shader):
         ''' remove a shader from all paths '''

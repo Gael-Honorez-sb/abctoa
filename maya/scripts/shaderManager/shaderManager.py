@@ -610,18 +610,30 @@ class List(QMainWindow, UI_ABCHierarchy.Ui_NAM):
 
         self.propertyEditor.resetToDefault()
 
+        layer = self.getLayer()
 
-        overridesEntity = cache.getAssignations().getOverrides(curPath, self.getLayer())
-        if not overridesEntity and self.getLayer() != None:
-            overridesEntity = cache.getAssignations().getOverrides(curPath, None)
+        attributes = {}
 
-        if overridesEntity:
-            overrides = overridesEntity.get("overrides")
-            for propname in overrides:
-                value = overrides[propname]
+        if layer:
+            layerOverrides = cache.getAssignations().getLayerOverrides(layer)
+            if not layerOverrides:
+                layerOverrides = dict(removeDisplacements=False, removeProperties=False, removeShaders=False)
+
+            if layerOverrides["removeProperties"] == False:
+                attributes = cache.getAssignations().getOverrides(curPath, layer)
+            else:
+                attributes = cache.getAssignations().getOverrides(curPath, None)
+
+        else:
+            attributes = cache.getAssignations().getOverrides(curPath, None)
+
+
+        if len(attributes) > 0 :
+            for propname in attributes:
+                value = attributes[propname].get("override") 
                 self.propertyEditor.propertyValue(dict(paramname=propname, value=value))
 
-                self.updatePropertyColor(cache, self.getLayer(), propname, curPath)
+                self.updatePropertyColor(cache, layer, propname, curPath)
 
         self.propertyEditor.propertyChanged.connect(self.propertyChanged)
 
