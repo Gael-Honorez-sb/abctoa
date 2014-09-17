@@ -20,6 +20,24 @@ SHADER = 3
 WILDCARD = 4
 DISPLACE = 5
 
+ICONSIZE = 22
+
+ICONS = {
+1: QtGui.QIcon(),
+2: QtGui.QIcon(),
+3: QtGui.QIcon(),
+4: QtGui.QIcon(),
+5: QtGui.QIcon(),
+}
+
+d = os.path.dirname(__file__)
+
+ICONS[1].addFile(os.path.join(d, "../../../icons/group.png"),       QtCore.QSize(ICONSIZE,ICONSIZE) )
+ICONS[2].addFile(os.path.join(d, "../../../icons/shape.png"),       QtCore.QSize(ICONSIZE,ICONSIZE) )
+ICONS[3].addFile(os.path.join(d, "../../../icons/sg.xpm"),          QtCore.QSize(ICONSIZE,ICONSIZE) )
+ICONS[4].addFile(os.path.join(d, "../../../icons/wildcard.png"),    QtCore.QSize(ICONSIZE,ICONSIZE) )
+ICONS[5].addFile(os.path.join(d, "../../../icons/displacement.xpm"),QtCore.QSize(ICONSIZE,ICONSIZE) )
+
 class treeDelegate(QtGui.QStyledItemDelegate):
     def __init__(self, *args, **kwargs):
         QtGui.QStyledItemDelegate.__init__(self, *args, **kwargs)
@@ -29,8 +47,6 @@ class treeDelegate(QtGui.QStyledItemDelegate):
         options = QtGui.QStyleOptionViewItemV4(option)
 
         self.initStyleOption(options, index)
-        
-
 
         style = options.widget.style() if options.widget else  QtGui.QApplication.style()
 
@@ -38,42 +54,26 @@ class treeDelegate(QtGui.QStyledItemDelegate):
         style.drawControl(style.CE_ItemViewItem, options, painter, options.widget)
 
         text = index.data(QtCore.Qt.DisplayRole)
-        fieldType = index.data(QtCore.Qt.UserRole)
-
-        d = os.path.dirname(__file__)
-
-        if fieldType == TRANSFORM:
-            iconfile = os.path.join(d, "../../../icons/group.png")
-        elif fieldType == SHAPE:
-            iconfile = os.path.join(d, "../../../icons/shape.png")
-        elif fieldType == SHADER:
-            iconfile = os.path.join(d, "../../../icons/sg.xpm")
-        elif fieldType == WILDCARD:
-            iconfile = os.path.join(d, "../../../icons/wildcard.png")
-        elif fieldType == DISPLACE:
-            iconfile = os.path.join(d, "../../../icons/displacement.xpm")
 
         painter.save()
 
         if options.state & QtGui.QStyle.State_MouseOver:
             painter.fillRect(option.rect, QtGui.QColor("#202020"))
-            #painter.fillRect(option.rect, painter.brush())
         
         html = QtGui.QTextDocument()
         html.setHtml(text)
 
-        iconsize = QtCore.QSize(22,22)
 
         if text != "":
-            icon = QtGui.QIcon()    
-            icon.addFile(iconfile, QtCore.QSize(22,22))
+            fieldType = index.data(QtCore.Qt.UserRole)
+            icon =  ICONS[fieldType]
             icon.paint(painter, option.rect.adjusted(5-2, -2, 0, 0), QtCore.Qt.AlignLeft|QtCore.Qt.AlignVCenter)   
-            iconsize = icon.actualSize(option.rect.size())
+
 
         
         #Description
-        painter.translate(option.rect.left() + iconsize.width() + 10, option.rect.top()+10)
-        clip = QtCore.QRectF(0, 0, option.rect.width()-iconsize.width() - 10 - 5, option.rect.height())
+        painter.translate(option.rect.left() + ICONSIZE + 10, option.rect.top()+10)
+        clip = QtCore.QRectF(0, 0, option.rect.width()- ICONSIZE - 10 - 5, option.rect.height())
         html.drawContents(painter, clip)
   
         painter.restore()
