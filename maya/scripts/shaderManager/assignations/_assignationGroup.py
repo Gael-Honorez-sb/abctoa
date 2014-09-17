@@ -16,9 +16,10 @@ import fnmatch
 import re
 
 class assignationGroup(object):
-    def __init__(self, parent=None, fromFile = False):
+    def __init__(self, parent=None, fromFile = False, fromlayer = None):
         self.parent = parent
         self.fromFile = fromFile
+        self.fromLayer = fromlayer
         self.shaders = {}
         self.overrides = {}
         self.displacements = {}
@@ -156,10 +157,10 @@ class assignationGroup(object):
 
 
     def createShaderEntity(self, shader, inherited= False):
-        return dict(shader=shader, fromfile=self.fromFile, inherited = inherited)
+        return dict(shader=shader, fromfile=self.fromFile, inherited = inherited, fromlayer=self.fromLayer)
 
     def createOverrideEntity(self, override, inherited = False):
-        return dict(override=override, fromfile=self.fromFile, inherited = inherited)
+        return dict(override=override, fromfile=self.fromFile, inherited = inherited, fromlayer=self.fromLayer)
 
     def removeShader(self, shader):
         ''' remove a shader from all paths '''

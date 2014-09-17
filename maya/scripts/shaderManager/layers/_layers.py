@@ -54,7 +54,7 @@ class Layers(object):
     def getOverridesFromPath(self, path, layer, onlyInherited=False):
         if layer in self.layers:
             return self.layers[layer].getAssignation().getOverridesFromPath(path, onlyInherited=onlyInherited)
-        return None
+        return {}
 
     def getLayerOverrides(self, layer):
         if layer in self.layers:

@@ -200,6 +200,8 @@ class List(QMainWindow, UI_ABCHierarchy.Ui_NAM):
             assignations = self.ABCViewerNode[shape].getAssignations()
             assignations.setRemovedProperties(self.getLayer(), result)
 
+        self.updateTree()
+
     def createSG(self, node):
         sg = None
         try:

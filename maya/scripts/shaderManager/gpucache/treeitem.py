@@ -114,7 +114,7 @@ class abcTreeItem(QtGui.QTreeWidgetItem):
             return self.display(column)  
         elif role == QtCore.Qt.UserRole :
             return self.getIcon(column)
-        return super(abcTreeItem, self).data(column, role)
+        #return super(abcTreeItem, self).data(column, role)
 
 
     def removeAssigns(self):
@@ -371,11 +371,11 @@ class abcTreeItem(QtGui.QTreeWidgetItem):
             if not layerOverrides:
                 layerOverrides = dict(removeDisplacements=False, removeProperties=False, removeShaders=False)
 
+
             if layerOverrides["removeProperties"] == False:
                 attributes = self.cacheAssignations.getOverrides(path, layer)
             else:
-                attributes = self.cacheAssignations.getOverrides(path, None)
-
+                attributes = self.cacheAssignations.getOverrides(path, layer, layerOnly = True)
         else:
             attributes = self.cacheAssignations.getOverrides(path, None)
         
@@ -388,13 +388,13 @@ class abcTreeItem(QtGui.QTreeWidgetItem):
             for attr in attributes:
                 fromFile = attributes[attr].get("fromfile", False)
                 inherited = attributes[attr].get("inherited", False)
+                fromlayer = attributes[attr].get("fromlayer", None)
 
                 attributeValue = str(attributes[attr].get("override", ""))
 
-
                 color = "#FFFFFF"
                 colortip = "#000000"
-                if fromFile or inherited:
+                if fromFile or inherited or layer != fromlayer:
                     color = "#848484"
                     colortip = "#848484"
                 tag = "b"
