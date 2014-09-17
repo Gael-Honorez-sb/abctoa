@@ -133,28 +133,30 @@ class cacheAssignations(object):
 
         return shader
 
-    def getOverrides(self, path, layer, onlyInherited=False):
+    def getOverrides(self, path, layer, onlyInherited=False, layerOnly=False):
         overrides = {}
+
+        if not layerOnly:
+            # get the overrides from the main file, main layer.
+            overridesMainFile = self.mainAssignationsFromFile.getOverridesFromPath(path, onlyInherited=onlyInherited)
+            for attr in overridesMainFile:
+                overrides[attr] = overridesMainFile[attr]
+
+            # Then the ones from the direct assignation.
+            overridesMain = self.mainAssignations.getOverridesFromPath(path, onlyInherited=onlyInherited)
+            for attr in overridesMain:
+                overrides[attr] = overridesMain[attr]            
 
         if layer != None:
             # The upper, possible overrides come from layer from file.
-            overrides = self.layersFromFile.getOverridesFromPath(path, layer, onlyInherited=onlyInherited)
-        
+            overridesLayerFile = self.layersFromFile.getOverridesFromPath(path, layer, onlyInherited=onlyInherited)
+            for attr in overridesLayerFile:
+                overrides[attr] = overridesLayerFile[attr]
+                
             # Then possibly the direct layer overrides
             overridesLayer = self.layers.getOverridesFromPath(path, layer, onlyInherited=onlyInherited)
             for attr in overridesLayer:
                 overrides[attr] = overridesLayer[attr]
-
-
-        # get the overrides from the main file, main layer.
-        overridesMainFile = self.mainAssignationsFromFile.getOverridesFromPath(path, onlyInherited=onlyInherited)
-        for attr in overridesMainFile:
-            overrides[attr] = overridesMainFile[attr]
-
-        # Then the ones from the direct assignation.
-        overridesMain = self.mainAssignations.getOverridesFromPath(path, onlyInherited=onlyInherited)
-        for attr in overridesMain:
-            overrides[attr] = overridesMain[attr]            
 
         return overrides
 
@@ -184,6 +186,10 @@ class cacheAssignations(object):
         if propName in attributes:
             fromFile = attributes[propName].get("fromfile", False)
             inherited = attributes[propName].get("inherited", False)
+            fromlayer = attributes[propName].get("fromlayer", None)
+
+            if fromlayer != layer:
+                return 1
 
             if fromFile:
                 return 3
@@ -225,6 +231,8 @@ class cacheAssignations(object):
                 self.mainAssignations.removeOverride(curPath, propName)
             else:
                 self.mainAssignations.updateOverride(propName, default, value, curPath)
+
+            self.parent.updateOverrides(self.mainAssignations.getOverrides())
 
     def assignShader(self, layer, path, shader):
         if layer == None:

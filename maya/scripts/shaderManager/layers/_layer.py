@@ -17,7 +17,7 @@ class layer(object):
     def __init__(self, parent=None, layername="", fromFile=False):
         self.parent = parent
         self.layerName = layername
-        self.assignation = assignationGroup(fromFile)
+        self.assignation = assignationGroup(fromFile=fromFile, fromlayer=layername)
 
         self._removeDisplacements = False
         self._removeProperties = False
