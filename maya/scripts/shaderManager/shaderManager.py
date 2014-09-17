@@ -555,7 +555,7 @@ class List(QMainWindow, UI_ABCHierarchy.Ui_NAM):
         if cacheState == 2:
             self.propertyEditor.propertyWidgets[propName].title.setText("<font color='red'>%s</font>" % propName)
         if cacheState == 1:
-            self.propertyEditor.propertyWidgets[propName].title.setText("<font color='orange'>%s</font>" % propName)
+            self.propertyEditor.propertyWidgets[propName].title.setText("<font color='white'><i>%s</i></font>" % propName)
 
 
     def fillShaderList(self):

@@ -114,7 +114,7 @@ class assignationGroup(object):
         return self.overrides
 
 
-    def getOverridesFromPath(self, path):
+    def getOverridesFromPath(self, path, onlyInherited=False):
         ''' Get all overrides of a path (inherited included) '''
 
         concatenedOverrides = {}
@@ -133,17 +133,18 @@ class assignationGroup(object):
 
         for attributepath in sorted(self.overrides):
             # by sorting, we are iterating from the smaller to biggest attr. 
-            if attributepath in path:
+            if attributepath in path and attributepath != path:
                 overrides = self.overrides[attributepath]
                 for attr in overrides:
                     concatenedOverrides[attr] = self.createOverrideEntity(overrides[attr], inherited=True)
 
 
-        # finally, we iterate over our own path if possible
-        if path in self.overrides:
-            overrides = self.overrides[path]
-            for attr in overrides:
-                concatenedOverrides[attr] = self.createOverrideEntity(overrides[attr])
+        # finally, we iterate over our own path if possible and allowed to.
+        if onlyInherited == False:
+            if path in self.overrides:
+                overrides = self.overrides[path]
+                for attr in overrides:
+                    concatenedOverrides[attr] = self.createOverrideEntity(overrides[attr])
 
         return concatenedOverrides
 

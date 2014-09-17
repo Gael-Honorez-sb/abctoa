@@ -133,26 +133,26 @@ class cacheAssignations(object):
 
         return shader
 
-    def getOverrides(self, path, layer):
+    def getOverrides(self, path, layer, onlyInherited=False):
         overrides = {}
 
         if layer != None:
             # The upper, possible overrides come from layer from file.
-            overrides = self.layersFromFile.getOverridesFromPath(path, layer)
+            overrides = self.layersFromFile.getOverridesFromPath(path, layer, onlyInherited=onlyInherited)
         
             # Then possibly the direct layer overrides
-            overridesLayer = self.layers.getOverridesFromPath(path, layer)
+            overridesLayer = self.layers.getOverridesFromPath(path, layer, onlyInherited=onlyInherited)
             for attr in overridesLayer:
                 overrides[attr] = overridesLayer[attr]
 
 
         # get the overrides from the main file, main layer.
-        overridesMainFile = self.mainAssignationsFromFile.getOverridesFromPath(path)
+        overridesMainFile = self.mainAssignationsFromFile.getOverridesFromPath(path, onlyInherited=onlyInherited)
         for attr in overridesMainFile:
             overrides[attr] = overridesMainFile[attr]
 
         # Then the ones from the direct assignation.
-        overridesMain = self.mainAssignations.getOverridesFromPath(path)
+        overridesMain = self.mainAssignations.getOverridesFromPath(path, onlyInherited=onlyInherited)
         for attr in overridesMain:
             overrides[attr] = overridesMain[attr]            
 
@@ -178,47 +178,53 @@ class cacheAssignations(object):
 
 
     def getPropertyState(self, layer, propName, curPath):
-        if layer == None:
-            if self.mainAssignationsFromFile.getOverrideValue(curPath, propName) != None:
-                return 3
-            if self.mainAssignations.getOverrideValue(curPath, propName) != None:
-                return 2
 
-        else:
-            if self.layersFromFile.getOverrideValue(layer, curPath, propName) != None:
+        # get the override
+        attributes = self.getOverrides(curPath, layer)
+        if propName in attributes:
+            fromFile = attributes[propName].get("fromfile", False)
+            inherited = attributes[propName].get("inherited", False)
+
+            if fromFile:
                 return 3
-            if self.layers.getOverrideValue(layer, curPath, propName) != None:
+            if inherited:
                 return 1
-            if self.mainAssignationsFromFile.getOverrideValue(curPath, propName) or self.mainAssignations.getOverrideValue(curPath, propName) != None:
-                return 2
+
+            return 2
 
         return 0
 
 
     def updateOverride(self, propName, default, value, curPath, layer):
-        if layer == None:
-            # check assignation from file
-            valueFromFile = self.mainAssignationsFromFile.getOverrideValue(curPath, propName)
-            if valueFromFile != value:
-                self.mainAssignations.updateOverride(propName, default, value, curPath)
+
+        valueInherited = None
+        attributes = self.getOverrides(curPath, layer, onlyInherited=True)
+
+        if propName in attributes:
+            print propName, attributes[propName]
+            fromFile = attributes[propName].get("fromfile", False)
+            inherited = attributes[propName].get("inherited", False)
+
+            if fromFile or inherited:
+                valueInherited = attributes[propName].get("override", value)
+
+
+        if valueInherited != None:
+            if valueInherited != value:
+                default = False
             else:
-                self.mainAssignations.removeOverride(curPath, propName)
+                default = True
 
-            self.parent.updateOverrides(self.mainAssignations.getOverrides())
-        else:
-            valueFromMain = self.mainAssignations.getOverrideValue(curPath, propName)
-            if not valueFromMain:
-                valueFromMain= self.mainAssignationsFromFile.getOverrideValue(curPath, propName)
-
-            valueFromFile = self.layersFromFile.getOverrideValue(layer, curPath, propName)
-
-            if valueFromFile != value and valueFromMain != value:
-                if valueFromFile != None or valueFromMain != None:
-                    default = False
-
-                self.layers.updateOverride(propName, default, value, curPath, layer)
-            else:
+        if layer is not None:                
+            if default:
                 self.layers.removeOverride(layer, curPath, propName)
+            else:
+                self.layers.updateOverride(propName, default, value, curPath, layer)
+        else:
+            if default:
+                self.mainAssignations.removeOverride(curPath, propName)
+            else:
+                self.mainAssignations.updateOverride(propName, default, value, curPath)
 
     def assignShader(self, layer, path, shader):
         if layer == None:
