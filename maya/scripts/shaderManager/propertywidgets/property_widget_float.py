@@ -43,7 +43,7 @@ class PropertyWidgetFloat(PropertyWidget):
       # else:
       #    self.__ReadFromArnold()
 
-      self.widget.valueChanged.connect(self.ValueChanged)
+      self.widget.editingFinished.connect(self.ValueChanged)
       self.layout().addWidget(self.widget)
    def ValueChanged(self, value):
       self.controller.mainEditor.propertyChanged(dict(propname=self.paramName, default=value == self.default, value=value))

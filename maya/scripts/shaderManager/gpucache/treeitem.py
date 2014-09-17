@@ -213,7 +213,7 @@ class abcTreeItem(QtGui.QTreeWidgetItem):
                     item.cache.assignDisplacement(item.getPath(), shaderName)
 
 
-        self.interface.checkShaders(self.interface.getLayer())
+        self.interface.checkShaders(self.interface.getLayer(), item=self)
 
 
     def assignShader(self):
@@ -239,7 +239,7 @@ class abcTreeItem(QtGui.QTreeWidgetItem):
                     item.cache.assignShader(item.getPath(), self.shaderToAssign)
 
 
-        self.interface.checkShaders(self.interface.getLayer())
+        self.interface.checkShaders(self.interface.getLayer(), item=self)
         self.interface.hierarchyWidget.resizeColumnToContents(1)
 
 
@@ -256,7 +256,7 @@ class abcTreeItem(QtGui.QTreeWidgetItem):
                     item.cache.assignDisplacement(item.getPath(), None)
 
 
-        self.interface.checkShaders(self.interface.getLayer())
+        self.interface.checkShaders(self.interface.getLayer(), item=self)
 
         self.interface.hierarchyWidget.resizeColumnToContents(2)
 
@@ -274,7 +274,7 @@ class abcTreeItem(QtGui.QTreeWidgetItem):
                     item.cache.assignShader(item.getPath(), None)
 
 
-        self.interface.checkShaders(self.interface.getLayer())
+        self.interface.checkShaders(self.interface.getLayer(), item=self)
         self.interface.hierarchyWidget.resizeColumnToContents(1)
 
     def checkShaders(self, layer=None):

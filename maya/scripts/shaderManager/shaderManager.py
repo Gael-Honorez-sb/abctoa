@@ -538,7 +538,7 @@ class List(QMainWindow, UI_ABCHierarchy.Ui_NAM):
             cache.updateOverride(propName, default, value, curPath, layer)
             self.updatePropertyColor(cache, layer, propName, curPath)
 
-            self.checkProperties(self.getLayer())
+            self.checkProperties(self.getLayer(), item=item)
 
         elif self.lastClick == 2:
             item = self.listTagsWidget.currentItem()
@@ -761,17 +761,37 @@ class List(QMainWindow, UI_ABCHierarchy.Ui_NAM):
 
             return SGs[0]
 
-    def checkShaders(self, layer=None):
-        for cache in self.ABCViewerNode.values():
-            if cache.cache != "":
-                for item in cache.itemsTree:
-                    item.checkShaders(layer)
+    def checkShaders(self, layer=None, item=None):
+        if item is None:
+            # we check every single item.
+            for cache in self.ABCViewerNode.values():
+                if cache.cache != "":
+                    for item in cache.itemsTree:
+                        item.checkShaders(layer)
+        else:
+            # we only check this item and his childrens
+            item.checkShaders(layer)
 
-    def checkProperties(self, layer=None):
-        for cache in self.ABCViewerNode.values():
-            if cache.cache != "":
-                for item in cache.itemsTree:
-                    item.checkProperties(layer)
+            numChildren = item.childCount()
+            for i in range(numChildren):
+                self.checkShaders(layer, item.child(i))
+
+    def checkProperties(self, layer=None, item=None):
+
+        if item is None:
+            # we check every single item.
+            for cache in self.ABCViewerNode.values():
+                if cache.cache != "":
+                    for item in cache.itemsTree:
+                        item.checkProperties(layer)
+        else:
+            # we only check this item and his childrens
+            item.checkProperties(layer)
+            numChildren = item.childCount()
+            for i in range(numChildren):
+                self.checkProperties(layer, item.child(i))
+                    
+
 
 
 
