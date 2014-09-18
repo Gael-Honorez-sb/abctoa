@@ -258,17 +258,14 @@ AtNode* CABCViewerTranslator::ExportProcedural(AtNode* procedural, bool update)
             objectPathStr = "/";
 
         float fps = 25.0f;
-        if (MTime::uiUnit() == MTime::kFilm)
-            fps = 24;
-        else if (MTime::uiUnit() ==    MTime::kPALFrame)
-            fps = 25;
+
+        static const MTime sec(1.0, MTime::kSeconds);
+        fps = sec.as(MTime::uiUnit());
 
         MString data;
         data += "-makeinstance -filename " +  abcfile + " -objectpath " + MString(objectPathStr.c_str()) + " -nameprefix " + m_dagPath.partialPathName() + " -frame " + time.as(time.unit()) + " -fps " + fps;
 
-
         AiNodeSetStr(procedural, "data", data.expandEnvironmentVariablesAndTilde().asChar());
-
 
         ExportBoundingBox(procedural);
     }
