@@ -114,7 +114,8 @@ class abcTreeItem(QtGui.QTreeWidgetItem):
             return self.display(column)  
         elif role == QtCore.Qt.UserRole :
             return self.getIcon(column)
-        #return super(abcTreeItem, self).data(column, role)
+
+        return super(abcTreeItem, self).data(column, role)
 
 
     def removeAssigns(self):
@@ -217,10 +218,10 @@ class abcTreeItem(QtGui.QTreeWidgetItem):
 
 
     def assignShader(self):
-
         if not cmds.objExists(str(self.shaderToAssign)):
             if self.shaderToAssign.endswith("SG") and cmds.objExists(str(self.shaderToAssign)[:-2]):
-                    self.shaderToAssign = self.interface.createSG(str(self.shaderToAssign)[:-2])
+                
+                self.shaderToAssign = self.interface.createSG(str(self.shaderToAssign)[:-2])
             else:
                 return
         
