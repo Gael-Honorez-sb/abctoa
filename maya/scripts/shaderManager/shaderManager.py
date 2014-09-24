@@ -207,13 +207,18 @@ class List(QMainWindow, UI_ABCHierarchy.Ui_NAM):
 
     def createSG(self, node):
         sg = None
-        try:
-            sg = cmds.shadingNode("shadingEngine", n="%sSG" % node, asRendering=True)
-            cmds.connectAttr("%s.outColor" % node, "%s.surfaceShader" % sg, force=True)
-        except:
-            print "Error creating shading group for node", node
 
-        return sg
+        SGs = cmds.listConnections( node, d=True, s=False, type="shadingEngine")        
+        if not SGs:
+            try:
+                sg = cmds.shadingNode("shadingEngine", n="%sSG" % node, asRendering=True)
+                cmds.connectAttr("%s.outColor" % node, "%s.surfaceShader" % sg, force=True)
+                return sg
+            except:
+                print "Error creating shading group for node", node
+        else:
+            return SGs[0]
+        
 
 
     def nameChangedCB(self, node, prevName, client):
@@ -771,12 +776,8 @@ class List(QMainWindow, UI_ABCHierarchy.Ui_NAM):
             return x[0]
 
         else:
-            SGs = cmds.listConnections( x[0], d=True, s=False, type="shadingEngine")
-            if not SGs:
-                sg = self.createSG(x[0])
-                return sg
+            return self.createSG(x[0])
 
-            return SGs[0]
 
     def checkShaders(self, layer=None, item=None):
         if item is None:
