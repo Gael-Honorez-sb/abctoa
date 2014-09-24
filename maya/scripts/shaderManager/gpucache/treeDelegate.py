@@ -67,10 +67,9 @@ class treeDelegate(QtGui.QStyledItemDelegate):
         if text != "":
             fieldType = index.data(QtCore.Qt.UserRole)
             icon =  ICONS[fieldType]
-            icon.paint(painter, option.rect.adjusted(5-2, -2, 0, 0), QtCore.Qt.AlignLeft|QtCore.Qt.AlignVCenter)   
+            painter.drawPixmap(option.rect.left()+5, option.rect.top()+10, icon.pixmap(ICONSIZE, ICONSIZE))
+            #icon.paint(painter, option.rect.adjusted(5-2, -2, 0, 0), QtCore.Qt.AlignLeft|QtCore.Qt.AlignVCenter)   
 
-
-        
         #Description
         painter.translate(option.rect.left() + ICONSIZE + 10, option.rect.top()+10)
         clip = QtCore.QRectF(0, 0, option.rect.width()- ICONSIZE - 10 - 5, option.rect.height())
