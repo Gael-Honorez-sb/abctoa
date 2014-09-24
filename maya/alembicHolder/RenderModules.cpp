@@ -52,6 +52,8 @@ BufferObject::~BufferObject() { clear(); }
 void
 BufferObject::render() const
 {
+    if(gGLFT == NULL)
+        return;
 
     if (mPrimNum == 0 || !gGLFT->glIsBufferARB(mIndexBuffer) || !gGLFT->glIsBufferARB(mVertexBuffer)) {
         return;
@@ -91,7 +93,8 @@ BufferObject::render() const
 void
 BufferObject::genIndexBuffer(const std::vector<MGLuint>& v, MGLenum primType)
 {
-
+    if(gGLFT == NULL)
+        return;
 
     // clear old buffer
     if (gGLFT->glIsBufferARB(mIndexBuffer) == MGL_TRUE) gGLFT->glDeleteBuffersARB(1, &mIndexBuffer);
@@ -116,6 +119,8 @@ BufferObject::genIndexBuffer(const std::vector<MGLuint>& v, MGLenum primType)
 void
 BufferObject::genVertexBuffer(const std::vector<MGLfloat>& v)
 {
+    if(gGLFT == NULL)
+        return;
 
     if (gGLFT->glIsBufferARB(mVertexBuffer) == MGL_TRUE) gGLFT->glDeleteBuffersARB(1, &mVertexBuffer);
 
@@ -132,6 +137,8 @@ BufferObject::genVertexBuffer(const std::vector<MGLfloat>& v)
 void
 BufferObject::genNormalBuffer(const std::vector<MGLfloat>& v)
 {
+    if(gGLFT == NULL)
+        return;
 
     if (gGLFT->glIsBufferARB(mNormalBuffer) == MGL_TRUE) gGLFT->glDeleteBuffersARB(1, &mNormalBuffer);
 
@@ -147,6 +154,8 @@ BufferObject::genNormalBuffer(const std::vector<MGLfloat>& v)
 void
 BufferObject::genColorBuffer(const std::vector<MGLfloat>& v)
 {
+    if(gGLFT == NULL)
+        return;
 
     if (gGLFT->glIsBufferARB(mColorBuffer) == MGL_TRUE) gGLFT->glDeleteBuffersARB(1, &mColorBuffer);
 
@@ -163,6 +172,9 @@ BufferObject::genColorBuffer(const std::vector<MGLfloat>& v)
 void
 BufferObject::clear()
 {
+    if(gGLFT == NULL)
+        return;
+
     if (gGLFT->glIsBufferARB(mIndexBuffer) == MGL_TRUE) gGLFT->glDeleteBuffersARB(1, &mIndexBuffer);
     if (gGLFT->glIsBufferARB(mVertexBuffer) == MGL_TRUE) gGLFT->glDeleteBuffersARB(1, &mVertexBuffer);
     if (gGLFT->glIsBufferARB(mColorBuffer) == MGL_TRUE) gGLFT->glDeleteBuffersARB(1, &mColorBuffer);
