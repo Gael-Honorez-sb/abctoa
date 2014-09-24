@@ -56,10 +56,15 @@ def getMayaWindow():
 class List(QMainWindow, UI_ABCHierarchy.Ui_NAM):
     def __init__(self, parent=None):
         super(List, self).__init__(parent)
+        
+        self.setAttribute(QtCore.Qt.WA_DeleteOnClose)        
+        
         if not AiUniverseIsActive():
             AiBegin()
 
         self.setupUi(self)
+
+
 
         self.shadersFromFile = []
         self.displaceFromFile = []
@@ -154,8 +159,6 @@ class List(QMainWindow, UI_ABCHierarchy.Ui_NAM):
 
         self.setCurrentLayer()
         self.layerChangedJob = cmds.scriptJob( e= ["renderLayerManagerChange",self.setCurrentLayer])
-
-
 
     def overrideDispsChanged(self, state):
         result = True
