@@ -10,6 +10,7 @@
 //+
 
 #include "gpuCacheGLPickingSelect.h"
+#include <boost/shared_array.hpp>
 #include <algorithm>
 
 //==============================================================================
