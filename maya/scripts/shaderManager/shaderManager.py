@@ -744,7 +744,7 @@ class List(QMainWindow, UI_ABCHierarchy.Ui_NAM):
                 #root.setCheckState(0, QtCore.Qt.Unchecked)
                 root.checkShaders(self.getLayer())
                 root.checkProperties(self.getLayer())
-
+                root.setHasChildren(True)
                 cache.itemsTree.append(root)
 
                 if cache.ABCcurPath != None :
