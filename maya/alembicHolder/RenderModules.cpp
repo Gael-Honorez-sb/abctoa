@@ -45,6 +45,8 @@ BufferObject::BufferObject():
     mPrimType(MGL_POINTS),
     mPrimNum(0)
 {
+    if (gGLFT == NULL)
+        gGLFT = MHardwareRenderer::theRenderer()->glFunctionTable();
 }
 
 BufferObject::~BufferObject() { clear(); }
@@ -93,25 +95,24 @@ BufferObject::render() const
 void
 BufferObject::genIndexBuffer(const std::vector<MGLuint>& v, MGLenum primType)
 {
-    if(gGLFT == NULL)
-        return;
+    if(gGLFT != NULL)
+    {
+        // clear old buffer
+        if (gGLFT->glIsBufferARB(mIndexBuffer) == MGL_TRUE) gGLFT->glDeleteBuffersARB(1, &mIndexBuffer);
 
-    // clear old buffer
-    if (gGLFT->glIsBufferARB(mIndexBuffer) == MGL_TRUE) gGLFT->glDeleteBuffersARB(1, &mIndexBuffer);
+        // gen new buffer
+        gGLFT->glGenBuffersARB(1, &mIndexBuffer);
+        gGLFT->glBindBufferARB(MGL_ELEMENT_ARRAY_BUFFER_ARB, mIndexBuffer);
+        if (gGLFT->glIsBufferARB(mIndexBuffer) == MGL_FALSE) throw "Error: Unable to create index buffer";
 
-    // gen new buffer
-    gGLFT->glGenBuffersARB(1, &mIndexBuffer);
-    gGLFT->glBindBufferARB(MGL_ELEMENT_ARRAY_BUFFER_ARB, mIndexBuffer);
-    if (gGLFT->glIsBufferARB(mIndexBuffer) == MGL_FALSE) throw "Error: Unable to create index buffer";
+        // upload data
+        gGLFT->glBufferDataARB(MGL_ELEMENT_ARRAY_BUFFER_ARB,
+            sizeof(MGLuint) * v.size(), &v[0], MGL_STATIC_DRAW_ARB); // upload data
+        if (MGL_NO_ERROR != gGLFT->glGetError()) throw "Error: Unable to upload index buffer data";
 
-    // upload data
-    gGLFT->glBufferDataARB(MGL_ELEMENT_ARRAY_BUFFER_ARB,
-        sizeof(MGLuint) * v.size(), &v[0], MGL_STATIC_DRAW_ARB); // upload data
-    if (MGL_NO_ERROR != gGLFT->glGetError()) throw "Error: Unable to upload index buffer data";
-
-    // release buffer
-    gGLFT->glBindBufferARB(MGL_ELEMENT_ARRAY_BUFFER_ARB, 0);
-
+        // release buffer
+        gGLFT->glBindBufferARB(MGL_ELEMENT_ARRAY_BUFFER_ARB, 0);
+    }
     mPrimNum = v.size();
     mPrimType = primType;
 }
@@ -172,14 +173,13 @@ BufferObject::genColorBuffer(const std::vector<MGLfloat>& v)
 void
 BufferObject::clear()
 {
-    if(gGLFT == NULL)
-        return;
-
-    if (gGLFT->glIsBufferARB(mIndexBuffer) == MGL_TRUE) gGLFT->glDeleteBuffersARB(1, &mIndexBuffer);
-    if (gGLFT->glIsBufferARB(mVertexBuffer) == MGL_TRUE) gGLFT->glDeleteBuffersARB(1, &mVertexBuffer);
-    if (gGLFT->glIsBufferARB(mColorBuffer) == MGL_TRUE) gGLFT->glDeleteBuffersARB(1, &mColorBuffer);
-    if (gGLFT->glIsBufferARB(mNormalBuffer) == MGL_TRUE) gGLFT->glDeleteBuffersARB(1, &mNormalBuffer);
-
+    if(gGLFT != NULL)
+    {
+        if (gGLFT->glIsBufferARB(mIndexBuffer) == MGL_TRUE) gGLFT->glDeleteBuffersARB(1, &mIndexBuffer);
+        if (gGLFT->glIsBufferARB(mVertexBuffer) == MGL_TRUE) gGLFT->glDeleteBuffersARB(1, &mVertexBuffer);
+        if (gGLFT->glIsBufferARB(mColorBuffer) == MGL_TRUE) gGLFT->glDeleteBuffersARB(1, &mColorBuffer);
+        if (gGLFT->glIsBufferARB(mNormalBuffer) == MGL_TRUE) gGLFT->glDeleteBuffersARB(1, &mNormalBuffer);
+    }
     mPrimType = MGL_POINTS;
     mPrimNum = 0;
 }
