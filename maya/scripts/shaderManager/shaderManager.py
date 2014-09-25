@@ -119,6 +119,7 @@ class List(QMainWindow, UI_ABCHierarchy.Ui_NAM):
         self.hierarchyWidget.itemExpanded.connect(self.requireItemExpanded)
         self.hierarchyWidget.itemCollapsed.connect(self.requireItemCollapse)
         self.hierarchyWidget.itemClicked.connect(self.itemCLicked)
+        self.hierarchyWidget.itemSelectionChanged.connect(self.itemSelectionChanged)
         self.hierarchyWidget.itemPressed.connect(self.itemPressed)
 
 
@@ -659,6 +660,11 @@ class List(QMainWindow, UI_ABCHierarchy.Ui_NAM):
         self.lastClick = 1
         if QtGui.QApplication.mouseButtons()  == QtCore.Qt.RightButton:
             item.pressed()
+
+    def itemSelectionChanged(self):
+        if len(self.hierarchyWidget.selectedItems()) == 0:
+            for cache in self.ABCViewerNode.values():
+                cache.setSelection("")
 
 
     def requireItemCollapse(self, item):
