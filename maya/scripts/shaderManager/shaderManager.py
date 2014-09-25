@@ -780,7 +780,8 @@ class List(QMainWindow, UI_ABCHierarchy.Ui_NAM):
 
 
     def checkShaders(self, layer=None, item=None):
-        if item is None:
+
+        if item is None or item.isWildCard == True:
             # we check every single item.
             for cache in self.ABCViewerNode.values():
                 if cache.cache != "":
@@ -796,7 +797,7 @@ class List(QMainWindow, UI_ABCHierarchy.Ui_NAM):
 
     def checkProperties(self, layer=None, item=None):
 
-        if item is None:
+        if item is None or item.isWildCard == True:
             # we check every single item.
             for cache in self.ABCViewerNode.values():
                 if cache.cache != "":
