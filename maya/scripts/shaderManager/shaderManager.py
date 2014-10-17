@@ -54,7 +54,7 @@ def getMayaWindow():
 
 
 class List(QMainWindow, UI_ABCHierarchy.Ui_NAM):
-    def __init__(self, parent=None):
+    def __init__(self, parent=getMayaWindow()):
         super(List, self).__init__(parent)
         
         self.setAttribute(QtCore.Qt.WA_DeleteOnClose)        
@@ -707,8 +707,8 @@ class List(QMainWindow, UI_ABCHierarchy.Ui_NAM):
     def createBranch(self, parentItem, abcchild, hierarchy = False, p = "/") :
         createdItems = []
         for item in abcchild :
-            itemType = item.split(":")[0]
-            itemName = item.split(":")[-1]
+            itemType = item.partition(":")[0]
+            itemName = item.partition(":")[-1]
 
             itemExists = False
             for i in xrange(0, parentItem.childCount()) :
