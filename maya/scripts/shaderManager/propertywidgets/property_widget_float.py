@@ -33,6 +33,7 @@ class PropertyWidgetFloat(PropertyWidget):
 
       self.widget = QDoubleSpinBox()
       self.widget.setValue(self.default)
+      self.widget.setSingleStep(0.1)
       # if AiMetaDataGetFlt(nentry, name, "min", byref(data)):
       #    self.widget.setMinimum(data.value)
       # if AiMetaDataGetFlt(nentry, name, "max", byref(data)):
@@ -43,7 +44,9 @@ class PropertyWidgetFloat(PropertyWidget):
       # else:
       #    self.__ReadFromArnold()
 
-      self.widget.editingFinished.connect(self.ValueChanged)
+      #self.widget.editingFinished.connect(self.ValueChanged)
+      self.widget.valueChanged.connect(self.ValueChanged)
+
       self.layout().addWidget(self.widget)
    def ValueChanged(self, value):
       self.controller.mainEditor.propertyChanged(dict(propname=self.paramName, default=value == self.default, value=value))
