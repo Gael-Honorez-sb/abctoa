@@ -843,8 +843,8 @@ class List(QMainWindow, UI_ABCHierarchy.Ui_NAM):
                         allLines = json.load(f)
                         if "shaders" in allLines:
                             cacheAssignations.addShaders(allLines["shaders"], fromFile=True)
-                        if "overrides" in allLines:
-                            cacheAssignations.addOverrides(allLines["overrides"], fromFile=True)
+                        if "attributes" in allLines:
+                            cacheAssignations.addOverrides(allLines["attributes"], fromFile=True)
                         if "displacement" in allLines:
                             cacheAssignations.addDisplacements(allLines["displacement"], fromFile=True)
                         if "layers" in allLines:
