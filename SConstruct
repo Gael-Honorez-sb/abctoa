@@ -740,7 +740,6 @@ PACKAGE_FILES.append([os.path.join(BUILD_BASE_DIR, 'extensions', 'ABCViewer', 'A
 PACKAGE_FILES.append([os.path.join(BUILD_BASE_DIR, 'plugins', 'abcMayaShader', 'abcMayaShader%s' % get_mayalibrary_extension()), os.path.join(ALEMBIC_FOLDER, 'plug-ins')])
 PACKAGE_FILES.append([os.path.join(BUILD_BASE_DIR, 'plugins', 'alembicHolder', 'alembicHolder%s' % get_mayalibrary_extension()), os.path.join(ALEMBIC_FOLDER, 'plug-ins')])
 PACKAGE_FILES.append([os.path.join(BUILD_BASE_DIR, 'shaders', 'abcShader', 'abcShader%s' % get_library_extension()), os.path.join(ALEMBIC_FOLDER, 'shaders')])
-PACKAGE_FILES.append([os.path.join(BUILD_BASE_DIR, 'shaders', 'blackHole', 'blackHole%s' % get_library_extension()), os.path.join(ALEMBIC_FOLDER, 'shaders')])
 
 
 
