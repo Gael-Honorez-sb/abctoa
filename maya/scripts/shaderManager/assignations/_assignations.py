@@ -111,6 +111,9 @@ class cacheAssignations(object):
 
         return shader
 
+    def getAllTags(self):
+        return self.parent.tags
+
     def getAllShaders(self):
         return self.mainAssignations.getShaders().keys()  + self.layers.getShaders()
 

@@ -71,9 +71,17 @@ class assignationGroup(object):
         if foundShader:
             return self.createShaderEntity(foundShader, inherited=True)
 
-
-        ### if we go this far, we didn't find any shader. We are iterating over the wildcards.
         wildShaders = self.getWildShaders()
+
+        # find from tag assignation.
+        tags = self.parent.getAllTags()
+        for shader in wildShaders:
+            for tag in wildShaders[shader]:
+                if tag in tags:
+                    if path in tags[tag]:
+                        return self.createShaderEntity(shader, inherited=True)
+
+        ### if we go this far, we didn't find any shader. We are iterating over the wildcards.        
         for shader in wildShaders:
             for wildcard in wildShaders[shader]:
                 pattern = fnmatch.translate(wildcard)

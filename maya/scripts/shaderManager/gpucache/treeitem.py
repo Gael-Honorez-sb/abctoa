@@ -30,6 +30,7 @@ SHAPE = 2
 SHADER = 3
 WILDCARD = 4
 DISPLACE = 5
+TAG = 6
 
 class abcTreeItem(QtGui.QTreeWidgetItem):
     def __init__(self, cache, path, itemType, parent=None, *args, **kwargs):
@@ -37,6 +38,8 @@ class abcTreeItem(QtGui.QTreeWidgetItem):
         self.interface = parent
         self.cache = cache
         self.path = path
+
+        self.tags = []
 
         self.isWildCard = False
         self.hasChildren = False
@@ -57,7 +60,7 @@ class abcTreeItem(QtGui.QTreeWidgetItem):
         self.icon = None
         
         if itemType == "Transform":
-            self.icon= TRANSFORM
+            self.icon = TRANSFORM
         else:
             self.icon = SHAPE
 

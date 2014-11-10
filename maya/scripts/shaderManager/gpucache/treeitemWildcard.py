@@ -25,6 +25,7 @@ SHAPE = 2
 SHADER = 3
 WILDCARD = 4
 DISPLACE = 5
+TAG = 6
 
 # Herited from normal tree item.
 class wildCardItem(treeitem.abcTreeItem):

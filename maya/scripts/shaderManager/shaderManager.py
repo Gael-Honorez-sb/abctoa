@@ -25,11 +25,13 @@ from PySide import QtGui, QtCore
 from PySide.QtGui import *
 from PySide.QtCore import *
 
-from gpucache import gpucache, treeitem, treeDelegate, treeitemWildcard
+from gpucache import gpucache, treeitem, treeDelegate, treeitemWildcard, treeitemTag
 reload(treeitem)
 reload(treeitemWildcard)
+reload(treeitemTag)
 reload(treeDelegate)
 reload(gpucache)
+
 from propertywidgets.property_editorByType import PropertyEditor
 
 from ui import UI_ABCHierarchy
@@ -79,6 +81,8 @@ class List(QMainWindow, UI_ABCHierarchy.Ui_NAM):
         self.tags = {}
         self.getNode()
         self.getCache()
+        
+
         self.thisTagItem = None
         self.thisTreeItem = None
 
@@ -110,7 +114,9 @@ class List(QMainWindow, UI_ABCHierarchy.Ui_NAM):
 
         self.hierarchyWidget.setItemDelegate(treeDelegate.treeDelegate(self))
 
+        self.updateTags()
         self.populate()
+        
 
         self.curPath = ""
         self.ABCcurPath = ""
@@ -766,12 +772,23 @@ class List(QMainWindow, UI_ABCHierarchy.Ui_NAM):
             ### CHECK WILDCARD ASSIGNATIONS
 
             wildsAdded = []
+            tagsAdded = []
             for wild in cache.assignations.getAllWidcards():
                 name = wild["name"]
-                if not name in wildsAdded:
-                    wildsAdded.append(name)
-                    self.createWildCard(root, name, wild["fromfile"])                
+                
+                if not name in cache.assignations.getAllTags():
+                    if not name in wildsAdded :
+                        wildsAdded.append(name)
+                        self.createWildCard(root, name, wild["fromfile"])
+                else:
+                    if not name in tagsAdded :
+                        tagsAdded.append(name)
+                        self.createTag(root, name, wild["fromfile"])
 
+            for tag in cache.assignations.getAllTags():
+                if not tag in tagsAdded:
+                        tagsAdded.append(tag)
+                        self.createTag(root, tag, False)
 
     def getShader(self):
         x = cmds.ls(mat=1, sl=1)
@@ -832,6 +849,8 @@ class List(QMainWindow, UI_ABCHierarchy.Ui_NAM):
                 if shapes:
                     shape = shapes[0]
             if cmds.nodeType(shape) == "gpuCache" or cmds.nodeType(shape) == "alembicHolder":
+
+
 
                 self.ABCViewerNode[shape] = gpucache.gpucache(shape, self)
                 cacheAssignations = self.ABCViewerNode[shape].getAssignations()
@@ -920,6 +939,25 @@ class List(QMainWindow, UI_ABCHierarchy.Ui_NAM):
         newItem.checkProperties(self.getLayer())
 
         newItem.protected = protected
+
+    def createTag(self, parentItem, tag, protected=False) :
+        ''' Create a wilcard assignation item '''
+
+        newItem = treeitemTag.tagItem(parentItem.cache, tag, self)
+        parentItem.cache.itemsTree.append(newItem)
+        newItem.setChildIndicatorPolicy(QtGui.QTreeWidgetItem.DontShowIndicator)
+        parentItem.addChild(newItem)
+        
+        newItem.checkShaders(self.getLayer())
+        newItem.checkProperties(self.getLayer())
+
+        newItem.protected = protected
+
+
+
+    def updateTags(self):
+        for shape in self.ABCViewerNode:
+            self.ABCViewerNode[shape].updateTags() 
 
     def addWildCard(self):
         ''' Add a widldcard expression to the current cache'''
