@@ -8,35 +8,84 @@ namespace
     using namespace Alembic::AbcMaterial;
 }
 
-void getTags(IXformSchema xs, std::vector<std::string> & tags, ProcArgs* args)
+void getTags(IObject &iObj, std::vector<std::string> & tags, ProcArgs* args)
 {
-    ICompoundProperty prop = xs.getArbGeomParams();
-    if ( prop != NULL && prop.valid() )
+    const MetaData &md = iObj.getMetaData();
+
+    ICompoundProperty arbGeomParams;
+
+    if ( IXformSchema::matches(md))
     {
-        if (prop.getPropertyHeader("mtoa_constant_tags") != NULL)
+        IXform xform( iObj, kWrapExisting );
+        IXformSchema ms = xform.getSchema();
+        arbGeomParams = ms.getArbGeomParams();
+    }
+    else if ( IPolyMeshSchema::matches( md ))
+    {
+        IPolyMesh mesh( iObj, kWrapExisting );
+        IPolyMeshSchema ms = mesh.getSchema();
+        arbGeomParams = ms.getArbGeomParams();
+    }
+    else if ( ISubD::matches( md ))
+    {
+        ISubD mesh( iObj, kWrapExisting );
+        ISubDSchema ms = mesh.getSchema();
+        arbGeomParams = ms.getArbGeomParams();
+    }
+
+    else if ( IPoints::matches( md ) )
+    {
+        IPoints points( iObj, kWrapExisting );
+        IPointsSchema ms = points.getSchema();
+        arbGeomParams = ms.getArbGeomParams();
+
+    }
+    else if ( ICurves::matches( md ) )
+    {
+        ICurves curves( iObj, kWrapExisting );
+        ICurvesSchema ms = curves.getSchema();
+        arbGeomParams = ms.getArbGeomParams();
+    }
+
+
+    if ( arbGeomParams != NULL && arbGeomParams.valid() )
+    {
+        if (arbGeomParams.getPropertyHeader("mtoa_constant_tags") != NULL)
         {
-            const PropertyHeader * tagsHeader = prop.getPropertyHeader("mtoa_constant_tags");
+            const PropertyHeader * tagsHeader = arbGeomParams.getPropertyHeader("mtoa_constant_tags");
             if (IStringGeomParam::matches( *tagsHeader ))
             {
-                IStringGeomParam param( prop,  "mtoa_constant_tags" );
+                IStringGeomParam param( arbGeomParams,  "mtoa_constant_tags" );
                 if ( param.valid() )
                 {
-                    IStringGeomParam::prop_type::sample_ptr_type valueSample =
-                                    param.getExpandedValue( ISampleSelector( args->frame / args->fps ) ).getVals();
-
+                    IStringGeomParam::prop_type::sample_ptr_type valueSample = param.getExpandedValue().getVals();
                     if ( param.getScope() == kConstantScope || param.getScope() == kUnknownScope)
                     {
                         Json::Value jtags;
                         Json::Reader reader;
                         if(reader.parse(valueSample->get()[0], jtags))
+                        {
                             for( Json::ValueIterator itr = jtags.begin() ; itr != jtags.end() ; itr++ )
                             {
-                                tags.push_back(jtags[itr.key().asUInt()].asString());
+                                std::string tag = jtags[itr.key().asUInt()].asString();
+                                tags.push_back(tag);
                             }
+                        }
                     }
+
                 }
             }
         }
+    }
+}
+
+
+void getAllTags(IObject &iObj, std::vector<std::string> & tags, ProcArgs* args)
+{
+    while ( iObj )
+    {
+        getTags(iObj, tags, args);
+        iObj = iObj.getParent();
     }
 }
 
