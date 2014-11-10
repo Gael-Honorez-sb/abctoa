@@ -65,12 +65,6 @@ class PropertyEditor(QWidget):
             frame.setLayout(frameLayout)
             mainLayout.addWidget(scrollArea)
 
-            #blackhole matte
-            propertyWidget = PropertyWidgetBool2(self, False, "matte", frame)
-            self.propertyWidgets["matte"] = propertyWidget
-            if propertyWidget:
-              frameLayout.addWidget(propertyWidget)
-
             propertyWidget2 = PropertyWidgetBool2(self, False, "forceVisible", frame)
             self.propertyWidgets["forceVisible"] = propertyWidget2
             if propertyWidget2:
