@@ -37,7 +37,24 @@ def importAssignations():
     from alembicHolder.cmds import cachesBaker
     cachesBaker.applyAssignations()
 
+def assignTagsFromSetName():
+    import json
+    sets = cmds.ls(sl=True, type="objectSet")
 
+    for set in sets:
+        for s in cmds.sets( set, q=True ):
+            tags = []
+            if not cmds.objExists(s + ".mtoa_constant_tags"): 
+                cmds.addAttr(s, ln='mtoa_constant_tags', dt='string') 
+            else:
+                try:
+                    tags = json.loads(cmds.getAttr(s + ".mtoa_constant_tags"))
+                except:
+                    pass
+
+            if not set in tags:
+                tags.append(set)
+                cmds.setAttr(s + ".mtoa_constant_tags", json.dumps(tags), type="string")
 
 def registerAlembicHolder():
     if not cmds.about(b=1):
@@ -47,3 +64,5 @@ def registerAlembicHolder():
         cmds.menuItem( divider=True )
         cmds.menuItem('exportAssign', label='Export Assignations on selected caches', parent='AlembicHolderMenu', c=lambda *args: exportAssignations())
         cmds.menuItem('importtAssign', label='Import Assignation on selected caches', parent='AlembicHolderMenu', c=lambda *args: importAssignations())
+        cmds.menuItem( divider=True )
+        cmds.menuItem('assignTagsSets', label='Assign tags from Selected Selection Sets', parent='AlembicHolderMenu', c=lambda *args: assignTagsFromSetName())
