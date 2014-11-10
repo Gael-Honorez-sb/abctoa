@@ -8,6 +8,39 @@ namespace
     using namespace Alembic::AbcMaterial;
 }
 
+void getTags(IXformSchema xs, std::vector<std::string> & tags, ProcArgs* args)
+{
+    ICompoundProperty prop = xs.getArbGeomParams();
+    if ( prop != NULL && prop.valid() )
+    {
+        if (prop.getPropertyHeader("mtoa_constant_tags") != NULL)
+        {
+            const PropertyHeader * tagsHeader = prop.getPropertyHeader("mtoa_constant_tags");
+            if (IStringGeomParam::matches( *tagsHeader ))
+            {
+                IStringGeomParam param( prop,  "mtoa_constant_tags" );
+                if ( param.valid() )
+                {
+                    IStringGeomParam::prop_type::sample_ptr_type valueSample =
+                                    param.getExpandedValue( ISampleSelector( args->frame / args->fps ) ).getVals();
+
+                    if ( param.getScope() == kConstantScope || param.getScope() == kUnknownScope)
+                    {
+                        Json::Value jtags;
+                        Json::Reader reader;
+                        if(reader.parse(valueSample->get()[0], jtags))
+                            for( Json::ValueIterator itr = jtags.begin() ; itr != jtags.end() ; itr++ )
+                            {
+                                tags.push_back(jtags[itr.key().asUInt()].asString());
+                            }
+                    }
+                }
+            }
+        }
+    }
+}
+
+
 bool isVisible(IObject child, IXformSchema xs, ProcArgs* args)
 {
     if(GetVisibility( child, ISampleSelector( args->frame / args->fps ) ) == kVisibilityHidden)
@@ -52,7 +85,6 @@ bool isVisible(IObject child, IXformSchema xs, ProcArgs* args)
     ICompoundProperty prop = xs.getArbGeomParams();
     if ( prop != NULL && prop.valid() )
     {
-        std::vector<std::string> tags;
         if (prop.getPropertyHeader("mtoa_constant_tags") != NULL)
         {
             const PropertyHeader * tagsHeader = prop.getPropertyHeader("mtoa_constant_tags");

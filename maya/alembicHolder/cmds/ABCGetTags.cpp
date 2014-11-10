@@ -84,25 +84,18 @@ void ABCGetTags::visitObject( IObject iObj, Json::Value & results )
 
     if ( IXformSchema::matches(md))
     {
-        if ( IXformSchema::matches( iObj.getMetaData() ) )
-        {
-                IXform xform( iObj, kWrapExisting );
-                IXformSchema ms = xform.getSchema();
-
-                arbGeomParams = ms.getArbGeomParams();
-                name = xform.getName();
-        }
-
+		IXform xform( iObj, kWrapExisting );
+		IXformSchema ms = xform.getSchema();
+		arbGeomParams = ms.getArbGeomParams();
+		name = xform.getFullName();
     }
     else if ( IPolyMeshSchema::matches( md ))
     {
-        if ( IPolyMesh::matches( iObj.getMetaData() ) )
-        {
-                IPolyMesh mesh( iObj, kWrapExisting );
-                IPolyMeshSchema ms = mesh.getSchema();
-                arbGeomParams = ms.getArbGeomParams();
-                name = mesh.getName();
-        }
+		IPolyMesh mesh( iObj, kWrapExisting );
+		IPolyMeshSchema ms = mesh.getSchema();
+		arbGeomParams = ms.getArbGeomParams();
+		name = mesh.getFullName();
+
     }
     
     if ( arbGeomParams != NULL && arbGeomParams.valid() )
