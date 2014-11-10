@@ -19,6 +19,7 @@ License along with this library.*/
 #include <Alembic/AbcGeom/Visibility.h>
 #include "Alembic/AbcGeom/All.h"
 #include "Alembic/Abc/All.h"
+#include <json/json.h>
 
 #ifndef ABCGETTAGS_H_
 #define ABCGETTAGS_H_
@@ -35,7 +36,7 @@ public:
     bool isUndoable() const {return false;};
     static void* creator();
 
-    void visitObject( IObject iObj, MStringArray* results );
+    void visitObject( IObject iObj, Json::Value & results );
 
     const char *    filename () const {return m_filename.asChar();}
     const char *    path () const {return m_path.asChar();}

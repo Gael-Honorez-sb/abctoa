@@ -22,7 +22,7 @@ License along with this library.*/
 // ABC helpers
 #include "ArchiveHelper.h"
 #include <maya/MStringArray.h>
-#include <json/json.h>
+
 
 
 
@@ -50,7 +50,7 @@ MStatus ABCGetTags::doIt( const MArgList& args )
         return MS::kFailure;
     }
 
-    MStringArray results;
+    
 
     IObject archiveTop = archive.getTop();
 
@@ -62,9 +62,12 @@ MStatus ABCGetTags::doIt( const MArgList& args )
 
 
     }
-
-    visitObject( archiveTop, &results );
-    setResult(results);
+    Json::Value tags;
+    visitObject( archiveTop, tags );
+    Json::FastWriter fastWriter;
+   
+    MString result(fastWriter.write(tags).c_str());
+    setResult(result);
 
 
     return MS::kSuccess;
@@ -72,55 +75,81 @@ MStatus ABCGetTags::doIt( const MArgList& args )
 }
 
 
-void ABCGetTags::visitObject( IObject iObj, MStringArray* results )
+void ABCGetTags::visitObject( IObject iObj, Json::Value & results )
 {
     const MetaData &md = iObj.getMetaData();
 
-    if ( IPolyMeshSchema::matches( md ))
+    ICompoundProperty arbGeomParams;
+    std::string name;
+
+    if ( IXformSchema::matches(md))
+    {
+        if ( IXformSchema::matches( iObj.getMetaData() ) )
+        {
+                IXform xform( iObj, kWrapExisting );
+                IXformSchema ms = xform.getSchema();
+
+                arbGeomParams = ms.getArbGeomParams();
+                name = xform.getName();
+        }
+
+    }
+    else if ( IPolyMeshSchema::matches( md ))
     {
         if ( IPolyMesh::matches( iObj.getMetaData() ) )
         {
                 IPolyMesh mesh( iObj, kWrapExisting );
                 IPolyMeshSchema ms = mesh.getSchema();
-
-                ICompoundProperty arbGeomParams = ms.getArbGeomParams();
-                if ( arbGeomParams != NULL && arbGeomParams.valid() )
+                arbGeomParams = ms.getArbGeomParams();
+                name = mesh.getName();
+        }
+    }
+    
+    if ( arbGeomParams != NULL && arbGeomParams.valid() )
+    {
+        if (arbGeomParams.getPropertyHeader("mtoa_constant_tags") != NULL)
+        {
+            const PropertyHeader * tagsHeader = arbGeomParams.getPropertyHeader("mtoa_constant_tags");
+            if (IStringGeomParam::matches( *tagsHeader ))
+            {
+                IStringGeomParam param( arbGeomParams,  "mtoa_constant_tags" );
+                if ( param.valid() )
                 {
-                    if (arbGeomParams.getPropertyHeader("mtoa_constant_tags") != NULL)
+                    IStringGeomParam::prop_type::sample_ptr_type valueSample = param.getExpandedValue().getVals();
+                    if ( param.getScope() == kConstantScope || param.getScope() == kUnknownScope)
                     {
-                        const PropertyHeader * tagsHeader = arbGeomParams.getPropertyHeader("mtoa_constant_tags");
-                        if (IStringGeomParam::matches( *tagsHeader ))
+                        Json::Value jtags;
+                        Json::Reader reader;
+                        if(reader.parse(valueSample->get()[0], jtags))
                         {
-                            IStringGeomParam param( arbGeomParams,  "mtoa_constant_tags" );
-                            if ( param.valid() )
+                            for( Json::ValueIterator itr = jtags.begin() ; itr != jtags.end() ; itr++ )
                             {
-                                IStringGeomParam::prop_type::sample_ptr_type valueSample = param.getExpandedValue().getVals();
-                                if ( param.getScope() == kConstantScope || param.getScope() == kUnknownScope)
+                                
+                                std::string tag = jtags[itr.key().asUInt()].asString();
+                                // Check if we already have this tag or not.
+                                bool found = false;
+                                for( Json::ValueIterator itr2 = results.begin() ; itr2 != results.end() ; itr2++ )
                                 {
-                                    Json::Value jtags;
-                                    Json::Reader reader;
-                                    if(reader.parse(valueSample->get()[0], jtags))
-                                        for( Json::ValueIterator itr = jtags.begin() ; itr != jtags.end() ; itr++ )
-                                        {
-                                            MString tag(jtags[itr.key().asUInt()].asCString());
-                                            bool found = false;
-                                            for (unsigned int i = 0; i < results->length(); ++i)
-                                            {
-                                                if(tag == (*results)[i])
-                                                {
-                                                    found = true;
-                                                    break;
-                                                }
-                                            }
-                                            if (!found)
-                                                results->append(tag);
-                                        }
-                                }
+                                    if(tag.compare(itr2.key().asString()) == 0)
+                                    {
+                                        results[tag].append(name);
+                                        found = true;
+                                    }
 
+
+                                }
+                                if(!found)
+                                {
+                                    Json::Value newTags;
+                                    newTags.append(name);
+                                    results[tag] = newTags;
+                                }
                             }
                         }
                     }
+
                 }
+            }
         }
     }
 
