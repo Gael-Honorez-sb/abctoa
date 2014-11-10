@@ -29,7 +29,7 @@ class gpucache(object):
         self.assignations = cacheAssignations(self)
 
         self.curPath = ""
-        self.tags = []
+        self.tags = {}
         self.itemsTree = []
 
     def getAssignations(self):
@@ -76,7 +76,12 @@ class gpucache(object):
         self.ABCcurPath = cmds.getAttr("%s.cacheGeomPath" % self.shape)
 
     def updateTags(self):
-        self.tags = cmds.ABCGetTags(self.ABCcache)
+        tags = cmds.ABCGetTags(self.ABCcache)
+        try:
+            self.tags = json.loads(tags)
+        except:
+            self.tags = {}
+        print self.tags
 
     def updateShaders(self, shaders):
         cmds.setAttr(self.shape + ".shadersAssignation", json.dumps(shaders), type="string")
