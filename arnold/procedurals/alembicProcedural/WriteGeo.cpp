@@ -39,7 +39,7 @@
 #include "WriteOverrides.h"
 #include "ArbGeomParams.h"
 #include "PathUtil.h"
-
+#include "parseAttributes.h"
 
 #include <ai.h>
 #include <sstream>
@@ -158,7 +158,7 @@ AtNode * ProcessPolyMeshBase(
         SampleTimeSet & sampleTimes,
         std::vector<unsigned int> & vidxs,
         MatrixSampleMap * xformSamples,
-        const std::string & facesetName = "" )
+        const std::string & facesetName = "")
 {
 
     if ( !prim.valid() )
@@ -169,6 +169,7 @@ AtNode * ProcessPolyMeshBase(
 
 
     typename primT::schema_type  &ps = prim.getSchema();
+    
     TimeSamplingPtr ts = ps.getTimeSampling();
 
     if ( ps.getTopologyVariance() != kHeterogenousTopology )
@@ -190,37 +191,10 @@ AtNode * ProcessPolyMeshBase(
 
     ICompoundProperty arbGeomParams = ps.getArbGeomParams();
     ISampleSelector frameSelector( *singleSampleTimes.begin() );
-    std::vector<std::string> tags;
 
     //get tags
-    if ( arbGeomParams != NULL && arbGeomParams.valid() )
-    {
-        if (arbGeomParams.getPropertyHeader("mtoa_constant_tags") != NULL)
-        {
-            const PropertyHeader * tagsHeader = arbGeomParams.getPropertyHeader("mtoa_constant_tags");
-            if (IStringGeomParam::matches( *tagsHeader ))
-            {
-                IStringGeomParam param( arbGeomParams,  "mtoa_constant_tags" );
-                if ( param.valid() )
-                {
-                    IStringGeomParam::prop_type::sample_ptr_type valueSample =
-                                    param.getExpandedValue( frameSelector ).getVals();
-
-                    if ( param.getScope() == kConstantScope || param.getScope() == kUnknownScope)
-                    {
-                        Json::Value jtags;
-                        Json::Reader reader;
-                        if(reader.parse(valueSample->get()[0], jtags))
-                            for( Json::ValueIterator itr = jtags.begin() ; itr != jtags.end() ; itr++ )
-                            {
-                                tags.push_back(jtags[itr.key().asUInt()].asString());
-                            }
-                    }
-                }
-            }
-        }
-    }
-
+    std::vector<std::string> tags;
+    getAllTags(prim, tags, &args);
 
     // displacement stuff
     AtNode* appliedDisplacement = NULL;
@@ -263,7 +237,6 @@ AtNode * ProcessPolyMeshBase(
     Json::FastWriter writer;
     Json::Value rootEncode;
 
-    bool objectMatte = false;
 
     if(args.linkAttributes)
     {
@@ -297,11 +270,6 @@ AtNode * ProcessPolyMeshBase(
                 for( Json::ValueIterator itr = overrides.begin() ; itr != overrides.end() ; itr++ )
                 {
                     std::string attribute = itr.key().asString();
-
-                    if (attribute == "matte")
-                    {
-                        objectMatte = args.attributesRoot[*it][itr.key().asString()].asBool();
-                    }
 
                     if (attribute=="smoothing"
                         || attribute=="subdiv_iterations"
@@ -389,7 +357,7 @@ AtNode * ProcessPolyMeshBase(
         // shader assignation
         if (nodeHasParameter( instanceNode, "shader" ) )
         {
-                ApplyShaders(name, instanceNode, tags, args, objectMatte);
+                ApplyShaders(name, instanceNode, tags, args);
         }
         if (I != g_meshCache.end())
         {
@@ -801,7 +769,7 @@ void ProcessPolyMesh( IPolyMesh &polymesh, ProcArgs &args,
 
     AtNode * meshNode = ProcessPolyMeshBase(
             polymesh, args, sampleTimes, vidxs, xformSamples,
-                    facesetName );
+                    facesetName);
 
     // This is a valid condition for the second instance onward and just
     // means that we don't need to do anything further.
@@ -874,7 +842,7 @@ void ProcessPolyMesh( IPolyMesh &polymesh, ProcArgs &args,
 //-*************************************************************************
 
 void ProcessSubD( ISubD &subd, ProcArgs &args,
-        MatrixSampleMap * xformSamples, const std::string & facesetName )
+        MatrixSampleMap * xformSamples, const std::string & facesetName)
 {
     SampleTimeSet sampleTimes;
     std::vector<unsigned int> vidxs;
