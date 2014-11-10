@@ -148,7 +148,7 @@ void ApplyOverrides(std::string name, AtNode* node, std::vector<std::string> tag
     }
 }
 
-void ApplyShaders(std::string name, AtNode* node, std::vector<std::string> tags, ProcArgs & args, bool matte)
+void ApplyShaders(std::string name, AtNode* node, std::vector<std::string> tags, ProcArgs & args)
 {
     bool foundInPath = false;
     AtNode* appliedShader = NULL;
@@ -181,47 +181,16 @@ void ApplyShaders(std::string name, AtNode* node, std::vector<std::string> tags,
         //AiNodeSetStr(appliedShader, "name", newName.c_str());
 
         AtArray* shaders = AiArrayAllocate( 1 , 1, AI_TYPE_NODE);
-        if(matte)
-        {
-            std::string shaderName =  newName + std::string("_BlackHole");
-            AtNode* matteShader = AiNode ("Blackhole");
-            AiNodeSetStr(matteShader, "name", shaderName.c_str());
-            AiNodeLink (appliedShader, "input", matteShader);
-            AiArraySetPtr(shaders, 0, matteShader);
-        }
-        else
-        {
-            AiArraySetPtr(shaders, 0, appliedShader);
-        }
+        AiArraySetPtr(shaders, 0, appliedShader);
+
         AiNodeSetArray(node, "shader", shaders);
         //AiNodeSetPtr(instanceNode, "shader", appliedShader);
     }
     else
     {
-        if(matte)
-        {
-            AtArray* procShaders = AiNodeGetArray(args.proceduralNode, "shader");
-            for(AtUInt32 i=0; i < procShaders->nelements; i++)
-            {
-                AtNode* shader = (AtNode*) AiArrayGetPtr(procShaders, i);
-                if(shader != NULL)
-                {
-                    std::string shaderName =  name + std::string("_") + std::string(AiNodeGetName(shader)) + std::string("_BlackHole");
-                    AtNode* matteShader = AiNode("Blackhole");
-                    AiNodeSetStr(matteShader, "name", shaderName.c_str());
-                    AiNodeLink (shader, "input", matteShader);
-                    AiArraySetPtr(procShaders, i, matteShader);
-                }
-            }
-        }
-        else
-        {
-            AtArray* shaders = AiNodeGetArray(args.proceduralNode, "shader");
-            if (shaders->nelements != 0)
-                AiNodeSetArray(node, "shader", AiArrayCopy(shaders));
-        }
-
-
+        AtArray* shaders = AiNodeGetArray(args.proceduralNode, "shader");
+        if (shaders->nelements != 0)
+            AiNodeSetArray(node, "shader", AiArrayCopy(shaders));
     }
 
 

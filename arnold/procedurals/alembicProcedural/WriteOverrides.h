@@ -42,6 +42,6 @@
 //-*****************************************************************************
 
 void ApplyOverrides(std::string name, AtNode* node, std::vector<std::string> tags, ProcArgs & args);
-void ApplyShaders(std::string name, AtNode* node, std::vector<std::string> tags, ProcArgs & args, bool matte = false);
+void ApplyShaders(std::string name, AtNode* node, std::vector<std::string> tags, ProcArgs & args);
 
 #endif
