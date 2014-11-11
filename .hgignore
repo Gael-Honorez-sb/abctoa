@@ -1,5 +1,11 @@
 syntax: glob
+maya\alembicHolder\version.h
 .git
+*.autosave
+abcToA.mod
+package.py
+*.zip
+local.cmake
 build
 *.rej
 *.pyc

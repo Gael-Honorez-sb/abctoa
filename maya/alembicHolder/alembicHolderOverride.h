@@ -44,7 +44,7 @@ public:
     virtual MUserData* prepareForDraw(
         const MDagPath& objPath,
         const MDagPath& cameraPath,
-        #ifndef MAYA_2013
+        #ifndef _MAYA_VERSION_2013
         const MHWRender::MFrameContext& frameContext,
         #endif
         MUserData* oldData);
