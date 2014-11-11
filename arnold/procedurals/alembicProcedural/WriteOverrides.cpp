@@ -75,6 +75,7 @@ void ApplyOverrides(std::string name, AtNode* node, std::vector<std::string> tag
             for( Json::ValueIterator itr = overrides.begin() ; itr != overrides.end() ; itr++ )
             {
                 std::string attribute = itr.key().asString();
+                
                 const AtNodeEntry* nodeEntry = AiNodeGetNodeEntry(node);
                 const AtParamEntry* paramEntry = AiNodeEntryLookUpParameter(nodeEntry, attribute.c_str());
 

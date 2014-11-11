@@ -51,11 +51,10 @@
 #include <ImathFun.h>
 #include <ImathBoxAlgo.h>
 
-#include <boost/format.hpp>
-#include <boost/preprocessor/stringize.hpp>
+/*#include <boost/format.hpp>
+#include <boost/preprocessor/stringize.hpp>*/
 #include <boost/timer.hpp>
-#include <boost/program_options.hpp>
-#include <boost/utility.hpp>
+//#include <boost/utility.hpp>
 
 #include <iostream>
 #include <algorithm>
