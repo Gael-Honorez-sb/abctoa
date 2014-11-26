@@ -213,7 +213,7 @@ class abcTreeItem(QtGui.QTreeWidgetItem):
         selectedItems = self.interface.hierarchyWidget.selectedItems()
         if len(selectedItems) > 1:
             for item in selectedItems:
-                if item != self:
+                if item is not self:
                     item.cache.assignDisplacement(item.getPath(), shaderName)
 
 
@@ -239,7 +239,7 @@ class abcTreeItem(QtGui.QTreeWidgetItem):
         selectedItems = self.interface.hierarchyWidget.selectedItems()
         if len(selectedItems) > 1:
             for item in selectedItems:
-                if item != self:
+                if item is not self:
                     item.cache.assignShader(item.getPath(), self.shaderToAssign)
 
 
@@ -256,7 +256,7 @@ class abcTreeItem(QtGui.QTreeWidgetItem):
         selectedItems = self.interface.hierarchyWidget.selectedItems()
         if len(selectedItems) > 1:
             for item in selectedItems:
-                if item != self:
+                if item is not self:
                     item.cache.assignDisplacement(item.getPath(), None)
 
 
@@ -274,7 +274,7 @@ class abcTreeItem(QtGui.QTreeWidgetItem):
         selectedItems = self.interface.hierarchyWidget.selectedItems()
         if len(selectedItems) > 1:
             for item in selectedItems:
-                if item != self:
+                if item is not self:
                     item.cache.assignShader(item.getPath(), None)
 
 

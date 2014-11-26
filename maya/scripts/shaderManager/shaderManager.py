@@ -785,10 +785,12 @@ class List(QMainWindow, UI_ABCHierarchy.Ui_NAM):
                         tagsAdded.append(name)
                         self.createTag(root, name, wild["fromfile"])
 
-            for tag in cache.assignations.getAllTags():
-                if not tag in tagsAdded:
-                        tagsAdded.append(tag)
-                        self.createTag(root, tag, False)
+            tags = cache.assignations.getAllTags()
+            if tags:
+                for tag in tags:
+                    if not tag in tagsAdded:
+                            tagsAdded.append(tag)
+                            self.createTag(root, tag, False)
 
     def getShader(self):
         x = cmds.ls(mat=1, sl=1)
