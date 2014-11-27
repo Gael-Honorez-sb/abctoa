@@ -404,9 +404,9 @@ MStatus nozAlembicHolder::compute( const MPlug& plug, MDataBlock& block )
         MStatus status;
         MFnDagNode fn(thisMObject());
         // Try to parse JSON Shader assignation here.
-         MPlug shaderAssignation = fn.findPlug("shadersAssignation", status);
-        
-        if(status)
+        MPlug shaderAssignation = fn.findPlug("shadersAssignation", &status);
+
+        if(status == MS::kSuccess)
         {
             bool parsingSuccessful = false;
             MString jsonAssign = block.inputValue(shaderAssignation).asString();
@@ -419,7 +419,6 @@ MStatus nozAlembicHolder::compute( const MPlug& plug, MDataBlock& block )
                     ParseShaders(jroot, fGeometry.shaderColors);
             }
         }
-
 
         MString file = block.inputValue(aAbcFile).asString();
         MFileObject fileObject;
