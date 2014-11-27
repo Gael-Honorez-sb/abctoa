@@ -51,7 +51,7 @@ EXTERN_DECL MStatus uninitializePlugin( MObject obj );
 MStatus initializePlugin( MObject obj )
 {
     MStatus   status;
-    MFnPlugin plugin( obj, HOLDER_VENDOR, ARCH_VERSION, MAYA_VERSION);
+    MFnPlugin plugin( obj, HOLDER_VENDOR, ARCH_VERSION, H_TOSTRING(MAYA_VERSION));
 
 
     status = plugin.registerShape( kPluginId,
