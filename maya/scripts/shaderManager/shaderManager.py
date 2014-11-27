@@ -32,7 +32,10 @@ reload(treeitemTag)
 reload(treeDelegate)
 reload(gpucache)
 
+from propertywidgets import property_editorByType
+reload(property_editorByType)
 from propertywidgets.property_editorByType import PropertyEditor
+
 
 from ui import UI_ABCHierarchy
 reload(UI_ABCHierarchy)
@@ -770,22 +773,24 @@ class List(QMainWindow, UI_ABCHierarchy.Ui_NAM):
                 root.setExpanded(1)
 
             ### CHECK WILDCARD ASSIGNATIONS
-
+            tags = cache.assignations.getAllTags()
             wildsAdded = []
             tagsAdded = []
             for wild in cache.assignations.getAllWidcards():
                 name = wild["name"]
-                
-                if not name in cache.assignations.getAllTags():
+                fromTag = False
+                if tags:
+                    if name in tags:
+                        if not name in tagsAdded :
+                            tagsAdded.append(name)
+                            self.createTag(root, name, wild["fromfile"])
+
+                if not fromTag:
                     if not name in wildsAdded :
                         wildsAdded.append(name)
                         self.createWildCard(root, name, wild["fromfile"])
-                else:
-                    if not name in tagsAdded :
-                        tagsAdded.append(name)
-                        self.createTag(root, name, wild["fromfile"])
+                        fromTag = True
 
-            tags = cache.assignations.getAllTags()
             if tags:
                 for tag in tags:
                     if not tag in tagsAdded:
