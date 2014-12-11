@@ -17,7 +17,7 @@ class layer(object):
     def __init__(self, parent=None, layername="", fromFile=False):
         self.parent = parent
         self.layerName = layername
-        self.assignation = assignationGroup(fromFile=fromFile, fromlayer=layername)
+        self.assignation = assignationGroup(self, fromFile=fromFile, fromlayer=layername)
 
         self._removeDisplacements = False
         self._removeProperties = False
@@ -97,3 +97,6 @@ class layer(object):
 
     def getDisplacements(self):
         return self.assignation.getDisplacements()
+
+    def getAllTags(self):
+        return self.assignation.getAllTags()
