@@ -50,7 +50,7 @@ void processArrayValues(AtNode* sit, const char *paramName, AtArray* paramArray,
 
 void exportParameterFromArray(AtNode* sit, Mat::OMaterial matObj, AtArray* paramArray, int index, MString nodeName, const char* paramName);
 void exportParameter(AtNode* sit, Mat::OMaterial matObj, int type, MString nodeName, const char* paramName, bool interfacing = false);
-void exportLink(AtNode* sit, int outputType,  Mat::OMaterial matObj, MString nodeName, const char* paramName, MString containerName);
+void exportLink(AtNode* sit, Mat::OMaterial matObj, MString nodeName, const char* paramName, MString containerName);
 
 bool relink(AtNode* src, AtNode* dest, const char* input, int comp);
 AtNode* renameAndCloneNodeByParent(AtNode* node, AtNode* parent);

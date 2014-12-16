@@ -412,7 +412,7 @@ void processLinkedParam(AtNode* sit, int inputType, int outputType,  Mat::OMater
         if(AiNodeGetLink(sit, paramName))
         {
             AiMsgDebug("%s.%s is linked", nodeName.asChar(), paramName);
-            exportLink(sit, outputType, matObj, nodeName, paramName, containerName);
+            exportLink(sit, matObj, nodeName, paramName, containerName);
         }
         else
         {
@@ -424,7 +424,7 @@ void processLinkedParam(AtNode* sit, int inputType, int outputType,  Mat::OMater
                 if(AiNodeIsLinked(sit, compAttrName.asChar()))
                 {
                     //cout << "exporting link : " << nodeName << "." << compAttrName.asChar() << endl;
-                    exportLink(sit, outputType, matObj, nodeName, compAttrName.asChar(), containerName);
+                    exportLink(sit, matObj, nodeName, compAttrName.asChar(), containerName);
 
                 }
             }
@@ -440,12 +440,14 @@ void processLinkedParam(AtNode* sit, int inputType, int outputType,  Mat::OMater
     AiMsgTab (-2);
 }
 
-void exportLink(AtNode* sit, int outputType,  Mat::OMaterial matObj, MString nodeName, const char* paramName, MString containerName)
+void exportLink(AtNode* sit, Mat::OMaterial matObj, MString nodeName, const char* paramName, MString containerName)
 {
     AiMsgTab (+2);
     int comp;
     AiMsgDebug("Checking link %s.%s", nodeName.asChar(), paramName);
+
     AtNode* linked = AiNodeGetLink(sit, paramName, &comp);
+    int outputType = AiNodeEntryGetOutputType(AiNodeGetNodeEntry(linked));
 
     MString nodeNameLinked(containerName);
 
