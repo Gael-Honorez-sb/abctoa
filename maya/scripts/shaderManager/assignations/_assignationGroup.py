@@ -24,6 +24,9 @@ class assignationGroup(object):
         self.overrides = {}
         self.displacements = {}
 
+    def getAllTags(self):
+        return self.parent.getAllTags()
+        
     def addShaders(self, shaders):
         self.shaders = shaders
 
