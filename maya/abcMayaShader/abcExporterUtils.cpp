@@ -298,7 +298,19 @@ void processArrayValues(AtNode* sit, const char *paramName, AtArray* paramArray,
         }
         prop.set(vals);
     }
-
+    else if (typeArray == AI_TYPE_RGBA)
+    {
+        // type rgba
+        Abc::OC4fArrayProperty prop(matObj.getSchema().getNetworkNodeParameters(nodeName.asChar()), paramName);
+        std::vector<Imath::C4f> vals;
+        for(unsigned int i=0; i < paramArray->nelements; i++)
+        {
+            AtRGBA a_val = AiArrayGetRGBA(paramArray, i);
+            Imath::C4f color_val( a_val.r, a_val.g, a_val.b, a_val.a );
+            vals.push_back(color_val);
+        }
+        prop.set(vals);
+    }
     else if (typeArray == AI_TYPE_POINT2)
     {
         // type point2
@@ -524,6 +536,15 @@ void exportParameterFromArray(AtNode* sit, Mat::OMaterial matObj, AtArray* param
         prop.set(color_val);
         cout << "exporting RGB value of " <<  a_val.r << " " << a_val.g << " " << a_val.b << " for " << nodeName.asChar() <<"."<<paramName << endl;
     }
+    else if (type == AI_TYPE_RGBA)
+    {
+        // type rgba
+        Abc::OC4fProperty prop(matObj.getSchema().getNetworkNodeParameters(nodeName.asChar()), paramName);
+        AtRGBA a_val = AiArrayGetRGBA(paramArray, index);
+        Imath::C4f color_val( a_val.r, a_val.g, a_val.b, a_val.a );
+        prop.set(color_val);
+        cout << "exporting RGBA value of " <<  a_val.r << " " << a_val.g << " " << a_val.b << " " << a_val.a << " for " << nodeName.asChar() <<"."<<paramName << endl;
+    }
     else if (type == AI_TYPE_POINT2)
     {
         // type point2
@@ -687,6 +708,15 @@ void exportParameter(AtNode* sit, Mat::OMaterial matObj, int type, MString nodeN
         Abc::OC3fProperty prop(matObj.getSchema().getNetworkNodeParameters(nodeName.asChar()), paramName);
         AtColor a_val = AiNodeGetRGB(sit, paramName);
         Imath::C3f color_val( a_val.r, a_val.g, a_val.b );
+        prop.set(color_val);
+        //cout << "exporting RGB value of " <<  a_val.r << " " << a_val.g << " " << a_val.b << " for " << nodeName.asChar() <<"."<<paramName << endl;
+    }
+    else if (type == AI_TYPE_RGBA)
+    {
+        // type rgb
+        Abc::OC4fProperty prop(matObj.getSchema().getNetworkNodeParameters(nodeName.asChar()), paramName);
+        AtRGBA a_val = AiNodeGetRGBA(sit, paramName);
+        Imath::C4f color_val( a_val.r, a_val.g, a_val.b, a_val.a );
         prop.set(color_val);
         //cout << "exporting RGB value of " <<  a_val.r << " " << a_val.g << " " << a_val.b << " for " << nodeName.asChar() <<"."<<paramName << endl;
     }
