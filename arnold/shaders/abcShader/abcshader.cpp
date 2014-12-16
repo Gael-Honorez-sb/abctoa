@@ -268,7 +268,32 @@ void setArrayParameter(Alembic::Abc::ICompoundProperty props, Alembic::AbcCoreAb
             }
         }
     }
+    else if (Abc::IC4fArrayProperty::matches(header))
+    {
+        // color type + alpha
+        Abc::C4fArraySamplePtr samp;
+        Abc::IC4fArrayProperty prop(props, header.getName());
+        if (prop.valid())
+        {
+            size_t numSamples = prop.getNumSamples();
+            if (numSamples > 0)
+            {
+                prop.get( samp, Alembic::Abc::ISampleSelector((Alembic::Abc::index_t)0) );
+                arrayValues = AiArrayAllocate(samp->size(), numSamples, AI_TYPE_RGBA);
+                for( int i = 0; i < samp->size(); ++i)
+                {
+                    AtRGBA val;
+                    val.r = (*samp)[i].r;
+                    val.g = (*samp)[i].g;
+                    val.b = (*samp)[i].b;
+                    val.a = (*samp)[i].a;
+                    AiArraySetRGBA(arrayValues,i, val);
 
+                }
+                AiNodeSetArray(node, header.getName().c_str(), arrayValues);
+            }
+        }
+    }
     else if (Abc::IP2fArrayProperty::matches(header))
     {
         //  point2
