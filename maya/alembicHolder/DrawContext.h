@@ -74,12 +74,16 @@ public:
     void setShaderColors(const std::map<std::string, MColor> color) {m_shaderColors = color;}
     const std::map<std::string, MColor> getShaderColors() const {return m_shaderColors;}
 
+    void setNormalFlipped(bool flippedNormal) {m_normalFlipped = flippedNormal;}
+    const bool &isNormalFlipped() const {return m_normalFlipped;}
+
 protected:
     M44d m_localToWorld;
     M44d m_worldToCamera;
     float m_pointSize;
     std::string m_selectionPath;
     std::map<std::string, MColor> m_shaderColors;
+    bool m_normalFlipped;
 };
 
 } // End namespace SimpleAbcViewer

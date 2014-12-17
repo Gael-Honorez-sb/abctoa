@@ -67,6 +67,7 @@ protected:
     IBox3dProperty m_boundsProp;
     MeshDrwHelper m_drwHelper;
     bool m_needtoupdate;
+    bool m_normalFlipped;
 };
 
 } // End namespace SimpleAbcViewer
