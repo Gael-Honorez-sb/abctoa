@@ -42,7 +42,7 @@ public:
     BufferObject();
     ~BufferObject();
 
-    void render() const;
+    void render(bool normalFlipped=false) const;
 
     /// @note accepted @c primType: GL_POINTS, GL_LINE_STRIP, GL_LINE_LOOP,
     /// GL_LINES, GL_TRIANGLE_STRIP, GL_TRIANGLE_FAN, GL_TRIANGLES,
@@ -50,13 +50,13 @@ public:
     void genIndexBuffer(const std::vector<MGLuint>&, MGLenum primType);
 
     void genVertexBuffer(const std::vector<MGLfloat>&);
-    void genNormalBuffer(const std::vector<MGLfloat>&);
+    void genNormalBuffer(const std::vector<MGLfloat>&, bool flipped = false);
     void genColorBuffer(const std::vector<MGLfloat>&);
 
     void clear();
 
 private:
-    MGLuint mVertexBuffer, mNormalBuffer, mIndexBuffer, mColorBuffer;
+    MGLuint mVertexBuffer, mNormalBuffer, mNormalBufferFlipped, mIndexBuffer, mColorBuffer;
     MGLenum mPrimType;
     MGLsizei mPrimNum;
 };

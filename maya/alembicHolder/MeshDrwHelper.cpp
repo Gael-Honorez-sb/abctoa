@@ -264,7 +264,7 @@ void MeshDrwHelper::update( P3fArraySamplePtr iP,
     updateNormals( iN );
 }
 
-void MeshDrwHelper::pushNormals(bool flipped)
+void MeshDrwHelper::pushNormals()
 {
     const V3f *normals = NULL;
     if ( m_meshN  && ( m_meshN->size() == m_meshP->size() ) )
@@ -275,18 +275,23 @@ void MeshDrwHelper::pushNormals(bool flipped)
     if(normals != NULL)
     {
         std::vector<MGLfloat> v;
+        std::vector<MGLfloat> vflipped;
         for ( size_t p = 0; p < m_meshP->size(); ++p )
         {
             V3f normal = normals[p];
-            if(flipped)
-                normal = -normal;
 
             v.push_back(normal.x);
             v.push_back(normal.y);
             v.push_back(normal.z);
 
-            }
+            vflipped.push_back(-normal.x);
+            vflipped.push_back(-normal.y);
+            vflipped.push_back(-normal.z);
+
+        }
+
         buffer.genNormalBuffer(v);
+        buffer.genNormalBuffer(vflipped, true);
     }
 }
 
@@ -434,7 +439,7 @@ void MeshDrwHelper::draw( const DrawContext & iCtx) const
         return;
     }
 
-    buffer.render();
+    buffer.render(iCtx.isNormalFlipped());
 
 }
 
