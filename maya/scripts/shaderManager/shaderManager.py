@@ -44,7 +44,7 @@ reload(UI_ABCHierarchy)
 import maya.cmds as cmds
 import maya.mel as mel
 
-from maya.OpenMaya import MObjectHandle, MDGMessage, MMessage, MNodeMessage, MFnDependencyNode, MObject
+from maya.OpenMaya import MObjectHandle, MDGMessage, MMessage, MNodeMessage, MFnDependencyNode, MObject, MSceneMessage
 import maya.OpenMayaUI as apiUI
 
 
@@ -152,10 +152,15 @@ class List(QMainWindow, UI_ABCHierarchy.Ui_NAM):
 
 
         self.getLayers()
-        self.renderLayer.currentIndexChanged.connect(self.layerChanged)
-        self.NodeNameMsgId  = MNodeMessage.addNameChangedCallback( MObject(), self.nameChangedCB )
-        self.newNodeCBMsgId = MDGMessage.addNodeAddedCallback( self.newNodeCB )
-        self.delNodeCBMsgId = MDGMessage.addNodeRemovedCallback( self.delNodeCB )
+        self.setCurrentLayer()
+        
+        self.addCBs()
+
+        self.beforeNewSceneCBId = MSceneMessage.addCallback(MSceneMessage.kBeforeNew, self.clearCBs)
+        self.beforeOpenSceneCBId = MSceneMessage.addCallback(MSceneMessage.kBeforeOpen, self.clearCBs)
+
+        self.afterNewSceneCBId = MSceneMessage.addCallback(MSceneMessage.kAfterNew, self.addCBs)
+        self.afterOpenSceneCBId = MSceneMessage.addCallback(MSceneMessage.kAfterOpen, self.addCBs)
 
         self.disableLayerOverrides()
 
@@ -167,8 +172,8 @@ class List(QMainWindow, UI_ABCHierarchy.Ui_NAM):
         #Widcard management
         self.wildCardButton.pressed.connect(self.addWildCard)
 
-        self.setCurrentLayer()
-        self.layerChangedJob = cmds.scriptJob( e= ["renderLayerManagerChange",self.setCurrentLayer])
+        
+        
 
     def overrideDispsChanged(self, state):
         result = True
@@ -431,7 +436,16 @@ class List(QMainWindow, UI_ABCHierarchy.Ui_NAM):
                
         event.accept()
 
-    def closeEvent(self, event):
+    def addCBs(self, event=None):
+        print "adding callbacks"
+        self.renderLayer.currentIndexChanged.connect(self.layerChanged)
+        self.NodeNameMsgId  = MNodeMessage.addNameChangedCallback( MObject(), self.nameChangedCB )
+        self.newNodeCBMsgId = MDGMessage.addNodeAddedCallback( self.newNodeCB )
+        self.delNodeCBMsgId = MDGMessage.addNodeRemovedCallback( self.delNodeCB )
+        print "adding scriptjob"
+        self.layerChangedJob = cmds.scriptJob( e= ["renderLayerManagerChange",self.setCurrentLayer])
+
+    def clearCBs(self, event=None):
         print "removing scriptjob"
         cmds.scriptJob( kill=self.layerChangedJob, force=True)
         for cache in self.ABCViewerNode.values():
@@ -440,6 +454,16 @@ class List(QMainWindow, UI_ABCHierarchy.Ui_NAM):
         MMessage.removeCallback( self.newNodeCBMsgId )
         MMessage.removeCallback( self.delNodeCBMsgId )
         MNodeMessage.removeCallback( self.NodeNameMsgId )
+
+
+    def closeEvent(self, event):
+        self.clearCBs()
+
+        MMessage.removeCallback( self.beforeNewSceneCBId )
+        MMessage.removeCallback( self.beforeOpenSceneCBId )
+        MMessage.removeCallback( self.afterNewSceneCBId )
+        MMessage.removeCallback( self.afterOpenSceneCBId )
+
         return QtGui.QMainWindow.closeEvent(self, event)
 
     def setCurrentLayer(self):
