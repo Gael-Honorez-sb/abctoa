@@ -52,7 +52,7 @@ BufferObject::BufferObject():
 BufferObject::~BufferObject() { clear(); }
 
 void
-BufferObject::render() const
+BufferObject::render(bool normalFlipped) const
 {
     if(gGLFT == NULL)
         return;
@@ -74,9 +74,12 @@ BufferObject::render() const
         gGLFT->glColorPointer(3, MGL_FLOAT, 0, 0);
     }
 
-    if (usesNormalBuffer) {
+    if (usesNormalBuffer) {      
         gGLFT->glEnableClientState(MGL_NORMAL_ARRAY);
-        gGLFT->glBindBufferARB(MGL_ARRAY_BUFFER_ARB, mNormalBuffer);
+        if(normalFlipped)
+            gGLFT->glBindBufferARB(MGL_ARRAY_BUFFER_ARB, mNormalBufferFlipped);
+        else
+            gGLFT->glBindBufferARB(MGL_ARRAY_BUFFER_ARB, mNormalBuffer);
         gGLFT->glNormalPointer(MGL_FLOAT, 0, 0);
     }
 
@@ -136,20 +139,33 @@ BufferObject::genVertexBuffer(const std::vector<MGLfloat>& v)
 }
 
 void
-BufferObject::genNormalBuffer(const std::vector<MGLfloat>& v)
+BufferObject::genNormalBuffer(const std::vector<MGLfloat>& v, bool flipped)
 {
     if(gGLFT == NULL)
         return;
+    if(flipped)
+    {
+    if (gGLFT->glIsBufferARB(mNormalBuffer) == MGL_TRUE) gGLFT->glDeleteBuffersARB(1, &mNormalBufferFlipped);
 
-    if (gGLFT->glIsBufferARB(mNormalBuffer) == MGL_TRUE) gGLFT->glDeleteBuffersARB(1, &mNormalBuffer);
+        gGLFT->glGenBuffersARB(1, &mNormalBufferFlipped);
+        gGLFT->glBindBufferARB(MGL_ARRAY_BUFFER_ARB, mNormalBufferFlipped);
+        if (gGLFT->glIsBufferARB(mNormalBufferFlipped) == MGL_FALSE) throw "Error: Unable to create normal buffer";
 
-    gGLFT->glGenBuffersARB(1, &mNormalBuffer);
-    gGLFT->glBindBufferARB(MGL_ARRAY_BUFFER_ARB, mNormalBuffer);
-    if (gGLFT->glIsBufferARB(mNormalBuffer) == MGL_FALSE) throw "Error: Unable to create normal buffer";
+
+    }
+    else
+    {
+        if (gGLFT->glIsBufferARB(mNormalBuffer) == MGL_TRUE) gGLFT->glDeleteBuffersARB(1, &mNormalBuffer);
+
+        gGLFT->glGenBuffersARB(1, &mNormalBuffer);
+        gGLFT->glBindBufferARB(MGL_ARRAY_BUFFER_ARB, mNormalBuffer);
+        if (gGLFT->glIsBufferARB(mNormalBuffer) == MGL_FALSE) throw "Error: Unable to create normal buffer";
+    }
 
     gGLFT->glBufferDataARB(MGL_ARRAY_BUFFER_ARB, sizeof(MGLfloat) * v.size(), &v[0], MGL_STATIC_DRAW_ARB);
     if (MGL_NO_ERROR != gGLFT->glGetError()) throw "Error: Unable to upload normal buffer data";
     gGLFT->glBindBufferARB(MGL_ARRAY_BUFFER_ARB, 0);
+
 }
 
 void

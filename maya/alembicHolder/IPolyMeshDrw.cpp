@@ -148,7 +148,6 @@ void IPolyMeshDrw::setTime( chrono_t iSeconds )
 
         m_bounds.makeEmpty();
         m_needtoupdate = true;
-        m_normalFlipped = false;
     }
 }
 
@@ -260,14 +259,6 @@ void IPolyMeshDrw::draw( const DrawContext &iCtx )
     if (m_needtoupdate)
         updateData();
 
-    
-    if(iCtx.isNormalFlipped())
-    {
-        m_drwHelper.pushNormals(true);
-        m_normalFlipped = true;
-    }
-    else if(m_normalFlipped)
-        m_drwHelper.pushNormals(false);
 
     m_drwHelper.draw( iCtx );
 
