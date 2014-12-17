@@ -231,6 +231,8 @@ void MeshDrwHelper::update( P3fArraySamplePtr iP,
     updateNormals( iN );
 
     pushNormals();
+
+
     // And that's it.
 }
 
@@ -262,7 +264,7 @@ void MeshDrwHelper::update( P3fArraySamplePtr iP,
     updateNormals( iN );
 }
 
-void MeshDrwHelper::pushNormals()
+void MeshDrwHelper::pushNormals(bool flipped)
 {
     const V3f *normals = NULL;
     if ( m_meshN  && ( m_meshN->size() == m_meshP->size() ) )
@@ -275,9 +277,14 @@ void MeshDrwHelper::pushNormals()
         std::vector<MGLfloat> v;
         for ( size_t p = 0; p < m_meshP->size(); ++p )
         {
-            v.push_back(normals[p].x);
-            v.push_back(normals[p].y);
-            v.push_back(normals[p].z);
+            V3f normal = normals[p];
+            if(flipped)
+                normal = -normal;
+
+            v.push_back(normal.x);
+            v.push_back(normal.y);
+            v.push_back(normal.z);
+
             }
         buffer.genNormalBuffer(v);
     }
@@ -303,32 +310,31 @@ void MeshDrwHelper::updateNormals( N3fArraySamplePtr iN )
     m_meshN = iN;
     m_customN.clear();
 
+
     // Right now we only handle "vertex varying" normals,
     // which have the same cardinality as the points
     if ( !m_meshN || m_meshN->size() != numPoints )
     {
-        // Make some custom normals.
+        
         m_meshN.reset();
         m_customN.resize( numPoints );
+
         std::fill( m_customN.begin(), m_customN.end(), V3f( 0.0f ) );
 
-        for ( size_t tidx = 0; tidx < m_triangles.size(); ++tidx )
+        // compute the face normals
+        for ( size_t tidx = 0;  tidx < m_triangles.size(); ++tidx )
         {
             const Tri &tri = m_triangles[tidx];
-
             const V3f &A = (*m_meshP)[tri[0]];
             const V3f &B = (*m_meshP)[tri[1]];
             const V3f &C = (*m_meshP)[tri[2]];
-
             V3f AB = B - A;
             V3f AC = C - A;
-
-            V3f wN = AC.cross( AB );
+            V3f wN = AB.cross( AC );
             m_customN[tri[0]] += wN;
             m_customN[tri[1]] += wN;
             m_customN[tri[2]] += wN;
         }
-
         // Normalize normals.
         for ( size_t nidx = 0; nidx < numPoints; ++nidx )
         {

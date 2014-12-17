@@ -695,6 +695,9 @@ void CAlembicHolderUI::draw(const MDrawRequest & request, M3dView & view) const
 void CAlembicHolderUI::drawingMeshes( std::string sceneKey, CAlembicDatas * cache, std::string selectionKey) const
 {
     gGLFT->glPushMatrix();
+
+    glEnable(MGL_POLYGON_OFFSET_FILL);  // Viewport has set the offset, just enable it
+
     glColorMaterial(MGL_FRONT_AND_BACK, MGL_AMBIENT_AND_DIFFUSE);
     glEnable(MGL_COLOR_MATERIAL) ;
     glColor4f(.7, .7, .7, 1.0);
@@ -716,24 +719,28 @@ void CAlembicHolderUI::drawingMeshes( std::string sceneKey, CAlembicDatas * cach
         glLightModeli(MGL_LIGHT_MODEL_TWO_SIDE, 0);
         glCullFace(MGL_FRONT);
         if(selectionKey != "")
-            cache->abcSceneManager.getScene(sceneKey)->drawOnly(cache->abcSceneState, selectionKey, cache->shaderColors);
+            cache->abcSceneManager.getScene(sceneKey)->drawOnly(cache->abcSceneState, selectionKey, cache->shaderColors, true);
         else
-            cache->abcSceneManager.getScene(sceneKey)->draw(cache->abcSceneState, cache->shaderColors);
+            cache->abcSceneManager.getScene(sceneKey)->draw(cache->abcSceneState, cache->shaderColors, true);
         glCullFace(MGL_BACK);
         if(selectionKey != "")
-            cache->abcSceneManager.getScene(sceneKey)->drawOnly(cache->abcSceneState, selectionKey, cache->shaderColors);
+            cache->abcSceneManager.getScene(sceneKey)->drawOnly(cache->abcSceneState, selectionKey, cache->shaderColors, false);
         else
-            cache->abcSceneManager.getScene(sceneKey)->draw(cache->abcSceneState, cache->shaderColors);
+            cache->abcSceneManager.getScene(sceneKey)->draw(cache->abcSceneState, cache->shaderColors, false);
         gGLFT->glLightModeli(MGL_LIGHT_MODEL_TWO_SIDE, 1);
         glDisable(MGL_CULL_FACE);
     }
     else
     {
         if(selectionKey != "")
-            cache->abcSceneManager.getScene(sceneKey)->drawOnly(cache->abcSceneState, selectionKey, cache->shaderColors);
+            cache->abcSceneManager.getScene(sceneKey)->drawOnly(cache->abcSceneState, selectionKey, cache->shaderColors, false);
         else
-            cache->abcSceneManager.getScene(sceneKey)->draw(cache->abcSceneState, cache->shaderColors);
+            cache->abcSceneManager.getScene(sceneKey)->draw(cache->abcSceneState, cache->shaderColors, false);
     }
+
+    glDisable(MGL_POLYGON_OFFSET_FILL);
+    glFrontFace(MGL_CCW);
+
     gGLFT->glPopMatrix();
 }
 

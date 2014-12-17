@@ -328,15 +328,24 @@ void AlembicHolderOverride::draw(const MHWRender::MDrawContext& context, const M
             // set colour
             glColor4f(.7f,.7f,.7f,1.0f);
             }
-
+            glEnable(MGL_CULL_FACE);
+            glCullFace(MGL_FRONT);
             if (cache->abcSceneManager.hasKey(sceneKey))
             {
                 if(selectionKey != "")
-                    cache->abcSceneManager.getScene(sceneKey)->drawOnly(cache->abcSceneState, selectionKey, cache->shaderColors);
+                    cache->abcSceneManager.getScene(sceneKey)->drawOnly(cache->abcSceneState, selectionKey, cache->shaderColors, true);
                 else
-                    cache->abcSceneManager.getScene(sceneKey)->draw(cache->abcSceneState, cache->shaderColors);
+                    cache->abcSceneManager.getScene(sceneKey)->draw(cache->abcSceneState, cache->shaderColors, true);
             }
-
+            glCullFace(MGL_BACK);
+            if (cache->abcSceneManager.hasKey(sceneKey))
+            {
+                if(selectionKey != "")
+                    cache->abcSceneManager.getScene(sceneKey)->drawOnly(cache->abcSceneState, selectionKey, cache->shaderColors, false);
+                else
+                    cache->abcSceneManager.getScene(sceneKey)->draw(cache->abcSceneState, cache->shaderColors, false);
+            }
+            glDisable(MGL_CULL_FACE);
 
             unsetLightingGL(context);
 

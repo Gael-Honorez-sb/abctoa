@@ -183,7 +183,7 @@ int Scene::getNumTriangles() const
 
 
 //-*****************************************************************************
-void Scene::draw( SceneState &s_state, std::map<std::string, MColor> shaderColors )
+void Scene::draw( SceneState &s_state, std::map<std::string, MColor> shaderColors, bool flippedNormal)
 {
 
    static MGLFunctionTable *gGLFT = NULL;
@@ -209,12 +209,13 @@ void Scene::draw( SceneState &s_state, std::map<std::string, MColor> shaderColor
     dctx.setPointSize( s_state.pointSize );
     dctx.setSelection("");
     dctx.setShaderColors(shaderColors);
+    dctx.setNormalFlipped(flippedNormal);
 
     m_drawable->draw( dctx );
 
 }
 
-void Scene::drawOnly( SceneState &s_state, std::string selection, std::map<std::string, MColor> shaderColors)
+void Scene::drawOnly( SceneState &s_state, std::string selection, std::map<std::string, MColor> shaderColors, bool flippedNormal)
 {
        static MGLFunctionTable *gGLFT = NULL;
        if (gGLFT == NULL)
@@ -239,6 +240,7 @@ void Scene::drawOnly( SceneState &s_state, std::string selection, std::map<std::
         dctx.setPointSize( s_state.pointSize );
         dctx.setSelection(selection);
         dctx.setShaderColors(shaderColors);
+        dctx.setNormalFlipped(flippedNormal);
         m_drawable->draw( dctx );
 
 }

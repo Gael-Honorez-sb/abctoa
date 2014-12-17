@@ -73,7 +73,7 @@ public:
                  Abc::Box3d iBounds = Abc::Box3d() );
 
     // Update just normals
-    void pushNormals();
+    void pushNormals(bool flipped = false);
     void updateNormals( N3fArraySamplePtr iN );
 
     void updateArbs(Alembic::Abc::ICompoundProperty & iParent,
@@ -125,7 +125,6 @@ protected:
 
     bool m_valid;
     bool m_isConstant;
-
     Box3d m_bounds;
 
     TriArray m_triangles;
