@@ -30,6 +30,9 @@ class assignationGroup(object):
     def addShaders(self, shaders):
         self.shaders = shaders
 
+    def AddDisplacements(self, shaders):
+        self.displacements = shaders
+
     def addOverrides(self, overrides):
         self.overrides = overrides
 
