@@ -47,7 +47,7 @@ class SceneManager
             }
             else {
                 file.close();
-                std::cout << "[aABCH] Can't open file: " << abcFile << std::endl;
+                std::cout << "[nozAlembicHolder] Can't open file: " << abcFile << std::endl;
             }
         }
 
@@ -66,7 +66,7 @@ class SceneManager
 //                    std::cout << key << " - " << m_scenes[key].second << " instances left!" << std::endl;
                 } else {
                     m_scenes.erase(key);
-                    std::cout << "[aABCH] Closed: " << key << std::endl;
+                    std::cout << "[nozAlembicHolder] Closed: " << key << std::endl;
 
 //                    std::cout << key << " - last instance removed" << std::endl;
                 }

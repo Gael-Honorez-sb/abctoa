@@ -62,15 +62,19 @@ public:
     // This is a "full update" of all parameters.
     // If N is empty, normals will be computed.
     void update( P3fArraySamplePtr iP,
+                 P3fArraySamplePtr iPCeil,
                  N3fArraySamplePtr iN,
                  Int32ArraySamplePtr iIndices,
                  Int32ArraySamplePtr iCounts,
-                 Abc::Box3d iBounds = Abc::Box3d() );
+                 Abc::Box3d iBounds = Abc::Box3d(), 
+                 double alpha = 0.0 );
 
     // Update just positions and possibly normals
     void update( P3fArraySamplePtr iP,
+                 P3fArraySamplePtr iPCeil,
                  N3fArraySamplePtr iN,
-                 Abc::Box3d iBounds = Abc::Box3d() );
+                 Abc::Box3d iBounds = Abc::Box3d(), 
+                 double alpha = 0.0 );
 
     // Update just normals
     void pushNormals();

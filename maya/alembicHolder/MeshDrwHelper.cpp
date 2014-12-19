@@ -35,6 +35,7 @@
 //-*****************************************************************************
 
 #include "MeshDrwHelper.h"
+#include "samplingUtils.h"
 
 namespace SimpleAbcViewer {
 
@@ -55,10 +56,12 @@ MeshDrwHelper::~MeshDrwHelper()
 
 //-*****************************************************************************
 void MeshDrwHelper::update( P3fArraySamplePtr iP,
+                            P3fArraySamplePtr iPCeil,
                             N3fArraySamplePtr iN,
                             Int32ArraySamplePtr iIndices,
                             Int32ArraySamplePtr iCounts,
-                            Abc::Box3d iBounds )
+                            Abc::Box3d iBounds, 
+                            double alpha )
 {
 
    // Before doing a ton, just have a quick look.
@@ -76,7 +79,7 @@ void MeshDrwHelper::update( P3fArraySamplePtr iP,
         }
         else
         {
-            update( iP, iN );
+            update( iP, iPCeil, iN, iBounds, alpha );
         }
         return;
     }
@@ -202,12 +205,25 @@ void MeshDrwHelper::update( P3fArraySamplePtr iP,
     std::vector<MGLfloat> v;
 
     //size_t numPoints = m_meshP->size();
-    for ( size_t p = 0; p < numPoints; ++p )
+
+    
     {
-        const V3f &P = (*m_meshP)[p];
-        v.push_back(P.x);
-        v.push_back(P.y);
-        v.push_back(P.z);
+        for ( size_t p = 0; p < numPoints; ++p )
+        {
+            const V3f &P = (*m_meshP)[p];
+            if (alpha == 0 || iPCeil == NULL) 
+            {
+                v.push_back(P.x);
+                v.push_back(P.y);
+                v.push_back(P.z);
+            }
+            else
+            {
+                v.push_back(simpleLerp<float>(alpha, P.x, (*iPCeil)[p].x));
+                v.push_back(simpleLerp<float>(alpha, P.y, (*iPCeil)[p].y));
+                v.push_back(simpleLerp<float>(alpha, P.z, (*iPCeil)[p].z));
+            }
+        }
     }
 
     buffer.genVertexBuffer(v);
@@ -238,8 +254,10 @@ void MeshDrwHelper::update( P3fArraySamplePtr iP,
 
 //-*****************************************************************************
 void MeshDrwHelper::update( P3fArraySamplePtr iP,
+                            P3fArraySamplePtr iPCeil,
                             N3fArraySamplePtr iN,
-                            Abc::Box3d iBounds )
+                            Abc::Box3d iBounds, 
+                            double alpha )
 {
     // Check validity.
     if ( !m_valid || !iP || !m_meshP ||
@@ -356,78 +374,7 @@ void MeshDrwHelper::updateArbs(Alembic::Abc::ICompoundProperty & iParent,
                  Int32ArraySamplePtr iIndices,
                  Int32ArraySamplePtr iCounts )
 {
-/*
-    // early exit!
-    if (m_colors.size()==m_meshP->size()) {
-        return;
-    }
 
-    Alembic::AbcCoreAbstract::ArraySamplePtr CsSamp;
-    Alembic::AbcCoreAbstract::ArraySamplePtr OsSamp;
-
-    size_t numProps = iParent.getNumProperties();
-    for (size_t i = 0; i < numProps; ++i)
-    {
-        const Alembic::Abc::PropertyHeader & propHeader = iParent.getPropertyHeader(i);
-        const std::string & propName = propHeader.getName();
-        if (propName == "Cs")
-        {
-            Alembic::Abc::IArrayProperty prop(iParent, propName);
-            if (prop.isArray() && prop.getNumSamples()>0) // only if array not empty
-            {
-                Alembic::AbcCoreAbstract::DataType dtype = prop.getDataType();
-                Alembic::Util::uint8_t extent = dtype.getExtent();
-                std::string interp = prop.getMetaData().get("interpretation");
-                if (dtype.getPod() == Alembic::Util::kFloat32POD && extent==3 && interp == "rgb")
-                {
-                    prop.get(CsSamp, 0);// only static data
-                }
-            }
-        }
-        else if (propName == "Os")
-        {
-            Alembic::Abc::IArrayProperty prop(iParent, propName);
-            if (prop.isArray() && prop.getNumSamples()>0) // only if array not empty
-            {
-                Alembic::AbcCoreAbstract::DataType dtype = prop.getDataType();
-                Alembic::Util::uint8_t extent = dtype.getExtent();
-                std::string interp = prop.getMetaData().get("interpretation");
-                if (dtype.getPod() == Alembic::Util::kFloat32POD && extent==3 && interp == "rgb")
-                {
-                    prop.get(OsSamp, 0);// only static data
-                }
-            }
-        }
-    }
-
-
-    if (CsSamp && !OsSamp) {
-        m_colors.resize(m_meshP->size());
-        float * CsData = (float *) CsSamp->getData();
-        unsigned int csid=0;
-        for (unsigned int idx=0; idx<iIndices->size(); idx++)
-        {
-            if (csid<CsSamp->size()*3) {
-                m_colors[(*iIndices)[idx]] = C4f(CsData[csid],CsData[csid+1],CsData[csid+2],1);
-            }
-            csid+=3;
-        }
-    }
-    else if (CsSamp && OsSamp) {
-        m_colors.resize(m_meshP->size());
-        float * CsData = (float *) CsSamp->getData();
-        float * OsData = (float *) OsSamp->getData();
-
-        unsigned int csid=0;
-        for (unsigned int idx=0; idx<iIndices->size(); idx++)
-        {
-            if (csid<CsSamp->size()*3) {
-                m_colors[(*iIndices)[idx]] = C4f(CsData[csid],CsData[csid+1],CsData[csid+2],OsData[csid]);
-            }
-            csid+=3;
-        }
-    }
-    */
 }
 //-*****************************************************************************
 void MeshDrwHelper::draw( const DrawContext & iCtx) const

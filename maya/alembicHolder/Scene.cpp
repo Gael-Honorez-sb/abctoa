@@ -147,7 +147,7 @@ Scene::Scene( const std::string &abcFileName, const std::string &objectPath )
     m_bounds = m_drawable->getBounds();
 
 
-    std::cout << "[aABCH] Opened archive: " << abcFileName << "|" << objectPath << std::endl;
+    std::cout << "[nozAlembicHolder] Opened archive: " << abcFileName << "|" << objectPath << std::endl;
 
 }
 
