@@ -67,6 +67,8 @@ protected:
     IBox3dProperty m_boundsProp;
     MeshDrwHelper m_drwHelper;
     bool m_needtoupdate;
+    double m_alpha;
+    Alembic::AbcCoreAbstract::index_t m_index, m_ceilIndex;
 };
 
 } // End namespace SimpleAbcViewer
