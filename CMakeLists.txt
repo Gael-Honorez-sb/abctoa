@@ -121,7 +121,7 @@ INSTALL(FILES README INSTALL DESTINATION ${INSTALL_DIR})
 INSTALL(DIRECTORY icons DESTINATION ${ICONS_INSTALL_DIR})
 INSTALL(DIRECTORY maya/scripts DESTINATION ${SCRIPTS_INSTALL_DIR})
 
-# configure other files with verson numbers etc.
+# configure other files with version numbers etc.
 
 configure_file (
   "${CMAKE_SOURCE_DIR}/maya/alembicHolder/version.h.in"
@@ -139,6 +139,10 @@ configure_file (
   "${INSTALL_ROOT}/abcToA.mod"
   )
 
+configure_file(
+    "${PROJECT_SOURCE_DIR}/INSTALL.in"
+    "${PROJECT_SOURCE_DIR}/INSTALL"
+)
   
 # 
 configure_file(

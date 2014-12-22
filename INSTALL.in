@@ -1,0 +1,34 @@
+BINARY DISTRIBUTION
+-------------------
+The distribution package is a Maya module folder.
+
+- You need PySide for your Maya version ( ie. http://3devartist.blogspot.com.tr/2012/11/pyside-113-for-autodesk-maya-2013-x64.html )
+- You also need MtoA > 1.1.2.0 ( http://www.solidangle.com )
+
+Unzip the 'modules" in any directory inside the MAYA_MODULE_PATH environment variable.
+
+ie. for maya @MAYA_VERSION@ on Windows:
+
+Edit or create
+c:\Users\<user>\Documents\maya\@MAYA_VERSION@-x64\Maya.env (or your OS equivalent)
+
+Add this line:
+MAYA_MODULE_PATH = %MAYA_MODULE_PATH%;c:\maya@MAYA_VERSION@\modules
+or on Linux/osX :
+MAYA_MODULE_PATH = $MAYA_MODULE_PATH:/maya@MAYA_VERSION@/modules
+
+(alternatively, but unadviced, maya will search for modules in c:\Program Files\Autodesk\Maya@MAYA_VERSION@\modules)
+
+Unpack in c:\maya@MAYA_VERSION@\modules
+Resulting in a file :
+c:\maya@MAYA_VERSION@\modules\abcToA.mod
+and a folder :
+c:\maya@MAYA_VERSION@\modules\AbcToA-@ABCTOA_MAJOR_VERSION@.@ABCTOA_MINOR_VERSION@.@ABCTOA_PATCH_VERSION@
+
+You can now launch maya and load the plugins.
+
+Alternatively, you can edit the .mod file and place the abcToA-@ABCTOA_MAJOR_VERSION@.@ABCTOA_MINOR_VERSION@.@ABCTOA_PATCH_VERSION@ somewhere else:
+ie. change
++ AbcToA @ABCTOA_MAJOR_VERSION@.@ABCTOA_MINOR_VERSION@.@ABCTOA_PATCH_VERSION@ .\AbcToA-@ABCTOA_MAJOR_VERSION@.@ABCTOA_MINOR_VERSION@.@ABCTOA_PATCH_VERSION@
+to
++ AbcToA @ABCTOA_MAJOR_VERSION@.@ABCTOA_MINOR_VERSION@.@ABCTOA_PATCH_VERSION@ s:\sharedModules\2013\AbcToA-@ABCTOA_MAJOR_VERSION@.@ABCTOA_MINOR_VERSION@.@ABCTOA_PATCH_VERSION@
