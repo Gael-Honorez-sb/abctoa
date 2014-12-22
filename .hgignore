@@ -1,5 +1,6 @@
 syntax: glob
-maya\alembicHolder\version.h
+maya/alembicHolder/version.h
+INSTALL*
 .git
 *.autosave
 abcToA.mod
