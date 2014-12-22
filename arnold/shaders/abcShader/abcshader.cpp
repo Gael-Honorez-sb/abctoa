@@ -283,6 +283,7 @@ void setArrayParameter(Alembic::Abc::ICompoundProperty props, Alembic::AbcCoreAb
                 for( int i = 0; i < samp->size(); ++i)
                 {
                     AtRGBA val;
+                    
                     val.r = (*samp)[i].r;
                     val.g = (*samp)[i].g;
                     val.b = (*samp)[i].b;
@@ -415,6 +416,17 @@ void setParameter(Alembic::Abc::ICompoundProperty props, Alembic::AbcCoreAbstrac
             AiMsgDebug("Setting color parameter %s.%s with value %f %f %f", AiNodeGetName(node), header.getName().c_str(),prop.getValue().x , prop.getValue().y, prop.getValue().z);
         }
     }
+    else if (Abc::IC4fProperty::matches(header))
+    {
+        // color type
+        Abc::IC4fProperty prop(props, header.getName());
+        if (prop.valid())
+        {
+            AiNodeSetRGBA(node, header.getName().c_str(), prop.getValue().r , prop.getValue().g, prop.getValue().b, prop.getValue().a);
+            AiMsgDebug("Setting color parameter %s.%s with value %f %f %f %f", AiNodeGetName(node), header.getName().c_str(),prop.getValue().r , prop.getValue().g, prop.getValue().b, prop.getValue().a);
+        }
+    }
+    
     else if (Abc::IP2fProperty::matches(header))
     {
         //  point2
