@@ -36,10 +36,10 @@
 #include "SampleUtil.h"
 
 #include <algorithm>
-#include <OpenEXR/ImathMatrix.h>
-#include <OpenEXR/ImathMatrixAlgo.h>
-#include <OpenEXR/ImathQuat.h>
-#include <OpenEXR/ImathEuler.h>
+#include <ImathMatrix.h>
+#include <ImathMatrixAlgo.h>
+#include <ImathQuat.h>
+#include <ImathEuler.h>
 
 // Hashing
 const size_t hash( std::string const& s )
