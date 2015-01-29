@@ -122,7 +122,7 @@ AtNode* CABCViewerTranslator::ExportProcedural(AtNode* procedural, bool update)
 
     if (!update)
     {
-        MString procLib = MString("AlembicArnoldProcedural") + LIBEXT ;
+        MString procLib = MString("arnoldAlembicProcedural") + LIBEXT ;
 
         AiNodeSetStr(procedural, "dso", procLib.asChar() );
 
