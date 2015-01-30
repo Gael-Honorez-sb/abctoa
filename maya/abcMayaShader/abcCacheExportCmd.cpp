@@ -74,7 +74,7 @@ MStatus abcCacheExportCmd::doIt( const MArgList &args)
     arnoldSession->SetExportFilterMask(16);
     renderSession->SetForceTranslateShadingEngines(true);
 
-    CMayaScene::Export(NULL, MString(""));
+    CMayaScene::Export(NULL);
 
     MItSelectionList iter(list, MFn::kPluginShape);
      for (; !iter.isDone(); iter.next())
