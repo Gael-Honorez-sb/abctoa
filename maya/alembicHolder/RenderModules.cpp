@@ -49,17 +49,13 @@ BufferObject::BufferObject():
         gGLFT = MHardwareRenderer::theRenderer()->glFunctionTable();
 }
 
-BufferObject::~BufferObject() { clear(); }
+BufferObject::~BufferObject() { }
 
 void
 BufferObject::render(bool normalFlipped) const
 {
-    if(gGLFT == NULL)
+    if (gGLFT == NULL || mPrimNum == 0 || !gGLFT->glIsBufferARB(mIndexBuffer) || !gGLFT->glIsBufferARB(mVertexBuffer))
         return;
-
-    if (mPrimNum == 0 || !gGLFT->glIsBufferARB(mIndexBuffer) || !gGLFT->glIsBufferARB(mVertexBuffer)) {
-        return;
-    }
 
     const bool usesColorBuffer = gGLFT->glIsBufferARB(mColorBuffer);
     const bool usesNormalBuffer = gGLFT->glIsBufferARB(mNormalBuffer);
@@ -98,24 +94,25 @@ BufferObject::render(bool normalFlipped) const
 void
 BufferObject::genIndexBuffer(const std::vector<MGLuint>& v, MGLenum primType)
 {
-    if(gGLFT != NULL)
-    {
-        // clear old buffer
-        if (gGLFT->glIsBufferARB(mIndexBuffer) == MGL_TRUE) gGLFT->glDeleteBuffersARB(1, &mIndexBuffer);
+    if(gGLFT == NULL)
+        return;
 
-        // gen new buffer
-        gGLFT->glGenBuffersARB(1, &mIndexBuffer);
-        gGLFT->glBindBufferARB(MGL_ELEMENT_ARRAY_BUFFER_ARB, mIndexBuffer);
-        if (gGLFT->glIsBufferARB(mIndexBuffer) == MGL_FALSE) throw "Error: Unable to create index buffer";
+    // clear old buffer
+    if (gGLFT->glIsBufferARB(mIndexBuffer) == MGL_TRUE) gGLFT->glDeleteBuffersARB(1, &mIndexBuffer);
 
-        // upload data
-        gGLFT->glBufferDataARB(MGL_ELEMENT_ARRAY_BUFFER_ARB,
-            sizeof(MGLuint) * v.size(), &v[0], MGL_STATIC_DRAW_ARB); // upload data
-        if (MGL_NO_ERROR != gGLFT->glGetError()) throw "Error: Unable to upload index buffer data";
+    // gen new buffer
+    gGLFT->glGenBuffersARB(1, &mIndexBuffer);
+    gGLFT->glBindBufferARB(MGL_ELEMENT_ARRAY_BUFFER_ARB, mIndexBuffer);
+    if (gGLFT->glIsBufferARB(mIndexBuffer) == MGL_FALSE) throw "Error: Unable to create index buffer";
 
-        // release buffer
-        gGLFT->glBindBufferARB(MGL_ELEMENT_ARRAY_BUFFER_ARB, 0);
-    }
+    // upload data
+    gGLFT->glBufferDataARB(MGL_ELEMENT_ARRAY_BUFFER_ARB,
+        sizeof(MGLuint) * v.size(), &v[0], MGL_STATIC_DRAW_ARB); // upload data
+    if (MGL_NO_ERROR != gGLFT->glGetError()) throw "Error: Unable to upload index buffer data";
+
+    // release buffer
+    gGLFT->glBindBufferARB(MGL_ELEMENT_ARRAY_BUFFER_ARB, 0);
+
     mPrimNum = v.size();
     mPrimType = primType;
 }
