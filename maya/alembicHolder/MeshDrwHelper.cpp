@@ -46,6 +46,7 @@ static MGLFunctionTable *gGLFT = NULL;
 MeshDrwHelper::MeshDrwHelper()
 {
     makeInvalid();
+    buffer.clear();
 }
 
 //-*****************************************************************************
@@ -264,6 +265,7 @@ void MeshDrwHelper::update( P3fArraySamplePtr iP,
          ( iP->size() != m_meshP->size() ) )
     {
         makeInvalid();
+        buffer.clear();
         return;
     }
 
@@ -320,6 +322,7 @@ void MeshDrwHelper::updateNormals( N3fArraySamplePtr iN )
     if ( !m_valid || !m_meshP )
     {
         makeInvalid();
+        buffer.clear();
         return;
     }
 
@@ -402,9 +405,6 @@ void MeshDrwHelper::makeInvalid()
     m_valid = false;
     m_bounds.makeEmpty();
     m_triangles.clear();
-
-    buffer.clear();
-
 }
 
 int MeshDrwHelper::getNumTriangles() const
