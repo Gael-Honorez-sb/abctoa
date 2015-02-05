@@ -209,20 +209,35 @@ AtNode* CABCViewerTranslator::ExportProcedural(AtNode* procedural, bool update)
 
         if(abcShaders.asString() != "")
         {
+            MFileObject AbcShadersObject; 
+            AbcShadersObject.setRawFullName(abcShaders.asString().expandFilePath());
+            AbcShadersObject.setResolveMethod(MFileObject::kInputFile);
+            MString  AbcShadersFile = AbcShadersObject.resolvedFullName();
+
             AiNodeDeclare(procedural, "abcShaders", "constant STRING");
-            AiNodeSetStr(procedural, "abcShaders", abcShaders.asString().asChar());
+            AiNodeSetStr(procedural, "abcShaders", AbcShadersFile.asChar());
         }
 
         if(uvsArchive.asString() != "")
         {
+            MFileObject UVsfileObject;
+            UVsfileObject.setRawFullName(uvsArchive.asString().expandFilePath());
+            UVsfileObject.setResolveMethod(MFileObject::kInputFile);
+            MString UvsFile = UVsfileObject.resolvedFullName();
+
             AiNodeDeclare(procedural, "uvsArchive", "constant STRING");
-            AiNodeSetStr(procedural, "uvsArchive", uvsArchive.asString().asChar());
+            AiNodeSetStr(procedural, "uvsArchive",UvsFile.asChar());
         }
 
         if(jsonFile.asString() != "")
         {
+            MFileObject JSONfileObject;
+            JSONfileObject.setRawFullName(jsonFile.asString().expandFilePath());
+            JSONfileObject.setResolveMethod(MFileObject::kInputFile);
+            MString JSONfile = JSONfileObject.resolvedFullName();
+
             AiNodeDeclare(procedural, "jsonFile", "constant STRING");
-            AiNodeSetStr(procedural, "jsonFile", jsonFile.asString().asChar());
+            AiNodeSetStr(procedural, "jsonFile", JSONfile.asChar());
         }
 
         if(shadersAssignation.asString() != "")

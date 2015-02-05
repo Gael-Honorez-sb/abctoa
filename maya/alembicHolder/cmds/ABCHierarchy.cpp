@@ -38,7 +38,12 @@ MStatus ABCHierarchy::doIt( const MArgList& args )
     for ( unsigned int i = 0; i < args.length(); i++ )
     {
         if (i == 0)
-            m_filename = args.asString( i, &status );
+        {
+            MFileObject fileObject;
+            fileObject.setRawFullName(args.asString( i, &status ).expandFilePath());
+            fileObject.setResolveMethod(MFileObject::kInputFile);
+            m_filename = fileObject.resolvedFullName();
+        }
         else if (i == 1)
             m_path = args.asString( i, &status );
     }

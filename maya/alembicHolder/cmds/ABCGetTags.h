@@ -20,6 +20,7 @@ License along with this library.*/
 #include "Alembic/AbcGeom/All.h"
 #include "Alembic/Abc/All.h"
 #include <json/json.h>
+#include <maya/MFileObject.h>
 
 #ifndef ABCGETTAGS_H_
 #define ABCGETTAGS_H_
