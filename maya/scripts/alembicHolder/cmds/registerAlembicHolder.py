@@ -56,6 +56,7 @@ def assignTagsFromSetName():
                 tags.append(set)
                 cmds.setAttr(s + ".mtoa_constant_tags", json.dumps(tags), type="string")
 
+				
 def registerAlembicHolder():
     if not cmds.about(b=1):
         cmds.menu('AlembicHolderMenu', label='Alembic Holder', parent='MayaWindow', tearOff=True )
@@ -66,3 +67,6 @@ def registerAlembicHolder():
         cmds.menuItem('importtAssign', label='Import Assignation on selected caches', parent='AlembicHolderMenu', c=lambda *args: importAssignations())
         cmds.menuItem( divider=True )
         cmds.menuItem('assignTagsSets', label='Assign tags from Selected Selection Sets', parent='AlembicHolderMenu', c=lambda *args: assignTagsFromSetName())
+        cmds.menuItem( divider=True )
+        cmds.menuItem('OnlineDocumentation', label='Online Documentation', parent='AlembicHolderMenu', c=lambda *args: cmds.launch(webPage='http://bitbucket.org/thepilot/abctoarnold/wiki/Home'))
+
