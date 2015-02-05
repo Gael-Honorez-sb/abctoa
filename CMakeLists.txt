@@ -95,16 +95,15 @@ set(TRANSLATOR_INSTALL_DIR ${INSTALL_DIR}/extensions)
 set(SHADERS_INSTALL_DIR ${INSTALL_DIR}/shaders)
 set(PLUGINS_INSTALL_DIR ${INSTALL_DIR}/plug-ins)
 set(PYSIDE_INSTALL_DIR ${INSTALL_DIR}/pyside)
-set(ICONS_INSTALL_DIR ${INSTALL_DIR})
-set(SCRIPTS_INSTALL_DIR ${INSTALL_DIR})
 
 message("DSO binaries will be installed to:\n\t${DSO_INSTALL_DIR}")
 message("Shaders will be installed to: \n\t${SHADERS_INSTALL_DIR}")
 message("Maya Plug-ins will be installed to: \n\t${PLUGINS_INSTALL_DIR}")
 message("MtoA Translators will be installed to: \n\t${TRANSLATOR_INSTALL_DIR}")
-message("Icons will be installed to: \n\t${ICONS_INSTALL_DIR}/icons")
-message("Scripts will be installed to: \n\t${SCRIPTS_INSTALL_DIR}/scripts")
+message("Icons will be installed to: \n\t${INSTALL_DIR}/icons")
+message("Scripts will be installed to: \n\t${INSTALL_DIR}/scripts")
 message("PySide will be installed to: \n\t${PYSIDE_INSTALL_DIR}")
+message("Samples will be installed to: \n\t${INSTALL_DIR}/samples")
 
 # Set the list of subdirectories to recurse into to find stuff to build
 set(SUBDIRECTORIES 
@@ -126,8 +125,8 @@ endforeach()
 INSTALL(FILES README INSTALL DESTINATION ${INSTALL_DIR})
 
 # add scripts & icons
-INSTALL(DIRECTORY icons DESTINATION ${ICONS_INSTALL_DIR})
-INSTALL(DIRECTORY maya/scripts DESTINATION ${SCRIPTS_INSTALL_DIR})
+INSTALL(DIRECTORY icons DESTINATION ${INSTALL_DIR})
+INSTALL(DIRECTORY maya/scripts DESTINATION ${INSTALL_DIR})
 
 if (${CMAKE_SYSTEM_NAME} MATCHES "Windows")
 	if(${MAYA_VERSION} EQUAL "2013")
@@ -153,6 +152,8 @@ if (${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
 		INSTALL(DIRECTORY contrib/pyside112_py26_qt471_mac/python DESTINATION ${PYSIDE_INSTALL_DIR})
 
 endif()
+
+INSTALL(DIRECTORY maya/samples DESTINATION ${INSTALL_DIR})
 
 
 # configure other files with version numbers etc.

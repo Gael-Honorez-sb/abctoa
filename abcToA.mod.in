@@ -5,3 +5,4 @@ PATH +:= pyside/lib
 PYTHONPATH +:= pyside/python
 ARNOLD_PLUGIN_PATH +:=shaders
 MTOA_EXTENSIONS_PATH +:=extensions
+SAMPLES +:=samples
