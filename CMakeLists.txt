@@ -21,9 +21,13 @@ if (${CMAKE_SYSTEM_NAME} MATCHES "Windows")
     # Disable some of the bullshit warnings MSVC wants to barf
     add_definitions( "-W3 -D_CRT_SECURE_NO_WARNINGS -wd4005 -wd4996 -wd4305 -wd4244 -nologo" )
 	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /MP")
-else()
-    set(CMAKE_CXX_FLAGS_RELEASE "-O3 -fvisibility=hidden")
 endif()
+
+IF( "${CMAKE_SYSTEM_NAME}" MATCHES "Linux" )
+	add_definitions(-D_LINUX)
+	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O3 -fvisibility=hidden -fPIC")
+endif()
+
 
 # check if we have a local cmake include file and include it if we do
 # this is useful for setting our arnold location as an alternative to
@@ -35,7 +39,7 @@ endif()
 
 # Find Arnold SDK
 find_package(Arnold REQUIRED)
-include_directories(${ARNOLD_INCLUDE_DIR})
+include_directories(${ARNOLD_INCLUDE_DIRS})
 link_directories(${ARNOLD_LIBRARY_DIR})
 
 # Find maya
@@ -48,8 +52,10 @@ find_package(Boost REQUIRED COMPONENTS regex thread date_time system chrono)
 # Find ILMBASE
 find_package(IlmBase REQUIRED)
 
-if(NOT ILMBASE_USE_STATIC_LIBS)
-	add_definitions( "-DOPENEXR_DLL -DHALF_EXPORTS")
+if (${CMAKE_SYSTEM_NAME} MATCHES "Windows")
+	if(NOT ILMBASE_USE_STATIC_LIBS)
+		add_definitions( "-DOPENEXR_DLL -DHALF_EXPORTS")
+	endif()
 endif()
 
 

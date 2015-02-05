@@ -48,6 +48,7 @@ def createArchive(distDir, name, isSrc=False):
     
 def createBinaryDistribution(name, droot):
     if platform.system() == "Windows":
+	print "writing", os.path.join('%s.zip' % name)
         zf = zipfile.ZipFile(os.path.join('%s.zip' % name), 'w')
         for root, dirs, files in os.walk(droot):
             rroot = os.path.relpath(root, droot)
@@ -59,9 +60,18 @@ def createBinaryDistribution(name, droot):
             zf.write(f, arcname=os.path.join(f))
         zf.write("abcToA.mod", arcname=os.path.join("modules", "abcToA.mod"))
     else:
-        f = tarfile.open(os.path.join('..', '%s.tar.gz' % name), 'w:gz')
-        f.add(droot, arcname = name)
-        f.close()
+	print "writing", os.path.join('%s.tar.gz' % name)
+        zf = tarfile.open(os.path.join('%s.tar.gz' % name), 'w:gz')
+	for root, dirs, files in os.walk(droot):
+            rroot = os.path.relpath(root, droot)
+            for f in files:
+            	rfile = os.path.join(rroot, f)
+	        zf.add(os.path.join(droot, rfile), arcname=os.path.join("modules", "abcToA-%s" % ABCTOA_VERSION,rfile))
+
+        for f in files_src:
+            zf.add(f, arcname=os.path.join(f))
+	zf.add("abcToA.mod", arcname=os.path.join("modules", "abcToA.mod"))
+        zf.close()
 
 # Binary distribution
 droot = '%s' % ("@INSTALL_DIR@")

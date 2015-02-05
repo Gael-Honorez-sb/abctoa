@@ -24,7 +24,7 @@ set(LIBRARY_PATHS
 # Find PYstring lib
 
 find_library(PYSTRING_LIBRARY
-	NAMES pystring
+	NAMES pystring libpystring
 	PATHS ${LIBRARY_PATHS})		
 
 set ( PYSTRING_LIBRARIES

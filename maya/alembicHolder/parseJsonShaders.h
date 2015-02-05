@@ -2,6 +2,7 @@
 #include <maya/MColor.h>
 #include <maya/MObject.h>
 #include <maya/MString.h>
+#include <stdlib.h>
 
 #ifndef _ParseJsonShaders_h_
 #define _ParseJsonShaders_h_
