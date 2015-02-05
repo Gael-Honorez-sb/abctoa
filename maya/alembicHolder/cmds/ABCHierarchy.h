@@ -14,6 +14,7 @@ License along with this library.*/
 
 #include <maya/MPxCommand.h>
 #include <maya/MString.h>
+#include <maya/MFileObject.h>
 
 #ifndef ABCHIERARCHY_H_
 #define ABCHIERARCHY_H_

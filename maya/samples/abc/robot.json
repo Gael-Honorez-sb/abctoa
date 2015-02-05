@@ -1,0 +1,22 @@
+{
+    "attributes":{
+        "/Robot":{
+            "subdiv_type":1
+        }
+    },
+    "namespace":"Robot_Subdivided_And_ShadedShape",
+    "shaders":{
+        "EyeBallSG":[
+            "/Robot/eyeball"
+        ],
+        "aiStandard43SG":[
+            "/Robot/Robot"
+        ],
+        "aiStandard45SG":[
+            "/Robot/pupil2"
+        ],
+        "blue_irisSG":[
+            "/Robot/iris"
+        ]
+    }
+}

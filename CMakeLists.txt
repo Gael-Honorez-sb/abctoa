@@ -94,15 +94,16 @@ set(DSO_INSTALL_DIR ${INSTALL_DIR}/procedurals)
 set(TRANSLATOR_INSTALL_DIR ${INSTALL_DIR}/extensions)
 set(SHADERS_INSTALL_DIR ${INSTALL_DIR}/shaders)
 set(PLUGINS_INSTALL_DIR ${INSTALL_DIR}/plug-ins)
-set(ICONS_INSTALL_DIR ${INSTALL_DIR})
-set(SCRIPTS_INSTALL_DIR ${INSTALL_DIR})
+set(PYSIDE_INSTALL_DIR ${INSTALL_DIR}/pyside)
 
 message("DSO binaries will be installed to:\n\t${DSO_INSTALL_DIR}")
 message("Shaders will be installed to: \n\t${SHADERS_INSTALL_DIR}")
 message("Maya Plug-ins will be installed to: \n\t${PLUGINS_INSTALL_DIR}")
 message("MtoA Translators will be installed to: \n\t${TRANSLATOR_INSTALL_DIR}")
-message("Icons will be installed to: \n\t${ICONS_INSTALL_DIR}/icons")
-message("Scripts will be installed to: \n\t${SCRIPTS_INSTALL_DIR}/scripts")
+message("Icons will be installed to: \n\t${INSTALL_DIR}/icons")
+message("Scripts will be installed to: \n\t${INSTALL_DIR}/scripts")
+message("PySide will be installed to: \n\t${PYSIDE_INSTALL_DIR}")
+message("Samples will be installed to: \n\t${INSTALL_DIR}/samples")
 
 # Set the list of subdirectories to recurse into to find stuff to build
 set(SUBDIRECTORIES 
@@ -124,8 +125,36 @@ endforeach()
 INSTALL(FILES README INSTALL DESTINATION ${INSTALL_DIR})
 
 # add scripts & icons
-INSTALL(DIRECTORY icons DESTINATION ${ICONS_INSTALL_DIR})
-INSTALL(DIRECTORY maya/scripts DESTINATION ${SCRIPTS_INSTALL_DIR})
+INSTALL(DIRECTORY icons DESTINATION ${INSTALL_DIR})
+INSTALL(DIRECTORY maya/scripts DESTINATION ${INSTALL_DIR})
+
+if (${CMAKE_SYSTEM_NAME} MATCHES "Windows")
+	if(${MAYA_VERSION} EQUAL "2013")
+		MESSAGE(STATUS "Pyside Windows for Maya 2013")
+		INSTALL(DIRECTORY contrib/pyside113_py26_qt471maya2013_win64/lib DESTINATION ${PYSIDE_INSTALL_DIR})
+		INSTALL(DIRECTORY contrib/pyside113_py26_qt471maya2013_win64/python DESTINATION ${PYSIDE_INSTALL_DIR})
+	else()
+		MESSAGE(STATUS "Pyside Windows for Maya")
+		INSTALL(DIRECTORY contrib/pyside111_py26_qt471_win64/lib DESTINATION ${PYSIDE_INSTALL_DIR})
+		INSTALL(DIRECTORY contrib/pyside111_py26_qt471_win64/python DESTINATION ${PYSIDE_INSTALL_DIR})
+	endif()
+endif()
+
+if (${CMAKE_SYSTEM_NAME} MATCHES "Linux")
+		MESSAGE(STATUS "Pyside Linux for Maya")
+		INSTALL(DIRECTORY contrib/pyside112_py26_qt471_linux/lib DESTINATION ${PYSIDE_INSTALL_DIR})
+		INSTALL(DIRECTORY contrib/pyside112_py26_qt471_linux/python DESTINATION ${PYSIDE_INSTALL_DIR})
+endif()
+
+if (${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
+		MESSAGE(STATUS "Pyside Linux for MacOS")
+		INSTALL(DIRECTORY contrib/pyside112_py26_qt471_mac/lib DESTINATION ${PYSIDE_INSTALL_DIR})
+		INSTALL(DIRECTORY contrib/pyside112_py26_qt471_mac/python DESTINATION ${PYSIDE_INSTALL_DIR})
+
+endif()
+
+INSTALL(DIRECTORY maya/samples DESTINATION ${INSTALL_DIR})
+
 
 # configure other files with version numbers etc.
 

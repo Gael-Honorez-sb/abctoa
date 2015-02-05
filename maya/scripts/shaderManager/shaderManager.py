@@ -888,20 +888,23 @@ class List(QMainWindow, UI_ABCHierarchy.Ui_NAM):
 
                 if cmds.objExists(str(shape) + ".jsonFile"):
                     cur = cmds.getAttr("%s.jsonFile" % shape)
-                    try:
-                        f = open(cur, "r")
-                        allLines = json.load(f)
-                        if "shaders" in allLines:
-                            cacheAssignations.addShaders(allLines["shaders"], fromFile=True)
-                        if "attributes" in allLines:
-                            cacheAssignations.addOverrides(allLines["attributes"], fromFile=True)
-                        if "displacement" in allLines:
-                            cacheAssignations.addDisplacements(allLines["displacement"], fromFile=True)
-                        if "layers" in allLines:
-                            cacheAssignations.addLayers(allLines["layers"], fromFile=True)
-                        f.close()
-                    except:
-                        pass
+                    for p in os.path.expandvars(cur).split(";"):
+                        try:
+
+                            print "trying to open", p
+                            f = open(p, "r")
+                            allLines = json.load(f)
+                            if "shaders" in allLines:
+                                cacheAssignations.addShaders(allLines["shaders"], fromFile=True)
+                            if "attributes" in allLines:
+                                cacheAssignations.addOverrides(allLines["attributes"], fromFile=True)
+                            if "displacement" in allLines:
+                                cacheAssignations.addDisplacements(allLines["displacement"], fromFile=True)
+                            if "layers" in allLines:
+                                cacheAssignations.addLayers(allLines["layers"], fromFile=True)
+                            f.close()
+                        except:
+                            pass
 
 
                 if not cmds.objExists(str(shape) + ".shadersAssignation"):
