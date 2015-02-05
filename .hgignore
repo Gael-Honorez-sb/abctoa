@@ -1,5 +1,5 @@
 syntax: glob
-maya/alembicHolder/version.h
+maya/alembicHolder/Version.h
 INSTALL*
 .git
 *.autosave
