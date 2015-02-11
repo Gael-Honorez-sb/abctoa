@@ -133,10 +133,6 @@ if (${CMAKE_SYSTEM_NAME} MATCHES "Windows")
 		MESSAGE(STATUS "Pyside Windows for Maya 2013")
 		INSTALL(DIRECTORY contrib/pyside113_py26_qt471maya2013_win64/lib DESTINATION ${PYSIDE_INSTALL_DIR})
 		INSTALL(DIRECTORY contrib/pyside113_py26_qt471maya2013_win64/python DESTINATION ${PYSIDE_INSTALL_DIR})
-	else()
-		MESSAGE(STATUS "Pyside Windows for Maya")
-		INSTALL(DIRECTORY contrib/pyside111_py26_qt471_win64/lib DESTINATION ${PYSIDE_INSTALL_DIR})
-		INSTALL(DIRECTORY contrib/pyside111_py26_qt471_win64/python DESTINATION ${PYSIDE_INSTALL_DIR})
 	endif()
 endif()
 
@@ -163,10 +159,18 @@ configure_file (
   "${CMAKE_SOURCE_DIR}/maya/alembicHolder/version.h"
   )
 
+if(${MAYA_VERSION} EQUAL "2013")
+  configure_file (
+  "${CMAKE_SOURCE_DIR}/abcToA.mod.2013.in"
+  "${PROJECT_SOURCE_DIR}/abcToA.mod"
+  )
+else()
   configure_file (
   "${CMAKE_SOURCE_DIR}/abcToA.mod.in"
   "${PROJECT_SOURCE_DIR}/abcToA.mod"
   )
+endif()
+
 
   
 configure_file (
