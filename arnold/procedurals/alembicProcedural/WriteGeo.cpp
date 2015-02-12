@@ -182,6 +182,8 @@ AtNode * ProcessPolyMeshBase(
     }
 
     std::string name = args.nameprefix + prim.getFullName();
+    std::string originalName = prim.getFullName();
+
     AtNode * instanceNode = NULL;
 
     std::string cacheId;
@@ -357,6 +359,31 @@ AtNode * ProcessPolyMeshBase(
         // shader assignation
         if (nodeHasParameter( instanceNode, "shader" ) )
         {
+            std::vector< std::string > faceSetNames;
+            ps.getFaceSetNames(faceSetNames);
+
+            // Managing faceSets.
+            if ( faceSetNames.size() > 0 )
+            {
+                AtArray* shadersArray = AiArrayAllocate( faceSetNames.size() , 1, AI_TYPE_NODE);
+                for(int i = 0; i < faceSetNames.size(); i++)
+                {
+                    if ( ps.hasFaceSet( faceSetNames[i] ) )
+                    {
+                        std::string faceSetNameForShading = originalName + "/" + faceSetNames[i];
+                        AtNode* shaderForFaceSet  = getShader(faceSetNameForShading, tags, args);
+                        if(shaderForFaceSet == NULL)
+                        {
+                            // We can't have a NULL.
+                            shaderForFaceSet = AiNode("utility");
+                            AiNodeSetStr(shaderForFaceSet, "name", faceSetNameForShading.c_str());
+                        }
+                         AiArraySetPtr(shadersArray, i, shaderForFaceSet);
+                    }
+                }
+                AiNodeSetArray(instanceNode, "shader", shadersArray);
+            }
+            else
                 ApplyShaders(name, instanceNode, tags, args);
         }
         if (I != g_meshCache.end())
@@ -591,8 +618,8 @@ AtNode * ProcessPolyMeshBase(
         AiNodeSetPtr(meshNode, "disp_map", appliedDisplacement);
 
     //making per face shader working
-    if (AiNodeLookUpUserParameter(args.proceduralNode, "faceShaderIdxs") != NULL)
-        AiNodeSetArray(meshNode, "shidxs", AiArrayCopy(AiNodeGetArray(args.proceduralNode, "faceShaderIdxs")));
+    //if (AiNodeLookUpUserParameter(args.proceduralNode, "faceShaderIdxs") != NULL)
+        //AiNodeSetArray(meshNode, "shidxs", AiArrayCopy(AiNodeGetArray(args.proceduralNode, "faceShaderIdxs")));
 
 
     if ( instanceNode != NULL)
@@ -691,42 +718,35 @@ AtNode * ProcessPolyMeshBase(
                 AiArray(2, 1, AI_TYPE_FLOAT, 0.f, 1.f));
     }
 
-    // faceset visibility array
-    if ( !facesetName.empty() )
+    // facesets
+    std::vector< std::string > faceSetNames;
+    ps.getFaceSetNames(faceSetNames);
+
+    if ( faceSetNames.size() > 0 )
     {
-        if ( ps.hasFaceSet( facesetName ) )
+        std::vector<AtByte> faceSetArray;
+        // By default, we are using all the faces.
+        faceSetArray.resize(nsides.size());
+        for ( int i = 0; i < (int) faceSetArray.size(); ++i )
+            faceSetArray[i] = 0;
+
+        for(int i = 0; i < faceSetNames.size(); i++)
         {
-            ISampleSelector frameSelector( *singleSampleTimes.begin() );
+            if ( ps.hasFaceSet( faceSetNames[i] ) )
+            {
+                std::string faceSetNameForShading = originalName + "/" + faceSetNames[i];
+                {
+                    IFaceSet faceSet = ps.getFaceSet( faceSetNames[i] );
+                    IFaceSetSchema::Sample faceSetSample = faceSet.getSchema().getValue( frameSelector );
 
-
-            IFaceSet faceSet = ps.getFaceSet( facesetName );
-            IFaceSetSchema::Sample faceSetSample =
-                    faceSet.getSchema().getValue( frameSelector );
-
-            std::set<int> facesToKeep;
-
-
-            facesToKeep.insert( faceSetSample.getFaces()->get(),
-                    faceSetSample.getFaces()->get() +
-                            faceSetSample.getFaces()->size() );
-
-//            std::vector<AtBoolean> faceVisArray;
-//            faceVisArray.reserve( nsides.size() );
-//
-//            for ( int i = 0; i < (int) nsides.size(); ++i )
-//            {
-//                faceVisArray.push_back(
-//                        facesToKeep.find( i ) != facesToKeep.end() );
-//            }
-
-//            if ( AiNodeDeclare( meshNode, "face_visibility", "uniform BOOL" ) )
-//            {
-//               AtArray *tmpArray; //= AiArrayConvert( faceVisArray.size(), 1, AI_TYPE_BOOLEAN,
-//                     //(void *) &faceVisArray[0]);
-//                AiNodeSetArray( meshNode, "face_visibility",
-//                      tmpArray   );
-//            }
+                    const int* faceArray((int *)faceSetSample.getFaces()->getData()); 
+                    for( int f = 0; f < (int) faceSetSample.getFaces()->size(); f++)
+                        faceSetArray[faceArray[f]] = (AtByte*) i;
+                }
+            }
         }
+        AtArray *tmpArray = AiArrayConvert( faceSetArray.size(), 1, AI_TYPE_BYTE, (void *) &faceSetArray[0]);
+        AiNodeSetArray( meshNode, "shidxs", tmpArray );
     }
 
     {
@@ -734,8 +754,6 @@ AtNode * ProcessPolyMeshBase(
         ISampleSelector frameSelector( *singleSampleTimes.begin() );
 
         AddArbitraryGeomParams( arbGeomParams, frameSelector, meshNode );
-
-
 
     }
 

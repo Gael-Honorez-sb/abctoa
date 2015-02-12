@@ -183,8 +183,10 @@ void WalkObject( IObject & parent, const ObjectHeader &ohead, ProcArgs &args,
     {
         std::string faceSetName;
 
-        IPolyMesh polymesh( parent, ohead.getName() );
+        
 
+        IPolyMesh polymesh( parent, ohead.getName() );
+        
         //if we haven't reached the end of a specified -objectpath,
         //check to see if the next token is a faceset name.
         //If it is, send the name to ProcessSubD for addition of
