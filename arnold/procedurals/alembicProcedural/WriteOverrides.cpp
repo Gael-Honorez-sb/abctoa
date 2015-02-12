@@ -149,7 +149,7 @@ void ApplyOverrides(std::string name, AtNode* node, std::vector<std::string> tag
     }
 }
 
-void ApplyShaders(std::string name, AtNode* node, std::vector<std::string> tags, ProcArgs & args)
+AtNode* getShader(std::string name, std::vector<std::string> tags, ProcArgs & args)
 {
     bool foundInPath = false;
     AtNode* appliedShader = NULL;
@@ -176,6 +176,14 @@ void ApplyShaders(std::string name, AtNode* node, std::vector<std::string> tags,
         }
     }
 
+    return appliedShader;
+}
+
+void ApplyShaders(std::string name, AtNode* node, std::vector<std::string> tags, ProcArgs & args)
+{
+    bool foundInPath = false;
+    AtNode* appliedShader = getShader(name, tags, args);
+
     if(appliedShader != NULL)
     {
         std::string newName = std::string(AiNodeGetName(appliedShader)) + std::string("_") + name;
@@ -193,6 +201,4 @@ void ApplyShaders(std::string name, AtNode* node, std::vector<std::string> tags,
         if (shaders->nelements != 0)
             AiNodeSetArray(node, "shader", AiArrayCopy(shaders));
     }
-
-
 }
