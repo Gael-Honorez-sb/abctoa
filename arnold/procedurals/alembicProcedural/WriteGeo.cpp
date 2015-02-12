@@ -157,8 +157,7 @@ AtNode * ProcessPolyMeshBase(
         primT & prim, ProcArgs & args,
         SampleTimeSet & sampleTimes,
         std::vector<unsigned int> & vidxs,
-        MatrixSampleMap * xformSamples,
-        const std::string & facesetName = "")
+        MatrixSampleMap * xformSamples)
 {
 
     if ( !prim.valid() )
@@ -320,7 +319,6 @@ AtNode * ProcessPolyMeshBase(
         }
 
         buffer << "@" << hash(hashAttributes);
-        buffer << "@" << facesetName;
 
         cacheId = buffer.str();
 
@@ -741,7 +739,7 @@ AtNode * ProcessPolyMeshBase(
 
                     const int* faceArray((int *)faceSetSample.getFaces()->getData()); 
                     for( int f = 0; f < (int) faceSetSample.getFaces()->size(); f++)
-                        faceSetArray[faceArray[f]] = (AtByte*) i;
+                        faceSetArray[faceArray[f]] = (AtByte) i;
                 }
             }
         }
@@ -780,14 +778,13 @@ AtNode * ProcessPolyMeshBase(
 //-*************************************************************************
 
 void ProcessPolyMesh( IPolyMesh &polymesh, ProcArgs &args,
-        MatrixSampleMap * xformSamples, const std::string & facesetName )
+        MatrixSampleMap * xformSamples)
 {
     SampleTimeSet sampleTimes;
     std::vector<unsigned int> vidxs;
 
     AtNode * meshNode = ProcessPolyMeshBase(
-            polymesh, args, sampleTimes, vidxs, xformSamples,
-                    facesetName);
+            polymesh, args, sampleTimes, vidxs, xformSamples);
 
     // This is a valid condition for the second instance onward and just
     // means that we don't need to do anything further.
@@ -860,14 +857,14 @@ void ProcessPolyMesh( IPolyMesh &polymesh, ProcArgs &args,
 //-*************************************************************************
 
 void ProcessSubD( ISubD &subd, ProcArgs &args,
-        MatrixSampleMap * xformSamples, const std::string & facesetName)
+        MatrixSampleMap * xformSamples )
 {
     SampleTimeSet sampleTimes;
     std::vector<unsigned int> vidxs;
 
     AtNode * meshNode = ProcessPolyMeshBase(
             subd, args, sampleTimes, vidxs,
-                    xformSamples, facesetName );
+                    xformSamples );
 
     // This is a valid condition for the second instance onward and just
     // means that we don't need to do anything further.
