@@ -155,58 +155,20 @@ void WalkObject( IObject & parent, const ObjectHeader &ohead, ProcArgs &args,
     }
     else if ( ISubD::matches( ohead ) )
     {
-        std::string faceSetName;
-
         ISubD subd( parent, ohead.getName() );
+        ProcessSubD( subd, args, xformSamples );
 
-        //if we haven't reached the end of a specified -objectpath,
-        //check to see if the next token is a faceset name.
-        //If it is, send the name to ProcessSubD for addition of
-        //"face_visibility" tags for the non-matching faces
-        if ( I != E )
-        {
-            if ( subd.getSchema().hasFaceSet( *I ) )
-            {
-                faceSetName = *I;
-            }
-        }
+        nextParentObject = subd;
 
-        ProcessSubD( subd, args, xformSamples, faceSetName );
-
-        //if we found a matching faceset, don't traverse below
-        if ( faceSetName.empty() )
-        {
-            nextParentObject = subd;
-        }
     }
     else if ( IPolyMesh::matches( ohead ) )
     {
-        std::string faceSetName;
-
-        
-
         IPolyMesh polymesh( parent, ohead.getName() );
         
-        //if we haven't reached the end of a specified -objectpath,
-        //check to see if the next token is a faceset name.
-        //If it is, send the name to ProcessSubD for addition of
-        //"face_visibility" tags for the non-matching faces
-        if ( I != E )
-        {
-            if ( polymesh.getSchema().hasFaceSet( *I ) )
-            {
-                faceSetName = *I;
-            }
-        }
         if(isVisibleForArnold(parent, &args)) // check if the object is invisible for arnold. It is there to avoid skipping the whole hierarchy.
-            ProcessPolyMesh( polymesh, args, xformSamples, faceSetName );
+            ProcessPolyMesh( polymesh, args, xformSamples);
 
-        //if we found a matching faceset, don't traverse below
-        if ( faceSetName.empty() )
-        {
-            nextParentObject = polymesh;
-        }
-
+        nextParentObject = polymesh; 
     }
     else if ( INuPatch::matches( ohead ) )
     {

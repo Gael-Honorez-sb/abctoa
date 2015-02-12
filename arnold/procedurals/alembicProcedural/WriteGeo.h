@@ -46,10 +46,10 @@ using namespace Alembic::AbcGeom;
 
 
 void ProcessPolyMesh( IPolyMesh &polymesh, ProcArgs &args,
-        MatrixSampleMap * xformSamples, const std::string & facesetName = "");
+        MatrixSampleMap * xformSamples);
 
 void ProcessSubD( ISubD &subd, ProcArgs &args,
-        MatrixSampleMap * xformSamples, const std::string & facesetName = "");
+        MatrixSampleMap * xformSamples);
 
 // void ProcessNuPatch( INuPatch &patch, ProcArgs &args );
 //
