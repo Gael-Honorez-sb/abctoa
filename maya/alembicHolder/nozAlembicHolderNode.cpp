@@ -81,6 +81,7 @@ MTypeId nozAlembicHolder::id(0x00114956);
 MObject nozAlembicHolder::aAbcFile;
 MObject nozAlembicHolder::aObjectPath;
 MObject nozAlembicHolder::aSelectionPath;
+MObject nozAlembicHolder::aBoundingExtended;
 MObject nozAlembicHolder::aTime;
 MObject nozAlembicHolder::aTimeOffset;
 MObject nozAlembicHolder::aShaderPath;
@@ -105,7 +106,7 @@ CAlembicDatas::CAlembicDatas() {
 
     bbox = MBoundingBox(MPoint(-1.0f, -1.0f, -1.0f), MPoint(1.0f, 1.0f, 1.0f));
     token = 0;
-    m_bbmode = 0;
+    m_bbextendedmode = false;
     m_currscenekey = "";
     m_abcdirty = false;
 
@@ -241,10 +242,15 @@ void nozAlembicHolder::copyInternalData(MPxNode* srcNode) {
     plug = fn.findPlug(aSelectionPath);
     plug.getValue(selectionPath);
 
+    bool extendedMode = false;
+    plug = fn.findPlug(aBoundingExtended);
+    plug.getValue(extendedMode);
+
     if(geom != NULL)
     {
         geom->abcSceneManager.addScene(abcfile.asChar(), objectPath.asChar());
         geom->m_currscenekey = getSceneKey();
+        geom->m_bbextendedmode = extendedMode;
     }
 
 }
@@ -280,6 +286,13 @@ MStatus nozAlembicHolder::initialize() {
     tAttr.setStorable(true);
     tAttr.setKeyable(true);
 
+    aSelectionPath = tAttr.create("cacheSelectionPath", "csp", MFnStringData::kString);
+    tAttr.setWritable(true);
+    tAttr.setReadable(true);
+    tAttr.setHidden(false);
+    tAttr.setStorable(true);
+    tAttr.setKeyable(true);
+
     aShaderPath = mAttr.create("shaders", "shds", &stat);
     //    tAttr.setWritable(true);
     //    tAttr.setReadable(true);
@@ -296,6 +309,12 @@ MStatus nozAlembicHolder::initialize() {
     uAttr.setStorable(true);
     uAttr.setKeyable(true);
 
+    aBoundingExtended = nAttr.create("boundingBoxExtendedMode", "bem", MFnNumericData::kBoolean, false);
+    nAttr.setWritable(true);
+    nAttr.setReadable(true);
+    nAttr.setHidden(false);
+    nAttr.setStorable(true);
+    nAttr.setKeyable(true);
 
     aUpdateCache = nAttr.create("updateCache", "upc", MFnNumericData::kInt, 0);
     nAttr.setHidden(true);
@@ -338,18 +357,20 @@ MStatus nozAlembicHolder::initialize() {
 
     // Add the attributes we have created to the node
     //
-    addAttribute( aAbcFile);
-    addAttribute( aObjectPath);
-    addAttribute( aSelectionPath);
+    addAttribute(aAbcFile);
+    addAttribute(aObjectPath);
+    addAttribute(aSelectionPath);
+    addAttribute(aBoundingExtended);
     addAttribute(aForceReload);
-    addAttribute( aShaderPath);
-    addAttribute( aTime);
-    addAttribute( aTimeOffset);
-    addAttribute ( aUpdateCache );
-    addAttribute( aBoundMin);
-    addAttribute( aBoundMax);
+    addAttribute(aShaderPath);
+    addAttribute(aTime);
+    addAttribute(aTimeOffset);
+    addAttribute(aUpdateCache);
+    addAttribute(aBoundMin);
+    addAttribute(aBoundMax);
 
     attributeAffects ( aForceReload, aUpdateCache );
+    attributeAffects ( aBoundingExtended, aUpdateCache );
     attributeAffects ( aAbcFile, aUpdateCache );
     attributeAffects ( aObjectPath, aUpdateCache );
     attributeAffects ( aSelectionPath, aUpdateCache );
@@ -362,13 +383,6 @@ MStatus nozAlembicHolder::initialize() {
 
     return MS::kSuccess;
 
-}
-
-MStatus nozAlembicHolder::doSomething() {
-    MStatus stat;
-
-    cout << "just did something!! :D" << endl;
-    return MS::kSuccess;
 }
 
 std::string nozAlembicHolder::getSelectionKey() const {
@@ -430,6 +444,8 @@ MStatus nozAlembicHolder::compute( const MPlug& plug, MDataBlock& block )
         MString selectionPath = block.inputValue(aSelectionPath).asString();
 
         MTime time = block.inputValue(aTime).asTime() + block.inputValue(aTimeOffset).asTime(); 
+
+        fGeometry.m_bbextendedmode = block.inputValue(aBoundingExtended).asBool();
 
         bool hasToReload = false;
 
@@ -591,12 +607,17 @@ void CAlembicHolderUI::draw(const MDrawRequest & request, M3dView & view) const
 {
     int token = request.token();
 
+    M3dView::DisplayStatus displayStatus = request.displayStatus();
+    
+    bool cacheSelected =  ((displayStatus == M3dView::kActive) || (displayStatus == M3dView::kLead) || (displayStatus == M3dView::kHilite));
     MDrawData data = request.drawData();
 
     nozAlembicHolder* shapeNode = (nozAlembicHolder*) surfaceShape();
     CAlembicDatas * cache = (CAlembicDatas*) data.geometry();
 
     bool refresh = cache->m_abcdirty;
+    bool forceBoundingBox = (cache->m_bbextendedmode && cacheSelected == false);
+
     int oldToken = cache->token;
 
     cache->token = token;
@@ -606,6 +627,8 @@ void CAlembicHolderUI::draw(const MDrawRequest & request, M3dView & view) const
     std::string selectionKey = shapeNode->getSelectionKey();
 
     if(selectionKey != "")
+        token = kDrawBoundingBox;
+    else if(forceBoundingBox)
         token = kDrawBoundingBox;
 
     view.beginGL();
@@ -627,19 +650,19 @@ void CAlembicHolderUI::draw(const MDrawRequest & request, M3dView & view) const
             refresh=true;
         else
             glcache = (*I).second;
-    }
 
-    if(refresh == true && token == kDrawBoundingBox)
-    {
-        if (glcache != -1)
+        if(refresh == true)
         {
-            glDeleteLists(glcache,1);
+            if (glcache != -1)
+            {
+                glDeleteLists(glcache,1);
+            }
+            glcache = glGenLists(1);
+            glNewList(glcache, MGL_COMPILE);
+            drawBoundingBox( request, view );
+            glEndList();
+            g_bboxCache[sceneKey] = glcache;
         }
-        glcache = glGenLists(1);
-        glNewList(glcache, MGL_COMPILE);
-        drawBoundingBox( request, view );
-        glEndList();
-        g_bboxCache[sceneKey] = glcache;
     }
 
     switch (token)
@@ -657,12 +680,14 @@ void CAlembicHolderUI::draw(const MDrawRequest & request, M3dView & view) const
             cache->abcSceneManager.getScene(sceneKey)->draw(cache->abcSceneState, std::map<std::string, MColor>());
             gGLFT->glPopMatrix();
             gGLFT->glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+
         }
         break;
     case kDrawSmoothShaded:
     case kDrawFlatShaded:
         if (cache->abcSceneManager.hasKey(sceneKey))
             drawingMeshes(sceneKey, cache, "");
+
         break;
     }
 
