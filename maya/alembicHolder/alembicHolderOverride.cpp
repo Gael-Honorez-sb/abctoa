@@ -188,13 +188,11 @@ void AlembicHolderOverride::draw(const MHWRender::MDrawContext& context, const M
 
     // get state data
     MStatus status;
-    const MMatrix transform =
-        context.getMatrix(MHWRender::MDrawContext::kWorldViewMtx, &status);
+    const MMatrix transform =  context.getMatrix(MHWRender::MDrawContext::kWorldViewMtx, &status);
     if (status != MStatus::kSuccess) return;
-    const MMatrix projection =
-        context.getMatrix(MHWRender::MDrawContext::kProjectionMtx, &status);
+    const MMatrix projection = context.getMatrix(MHWRender::MDrawContext::kProjectionMtx, &status);
     if (status != MStatus::kSuccess) return;
-    const int displayStyle = context.getDisplayStyle();
+    int displayStyle = context.getDisplayStyle();
 
     // get renderer
     MHWRender::MRenderer* theRenderer = MHWRender::MRenderer::theRenderer();
@@ -202,8 +200,6 @@ void AlembicHolderOverride::draw(const MHWRender::MDrawContext& context, const M
 
     if (theRenderer->drawAPIIsOpenGL())
     {
-
-
         glMatrixMode(GL_PROJECTION);
         glPushMatrix();
         glLoadMatrixd(projection.matrix[0]);
@@ -214,12 +210,16 @@ void AlembicHolderOverride::draw(const MHWRender::MDrawContext& context, const M
         glPushMatrix();
         glLoadMatrixd(transform.matrix[0]);
 
-
         nozAlembicHolder* shapeNode = data->fShapeNode;
 
         std::string sceneKey = shapeNode->getSceneKey();
         CAlembicDatas* cache = shapeNode->alembicData();
         std::string selectionKey = shapeNode->getSelectionKey();
+
+        
+        bool forceBoundingBox = (cache->m_bbextendedmode && data->fIsSelected == false);
+        if(selectionKey == "" && forceBoundingBox)
+            displayStyle = 0;
 
         // draw bounding box
         if(selectionKey != "" || displayStyle == 0)

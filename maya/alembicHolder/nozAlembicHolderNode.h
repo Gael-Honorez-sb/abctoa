@@ -56,7 +56,7 @@ public:
     int token;
     bool m_abcdirty;
     std::string m_currscenekey;
-    int m_bbmode;
+    bool m_bbextendedmode;
     double time;
 
     //BufferObject buffer;
@@ -99,8 +99,6 @@ public:
     static  void*       creator();
     static  MStatus     initialize();
 
-    MStatus     doSomething();
-
     std::string getSceneKey() const;
     std::string getSelectionKey() const;
 
@@ -115,6 +113,7 @@ private:
     CAlembicDatas        fGeometry;
     static    MObject    aAbcFile;
     static    MObject    aObjectPath;
+    static    MObject    aBoundingExtended;
 //    static  MObject    aBooleanAttr; // example boolean attribute
     static    MObject    aTime;
     static    MObject    aTimeOffset;
