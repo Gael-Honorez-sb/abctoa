@@ -179,31 +179,31 @@ AtNode* CABCViewerTranslator::ExportProcedural(AtNode* procedural, bool update)
 
         if(skipJsonFile)
         {
-            AiNodeDeclare(procedural, "skipJsonFile", "constant BOOLEAN");
+            AiNodeDeclare(procedural, "skipJsonFile", "constant BOOL");
             AiNodeSetBool(procedural, "skipJsonFile", skipJsonFile);
         }
 
         if(skipShaders)
         {
-            AiNodeDeclare(procedural, "skipShaders", "constant BOOLEAN");
+            AiNodeDeclare(procedural, "skipShaders", "constant BOOL");
             AiNodeSetBool(procedural, "skipShaders", skipShaders);
         }
 
         if(skipAttributes)
         {
-            AiNodeDeclare(procedural, "skipAttributes", "constant BOOLEAN");
+            AiNodeDeclare(procedural, "skipAttributes", "constant BOOL");
             AiNodeSetBool(procedural, "skipAttributes", skipAttributes);
         }
 
         if(skipLayers)
         {
-            AiNodeDeclare(procedural, "skipLayers", "constant BOOLEAN");
+            AiNodeDeclare(procedural, "skipLayers", "constant BOOL");
             AiNodeSetBool(procedural, "skipLayers", skipLayers);
         }
 
         if(skipDisplacements)
         {
-            AiNodeDeclare(procedural, "skipDisplacements", "constant BOOLEAN");
+            AiNodeDeclare(procedural, "skipDisplacements", "constant BOOL");
             AiNodeSetBool(procedural, "skipDisplacements", skipDisplacements);
         }
 
