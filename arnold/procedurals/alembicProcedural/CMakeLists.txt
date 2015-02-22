@@ -1,6 +1,6 @@
 set(PROC arnoldAlembicProcedural)
 
-file(GLOB SRC "*.cpp" "*h")
+file(GLOB SRC "*.cpp" "*h" "../../../common/*.h" "../../../common/*.cpp")
 
 include_directories(${ALEMBIC_INCLUDE_DIR})
 include_directories(${Boost_INCLUDE_DIR})

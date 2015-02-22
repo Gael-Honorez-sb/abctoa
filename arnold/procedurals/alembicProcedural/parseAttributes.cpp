@@ -1,5 +1,6 @@
 
 #include "parseAttributes.h"
+#include "abcshaderutils.h"
 #include <pystring.h>
 
 namespace
@@ -268,6 +269,97 @@ Json::Value OverrideAssignations(Json::Value jroot, Json::Value jrootOverrides)
     return newJroot;
 }
 
+AtNode* createNetwork(IObject object, std::string prefix, ProcArgs & args)
+{
+    std::map<std::string,AtNode*> aShaders;
+    Mat::IMaterial matObj(object, kWrapExisting);
+    for (size_t i = 0, e = matObj.getSchema().getNumNetworkNodes(); i < e; ++i)
+    {
+        Mat::IMaterialSchema::NetworkNode abcnode = matObj.getSchema().getNetworkNode(i);
+        std::string target = "<undefined>";
+        abcnode.getTarget(target);
+        if(target == "arnold")
+        {
+            std::string nodeType = "<undefined>";
+            abcnode.getNodeType(nodeType);
+            AiMsgDebug("Creating %s node named %s", nodeType.c_str(), abcnode.getName().c_str());
+            AtNode* aShader = AiNode (nodeType.c_str());
+
+            std::string name = prefix + "_" + abcnode.getName();
+
+            AiNodeSetStr (aShader, "name", name.c_str());
+            aShaders[abcnode.getName()] = aShader;
+
+            args.createdNodes.push_back(aShader);
+
+            // We set the default attributes
+            ICompoundProperty parameters = abcnode.getParameters();
+            if (parameters.valid())
+            {
+                for (size_t i = 0, e = parameters.getNumProperties(); i < e; ++i)
+                {
+                    const PropertyHeader & header = parameters.getPropertyHeader(i);
+
+                    if (header.getName() == "name")
+                        continue;
+
+                    if (header.isArray())
+                        setArrayParameter(parameters, header, aShader);
+
+                    else
+                        setParameter(parameters, header, aShader);
+                }
+
+            }
+
+        }
+
+    }
+
+    // once every node is created, we can set the connections...
+    for (size_t i = 0, e = matObj.getSchema().getNumNetworkNodes(); i < e; ++i)
+    {
+        Mat::IMaterialSchema::NetworkNode abcnode = matObj.getSchema().getNetworkNode(i);
+
+        std::string target = "<undefined>";
+        abcnode.getTarget(target);
+        if(target == "arnold")
+        {
+            size_t numConnections = abcnode.getNumConnections();
+            if(numConnections)
+            {
+                AiMsgDebug("linking nodes");
+                std::string inputName, connectedNodeName, connectedOutputName;
+                for (size_t j = 0; j < numConnections; ++j)
+                {
+                    if (abcnode.getConnection(j, inputName, connectedNodeName, connectedOutputName))
+                    {
+                        AiMsgDebug("Linking %s.%s to %s.%s", connectedNodeName.c_str(), connectedOutputName.c_str(), abcnode.getName().c_str(), inputName.c_str());
+                        AiNodeLinkOutput(aShaders[connectedNodeName.c_str()], connectedOutputName.c_str(), aShaders[abcnode.getName().c_str()], inputName.c_str());
+                    }
+                }
+
+            }
+        }
+    }
+
+    // Getting the root node now ...
+    std::string connectedNodeName = "<undefined>";
+    std::string connectedOutputName = "<undefined>";
+    if (matObj.getSchema().getNetworkTerminal(
+                "arnold", "surface", connectedNodeName, connectedOutputName))
+    {
+        AtNode *root = aShaders[connectedNodeName.c_str()];
+        if(root)
+            AiNodeSetStr(root, "name", prefix.c_str());
+
+        return root;
+    }
+
+    return NULL;
+
+}
+
 void ParseShaders(Json::Value jroot, std::string ns, std::string nameprefix, ProcArgs* args, AtByte type)
 {
     for( Json::ValueIterator itr = jroot.begin() ; itr != jroot.end() ; itr++ )
@@ -291,10 +383,12 @@ void ParseShaders(Json::Value jroot, std::string ns, std::string nameprefix, Pro
                 IObject object = args->materialsObject.getChild(orginalName);
                 if (IMaterial::matches(object.getHeader()))
                 {
-                    shaderNode = AiNode("AbcShader");
+                    shaderNode = createNetwork(object, shaderName, *args);
+
+                    /*shaderNode = AiNode("AbcShader");
                     AiNodeSetStr(shaderNode, "file", args->abcShaderFile);
                     AiNodeSetStr(shaderNode, "shader", orginalName.c_str());
-                    AiNodeSetStr(shaderNode, "name", shaderName.c_str());
+                    AiNodeSetStr(shaderNode, "name", shaderName.c_str());*/
                 }
             }
             if(shaderNode == NULL)
