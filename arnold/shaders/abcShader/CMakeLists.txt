@@ -1,6 +1,7 @@
 set(SHADER arnoldAlembicShader)
 
-file(GLOB SRC "*.cpp" "*h")
+set(SRC abcshader.cpp loader.cpp ../../../common/abcshaderutils.h ../../../common/abcshaderutils.cpp)
+
 
 include_directories(${Boost_INCLUDE_DIR})
 include_directories(${ALEMBIC_INCLUDE_DIR})

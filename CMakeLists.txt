@@ -115,6 +115,7 @@ set(SUBDIRECTORIES
 		mtoa/abcShader
 )
 
+include_directories(common)
 
 # loop over subdirectories
 foreach(SUBDIR ${SUBDIRECTORIES})
