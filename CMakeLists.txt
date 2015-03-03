@@ -19,7 +19,7 @@ set(CMAKE_OSX_DEPLOYMENT_TARGET 10.8)
 # Compiler flags
 if (${CMAKE_SYSTEM_NAME} MATCHES "Windows")
     # Disable some of the bullshit warnings MSVC wants to barf
-    add_definitions( "-W3 -D_CRT_SECURE_NO_WARNINGS -wd4005 -wd4996 -wd4305 -wd4244 -nologo" )
+    add_definitions( "-W3 -MP -D_CRT_SECURE_NO_WARNINGS -wd4005 -wd4996 -wd4305 -wd4244 -nologo" )
 	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /MP")
 endif()
 
