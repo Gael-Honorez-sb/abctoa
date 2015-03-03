@@ -278,7 +278,7 @@ AtNode* CABCViewerTranslator::ExportProcedural(AtNode* procedural, bool update)
         fps = sec.as(MTime::uiUnit());
 
         MString data;
-        data += "-makeinstance -filename " +  abcfile + " -objectpath " + MString(objectPathStr.c_str()) + " -nameprefix " + m_dagPath.partialPathName() + " -frame " + time.as(time.unit()) + " -fps " + fps;
+        data += "-filename " +  abcfile + " -objectpath " + MString(objectPathStr.c_str()) + " -nameprefix " + m_dagPath.partialPathName() + " -frame " + time.as(time.unit()) + " -fps " + fps;
 
         AiNodeSetStr(procedural, "data", data.expandEnvironmentVariablesAndTilde().asChar());
 

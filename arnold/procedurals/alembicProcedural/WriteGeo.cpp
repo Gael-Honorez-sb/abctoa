@@ -301,7 +301,6 @@ AtNode * ProcessPolyMeshBase(
 
     hashAttributes += writer.write(rootEncode);
 
-    if ( args.makeInstance )
     {
         std::ostringstream buffer;
         AbcA::ArraySampleKey sampleKey;
@@ -374,6 +373,7 @@ AtNode * ProcessPolyMeshBase(
                         {
                             // We can't have a NULL.
                             shaderForFaceSet = AiNode("utility");
+                            args.createdNodes.push_back(shaderForFaceSet);
                             AiNodeSetStr(shaderForFaceSet, "name", faceSetNameForShading.c_str());
                         }
                          AiArraySetPtr(shadersArray, i, shaderForFaceSet);
@@ -756,22 +756,13 @@ AtNode * ProcessPolyMeshBase(
     }
 
     if ( instanceNode == NULL )
-    {
-        if ( xformSamples )
-        {
-            ApplyTransformation( meshNode, xformSamples, args );
-        }
+         AiMsgError("No instance node found for %s", AiNodeGetName(meshNode));
 
-        return meshNode;
-    }
-    else
-    {
-        AiNodeSetPtr(instanceNode, "node", meshNode );
-         AiNodeSetByte( meshNode, "visibility", 0 );
-         g_meshCache[cacheId] = meshNode;
-        return meshNode;
+    AiNodeSetPtr(instanceNode, "node", meshNode );
+    AiNodeSetByte( meshNode, "visibility", 0 );
+    g_meshCache[cacheId] = meshNode;
+    return meshNode;
 
-    }
 
 }
 

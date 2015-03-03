@@ -65,7 +65,6 @@ struct ProcArgs
     , shutterClose( rhs.shutterClose )
     , excludeXform( rhs.excludeXform )
     , inheritXform( rhs.inheritXform )
-    , makeInstance( rhs.makeInstance )
     , subdIterations ( rhs.subdIterations )
     , subdivType( rhs.subdivType )
     , subdivAdaptiveMetric (rhs.subdivAdaptiveMetric )
@@ -88,7 +87,6 @@ struct ProcArgs
     bool excludeXform;
     bool inheritXform;
 
-    bool makeInstance;
     int subdIterations;
     int subdivType;
 

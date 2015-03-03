@@ -204,68 +204,65 @@ AtNode * ProcessPointsBase(
         }
     }
 
-    if ( args.makeInstance )
+    std::ostringstream buffer;
+    AbcA::ArraySampleKey sampleKey;
+
+
+    for ( SampleTimeSet::iterator I = sampleTimes.begin();
+            I != sampleTimes.end(); ++I )
     {
-        std::ostringstream buffer;
-        AbcA::ArraySampleKey sampleKey;
+        ISampleSelector sampleSelector( *I );
+        ps.getPositionsProperty().getKey(sampleKey, sampleSelector);
 
+        buffer << GetRelativeSampleTime( args, (*I) ) << ":";
+        sampleKey.digest.print(buffer);
+        buffer << ":";
+    }
 
-        for ( SampleTimeSet::iterator I = sampleTimes.begin();
-                I != sampleTimes.end(); ++I )
+    cacheId = buffer.str();
+
+    instanceNode = AiNode( "ginstance" );
+    AiNodeSetStr( instanceNode, "name", name.c_str() );
+    args.createdNodes.push_back(instanceNode);
+
+    if ( args.proceduralNode )
+    {
+        AiNodeSetByte( instanceNode, "visibility",
+                AiNodeGetByte( args.proceduralNode, "visibility" ) );
+
+    }
+    else
+    {
+        AiNodeSetByte( instanceNode, "visibility", AI_RAY_ALL );
+    }
+
+    ApplyTransformation( instanceNode, xformSamples, args );
+
+    NodeCache::iterator I = g_meshCache.find(cacheId);
+
+    // parameters overrides
+    if(args.linkAttributes)
+        ApplyOverrides(name, instanceNode, tags, args);
+
+    // shader assignation
+    if (nodeHasParameter( instanceNode, "shader" ) )
+    {
+        if(args.linkShader)
         {
-            ISampleSelector sampleSelector( *I );
-            ps.getPositionsProperty().getKey(sampleKey, sampleSelector);
-
-            buffer << GetRelativeSampleTime( args, (*I) ) << ":";
-            sampleKey.digest.print(buffer);
-            buffer << ":";
-        }
-
-        cacheId = buffer.str();
-
-        instanceNode = AiNode( "ginstance" );
-        AiNodeSetStr( instanceNode, "name", name.c_str() );
-        args.createdNodes.push_back(instanceNode);
-
-        if ( args.proceduralNode )
-        {
-            AiNodeSetByte( instanceNode, "visibility",
-                    AiNodeGetByte( args.proceduralNode, "visibility" ) );
-
+            ApplyShaders(name, instanceNode, tags, args);
         }
         else
         {
-            AiNodeSetByte( instanceNode, "visibility", AI_RAY_ALL );
+            AtArray* shaders = AiNodeGetArray(args.proceduralNode, "shader");
+            if (shaders->nelements != 0)
+                AiNodeSetArray(instanceNode, "shader", AiArrayCopy(shaders));
         }
+    }
 
-        ApplyTransformation( instanceNode, xformSamples, args );
-
-        NodeCache::iterator I = g_meshCache.find(cacheId);
-
-        // parameters overrides
-        if(args.linkAttributes)
-            ApplyOverrides(name, instanceNode, tags, args);
-
-        // shader assignation
-        if (nodeHasParameter( instanceNode, "shader" ) )
-        {
-            if(args.linkShader)
-            {
-                ApplyShaders(name, instanceNode, tags, args);
-            }
-            else
-            {
-                AtArray* shaders = AiNodeGetArray(args.proceduralNode, "shader");
-                if (shaders->nelements != 0)
-                   AiNodeSetArray(instanceNode, "shader", AiArrayCopy(shaders));
-            }
-        }
-
-        if ( I != g_meshCache.end() )
-        {
-            AiNodeSetPtr(instanceNode, "node", (*I).second );
-            return NULL;
-        }
+    if ( I != g_meshCache.end() )
+    {
+        AiNodeSetPtr(instanceNode, "node", (*I).second );
+        return NULL;
     }
 
 

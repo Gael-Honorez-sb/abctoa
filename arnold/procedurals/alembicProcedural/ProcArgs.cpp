@@ -171,10 +171,6 @@ ProcArgs::ProcArgs( const char * paramStr )
                subdivUvSmoothing = atoi( tokens[i].c_str() );
             }
         }
-        else if ( token == "-makeinstance" )
-        {
-            makeInstance = true;
-        }
     }
 }
 
