@@ -289,103 +289,100 @@ AtNode * ProcessCurvesBase(
 
     hashAttributes += writer.write(rootEncode);
    
-    if ( args.makeInstance  )
+    std::ostringstream buffer;
+    AbcA::ArraySampleKey sampleKey;
+        
+        
+    for ( SampleTimeSet::iterator I = sampleTimes.begin();
+            I != sampleTimes.end(); ++I )
     {
-        std::ostringstream buffer;
-        AbcA::ArraySampleKey sampleKey;
-        
-        
-        for ( SampleTimeSet::iterator I = sampleTimes.begin();
-                I != sampleTimes.end(); ++I )
-        {
-            ISampleSelector sampleSelector( *I );
-            ps.getPositionsProperty().getKey(sampleKey, sampleSelector);
+        ISampleSelector sampleSelector( *I );
+        ps.getPositionsProperty().getKey(sampleKey, sampleSelector);
             
-            buffer << GetRelativeSampleTime( args, (*I) ) << ":";
-            sampleKey.digest.print(buffer);
-            buffer << ":";
-        }
+        buffer << GetRelativeSampleTime( args, (*I) ) << ":";
+        sampleKey.digest.print(buffer);
+        buffer << ":";
+    }
         
-        buffer << "@" << hash(hashAttributes);
+    buffer << "@" << hash(hashAttributes);
         
-        cacheId = buffer.str();
+    cacheId = buffer.str();
         
-        instanceNode = AiNode( "ginstance" );
-        AiNodeSetStr( instanceNode, "name", name.c_str() );
-        args.createdNodes.push_back(instanceNode);
+    instanceNode = AiNode( "ginstance" );
+    AiNodeSetStr( instanceNode, "name", name.c_str() );
+    args.createdNodes.push_back(instanceNode);
         
-        AiNodeSetBool( instanceNode, "inherit_xform", false );
+    AiNodeSetBool( instanceNode, "inherit_xform", false );
 
-        if ( args.proceduralNode )
+    if ( args.proceduralNode )
+    {
+        AiNodeSetByte( instanceNode, "visibility",
+        AiNodeGetByte( args.proceduralNode, "visibility" ) );
+    }
+    else
+    {
+        AiNodeSetByte( instanceNode, "visibility", AI_RAY_ALL );
+    }
+        
+    ApplyTransformation( instanceNode, xformSamples, args );
+        
+    // adding arbitary parameters
+
+    AddArbitraryGeomParams( arbGeomParams, frameSelector, instanceNode );
+
+    NodeCache::iterator I = g_meshCache.find(cacheId);
+
+    if (args.linkAttributes)
+    {
+        ApplyOverrides(name, instanceNode, tags,  args);
+    }
+
+    // If the current node has a user attribute called tags, parse it and add these tags to the tags list
+    if (AiNodeLookUpUserParameter(instanceNode, "tags") != NULL)
+    {
+        Json::Value jtags;
+        Json::Reader reader;
+
+        if(reader.parse( AiNodeGetStr(instanceNode, "tags"), jtags))
         {
-            AiNodeSetByte( instanceNode, "visibility",
-            AiNodeGetByte( args.proceduralNode, "visibility" ) );
+        for( Json::ValueIterator itr = jtags.begin() ; itr != jtags.end() ; itr++ )
+        { 
+
+            if ( std::find(tags.begin(), tags.end(), jtags[itr.key().asUInt()].asString()) == tags.end() )
+            {
+            tags.push_back(jtags[itr.key().asUInt()].asString());
+            }
+        }
+        }
+    }
+
+    // start param overrides on instance
+    if(args.linkAttributes)
+    {
+        ApplyOverrides(name, instanceNode, tags, args );
+    }   
+
+    // shader assignation
+    if (nodeHasParameter( instanceNode, "shader" ) )
+    {
+        if(args.linkShader)
+        {
+        ApplyShaders(name, instanceNode, tags, args);
         }
         else
         {
-            AiNodeSetByte( instanceNode, "visibility", AI_RAY_ALL );
+        AtArray* shaders = AiNodeGetArray(args.proceduralNode, "shader");
+        if (shaders->nelements != 0)
+            AiNodeSetArray(instanceNode, "shader", AiArrayCopy(shaders));
         }
+    } // end shader assignment
         
-        ApplyTransformation( instanceNode, xformSamples, args );
-        
-        // adding arbitary parameters
+    if ( I != g_meshCache.end() ) 
+    {
+        AiNodeSetPtr(instanceNode, "node", (*I).second );
+        return NULL;
+    }
 
-        AddArbitraryGeomParams( arbGeomParams, frameSelector, instanceNode );
-
-        NodeCache::iterator I = g_meshCache.find(cacheId);
-
-        if (args.linkAttributes)
-        {
-            ApplyOverrides(name, instanceNode, tags,  args);
-        }
-
-        // If the current node has a user attribute called tags, parse it and add these tags to the tags list
-        if (AiNodeLookUpUserParameter(instanceNode, "tags") != NULL)
-        {
-          Json::Value jtags;
-          Json::Reader reader;
-
-          if(reader.parse( AiNodeGetStr(instanceNode, "tags"), jtags))
-          {
-            for( Json::ValueIterator itr = jtags.begin() ; itr != jtags.end() ; itr++ )
-            { 
-
-              if ( std::find(tags.begin(), tags.end(), jtags[itr.key().asUInt()].asString()) == tags.end() )
-              {
-                tags.push_back(jtags[itr.key().asUInt()].asString());
-              }
-            }
-          }
-        }
-
-        // start param overrides on instance
-        if(args.linkAttributes)
-        {
-            ApplyOverrides(name, instanceNode, tags, args );
-        }   
-
-        // shader assignation
-        if (nodeHasParameter( instanceNode, "shader" ) )
-        {
-          if(args.linkShader)
-          {
-            ApplyShaders(name, instanceNode, tags, args);
-          }
-          else
-          {
-            AtArray* shaders = AiNodeGetArray(args.proceduralNode, "shader");
-            if (shaders->nelements != 0)
-               AiNodeSetArray(instanceNode, "shader", AiArrayCopy(shaders));
-          }
-        } // end shader assignment
-        
-        if ( I != g_meshCache.end() ) 
-        {
-           AiNodeSetPtr(instanceNode, "node", (*I).second );
-           return NULL;
-        }
-
-    } // end makeinstance
     
     size_t numSampleTimes = sampleTimes.size();
     size_t numCurves;
