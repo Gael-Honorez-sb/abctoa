@@ -64,10 +64,9 @@
 namespace
 {
 using namespace Alembic::AbcGeom;
-typedef boost::shared_mutex Lock;
-typedef boost::unique_lock< Lock > WriteLock;
-typedef boost::shared_lock< Lock > ReadLock;
-Lock myLock;
+
+boost::mutex gGlobalLock;
+#define GLOBAL_LOCK	   boost::mutex::scoped_lock writeLock( gGlobalLock );
 
 typedef std::map<std::string, IObject> FileCache;
 FileCache g_fileCache;
@@ -250,6 +249,8 @@ void WalkObject( IObject & parent, const ObjectHeader &ohead, ProcArgs &args,
 
 int ProcInit( struct AtNode *node, void **user_ptr )
 {
+    GLOBAL_LOCK;
+
     bool skipJson = false;
     bool skipShaders = false;
     bool skipAttributes = false;
@@ -286,7 +287,6 @@ int ProcInit( struct AtNode *node, void **user_ptr )
     ProcArgs * args = new ProcArgs( AiNodeGetStr( node, "data" ) );
     args->proceduralNode = node;
 
-    WriteLock w_lock(myLock);
     if (AiNodeLookUpUserParameter(node, "assShaders") !=NULL )
     {
         const char* assfile = AiNodeGetStr(node, "assShaders");
@@ -333,8 +333,6 @@ int ProcInit( struct AtNode *node, void **user_ptr )
             }
         }
     }
-
-    w_lock.unlock();
 
     // check if we have a UV archive attribute
     if (AiNodeLookUpUserParameter(node, "uvsArchive") !=NULL )
@@ -563,7 +561,7 @@ int ProcInit( struct AtNode *node, void **user_ptr )
     }
 
 
-    w_lock.lock();
+    
     IObject root;
 
     FileCache::iterator I = g_fileCache.find(args->filename);
@@ -623,7 +621,7 @@ int ProcInit( struct AtNode *node, void **user_ptr )
     {
         AiMsgError("exception thrown");
     }
-    w_lock.unlock();
+
     return 1;
 }
 
@@ -648,6 +646,7 @@ int ProcNumNodes( void *user_ptr )
 
 struct AtNode* ProcGetNode(void *user_ptr, int i)
 {
+
     ProcArgs * args = reinterpret_cast<ProcArgs*>( user_ptr );
 
     if ( i >= 0 && i < (int) args->createdNodes.size() )
