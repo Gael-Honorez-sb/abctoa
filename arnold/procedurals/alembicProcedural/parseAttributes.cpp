@@ -382,14 +382,8 @@ void ParseShaders(Json::Value jroot, std::string ns, std::string nameprefix, Pro
 
                 IObject object = args->materialsObject.getChild(orginalName);
                 if (IMaterial::matches(object.getHeader()))
-                {
                     shaderNode = createNetwork(object, shaderName, *args);
 
-                    /*shaderNode = AiNode("AbcShader");
-                    AiNodeSetStr(shaderNode, "file", args->abcShaderFile);
-                    AiNodeSetStr(shaderNode, "shader", orginalName.c_str());
-                    AiNodeSetStr(shaderNode, "name", shaderName.c_str());*/
-                }
             }
             if(shaderNode == NULL)
             {

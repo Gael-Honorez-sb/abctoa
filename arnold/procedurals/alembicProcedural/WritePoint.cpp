@@ -40,7 +40,6 @@
 
 #include "ArbGeomParams.h"
 #include "PathUtil.h"
-//#include "ArbAttrUtil.h"
 
 #include <ai.h>
 #include <sstream>
