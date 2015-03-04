@@ -1,4 +1,4 @@
-//-****************************fs*************************************************
+//-*****************************************************************************
 //
 // Copyright (c) 2009-2011,
 //  Sony Pictures Imageworks Inc. and
@@ -250,8 +250,6 @@ void WalkObject( IObject & parent, const ObjectHeader &ohead, ProcArgs &args,
 
 int ProcInit( struct AtNode *node, void **user_ptr )
 {
-
-
     bool skipJson = false;
     bool skipShaders = false;
     bool skipAttributes = false;

@@ -146,31 +146,19 @@ namespace
 //-*************************************************************************
 // This is templated to handle shared behavior of IPolyMesh and ISubD
 
-// We send in our empty sampleTimes and vidxs because polymesh needs those
-// for processing animated normal.
 
-
-// The return value is the polymesh node. If instanced, it will be returned
-// for the first created instance only.
+//-*************************************************************************
+// getSampleTimes
+// This function fill the sampleTimes timeSet array.
 template <typename primT>
-AtNode * ProcessPolyMeshBase(
-        primT & prim, ProcArgs & args,
-        SampleTimeSet & sampleTimes,
-        std::vector<unsigned int> & vidxs,
-        MatrixSampleMap * xformSamples)
+void getSampleTimes(
+    primT & prim,
+    ProcArgs & args,
+    SampleTimeSet & sampleTimes
+    )
 {
-
-    if ( !prim.valid() )
-    {
-        return NULL;
-    }
-
-
-
     typename primT::schema_type  &ps = prim.getSchema();
-    
     TimeSamplingPtr ts = ps.getTimeSampling();
-
     if ( ps.getTopologyVariance() != kHeterogenousTopology )
     {
         GetRelevantSampleTimes( args, ts, ps.getNumSamples(), sampleTimes );
@@ -180,10 +168,25 @@ AtNode * ProcessPolyMeshBase(
         sampleTimes.insert( ts->getFloorIndex(args.frame / args.fps, ps.getNumSamples()).second );
     }
 
-    std::string name = args.nameprefix + prim.getFullName();
-    std::string originalName = prim.getFullName();
 
-    AtNode * instanceNode = NULL;
+}
+
+
+//-*************************************************************************
+// getHash
+// This function return the hash of the mesh, with attributes & displacement applied to it.
+template <typename primT>
+std::string getHash(
+    std::string name,
+    std::string originalName,
+    primT & prim,
+    ProcArgs & args,
+    SampleTimeSet sampleTimes
+    )
+{
+    typename primT::schema_type  &ps = prim.getSchema();
+
+    TimeSamplingPtr ts = ps.getTimeSampling();
 
     std::string cacheId;
 
@@ -193,11 +196,11 @@ AtNode * ProcessPolyMeshBase(
     ICompoundProperty arbGeomParams = ps.getArbGeomParams();
     ISampleSelector frameSelector( *singleSampleTimes.begin() );
 
-    //get tags
+  //get tags
     std::vector<std::string> tags;
     getAllTags(prim, tags, &args);
 
-    // displacement stuff
+    // displacement stuff. If the node has displacement, the resulting geom is probably different than the one in the cache.
     AtNode* appliedDisplacement = NULL;
 
     if(args.linkDisplacement)
@@ -230,7 +233,6 @@ AtNode * ProcessPolyMeshBase(
             }
         }
     }
-
 
     // overrides that can't be applied on instances
     // we create a hash from that.
@@ -301,106 +303,141 @@ AtNode * ProcessPolyMeshBase(
 
     hashAttributes += writer.write(rootEncode);
 
+    std::ostringstream buffer;
+    AbcA::ArraySampleKey sampleKey;
+
+    for ( SampleTimeSet::iterator I = sampleTimes.begin();
+            I != sampleTimes.end(); ++I )
     {
-        std::ostringstream buffer;
-        AbcA::ArraySampleKey sampleKey;
+        ISampleSelector sampleSelector( *I );
+        ps.getPositionsProperty().getKey(sampleKey, sampleSelector);
 
-
-        for ( SampleTimeSet::iterator I = sampleTimes.begin();
-                I != sampleTimes.end(); ++I )
-        {
-            ISampleSelector sampleSelector( *I );
-            ps.getPositionsProperty().getKey(sampleKey, sampleSelector);
-
-            buffer << GetRelativeSampleTime( args, (*I) ) << ":";
-            sampleKey.digest.print(buffer);
-            buffer << ":";
-        }
-
-        buffer << "@" << hash(hashAttributes);
-
-        cacheId = buffer.str();
-
-        instanceNode = AiNode( "ginstance" );
-        AiNodeSetStr( instanceNode, "name", name.c_str() );
-        args.createdNodes.push_back(instanceNode);
-
-        AiNodeSetBool( instanceNode, "inherit_xform", false );
-
-        if ( args.proceduralNode )
-        {
-            AiNodeSetByte( instanceNode, "visibility",
-                    AiNodeGetByte( args.proceduralNode, "visibility" ) );
-        }
-        else
-        {
-            AiNodeSetByte( instanceNode, "visibility", AI_RAY_ALL );
-        }
-
-        ApplyTransformation( instanceNode, xformSamples, args );
-
-        // adding arbitary parameters
-        AddArbitraryGeomParams(
-                arbGeomParams,
-                frameSelector,
-                instanceNode );
-
-
-        AddArbitraryProceduralParams(args.proceduralNode, instanceNode);
-
-        NodeCache::iterator I = g_meshCache.find(cacheId);
-        // parameters overrides
-        if(args.linkAttributes)
-            ApplyOverrides(name, instanceNode, tags, args);
-
-        // shader assignation
-        if (nodeHasParameter( instanceNode, "shader" ) )
-        {
-            std::vector< std::string > faceSetNames;
-            ps.getFaceSetNames(faceSetNames);
-
-            // Managing faceSets.
-            if ( faceSetNames.size() > 0 )
-            {
-                AtArray* shadersArray = AiArrayAllocate( faceSetNames.size() , 1, AI_TYPE_NODE);
-                for(int i = 0; i < faceSetNames.size(); i++)
-                {
-                    if ( ps.hasFaceSet( faceSetNames[i] ) )
-                    {
-                        std::string faceSetNameForShading = originalName + "/" + faceSetNames[i];
-                        AtNode* shaderForFaceSet  = getShader(faceSetNameForShading, tags, args);
-                        if(shaderForFaceSet == NULL)
-                        {
-                            // We can't have a NULL.
-                            shaderForFaceSet = AiNode("utility");
-                            args.createdNodes.push_back(shaderForFaceSet);
-                            AiNodeSetStr(shaderForFaceSet, "name", faceSetNameForShading.c_str());
-                        }
-                         AiArraySetPtr(shadersArray, i, shaderForFaceSet);
-                    }
-                }
-                AiNodeSetArray(instanceNode, "shader", shadersArray);
-            }
-            else
-                ApplyShaders(name, instanceNode, tags, args);
-        }
-        if (I != g_meshCache.end())
-        {
-            AiNodeSetPtr(instanceNode, "node", (*I).second );
-            return NULL;
-        }
+        buffer << GetRelativeSampleTime( args, (*I) ) << ":";
+        sampleKey.digest.print(buffer);
+        buffer << ":";
     }
 
+    buffer << "@" << hash(hashAttributes);
+
+    cacheId = buffer.str();
+
+    return cacheId;
+
+}
+
+
+//-*************************************************************************
+// getCachedNode
+// This function return the the mesh node if already in the cache.
+// Otherwise, return NULL.
+AtNode* getCachedNode(std::string cacheId)
+{
+    NodeCache::iterator I = g_meshCache.find(cacheId);
+    if (I != g_meshCache.end())
+    {
+        AiMsgInfo("Found the mesh!");
+        return (*I).second;
+        
+    }
+    return NULL;
+}
+
+//-*************************************************************************
+// doNormals
+// This function does nothing for subdv, but write normals for non-subdvided meshes. Called in writeMesh.
+template<typename primT> 
+inline void doNormals( primT& prim)
+{
+}
+
+template<typename primT> 
+inline void doNormals(IPolyMesh& prim)
+{
+    if(AiNodeGetInt(meshNode, "subdiv_type") == 0) // if the mesh has subdiv, we don't need normals as they are recomputed by arnold!
+    {
+        std::vector<float> nlist;
+        std::vector<unsigned int> nidxs;
+
+        ProcessIndexedBuiltinParam(
+                ps.getNormalsParam(),
+                sampleTimes,
+                nlist,
+                nidxs,
+                3);
+
+
+        if ( !nlist.empty() )
+        {
+            AiNodeSetArray(meshNode, "nlist",
+                AiArrayConvert( nlist.size() / sampleTimes.size(),
+                        sampleTimes.size(), AI_TYPE_FLOAT, (void*)(&(nlist[0]))));
+
+            if ( !nidxs.empty() )
+            {
+               // we must invert the idxs
+               //unsigned int facePointIndex = 0;
+               unsigned int base = 0;
+               AtArray* nsides = AiNodeGetArray(meshNode, "nsides");
+               std::vector<unsigned int> nvidxReversed;
+               for (unsigned int i = 0; i < nsides->nelements / nsides->nkeys; ++i)
+               {
+                  int curNum = AiArrayGetUInt(nsides ,i);
+
+                  for (int j = 0; j < curNum; ++j)
+                  {
+                      nvidxReversed.push_back(nidxs[base+curNum-j-1]);
+                  }
+                  base += curNum;
+               }
+                AiNodeSetArray(meshNode, "nidxs", AiArrayConvert(nvidxReversed.size(), 1, AI_TYPE_UINT, (void*)&nvidxReversed[0]));
+            }
+            else
+            {
+                AiNodeSetArray(meshNode, "nidxs",
+                        AiArrayConvert(vidxs.size(), 1, AI_TYPE_UINT,
+                                &(vidxs[0])));
+            }
+        }
+    }
+}
+
+//-*************************************************************************
+// writeMesh
+// This function create & return a mesh node with displace & attributes related to it.
+template <typename primT>
+AtNode* writeMesh(  
+    std::string name,
+    std::string originalName,
+    primT & prim,
+    ProcArgs & args,
+    SampleTimeSet sampleTimes
+    )
+
+{
+
+    typename primT::schema_type  &ps = prim.getSchema();
+    TimeSamplingPtr ts = ps.getTimeSampling();
+
+
+    SampleTimeSet singleSampleTimes;
+    singleSampleTimes.insert( ts->getFloorIndex(args.frame / args.fps, ps.getNumSamples()).second );
+    ISampleSelector frameSelector( *singleSampleTimes.begin() );
+
+
+    std::string prefixname = args.nameprefix + name;
+
+
+    // Getting all the data relative to the mesh.
+    std::vector<unsigned int> vidxs;
     std::vector<AtByte> nsides;
     std::vector<float> vlist;
 
     std::vector<float> uvlist;
     std::vector<unsigned int> uvidxs;
 
-
-    // POTENTIAL OPTIMIZATIONS LEFT TO THE READER
-    // 1) vlist needn't be copied if it's a single sample
     size_t numSampleTimes = sampleTimes.size();
+    
+
     bool isFirstSample = true;
     for ( SampleTimeSet::iterator I = sampleTimes.begin();
           I != sampleTimes.end(); ++I, isFirstSample = false)
@@ -538,7 +575,9 @@ AtNode * ProcessPolyMeshBase(
     }
 
 
+    // Set the meshNode.
     AtNode* meshNode = AiNode( "polymesh" );
+
 
     if (!meshNode)
     {
@@ -547,9 +586,14 @@ AtNode * ProcessPolyMeshBase(
         return NULL;
     }
 
-    args.createdNodes.push_back(meshNode);
+    AiNodeSetStr( meshNode, "name", (name + ":src").c_str() );
+    AiNodeSetByte( meshNode, "visibility", 0 );
 
-    // Attribute overrides. We assume instance mode all the time here.
+
+    //get tags
+    std::vector<std::string> tags;
+    getAllTags(prim, tags, &args);
+
     if(args.linkAttributes)
     {
         for(std::vector<std::string>::iterator it=args.attributes.begin(); it!=args.attributes.end(); ++it)
@@ -563,6 +607,7 @@ AtNode * ProcessPolyMeshBase(
                     {
                         std::string attribute = itr.key().asString();
 
+                        // All these attribute affect the nodeCacheId.
                         if (attribute=="smoothing"
                             || attribute=="subdiv_iterations"
                             || attribute=="subdiv_type"
@@ -575,14 +620,11 @@ AtNode * ProcessPolyMeshBase(
                             || attribute=="disp_autobump"
                             || attribute=="invert_normals")
                         {
-                            //AiMsgDebug("Checking attribute %s for shape %s", attribute.c_str(), name.c_str());
-                            // check if the attribute exists ...
                             const AtNodeEntry* nodeEntry = AiNodeGetNodeEntry(meshNode);
                             const AtParamEntry* paramEntry = AiNodeEntryLookUpParameter(nodeEntry, attribute.c_str());
 
                             if ( paramEntry != NULL)
                             {
-                                //AiMsgDebug("attribute %s exists on shape", attribute.c_str());
                                 Json::Value val = args.attributesRoot[*it][itr.key().asString()];
                                 if( val.isString() )
                                     AiNodeSetStr(meshNode, attribute.c_str(), val.asCString());
@@ -609,26 +651,46 @@ AtNode * ProcessPolyMeshBase(
         }
     }
 
+    // NORMALS
+    doNormals(prim);
 
     // displaces assignation
+    // displacement stuff
+    AtNode* appliedDisplacement = NULL;
+    if(args.linkDisplacement)
+    {
+        bool foundInPath = false;
+        for(std::map<std::string, AtNode*>::iterator it = args.displacements.begin(); it != args.displacements.end(); ++it)
+        {
+            //check both path & tag
+            if(it->first.find("/") != string::npos)
+            {
+                if(name.find(it->first) != string::npos)
+                {
+                    appliedDisplacement = it->second;
+                    foundInPath = true;
+                }
+            }
+            else if(matchPattern(name,it->first)) // based on wildcard expression
+            {
+                appliedDisplacement = it->second;
+                foundInPath = true;
+            }
+            else if(foundInPath == false)
+            {
+                if (std::find(tags.begin(), tags.end(), it->first) != tags.end())
+                {
+                    appliedDisplacement = it->second;
+                }
+            }
+        }
+    }
 
     if(appliedDisplacement!= NULL)
         AiNodeSetPtr(meshNode, "disp_map", appliedDisplacement);
 
-    //making per face shader working
-    //if (AiNodeLookUpUserParameter(args.proceduralNode, "faceShaderIdxs") != NULL)
-        //AiNodeSetArray(meshNode, "shidxs", AiArrayCopy(AiNodeGetArray(args.proceduralNode, "faceShaderIdxs")));
 
-
-    if ( instanceNode != NULL)
-    {
-        AiNodeSetStr( meshNode, "name", (name + ":src").c_str() );
-    }
-    else
-    {
-        AiNodeSetStr( meshNode, "name", name.c_str() );
-    }
-
+    // Fill mesh infos
     AiNodeSetArray(meshNode, "vidxs",
             AiArrayConvert(vidxs.size(), 1, AI_TYPE_UINT,
                     (void*)&vidxs[0]));
@@ -643,14 +705,9 @@ AtNode * ProcessPolyMeshBase(
                     numSampleTimes, AI_TYPE_FLOAT, (void*)(&(vlist[0]))
                             ));
 
+
     if ( !uvlist.empty() )
     {
-        //TODO, option to disable v flipping
-//        for (size_t i = 1, e = uvlist.size(); i < e; i += 2)
-//        {
-//            uvlist[i] = 1.0 - uvlist[i];
-//        }
-       //int size = uvlist.size();
        AtArray* a_uvlist = AiArrayAllocate( uvlist.size() , 1, AI_TYPE_FLOAT);
 
        for (unsigned int i = 0; i < uvlist.size() ; ++i)
@@ -668,9 +725,6 @@ AtNode * ProcessPolyMeshBase(
            unsigned int base = 0;
 
            AtArray* uvidxReversed = AiArrayAllocate(uvidxs.size(), 1, AI_TYPE_UINT);
-
-                //AiMsgInfo("sampleTimes.size() %i", sampleTimes.size());
-
            for (unsigned int i = 0; i < nsides.size() ; ++i)
            {
               int curNum = nsides[i];
@@ -755,14 +809,99 @@ AtNode * ProcessPolyMeshBase(
 
     }
 
-    if ( instanceNode == NULL )
-         AiMsgError("No instance node found for %s", AiNodeGetName(meshNode));
-
-    AiNodeSetPtr(instanceNode, "node", meshNode );
-    AiNodeSetByte( meshNode, "visibility", 0 );
-    g_meshCache[cacheId] = meshNode;
+    args.createdNodes.push_back(meshNode);
     return meshNode;
 
+}
+
+//-*************************************************************************
+// createInstance
+// This function create & return a instance node with shaders & attributes applied.
+template <typename primT>
+void createInstance(
+    std::string name,
+    std::string originalName,
+    primT & prim,
+    ProcArgs & args,
+    MatrixSampleMap * xformSamples,
+    AtNode* mesh)
+{
+    std::string prefixname = args.nameprefix + name;
+
+    typename primT::schema_type  &ps = prim.getSchema();
+    ICompoundProperty arbGeomParams = ps.getArbGeomParams();
+
+    SampleTimeSet singleSampleTimes;
+    TimeSamplingPtr ts = ps.getTimeSampling();
+    singleSampleTimes.insert( ts->getFloorIndex(args.frame / args.fps, ps.getNumSamples()).second );
+
+    ISampleSelector frameSelector( *singleSampleTimes.begin() );
+
+    AtNode* instanceNode = AiNode( "ginstance" );
+
+    AiNodeSetStr( instanceNode, "name", name.c_str() );
+    AiNodeSetPtr(instanceNode, "node", mesh );
+    AiNodeSetBool( instanceNode, "inherit_xform", false );
+    
+    if ( args.proceduralNode )
+        AiNodeSetByte( instanceNode, "visibility", AiNodeGetByte( args.proceduralNode, "visibility" ) );
+    else
+        AiNodeSetByte( instanceNode, "visibility", AI_RAY_ALL );
+
+    // Xform
+    ApplyTransformation( instanceNode, xformSamples, args );
+
+    // adding arbitary parameters
+    AddArbitraryGeomParams(
+            arbGeomParams,
+            frameSelector,
+            instanceNode );
+
+    // adding attributes on procedural
+    AddArbitraryProceduralParams(args.proceduralNode, instanceNode);
+
+    //get tags
+    std::vector<std::string> tags;
+    getAllTags(prim, tags, &args);
+
+    // Arnold Attribute from json
+    if(args.linkAttributes)
+        ApplyOverrides(name, instanceNode, tags, args);
+
+
+    // shader assignation
+    if (nodeHasParameter( instanceNode, "shader" ) )
+    {
+        std::vector< std::string > faceSetNames;
+        ps.getFaceSetNames(faceSetNames);
+
+        // Managing faceSets.
+        if ( faceSetNames.size() > 0 )
+        {
+            AtArray* shadersArray = AiArrayAllocate( faceSetNames.size() , 1, AI_TYPE_NODE);
+            for(int i = 0; i < faceSetNames.size(); i++)
+            {
+                if ( ps.hasFaceSet( faceSetNames[i] ) )
+                {
+                    std::string faceSetNameForShading = originalName + "/" + faceSetNames[i];
+                    AtNode* shaderForFaceSet  = getShader(faceSetNameForShading, tags, args);
+                    if(shaderForFaceSet == NULL)
+                    {
+                        // We can't have a NULL.
+                        shaderForFaceSet = AiNode("utility");
+                        args.createdNodes.push_back(shaderForFaceSet);
+                        AiNodeSetStr(shaderForFaceSet, "name", faceSetNameForShading.c_str());
+                    }
+                        AiArraySetPtr(shadersArray, i, shaderForFaceSet);
+                }
+            }
+            AiNodeSetArray(instanceNode, "shader", shadersArray);
+        }
+        else
+            ApplyShaders(name, instanceNode, tags, args);
+    }
+
+    args.createdNodes.push_back(instanceNode);
 
 }
 
@@ -771,77 +910,28 @@ AtNode * ProcessPolyMeshBase(
 void ProcessPolyMesh( IPolyMesh &polymesh, ProcArgs &args,
         MatrixSampleMap * xformSamples)
 {
-    SampleTimeSet sampleTimes;
-    std::vector<unsigned int> vidxs;
 
-    AtNode * meshNode = ProcessPolyMeshBase(
-            polymesh, args, sampleTimes, vidxs, xformSamples);
-
-    // This is a valid condition for the second instance onward and just
-    // means that we don't need to do anything further.
-    if ( !meshNode )
-    {
+    if ( !polymesh.valid() )
         return;
+
+    std::string originalName = polymesh.getFullName();
+    std::string name = args.nameprefix + originalName;
+
+    SampleTimeSet sampleTimes;
+
+    getSampleTimes(polymesh, args, sampleTimes);
+    std::string cacheId = getHash(name, originalName, polymesh, args, sampleTimes);
+    AtNode* meshNode = getCachedNode(cacheId);
+
+    if(meshNode == NULL)
+    { // We don't have a cache, so we much create this mesh.
+        meshNode = writeMesh(name, originalName, polymesh, args, sampleTimes);
+        g_meshCache[cacheId] = meshNode;
     }
 
-
-    IPolyMeshSchema &ps = polymesh.getSchema();
-
-    std::vector<float> nlist;
-    std::vector<unsigned int> nidxs;
-
-    AiNodeSetBool(meshNode, "smoothing", true);
-
-    if(AiNodeGetInt(meshNode, "subdiv_type") == 0)
-    {
-        //TODO: better check
-        if (AiNodeGetArray(meshNode, "vlist")->nkeys == sampleTimes.size())
-        {
-            ProcessIndexedBuiltinParam(
-                    ps.getNormalsParam(),
-                    sampleTimes,
-                    nlist,
-                    nidxs,
-                    3);
-
-        }
-
-
-
-        if ( !nlist.empty() )
-        {
-            AiNodeSetArray(meshNode, "nlist",
-                AiArrayConvert( nlist.size() / sampleTimes.size(),
-                        sampleTimes.size(), AI_TYPE_FLOAT, (void*)(&(nlist[0]))));
-
-            if ( !nidxs.empty() )
-            {
-
-               // we must invert the idxs
-               //unsigned int facePointIndex = 0;
-               unsigned int base = 0;
-               AtArray* nsides = AiNodeGetArray(meshNode, "nsides");
-               std::vector<unsigned int> nvidxReversed;
-               for (unsigned int i = 0; i < nsides->nelements / nsides->nkeys; ++i)
-               {
-                  int curNum = AiArrayGetUInt(nsides ,i);
-
-                  for (int j = 0; j < curNum; ++j)
-                  {
-                      nvidxReversed.push_back(nidxs[base+curNum-j-1]);
-                  }
-                  base += curNum;
-               }
-                AiNodeSetArray(meshNode, "nidxs", AiArrayConvert(nvidxReversed.size(), 1, AI_TYPE_UINT, (void*)&nvidxReversed[0]));
-            }
-            else
-            {
-                AiNodeSetArray(meshNode, "nidxs",
-                        AiArrayConvert(vidxs.size(), 1, AI_TYPE_UINT,
-                                &(vidxs[0])));
-            }
-        }
-    }
+    // we can create the instance, with correct transform, attributes & shaders.
+    if(meshNode != NULL)
+        createInstance(name, originalName, polymesh, args, xformSamples, meshNode);
 
 }
 
@@ -850,21 +940,33 @@ void ProcessPolyMesh( IPolyMesh &polymesh, ProcArgs &args,
 void ProcessSubD( ISubD &subd, ProcArgs &args,
         MatrixSampleMap * xformSamples )
 {
-    SampleTimeSet sampleTimes;
-    std::vector<unsigned int> vidxs;
 
-    AtNode * meshNode = ProcessPolyMeshBase(
-            subd, args, sampleTimes, vidxs,
-                    xformSamples );
-
-    // This is a valid condition for the second instance onward and just
-    // means that we don't need to do anything further.
-    if ( !meshNode )
-    {
+    if ( !subd.valid() )
         return;
+
+    std::string originalName = subd.getFullName();
+    std::string name = args.nameprefix + originalName;
+
+    SampleTimeSet sampleTimes;
+
+    getSampleTimes( subd, args, sampleTimes);
+    std::string cacheId = getHash(name, originalName, subd, args, sampleTimes);
+
+    AtNode* meshNode = getCachedNode(cacheId);
+
+    if(meshNode == NULL) // We don't have a cache, so we much create this mesh.
+    {
+        meshNode = writeMesh(name, originalName, subd, args, sampleTimes);
+        g_meshCache[cacheId] = meshNode;
+        //force suddiv
+        if(meshNode)
+            AiNodeSetStr( meshNode, "subdiv_type", "catclark" );
     }
 
-    AiNodeSetStr( meshNode, "subdiv_type", "catclark" );
+    // we can create the instance, with correct transform, attributes & shaders.
+    if(meshNode != NULL)
+        createInstance(name, originalName, subd, args, xformSamples, meshNode);
+   
 }
 
 
