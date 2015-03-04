@@ -334,11 +334,8 @@ AtNode* getCachedNode(std::string cacheId)
 {
     NodeCache::iterator I = g_meshCache.find(cacheId);
     if (I != g_meshCache.end())
-    {
-        AiMsgInfo("Found the mesh!");
         return (*I).second;
-        
-    }
+
     return NULL;
 }
 
