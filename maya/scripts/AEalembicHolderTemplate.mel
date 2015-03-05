@@ -74,6 +74,7 @@ global proc AEalembicHolderTemplate(string $nodeName)
         editorTemplate -label "Selection Path" -addControl "cacheSelectionPath";
 		editorTemplate -label "bounding Box Extended Mode" -addControl "boundingBoxExtendedMode";
         editorTemplate -label "Time Offset" -addControl "timeOffset";
+		editorTemplate -label "load At Init" -addControl "loadAtInit";
     editorTemplate -endLayout;
 
     editorTemplate -bl "Render Stats" -cl 0;
