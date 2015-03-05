@@ -126,9 +126,8 @@ AtNode* CABCViewerTranslator::ExportProcedural(AtNode* procedural, bool update)
 
         AiNodeSetStr(procedural, "dso", procLib.asChar() );
 
-        AiNodeSetBool(procedural, "load_at_init", true);
-
-
+        bool loadAtInit =  m_DagNode.findPlug("loadAtInit").asBool();
+        AiNodeSetBool(procedural, "load_at_init", loadAtInit);
 
         MString abcfile = m_DagNode.findPlug("cacheFileName").asString();
 
@@ -170,6 +169,7 @@ AtNode* CABCViewerTranslator::ExportProcedural(AtNode* procedural, bool update)
         MPlug attributes = m_DagNode.findPlug("attributes");
         MPlug displacementsAssignation = m_DagNode.findPlug("displacementsAssignation");
         MPlug layersOverride = m_DagNode.findPlug("layersOverride");
+        
         
         bool skipJsonFile = m_DagNode.findPlug("skipJsonFile").asBool();
         bool skipShaders = m_DagNode.findPlug("skipShaders").asBool();
@@ -438,5 +438,10 @@ void CABCViewerTranslator::NodeInitializer(CAbTranslator context)
     data.shortName = "ogs";
     helper.MakeInputBoolean(data) ;
 
+    data.defaultValue.BOOL = true;
+    data.name = "loadAtInit";
+    data.shortName = "lai";
+    data.channelBox = true;
+    helper.MakeInputBoolean(data);
 
 }
