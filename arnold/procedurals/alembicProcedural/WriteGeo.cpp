@@ -140,6 +140,9 @@ namespace
     // access to this for now.
     typedef std::map<std::string, AtNode *> NodeCache;
     NodeCache g_meshCache;
+
+    boost::mutex gGlobalLock;
+    #define GLOBAL_LOCK	   boost::mutex::scoped_lock writeLock( gGlobalLock );
 }
 
 
@@ -405,13 +408,14 @@ template <typename primT>
 AtNode* writeMesh(  
     std::string name,
     std::string originalName,
+    std::string cacheId,
     primT & prim,
     ProcArgs & args,
     SampleTimeSet sampleTimes
     )
 
 {
-
+    GLOBAL_LOCK;
     typename primT::schema_type  &ps = prim.getSchema();
     TimeSamplingPtr ts = ps.getTimeSampling();
 
@@ -807,6 +811,7 @@ AtNode* writeMesh(
     }
 
     args.createdNodes.push_back(meshNode);
+    g_meshCache[cacheId] = meshNode;
     return meshNode;
 
 }
@@ -922,8 +927,7 @@ void ProcessPolyMesh( IPolyMesh &polymesh, ProcArgs &args,
 
     if(meshNode == NULL)
     { // We don't have a cache, so we much create this mesh.
-        meshNode = writeMesh(name, originalName, polymesh, args, sampleTimes);
-        g_meshCache[cacheId] = meshNode;
+        meshNode = writeMesh(name, originalName, cacheId, polymesh, args, sampleTimes);
     }
 
     // we can create the instance, with correct transform, attributes & shaders.
@@ -953,8 +957,7 @@ void ProcessSubD( ISubD &subd, ProcArgs &args,
 
     if(meshNode == NULL) // We don't have a cache, so we much create this mesh.
     {
-        meshNode = writeMesh(name, originalName, subd, args, sampleTimes);
-        g_meshCache[cacheId] = meshNode;
+        meshNode = writeMesh(name, originalName, cacheId, subd, args, sampleTimes);
         //force suddiv
         if(meshNode)
             AiNodeSetStr( meshNode, "subdiv_type", "catclark" );
