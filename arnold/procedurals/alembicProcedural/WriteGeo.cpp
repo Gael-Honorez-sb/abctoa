@@ -652,7 +652,6 @@ AtNode* writeMesh(
     }
 
     // NORMALS
-    AiMsgInfo("Doing normals");
     doNormals(prim, meshNode, sampleTimes, vidxs);
 
     // displaces assignation
