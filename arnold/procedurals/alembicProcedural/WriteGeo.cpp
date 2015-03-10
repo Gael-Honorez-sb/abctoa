@@ -346,12 +346,12 @@ AtNode* getCachedNode(std::string cacheId)
 // doNormals
 // This function does nothing for subdv, but write normals for non-subdvided meshes. Called in writeMesh.
 template<typename primT> 
-inline void doNormals( primT& prim)
+inline void doNormals( primT& prim, AtNode *meshNode, SampleTimeSet sampleTimes, std::vector<unsigned int> vidxs)
 {
 }
 
-template<typename primT> 
-inline void doNormals(IPolyMesh& prim)
+template<> 
+inline void doNormals<IPolyMesh>(IPolyMesh& prim, AtNode *meshNode, SampleTimeSet sampleTimes, std::vector<unsigned int> vidxs)
 {
     if(AiNodeGetInt(meshNode, "subdiv_type") == 0) // if the mesh has subdiv, we don't need normals as they are recomputed by arnold!
     {
@@ -359,12 +359,11 @@ inline void doNormals(IPolyMesh& prim)
         std::vector<unsigned int> nidxs;
 
         ProcessIndexedBuiltinParam(
-                ps.getNormalsParam(),
+                prim.getSchema().getNormalsParam(),
                 sampleTimes,
                 nlist,
                 nidxs,
                 3);
-
 
         if ( !nlist.empty() )
         {
@@ -589,7 +588,7 @@ AtNode* writeMesh(
 
     AiNodeSetStr( meshNode, "name", (name + ":src").c_str() );
     AiNodeSetByte( meshNode, "visibility", 0 );
-
+    AiNodeSetBool(meshNode, "smoothing", true);
 
     //get tags
     std::vector<std::string> tags;
@@ -653,7 +652,8 @@ AtNode* writeMesh(
     }
 
     // NORMALS
-    doNormals(prim);
+    AiMsgInfo("Doing normals");
+    doNormals(prim, meshNode, sampleTimes, vidxs);
 
     // displaces assignation
     // displacement stuff
