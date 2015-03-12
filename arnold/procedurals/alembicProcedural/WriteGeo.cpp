@@ -651,9 +651,6 @@ AtNode* writeMesh(
         }
     }
 
-    // NORMALS
-    doNormals(prim, meshNode, sampleTimes, vidxs);
-
     // displaces assignation
     // displacement stuff
     AtNode* appliedDisplacement = NULL;
@@ -769,6 +766,10 @@ AtNode* writeMesh(
         AiNodeSetArray( meshNode, "deform_time_samples",
                 AiArray(2, 1, AI_TYPE_FLOAT, 0.f, 1.f));
     }
+
+    
+    // NORMALS   
+    doNormals(prim, meshNode, sampleTimes, vidxs);
 
     // facesets
     std::vector< std::string > faceSetNames;
