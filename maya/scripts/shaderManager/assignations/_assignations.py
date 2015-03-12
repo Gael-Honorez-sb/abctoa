@@ -18,12 +18,13 @@ from shaderManager.assignations._assignationGroup import assignationGroup
 class cacheAssignations(object):
     def __init__(self, parent=None):
         self.parent = parent
+        self.gpucache = self.parent
 
-        self.mainAssignations = assignationGroup(self)
-        self.mainAssignationsFromFile = assignationGroup(self, fromFile=True)
+        self.mainAssignations = assignationGroup(self, self.gpucache)
+        self.mainAssignationsFromFile = assignationGroup(self, self.gpucache, fromFile=True)
 
-        self.layers = Layers(self)
-        self.layersFromFile = Layers(self, fromFile=True)
+        self.layers = Layers(self, self.gpucache)
+        self.layersFromFile = Layers(self, self.gpucache, fromFile=True)
 
 
     def writeLayer(self):
@@ -112,7 +113,16 @@ class cacheAssignations(object):
         return shader
 
     def getAllTags(self):
-        return self.parent.tags
+        return self.gpucache.getAllTags()
+
+    def getAllShaderPaths(self):
+        paths = []
+        for shader in self.mainAssignations.getShaders().values():
+            paths.append(shader)
+        return paths
+
+    def getAllLayerShaderPaths(self):
+        return self.layers.getAllShaderPaths()
 
     def getAllShaders(self):
         return self.mainAssignations.getShaders().keys()  + self.layers.getShaders()

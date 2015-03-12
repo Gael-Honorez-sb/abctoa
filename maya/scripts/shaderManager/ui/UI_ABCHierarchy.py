@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'UI_ABCHierarchy.ui'
 #
-# Created: Tue Sep 16 15:14:56 2014
+# Created: Thu Mar 12 11:02:30 2015
 #      by: pyside-uic 0.2.15 running on PySide 1.2.1
 #
 # WARNING! All changes made in this file will be lost!
@@ -35,7 +35,7 @@ class Ui_NAM(object):
         self.renderLayer = QtGui.QComboBox(self.centralwidget)
         self.renderLayer.setMinimumSize(QtCore.QSize(150, 0))
         self.renderLayer.setObjectName("renderLayer")
-        self.gridLayout.addWidget(self.renderLayer, 0, 4, 1, 1)
+        self.gridLayout.addWidget(self.renderLayer, 0, 5, 1, 1)
         self.splitter = QtGui.QSplitter(self.centralwidget)
         self.splitter.setOrientation(QtCore.Qt.Vertical)
         self.splitter.setObjectName("splitter")
@@ -102,7 +102,10 @@ class Ui_NAM(object):
         self.hierarchyWidget.setColumnCount(3)
         self.hierarchyWidget.setObjectName("hierarchyWidget")
         self.hierarchyWidget.header().setVisible(True)
-        self.gridLayout.addWidget(self.splitter, 3, 0, 1, 5)
+        self.gridLayout.addWidget(self.splitter, 3, 0, 1, 6)
+        self.isolateCheckbox = QtGui.QCheckBox(self.centralwidget)
+        self.isolateCheckbox.setObjectName("isolateCheckbox")
+        self.gridLayout.addWidget(self.isolateCheckbox, 0, 4, 1, 1)
         self.gridLayout_2.addLayout(self.gridLayout, 0, 0, 1, 1)
         self.splitter_2 = QtGui.QSplitter(self.centralwidget)
         sizePolicy = QtGui.QSizePolicy(QtGui.QSizePolicy.Preferred, QtGui.QSizePolicy.Minimum)
@@ -164,6 +167,7 @@ class Ui_NAM(object):
         self.hierarchyWidget.headerItem().setText(0, QtGui.QApplication.translate("NAM", "ABC Hierarchy", None, QtGui.QApplication.UnicodeUTF8))
         self.hierarchyWidget.headerItem().setText(1, QtGui.QApplication.translate("NAM", "shaders", None, QtGui.QApplication.UnicodeUTF8))
         self.hierarchyWidget.headerItem().setText(2, QtGui.QApplication.translate("NAM", "displacement", None, QtGui.QApplication.UnicodeUTF8))
+        self.isolateCheckbox.setText(QtGui.QApplication.translate("NAM", "Isolate Selected", None, QtGui.QApplication.UnicodeUTF8))
         self.shadersList.setSortingEnabled(True)
         self.displacementList.setSortingEnabled(True)
         self.wildCardButton.setText(QtGui.QApplication.translate("NAM", "Add WilCard Assignation", None, QtGui.QApplication.UnicodeUTF8))

@@ -354,49 +354,49 @@ void CABCViewerTranslator::NodeInitializer(CAbTranslator context)
 
     CAttrData data;
 
-    data.stringDefault = "";
+    data.defaultValue.STR = "";
     data.name = "jsonFile";
     data.shortName = "jf";
     data.channelBox = false;
     helper.MakeInputString(data);
 
-    data.stringDefault = "";
+    data.defaultValue.STR = "";
     data.name = "abcShaders";
     data.shortName = "abcs";
     data.channelBox = false;
     helper.MakeInputString(data);
 
-    data.stringDefault = "";
+    data.defaultValue.STR = "";
     data.name = "uvsArchive";
     data.shortName = "uvsa";
     data.channelBox = false;
     helper.MakeInputString(data);
 
-    data.stringDefault = "";
+    data.defaultValue.STR = "";
     data.name = "abcShaders";
     data.shortName = "abcs";
     data.channelBox = false;
     helper.MakeInputString(data);
 
-    data.stringDefault = "";
+    data.defaultValue.STR = "";
     data.name = "shadersAssignation";
     data.shortName = "sa";
     data.channelBox = false;
     helper.MakeInputString(data);
 
-    data.stringDefault = "";
+    data.defaultValue.STR = "";
     data.name = "attributes";
     data.shortName = "attr";
     data.channelBox = false;
     helper.MakeInputString(data);
 
-    data.stringDefault = "";
+    data.defaultValue.STR = "";
     data.name = "displacementsAssignation";
     data.shortName = "da";
     data.channelBox = false;
     helper.MakeInputString(data);
 
-    data.stringDefault = "";
+    data.defaultValue.STR = "";
     data.name = "layersOverride";
     data.shortName = "lo";
     data.channelBox = false;
