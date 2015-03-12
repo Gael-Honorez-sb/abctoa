@@ -865,7 +865,23 @@ class List(QMainWindow, UI_ABCHierarchy.Ui_NAM):
                 self.checkProperties(layer, item.child(i))
                     
 
+    def cleanAssignations(self):
+        ''' This function will remove any assignation that no longer exists in the cache'''
+        for shape in self.ABCViewerNode:
+            assignations = self.ABCViewerNode[shape].getAssignations()
+            shaders = assignations.getAllShaderPaths()
 
+            toRemove = []
+            for shader in shaders:
+                for path in shader:
+                    try:
+                        cmds.ABCHierarchy(self.ABCViewerNode[shape].getAbcPath(), path.replace("/", "|"))
+                    except:
+                        toRemove.append(path)
+            
+            for remove in toRemove:
+                print "Cleaning non existing path", remove
+                assignations.assignShader(None, remove, None)
 
 
     def getNode(self):
@@ -890,8 +906,6 @@ class List(QMainWindow, UI_ABCHierarchy.Ui_NAM):
                     cur = cmds.getAttr("%s.jsonFile" % shape)
                     for p in os.path.expandvars(cur).split(";"):
                         try:
-
-                            print "trying to open", p
                             f = open(p, "r")
                             allLines = json.load(f)
                             if "shaders" in allLines:
@@ -956,9 +970,13 @@ class List(QMainWindow, UI_ABCHierarchy.Ui_NAM):
                     if not cmds.objExists(str(shape) + ".skip%s" % attr):
                         cmds.addAttr(shape, ln='skip%s' % attr, at='bool')
 
+        
+
     def getCache(self):
         for shape in self.ABCViewerNode:
             self.ABCViewerNode[shape].updateCache()
+
+        self.cleanAssignations()
 
 
     def createWildCard(self, parentItem, wildcard="*", protected=False) :

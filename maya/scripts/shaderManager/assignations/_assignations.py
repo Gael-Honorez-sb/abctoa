@@ -114,6 +114,16 @@ class cacheAssignations(object):
     def getAllTags(self):
         return self.parent.tags
 
+
+    def getAllShaderPaths(self):
+        paths = []
+        for shader in self.mainAssignations.getShaders().values():
+            paths.append(shader)
+        return paths
+
+    def getAllLayerShaderPaths(self):
+        return self.layers.getAllShaderPaths()
+
     def getAllShaders(self):
         return self.mainAssignations.getShaders().keys()  + self.layers.getShaders()
 

@@ -163,6 +163,13 @@ class Layers(object):
 
         return result
 
+    def getAllShaderPaths(self):
+        paths = []
+        for layer in self.layers:
+            for path in  self.layers[layer].assignation.getShaders().values():
+                paths.append(path)
+        return paths        
+
     def getShaders(self):
         shaders = []
         for layer in self.layers:

@@ -32,6 +32,9 @@ class gpucache(object):
         self.tags = {}
         self.itemsTree = []
 
+    def getAbcPath(self):
+        return self.ABCcache
+
     def getAssignations(self):
         ''' return the assignations manager'''
         return self.assignations
