@@ -15,14 +15,15 @@ from shaderManager.layers._layer import layer
 
 
 class Layers(object):
-    def __init__(self, parent=None, fromFile = False):
+    def __init__(self, parent=None, gpucache=None, fromFile = False):
         self.parent = parent
+        self.gpucache = gpucache
         self.fromFile = fromFile
         self.layers = {}
 
     def addLayer(self, layername, layerdata):
         if not layername in self.layers:
-            self.layers[layername] = layer(self, layername, self.fromFile)
+            self.layers[layername] = layer(self, self.gpucache, layername, self.fromFile)
             if "shaders" in layerdata:
                 self.layers[layername].addShaders(layerdata["shaders"])
             if "properties" in layerdata:
