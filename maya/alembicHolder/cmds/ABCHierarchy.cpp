@@ -85,8 +85,12 @@ MStatus ABCHierarchy::doIt( const MArgList& args )
         MString typeObj;
         if(IXform::matches(iObj->getHeader()))
             typeObj = "Transform:";
-        else
+        else if(IPolyMesh::matches(iObj->getHeader()))
             typeObj = "Shape:";
+        else if(IPoints::matches(iObj->getHeader()))
+            typeObj = "Points:";
+        else
+            typeObj = "Unknown:";
 
         appendToResult(typeObj + iObj->getName().c_str());
         obj++;
