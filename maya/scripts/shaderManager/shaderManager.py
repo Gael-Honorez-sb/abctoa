@@ -480,7 +480,7 @@ class List(QMainWindow, UI_ABCHierarchy.Ui_NAM):
         curLayeridx = self.renderLayer.findText(curLayer)
         if curLayeridx != -1:
             self.renderLayer.setCurrentIndex(curLayeridx)
-
+        self.curLayer = curLayer
 
 
     def layerChanged(self, index):
@@ -743,6 +743,10 @@ class List(QMainWindow, UI_ABCHierarchy.Ui_NAM):
         item.setChildIndicatorPolicy(QtGui.QTreeWidgetItem.DontShowIndicator)
 
     def createBranch(self, parentItem, abcchild, hierarchy = False, p = "/") :
+        ''' 
+        createBranch
+        This function will create a branch inside the cache hierarchy
+        '''
         createdItems = []
         for item in abcchild :
             itemType = item.partition(":")[0]
