@@ -28,6 +28,12 @@ class PropertyWidgetVisibility(PropertyWidget):
     self.controller.setPropertyValue.connect(self.changed)
     self.controller.reset.connect(self.resetValue)
 
+    self.allSwitch = QPushButton(self)
+    self.allSwitch.setText("All Off")
+    self.allSwitch.pressed.connect(self.switchPressed)
+    
+    self.switch = True
+
     self.viz = {}
     self.viz["camera"] = QCheckBox(self)
     self.viz["cast_shadows"] = QCheckBox(self)
@@ -47,7 +53,8 @@ class PropertyWidgetVisibility(PropertyWidget):
 
 
     grid= QGridLayout()
-    row = 1
+    grid.addWidget(self.allSwitch, 1, 1)
+    row = 2
     for v in self.viz:
       label = QLabel(v)
       grid.addWidget(label, row, 1)
@@ -58,6 +65,15 @@ class PropertyWidgetVisibility(PropertyWidget):
 
     self.layout().addLayout(grid)
 
+  def switchPressed(self):
+    if self.switch:
+        self.setViz(144)
+        self.allSwitch.setText("All On")
+        self.switch = False
+    else:
+        self.setViz(255)
+        self.allSwitch.setText("All Off")
+        self.switch = True
 
   def computeViz(self):
     value = AI_RAY_ALL
