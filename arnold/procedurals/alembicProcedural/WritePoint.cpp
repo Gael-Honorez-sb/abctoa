@@ -266,11 +266,92 @@ AtNode * ProcessPointsBase(
     }
 
 
-    bool isFirstSample = true;
+    AtNode* pointsNode = AiNode( "points" );
+
+    if (!pointsNode)
+    {
+        AiMsgError("Failed to make points node for %s",
+                prim.getFullName().c_str());
+        return NULL;
+    }
+
+    args.createdNodes.push_back(pointsNode);
+    
 
     float radiusPoint = 1.0f;
+    float scaleVelocity = 1.0f/args.fps;
+
     if (AiNodeLookUpUserParameter(args.proceduralNode, "radiusPoint") !=NULL )
         radiusPoint = AiNodeGetFlt(args.proceduralNode, "radiusPoint");
+    
+    // Attribute overrides. We assume instance mode all the time here.
+    if(args.linkAttributes)
+    {
+        for(std::vector<std::string>::iterator it=args.attributes.begin(); it!=args.attributes.end(); ++it)
+        {
+            if(name.find(*it) != string::npos || std::find(tags.begin(), tags.end(), *it) != tags.end() || matchPattern(name,*it))
+            {
+                const Json::Value overrides = args.attributesRoot[*it];
+                if(overrides.size() > 0)
+                {
+                    for( Json::ValueIterator itr = overrides.begin() ; itr != overrides.end() ; itr++ )
+                    {
+                        std::string attribute = itr.key().asString();
+
+                        if(attribute == "radius_multiplier")
+                        {
+                            Json::Value val = args.attributesRoot[*it][itr.key().asString()];
+                            radiusPoint *= val.asDouble();
+                        }
+
+                        if(attribute == "velocity_multiplier")
+                        {
+                            Json::Value val = args.attributesRoot[*it][itr.key().asString()];
+                            scaleVelocity *= val.asDouble();
+                        }
+
+                        if (attribute=="mode"
+                            || attribute=="min_pixel_width"
+                            || attribute=="step_size"
+                            || attribute=="invert_normals")
+                        {
+                            //AiMsgDebug("Checking attribute %s for shape %s", attribute.c_str(), name.c_str());
+                            // check if the attribute exists ...
+                            const AtNodeEntry* nodeEntry = AiNodeGetNodeEntry(pointsNode);
+                            const AtParamEntry* paramEntry = AiNodeEntryLookUpParameter(nodeEntry, attribute.c_str());
+
+                            if ( paramEntry != NULL)
+                            {
+                                //AiMsgDebug("attribute %s exists on shape", attribute.c_str());
+                                Json::Value val = args.attributesRoot[*it][itr.key().asString()];
+                                if( val.isString() )
+                                    AiNodeSetStr(pointsNode, attribute.c_str(), val.asCString());
+                                else if( val.isBool() )
+                                    AiNodeSetBool(pointsNode, attribute.c_str(), val.asBool());
+                                else if( val.isInt() )
+                                {
+                                    //make the difference between Byte & int!
+                                    int typeEntry = AiParamGetType(paramEntry);
+                                    if(typeEntry == AI_TYPE_BYTE)
+                                        AiNodeSetByte(pointsNode, attribute.c_str(), val.asInt());
+                                    else
+                                        AiNodeSetInt(pointsNode, attribute.c_str(), val.asInt());
+                                }
+                                else if( val.isUInt() )
+                                    AiNodeSetUInt(pointsNode, attribute.c_str(), val.asUInt());
+                                else if( val.isDouble() )
+                                    AiNodeSetFlt(pointsNode, attribute.c_str(), val.asDouble());
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+
+    bool isFirstSample = true;
+
 
     std::string radiusParam = "pscale";
     if (AiNodeLookUpUserParameter(args.proceduralNode, "radiusProperty") !=NULL )
@@ -321,7 +402,7 @@ AtNode * ProcessPointsBase(
 
         if(useVelocities && isFirstSample)
         {
-            float scaleVelocity = 1.0f/args.fps;
+            
             if (AiNodeLookUpUserParameter(args.proceduralNode, "scaleVelocity") !=NULL )
                 scaleVelocity *= AiNodeGetFlt(args.proceduralNode, "scaleVelocity");
 
@@ -370,17 +451,7 @@ AtNode * ProcessPointsBase(
         }
     }
 
-    AtNode* pointsNode = AiNode( "points" );
 
-    if (!pointsNode)
-    {
-        AiMsgError("Failed to make points node for %s",
-                prim.getFullName().c_str());
-        return NULL;
-    }
-
-
-    args.createdNodes.push_back(pointsNode);
     if ( instanceNode != NULL)
     {
         AiNodeSetStr( pointsNode, "name", (name + ":src").c_str() );
@@ -389,6 +460,7 @@ AtNode * ProcessPointsBase(
     {
         AiNodeSetStr( pointsNode, "name", name.c_str() );
     }
+
 
     if(!useVelocities)
     {
@@ -458,7 +530,7 @@ AtNode * ProcessPointsBase(
     {
         AiNodeSetByte( pointsNode, "visibility", 0 );
 
-        AiNodeSetInt( pointsNode, "mode", 1 );
+        //AiNodeSetInt( pointsNode, "mode", 1 );
 
         AiNodeSetPtr(instanceNode, "node", pointsNode );
         g_meshCache[cacheId] = pointsNode;
