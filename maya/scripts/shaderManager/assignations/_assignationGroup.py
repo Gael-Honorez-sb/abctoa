@@ -16,8 +16,9 @@ import fnmatch
 import re
 
 class assignationGroup(object):
-    def __init__(self, parent=None, fromFile = False, fromlayer = None):
+    def __init__(self, parent=None, gpucache=None, fromFile = False, fromlayer = None):
         self.parent = parent
+        self.gpucache = gpucache
         self.fromFile = fromFile
         self.fromLayer = fromlayer
         self.shaders = {}
@@ -25,7 +26,7 @@ class assignationGroup(object):
         self.displacements = {}
 
     def getAllTags(self):
-        return self.parent.getAllTags()
+        return self.gpucache.getAllTags()
         
     def addShaders(self, shaders):
         self.shaders = shaders
@@ -80,7 +81,7 @@ class assignationGroup(object):
         wildShaders = self.getWildShaders()
 
         # find from tag assignation.
-        tags = self.parent.getAllTags()
+        tags = self.getAllTags()
         for shader in wildShaders:
             for tag in wildShaders[shader]:
                 if tags:

@@ -64,8 +64,6 @@ class List(QMainWindow, UI_ABCHierarchy.Ui_NAM):
         
         self.setAttribute(QtCore.Qt.WA_DeleteOnClose)        
         
-        if not AiUniverseIsActive():
-            AiBegin()
 
         self.setupUi(self)
 
@@ -98,7 +96,8 @@ class List(QMainWindow, UI_ABCHierarchy.Ui_NAM):
         self.propertyEditorWindow.setWindowTitle("Properties")
         self.propertyEditorWindow.setMinimumWidth(300)
         self.addDockWidget(QtCore.Qt.LeftDockWidgetArea, self.propertyEditorWindow)
-        self.propertyEditor = PropertyEditor(self, "polymesh", self.propertyEditorWindow)
+        self.propertyType = "polymesh"
+        self.propertyEditor = PropertyEditor(self, self.propertyType, self.propertyEditorWindow)
         self.propertyEditorWindow.setWidget(self.propertyEditor)
 
 
@@ -147,10 +146,6 @@ class List(QMainWindow, UI_ABCHierarchy.Ui_NAM):
 
         self.refreshShaders()
 
-        if AiUniverseIsActive() and AiRendering() == False:
-             AiEnd()
-
-
         self.getLayers()
         self.setCurrentLayer()
         
@@ -168,12 +163,21 @@ class List(QMainWindow, UI_ABCHierarchy.Ui_NAM):
         self.overrideShaders.stateChanged.connect(self.overrideShadersChanged)
         self.overrideProps.stateChanged.connect(self.overridePropsChanged)
 
+        self.isolateCheckbox.stateChanged.connect(self.isolateCheckboxChanged)
 
         #Widcard management
         self.wildCardButton.pressed.connect(self.addWildCard)
 
         
-        
+    def isolateCheckboxChanged(self, state):
+        ''' activate/desactive isolation'''
+        if state == 0:
+            for cache in self.ABCViewerNode.values():
+                cache.setToPath("")
+
+        else:
+            for cache in self.ABCViewerNode.values():
+                cache.setToPath(cache.getSelection())            
 
     def overrideDispsChanged(self, state):
         result = True
@@ -471,7 +475,7 @@ class List(QMainWindow, UI_ABCHierarchy.Ui_NAM):
         curLayeridx = self.renderLayer.findText(curLayer)
         if curLayeridx != -1:
             self.renderLayer.setCurrentIndex(curLayeridx)
-
+        self.curLayer = curLayer
 
 
     def layerChanged(self, index):
@@ -638,6 +642,26 @@ class List(QMainWindow, UI_ABCHierarchy.Ui_NAM):
         except:
             pass
 
+        #TODO : Smarter switch
+        typeChanged = False
+        if item.icon == 7 and self.propertyType == "polymesh":
+            self.propertyType = "points"
+            typeChanged = True
+            
+            self.propertyEditor = PropertyEditor(self, self.propertyType, self.propertyEditorWindow)
+            self.propertyEditorWindow.setWidget(self.propertyEditor)
+
+
+        elif item.icon != 7 and self.propertyType == "points":
+            self.propertyType = "polymesh"
+            typeChanged = True
+
+        if typeChanged:
+            self.propertyEditor.deleteLater()            
+            self.propertyEditor = PropertyEditor(self, self.propertyType, self.propertyEditorWindow)
+            self.propertyEditorWindow.setWidget(self.propertyEditor)
+
+
         self.lastClick = 1
 
         if self.thisTreeItem is item and force==False:
@@ -645,11 +669,13 @@ class List(QMainWindow, UI_ABCHierarchy.Ui_NAM):
             return
         self.thisTreeItem = item
 
-        state = item.checkState(col)
         curPath = item.getPath()
         cache = item.cache
 
         cache.setSelection(curPath)
+
+        if self.isolateCheckbox.checkState() == Qt.Checked:
+            cache.setToPath(curPath)
 
 
         self.propertyEditor.resetToDefault()
@@ -681,18 +707,13 @@ class List(QMainWindow, UI_ABCHierarchy.Ui_NAM):
 
         self.propertyEditor.propertyChanged.connect(self.propertyChanged)
 
-        if state == 2 :
-            cache.setToPath(curPath)
-
-        elif state == 0:
-            cache.setToPath("|")
-
         self.propertyEditing = False
 
     def itemPressed(self, item, col) :
         self.lastClick = 1
         if QtGui.QApplication.mouseButtons()  == QtCore.Qt.RightButton:
             item.pressed()
+
 
     def itemSelectionChanged(self):
         if len(self.hierarchyWidget.selectedItems()) == 0:
@@ -738,6 +759,10 @@ class List(QMainWindow, UI_ABCHierarchy.Ui_NAM):
         item.setChildIndicatorPolicy(QtGui.QTreeWidgetItem.DontShowIndicator)
 
     def createBranch(self, parentItem, abcchild, hierarchy = False, p = "/") :
+        ''' 
+        createBranch
+        This function will create a branch inside the cache hierarchy
+        '''
         createdItems = []
         for item in abcchild :
             itemType = item.partition(":")[0]
@@ -865,7 +890,23 @@ class List(QMainWindow, UI_ABCHierarchy.Ui_NAM):
                 self.checkProperties(layer, item.child(i))
                     
 
+    def cleanAssignations(self):
+        ''' This function will remove any assignation that no longer exists in the cache'''
+        for shape in self.ABCViewerNode:
+            assignations = self.ABCViewerNode[shape].getAssignations()
+            shaders = assignations.getAllShaderPaths()
 
+            toRemove = []
+            for shader in shaders:
+                for path in shader:
+                    try:
+                        cmds.ABCHierarchy(self.ABCViewerNode[shape].getAbcPath(), path.replace("/", "|"))
+                    except:
+                        toRemove.append(path)
+            
+            for remove in toRemove:
+                print "Cleaning non existing path", remove
+                assignations.assignShader(None, remove, None)
 
 
     def getNode(self):
@@ -890,8 +931,6 @@ class List(QMainWindow, UI_ABCHierarchy.Ui_NAM):
                     cur = cmds.getAttr("%s.jsonFile" % shape)
                     for p in os.path.expandvars(cur).split(";"):
                         try:
-
-                            print "trying to open", p
                             f = open(p, "r")
                             allLines = json.load(f)
                             if "shaders" in allLines:
@@ -956,9 +995,13 @@ class List(QMainWindow, UI_ABCHierarchy.Ui_NAM):
                     if not cmds.objExists(str(shape) + ".skip%s" % attr):
                         cmds.addAttr(shape, ln='skip%s' % attr, at='bool')
 
+        
+
     def getCache(self):
         for shape in self.ABCViewerNode:
             self.ABCViewerNode[shape].updateCache()
+
+        self.cleanAssignations()
 
 
     def createWildCard(self, parentItem, wildcard="*", protected=False) :

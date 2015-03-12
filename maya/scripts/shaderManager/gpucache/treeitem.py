@@ -31,6 +31,7 @@ SHADER = 3
 WILDCARD = 4
 DISPLACE = 5
 TAG = 6
+POINTS = 7
 
 class abcTreeItem(QtGui.QTreeWidgetItem):
     def __init__(self, cache, path, itemType, parent=None, *args, **kwargs):
@@ -61,6 +62,8 @@ class abcTreeItem(QtGui.QTreeWidgetItem):
         
         if itemType == "Transform":
             self.icon = TRANSFORM
+        elif itemType == "Points":
+            self.icon = POINTS
         else:
             self.icon = SHAPE
 
@@ -87,7 +90,7 @@ class abcTreeItem(QtGui.QTreeWidgetItem):
         if column == 0 :
             text = self.getDisplayPath()
 
-            if self.icon == SHAPE or self.icon == WILDCARD:    
+            if self.icon == SHAPE or self.icon == POINTS or self.icon == WILDCARD:    
                 ### display all attributes
                 text += "<br>" + self.attributeText
 

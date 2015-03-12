@@ -14,10 +14,11 @@
 from shaderManager.assignations._assignationGroup import assignationGroup
 
 class layer(object):
-    def __init__(self, parent=None, layername="", fromFile=False):
+    def __init__(self, parent=None, gpucache=None, layername="", fromFile=False):
         self.parent = parent
         self.layerName = layername
-        self.assignation = assignationGroup(self, fromFile=fromFile, fromlayer=layername)
+        self.gpucache = gpucache
+        self.assignation = assignationGroup(self, gpucache, fromFile=fromFile, fromlayer=layername)
 
         self._removeDisplacements = False
         self._removeProperties = False
@@ -99,4 +100,4 @@ class layer(object):
         return self.assignation.getDisplacements()
 
     def getAllTags(self):
-        return self.assignation.getAllTags()
+        return self.gpucache.getAllTags()

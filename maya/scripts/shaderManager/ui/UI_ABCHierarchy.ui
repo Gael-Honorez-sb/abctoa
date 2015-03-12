@@ -63,7 +63,7 @@
         </property>
        </spacer>
       </item>
-      <item row="0" column="4">
+      <item row="0" column="5">
        <widget class="QComboBox" name="renderLayer">
         <property name="minimumSize">
          <size>
@@ -73,7 +73,7 @@
         </property>
        </widget>
       </item>
-      <item row="3" column="0" colspan="5">
+      <item row="3" column="0" colspan="6">
        <widget class="QSplitter" name="splitter">
         <property name="orientation">
          <enum>Qt::Vertical</enum>
@@ -177,6 +177,13 @@ border: none;
           </property>
          </column>
         </widget>
+       </widget>
+      </item>
+      <item row="0" column="4">
+       <widget class="QCheckBox" name="isolateCheckbox">
+        <property name="text">
+         <string>Isolate Selected</string>
+        </property>
        </widget>
       </item>
      </layout>

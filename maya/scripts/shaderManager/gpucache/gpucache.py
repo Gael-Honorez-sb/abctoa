@@ -32,6 +32,12 @@ class gpucache(object):
         self.tags = {}
         self.itemsTree = []
 
+    def getAllTags(self):
+        return self.tags
+
+    def getAbcPath(self):
+        return self.ABCcache
+
     def getAssignations(self):
         ''' return the assignations manager'''
         return self.assignations
@@ -121,6 +127,8 @@ class gpucache(object):
             topath =""
         cmds.setAttr("%s.cacheSelectionPath" % self.shape, str(topath).replace("|", "/"), type="string")
 
+    def getSelection(self):
+        return cmds.getAttr("%s.cacheSelectionPath" % self.shape)
 
     def setToPath(self, topath):
         cmds.setAttr("%s.cacheGeomPath" % self.shape, str(topath).replace("/", "|"), type="string")
