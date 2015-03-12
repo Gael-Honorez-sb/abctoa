@@ -124,6 +124,8 @@ class gpucache(object):
             topath =""
         cmds.setAttr("%s.cacheSelectionPath" % self.shape, str(topath).replace("|", "/"), type="string")
 
+    def getSelection(self):
+        return cmds.getAttr("%s.cacheSelectionPath" % self.shape)
 
     def setToPath(self, topath):
         cmds.setAttr("%s.cacheGeomPath" % self.shape, str(topath).replace("/", "|"), type="string")

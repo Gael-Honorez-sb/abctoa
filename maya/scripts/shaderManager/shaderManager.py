@@ -168,12 +168,21 @@ class List(QMainWindow, UI_ABCHierarchy.Ui_NAM):
         self.overrideShaders.stateChanged.connect(self.overrideShadersChanged)
         self.overrideProps.stateChanged.connect(self.overridePropsChanged)
 
+        self.isolateCheckbox.stateChanged.connect(self.isolateCheckboxChanged)
 
         #Widcard management
         self.wildCardButton.pressed.connect(self.addWildCard)
 
         
-        
+    def isolateCheckboxChanged(self, state):
+        ''' activate/desactive isolation'''
+        if state == 0:
+            for cache in self.ABCViewerNode.values():
+                cache.setToPath("")
+
+        else:
+            for cache in self.ABCViewerNode.values():
+                cache.setToPath(cache.getSelection())            
 
     def overrideDispsChanged(self, state):
         result = True
@@ -645,11 +654,13 @@ class List(QMainWindow, UI_ABCHierarchy.Ui_NAM):
             return
         self.thisTreeItem = item
 
-        state = item.checkState(col)
         curPath = item.getPath()
         cache = item.cache
 
         cache.setSelection(curPath)
+
+        if self.isolateCheckbox.checkState() == Qt.Checked:
+            cache.setToPath(curPath)
 
 
         self.propertyEditor.resetToDefault()
@@ -680,12 +691,6 @@ class List(QMainWindow, UI_ABCHierarchy.Ui_NAM):
                 self.updatePropertyColor(cache, layer, propname, curPath)
 
         self.propertyEditor.propertyChanged.connect(self.propertyChanged)
-
-        if state == 2 :
-            cache.setToPath(curPath)
-
-        elif state == 0:
-            cache.setToPath("|")
 
         self.propertyEditing = False
 
