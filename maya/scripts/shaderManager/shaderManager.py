@@ -64,8 +64,6 @@ class List(QMainWindow, UI_ABCHierarchy.Ui_NAM):
         
         self.setAttribute(QtCore.Qt.WA_DeleteOnClose)        
         
-        if not AiUniverseIsActive():
-            AiBegin()
 
         self.setupUi(self)
 
@@ -98,7 +96,8 @@ class List(QMainWindow, UI_ABCHierarchy.Ui_NAM):
         self.propertyEditorWindow.setWindowTitle("Properties")
         self.propertyEditorWindow.setMinimumWidth(300)
         self.addDockWidget(QtCore.Qt.LeftDockWidgetArea, self.propertyEditorWindow)
-        self.propertyEditor = PropertyEditor(self, "polymesh", self.propertyEditorWindow)
+        self.propertyType = "polymesh"
+        self.propertyEditor = PropertyEditor(self, self.propertyType, self.propertyEditorWindow)
         self.propertyEditorWindow.setWidget(self.propertyEditor)
 
 
@@ -146,10 +145,6 @@ class List(QMainWindow, UI_ABCHierarchy.Ui_NAM):
         self.refreshShadersBtn.pressed.connect(self.refreshShaders)
 
         self.refreshShaders()
-
-        if AiUniverseIsActive() and AiRendering() == False:
-             AiEnd()
-
 
         self.getLayers()
         self.setCurrentLayer()
@@ -647,6 +642,26 @@ class List(QMainWindow, UI_ABCHierarchy.Ui_NAM):
         except:
             pass
 
+        #TODO : Smarter switch
+        typeChanged = False
+        if item.icon == 7 and self.propertyType == "polymesh":
+            self.propertyType = "points"
+            typeChanged = True
+            
+            self.propertyEditor = PropertyEditor(self, self.propertyType, self.propertyEditorWindow)
+            self.propertyEditorWindow.setWidget(self.propertyEditor)
+
+
+        elif item.icon != 7 and self.propertyType == "points":
+            self.propertyType = "polymesh"
+            typeChanged = True
+
+        if typeChanged:
+            self.propertyEditor.deleteLater()            
+            self.propertyEditor = PropertyEditor(self, self.propertyType, self.propertyEditorWindow)
+            self.propertyEditorWindow.setWidget(self.propertyEditor)
+
+
         self.lastClick = 1
 
         if self.thisTreeItem is item and force==False:
@@ -698,6 +713,7 @@ class List(QMainWindow, UI_ABCHierarchy.Ui_NAM):
         self.lastClick = 1
         if QtGui.QApplication.mouseButtons()  == QtCore.Qt.RightButton:
             item.pressed()
+
 
     def itemSelectionChanged(self):
         if len(self.hierarchyWidget.selectedItems()) == 0:
