@@ -31,7 +31,8 @@ class PropertyWidgetString2(PropertyWidget):
       self.widget.returnPressed.connect(self.TextChanged)
       self.layout().addWidget(self.widget)
    
-   def TextChanged(self, value):
+   def TextChanged(self):
+      value = self.widget.text()
       self.controller.mainEditor.propertyChanged(dict(propname=self.paramName, default=value == self.default, value=value))
 
 

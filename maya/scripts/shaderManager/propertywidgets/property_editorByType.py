@@ -32,7 +32,7 @@ from arnold import *
 PROPERTY_ADD_LIST = {
 'polymesh'       : [
                     {'name' :'forceVisible', 'type': AI_TYPE_BOOLEAN, 'default' : False},
-                    {'name' :'sss_setname', 'type': AI_TYPE_STRING, 'default' : False},
+                    {'name' :'sss_setname', 'type': AI_TYPE_STRING, 'default' : ""},
                   ],
 'points'         : [
                     {'name' :'forceVisible', 'type': AI_TYPE_BOOLEAN, 'default' : False}, 
