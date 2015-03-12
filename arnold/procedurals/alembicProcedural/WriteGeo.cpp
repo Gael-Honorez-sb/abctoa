@@ -287,6 +287,7 @@ std::string getHash(
                         || attribute=="disp_padding"
                         || attribute=="disp_zero_value"
                         || attribute=="disp_autobump"
+                        || attribute=="sss_setname"
                         || attribute=="invert_normals")
                     {
                         Json::Value val = args.attributesRoot[*it][itr.key().asString()];
@@ -618,32 +619,50 @@ AtNode* writeMesh(
                             || attribute=="disp_padding"
                             || attribute=="disp_zero_value"
                             || attribute=="disp_autobump"
+                            || attribute=="sss_setname"
                             || attribute=="invert_normals")
                         {
                             const AtNodeEntry* nodeEntry = AiNodeGetNodeEntry(meshNode);
                             const AtParamEntry* paramEntry = AiNodeEntryLookUpParameter(nodeEntry, attribute.c_str());
 
-                            if ( paramEntry != NULL)
+                            Json::Value val = args.attributesRoot[*it][itr.key().asString()];
+
+                            if ( paramEntry == NULL)
                             {
-                                Json::Value val = args.attributesRoot[*it][itr.key().asString()];
+                                // the param doesn't exists, but we can add it!
                                 if( val.isString() )
-                                    AiNodeSetStr(meshNode, attribute.c_str(), val.asCString());
+                                    AiNodeDeclare(meshNode, attribute.c_str(), "constant STRING");
                                 else if( val.isBool() )
-                                    AiNodeSetBool(meshNode, attribute.c_str(), val.asBool());
-                                else if( val.isInt() )
+                                    AiNodeDeclare(meshNode, attribute.c_str(), "constant BOOL");
+                                else if( val.isInt() || val.isUInt() )
+                                    AiNodeDeclare(meshNode, attribute.c_str(), "constant INT");
+                                else if( val.isDouble() )
+                                    AiNodeDeclare(meshNode, attribute.c_str(), "constant FLOAT");
+                            }
+                                
+                            if( val.isString() )
+                                AiNodeSetStr(meshNode, attribute.c_str(), val.asCString());
+                            else if( val.isBool() )
+                                AiNodeSetBool(meshNode, attribute.c_str(), val.asBool());
+                            else if( val.isInt() )
+                            {
+                                //make the difference between Byte & int!
+                                if ( paramEntry != NULL)
                                 {
-                                    //make the difference between Byte & int!
                                     int typeEntry = AiParamGetType(paramEntry);
                                     if(typeEntry == AI_TYPE_BYTE)
                                         AiNodeSetByte(meshNode, attribute.c_str(), val.asInt());
                                     else
                                         AiNodeSetInt(meshNode, attribute.c_str(), val.asInt());
                                 }
-                                else if( val.isUInt() )
-                                    AiNodeSetUInt(meshNode, attribute.c_str(), val.asUInt());
-                                else if( val.isDouble() )
-                                    AiNodeSetFlt(meshNode, attribute.c_str(), val.asDouble());
+                                else
+                                    AiNodeSetInt(meshNode, attribute.c_str(), val.asInt());
                             }
+                            else if( val.isUInt() )
+                                AiNodeSetUInt(meshNode, attribute.c_str(), val.asUInt());
+                            else if( val.isDouble() )
+                                AiNodeSetFlt(meshNode, attribute.c_str(), val.asDouble());
+
                         }
                     }
                 }
