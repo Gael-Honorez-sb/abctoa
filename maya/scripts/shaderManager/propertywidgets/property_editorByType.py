@@ -24,14 +24,16 @@ from shaderManager.propertywidgets.property_widget_int import *
 from shaderManager.propertywidgets.property_widget_node import *
 from shaderManager.propertywidgets.property_widget_pointer import *
 from shaderManager.propertywidgets.property_widget_string import *
+from shaderManager.propertywidgets.property_widget_string2 import PropertyWidgetString2
 from shaderManager.propertywidgets.property_widget_vector import *
 from shaderManager.propertywidgets.property_widget_visibility import *
 from arnold import *
 
 PROPERTY_ADD_LIST = {
 'polymesh'       : [
-                    {'name' :'forceVisible', 'type': AI_TYPE_BOOLEAN, 'default' : False}
-],
+                    {'name' :'forceVisible', 'type': AI_TYPE_BOOLEAN, 'default' : False},
+                    {'name' :'sss_setname', 'type': AI_TYPE_STRING, 'default' : False},
+                  ],
 'points'         : [
                     {'name' :'forceVisible', 'type': AI_TYPE_BOOLEAN, 'default' : False}, 
                     {'name' :'radius_multiplier', 'type': AI_TYPE_FLOAT, 'default' : 1.0},
@@ -131,6 +133,8 @@ class PropertyEditor(QWidget):
          widget = PropertyWidgetBool2(self, default, name, parent)
       elif type == AI_TYPE_FLOAT:
          widget = PropertyWidgetFloat2(self, default, name, parent)
+      elif type == AI_TYPE_STRING:
+         widget = PropertyWidgetString2(self, default, name, parent)         
       ##elif type == AI_TYPE_POINTER:
       ##   widget = PropertyWidgetPointer(nentry, name, parent)
       # elif type == AI_TYPE_NODE:
