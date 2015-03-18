@@ -266,9 +266,6 @@ global proc vioVizCustomAttrsManage (string $nodeName)
     }
     optionMenuGrp -e -cc ("vioVizSwitchAttributeFrom " + $nodeName + " " + $shaderMenu) $shaderMenu;
 
-    print "\n-----\n";
-    print $shaderFrom;
-    print "\n-----\n";
     if (`size($multiList)` && $shaderFrom != "")
     {
         optionMenuGrp -e -v $shaderFrom $shaderMenu;

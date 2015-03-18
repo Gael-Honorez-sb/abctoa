@@ -181,16 +181,26 @@ class abcTreeItem(QtGui.QTreeWidgetItem):
         menu.addSeparator()
         shader = self.cache.assignations.getShader(path, self.interface.getLayer())
         if shader:
-            deassignShader = QtGui.QAction("Deassign %s" % shader["shader"], menu)
-            deassignShader.triggered.connect(self.deassignShader)
-            menu.addAction(deassignShader)
+            if shader["fromfile"] == False:
+                deassignShader = QtGui.QAction("Deassign %s" % shader["shader"], menu)
+                deassignShader.triggered.connect(self.deassignShader)
+                menu.addAction(deassignShader)
+            else:
+                importShaderInscene= QtGui.QAction("Import %s in Scene" % shader["shader"], menu)
+                importShaderInscene.triggered.connect(self.importShaderInScene)
+                menu.addAction(importShaderInscene)                
 
         menu.addSeparator()
         shader = self.cache.assignations.getDisplace(path, self.interface.getLayer())
         if shader:
+            if shader["fromfile"] == False:
                 deassignShader = QtGui.QAction("Deassign displace %s" % shader["shader"], menu)
                 deassignShader.triggered.connect(self.deassignDisplace)
                 menu.addAction(deassignShader)
+            else:
+                importDisplaceInscene= QtGui.QAction("Import %s in Scene" % shader["shader"], menu)
+                importDisplaceInscene.triggered.connect(self.importDisplaceInscene)
+                menu.addAction(importDisplaceInscene)                 
 
         menu.addSeparator()
         importinscene= QtGui.QAction("Import in Scene", menu)
@@ -199,6 +209,23 @@ class abcTreeItem(QtGui.QTreeWidgetItem):
 
 
         menu.popup(QtGui.QCursor.pos())
+
+    def importShaderInScene(self):
+        cmds.loadPlugin('abcMayaShader.mll', qt=1)
+        shader = self.cache.assignations.getShader(self.getPath(), self.interface.getLayer())
+        if shader:
+            abcShader = cmds.shadingNode('abcMayaShader', asShader=True, n="%s" % shader["shader"].replace("SG", ""))
+            cmds.setAttr(abcShader +".shader", self.cache.getAbcShader(), type="string")
+            cmds.setAttr(abcShader +".shaderFrom", shader["shader"], type="string")
+
+
+    def importDisplaceInscene(self):
+        cmds.loadPlugin('abcMayaShader.mll', qt=1)
+        shader = self.cache.assignations.getDisplace(self.getPath(), self.interface.getLayer())
+        if shader:
+            abcShader = cmds.shadingNode('abcMayaShader', asShader=True, n="%s" % shader["shader"].replace("SG", ""))
+            cmds.setAttr(abcShader +".shader", self.cache.getAbcShader(), type="string")
+            cmds.setAttr(abcShader +".shaderFrom", shader["shader"], type="string")
 
     def importinscene(self):
         cmd = 'AbcImport  -ft "^%s$" "%s"' % (self.path[-1], self.cache.ABCcache.replace(os.path.sep, "/"))
