@@ -690,7 +690,11 @@ class List(QMainWindow, UI_ABCHierarchy.Ui_NAM):
         curPath = item.getPath()
         cache = item.cache
 
-        cache.setSelection(curPath)
+        allSelected = []
+        for item in self.hierarchyWidget.selectedItems():
+            allSelected.append(item.getPath())
+
+        cache.setSelection(allSelected)
 
         if self.isolateCheckbox.checkState() == Qt.Checked:
             cache.setToPath(curPath)

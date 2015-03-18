@@ -37,8 +37,43 @@
 
 #include <boost/tokenizer.hpp>
 #include <boost/regex.hpp>
+#include <pystring.h>
 
 //-*****************************************************************************
+
+bool pathInJsonString(const std::string &path, const std::string &jsonString )
+{
+
+    std::vector<std::string> pathParts;
+    std::vector<std::string> jsonPathParts;
+    std::cout << path << std::endl;
+    pystring::split(path, pathParts, "/");
+
+    Json::Value jroot;
+    Json::Reader reader;
+    bool parsingSuccessful = reader.parse( jsonString, jroot, false );
+    if(parsingSuccessful)
+    {
+        for( Json::ValueIterator itr = jroot.begin() ; itr != jroot.end() ; itr++ )
+        {
+            std::string jpath = jroot[itr.key().asUInt()].asString();
+            pystring::split(jpath, jsonPathParts, "/");
+
+            if(jsonPathParts.size() > pathParts.size())
+                continue;
+
+            bool validPath = true;
+            for(int i = 0; i < jsonPathParts.size(); i++)
+                if(pathParts[i].compare(jsonPathParts[i]) != 0)
+                    validPath = false;
+           
+            if(validPath)
+                return validPath;
+        }
+    }
+    return false;
+}
+
 void TokenizePath( const std::string &path, std::vector<std::string> &result )
 {
     typedef boost::char_separator<char> Separator;

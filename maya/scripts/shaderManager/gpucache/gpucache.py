@@ -126,15 +126,18 @@ class gpucache(object):
                     port = port + 1
 
     def setSelection(self, topath):
-        if topath == "/":
-            topath =""
-        cmds.setAttr("%s.cacheSelectionPath" % self.shape, str(topath).replace("|", "/"), type="string")
+        if len(topath) == 0:
+            topath = ""
+        else:
+            topath = json.dumps(topath)
+
+        cmds.setAttr("%s.cacheSelectionPath" % self.shape, topath, type="string")
 
     def getSelection(self):
         return cmds.getAttr("%s.cacheSelectionPath" % self.shape)
 
     def setToPath(self, topath):
-        cmds.setAttr("%s.cacheGeomPath" % self.shape, str(topath).replace("/", "|"), type="string")
+        cmds.setAttr("%s.cacheGeomPath" % self.shape, topath, type="string")
         # for item in self.itemsTree:
         #     if item.getPath() != topath:
         #         item.setCheckState(0, QtCore.Qt.Unchecked)
