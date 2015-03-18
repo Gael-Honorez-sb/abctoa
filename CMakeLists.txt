@@ -172,13 +172,6 @@ else()
   )
 endif()
 
-
-  
-configure_file (
-  "${CMAKE_SOURCE_DIR}/abcToA.mod.in"
-  "${INSTALL_ROOT}/abcToA.mod"
-  )
-
 configure_file(
     "${PROJECT_SOURCE_DIR}/INSTALL.in"
     "${PROJECT_SOURCE_DIR}/INSTALL"
