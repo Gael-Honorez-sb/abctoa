@@ -132,7 +132,7 @@ class List(QMainWindow, UI_ABCHierarchy.Ui_NAM):
 
 
 
-        
+        self.filterShaderLineEdit.textChanged.connect(self.filterShader)
 
         #self.shadersList.startDrag = self.newshadersListStartDrag
         self.shadersList.itemPressed.connect(self.shaderCLicked)
@@ -169,6 +169,24 @@ class List(QMainWindow, UI_ABCHierarchy.Ui_NAM):
         self.wildCardButton.pressed.connect(self.addWildCard)
 
         
+    def filterShader(self, text):
+        '''
+        Only show shaders matching this string.
+        '''
+
+        for i in range(self.shadersList.count()):
+            item = self.shadersList.item(i)
+            item.setHidden(0)
+            if text != "" and not text.lower() in item.text().lower():
+                item.setHidden(1)
+
+        for i in range(self.displacementList.count()):
+            item = self.displacementList.item(i)
+            item.setHidden(0)
+            if text != "" and not text.lower() in item.text().lower():
+                item.setHidden(1)
+
+
     def isolateCheckboxChanged(self, state):
         ''' activate/desactive isolation'''
         if state == 0:
