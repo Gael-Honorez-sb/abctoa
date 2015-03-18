@@ -36,6 +36,7 @@
 
 #include "IPointsDrw.h"
 #include "RenderModules.h"
+#include "PathUtil.h"
 
 namespace SimpleAbcViewer {
 
@@ -156,14 +157,11 @@ void IPointsDrw::draw( const DrawContext &iCtx )
         return;
     }
 
+
     if(iCtx.getSelection() != "")
     {
         std::string pathSel = iCtx.getSelection();
-        if(pathSel.find("/") != std::string::npos)
-        {
-            if(m_points.getFullName().find(pathSel) == std::string::npos)
-                return;
-        }else
+        if(!pathInJsonString(m_points.getFullName(), pathSel))
             return;
     }
 
