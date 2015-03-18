@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'UI_ABCHierarchy.ui'
 #
-# Created: Thu Mar 12 11:02:30 2015
+# Created: Fri Mar 13 14:06:45 2015
 #      by: pyside-uic 0.2.15 running on PySide 1.2.1
 #
 # WARNING! All changes made in this file will be lost!
@@ -12,13 +12,20 @@ from PySide import QtCore, QtGui
 class Ui_NAM(object):
     def setupUi(self, NAM):
         NAM.setObjectName("NAM")
-        NAM.resize(1600, 661)
+        NAM.resize(1600, 730)
         NAM.setMinimumSize(QtCore.QSize(1600, 0))
         NAM.setBaseSize(QtCore.QSize(1280, 0))
         self.centralwidget = QtGui.QWidget(NAM)
         self.centralwidget.setObjectName("centralwidget")
         self.gridLayout_2 = QtGui.QGridLayout(self.centralwidget)
         self.gridLayout_2.setObjectName("gridLayout_2")
+        self.wildCardButton = QtGui.QPushButton(self.centralwidget)
+        self.wildCardButton.setMaximumSize(QtCore.QSize(200, 16777215))
+        self.wildCardButton.setObjectName("wildCardButton")
+        self.gridLayout_2.addWidget(self.wildCardButton, 2, 0, 1, 1)
+        self.refreshShadersBtn = QtGui.QPushButton(self.centralwidget)
+        self.refreshShadersBtn.setObjectName("refreshShadersBtn")
+        self.gridLayout_2.addWidget(self.refreshShadersBtn, 2, 1, 1, 1)
         self.gridLayout = QtGui.QGridLayout()
         self.gridLayout.setObjectName("gridLayout")
         self.overrideShaders = QtGui.QCheckBox(self.centralwidget)
@@ -106,7 +113,7 @@ class Ui_NAM(object):
         self.isolateCheckbox = QtGui.QCheckBox(self.centralwidget)
         self.isolateCheckbox.setObjectName("isolateCheckbox")
         self.gridLayout.addWidget(self.isolateCheckbox, 0, 4, 1, 1)
-        self.gridLayout_2.addLayout(self.gridLayout, 0, 0, 1, 1)
+        self.gridLayout_2.addLayout(self.gridLayout, 1, 0, 1, 1)
         self.splitter_2 = QtGui.QSplitter(self.centralwidget)
         sizePolicy = QtGui.QSizePolicy(QtGui.QSizePolicy.Preferred, QtGui.QSizePolicy.Minimum)
         sizePolicy.setHorizontalStretch(0)
@@ -116,6 +123,8 @@ class Ui_NAM(object):
         self.splitter_2.setOrientation(QtCore.Qt.Vertical)
         self.splitter_2.setChildrenCollapsible(True)
         self.splitter_2.setObjectName("splitter_2")
+        self.filterShaderLineEdit = QtGui.QLineEdit(self.splitter_2)
+        self.filterShaderLineEdit.setObjectName("filterShaderLineEdit")
         self.shadersList = QtGui.QListWidget(self.splitter_2)
         sizePolicy = QtGui.QSizePolicy(QtGui.QSizePolicy.Minimum, QtGui.QSizePolicy.Expanding)
         sizePolicy.setHorizontalStretch(0)
@@ -138,14 +147,7 @@ class Ui_NAM(object):
         self.displacementList.setMaximumSize(QtCore.QSize(300, 16777215))
         self.displacementList.setSpacing(2)
         self.displacementList.setObjectName("displacementList")
-        self.gridLayout_2.addWidget(self.splitter_2, 0, 1, 1, 1)
-        self.wildCardButton = QtGui.QPushButton(self.centralwidget)
-        self.wildCardButton.setMaximumSize(QtCore.QSize(200, 16777215))
-        self.wildCardButton.setObjectName("wildCardButton")
-        self.gridLayout_2.addWidget(self.wildCardButton, 1, 0, 1, 1)
-        self.refreshShadersBtn = QtGui.QPushButton(self.centralwidget)
-        self.refreshShadersBtn.setObjectName("refreshShadersBtn")
-        self.gridLayout_2.addWidget(self.refreshShadersBtn, 1, 1, 1, 1)
+        self.gridLayout_2.addWidget(self.splitter_2, 1, 1, 1, 1)
         NAM.setCentralWidget(self.centralwidget)
         self.menubar = QtGui.QMenuBar(NAM)
         self.menubar.setGeometry(QtCore.QRect(0, 0, 1600, 21))
@@ -160,6 +162,8 @@ class Ui_NAM(object):
 
     def retranslateUi(self, NAM):
         NAM.setWindowTitle(QtGui.QApplication.translate("NAM", "Nozon Alembic Cache Manager", None, QtGui.QApplication.UnicodeUTF8))
+        self.wildCardButton.setText(QtGui.QApplication.translate("NAM", "Add WilCard Assignation", None, QtGui.QApplication.UnicodeUTF8))
+        self.refreshShadersBtn.setText(QtGui.QApplication.translate("NAM", "Refresh Shaders", None, QtGui.QApplication.UnicodeUTF8))
         self.overrideShaders.setText(QtGui.QApplication.translate("NAM", "Override All Shaders", None, QtGui.QApplication.UnicodeUTF8))
         self.overrideDisps.setText(QtGui.QApplication.translate("NAM", "Override all displacement shaders", None, QtGui.QApplication.UnicodeUTF8))
         self.overrideProps.setText(QtGui.QApplication.translate("NAM", "Override all object properties", None, QtGui.QApplication.UnicodeUTF8))
@@ -170,6 +174,4 @@ class Ui_NAM(object):
         self.isolateCheckbox.setText(QtGui.QApplication.translate("NAM", "Isolate Selected", None, QtGui.QApplication.UnicodeUTF8))
         self.shadersList.setSortingEnabled(True)
         self.displacementList.setSortingEnabled(True)
-        self.wildCardButton.setText(QtGui.QApplication.translate("NAM", "Add WilCard Assignation", None, QtGui.QApplication.UnicodeUTF8))
-        self.refreshShadersBtn.setText(QtGui.QApplication.translate("NAM", "Refresh Shaders", None, QtGui.QApplication.UnicodeUTF8))
 

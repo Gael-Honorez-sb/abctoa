@@ -32,6 +32,9 @@ class gpucache(object):
         self.tags = {}
         self.itemsTree = []
 
+    def getAbcShader(self):
+        return cmds.getAttr(self.shape + ".abcShaders")
+
     def getAllTags(self):
         return self.tags
 
