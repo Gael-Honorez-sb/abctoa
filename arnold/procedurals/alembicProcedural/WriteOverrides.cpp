@@ -51,12 +51,7 @@ void ApplyOverrides(std::string name, AtNode* node, std::vector<std::string> tag
         Json::Value overrides;
         if(it->find("/") != std::string::npos)
         {
-            if(name.find(*it) != std::string::npos)
-            {
-                overrides = args.attributesRoot[*it];
-                foundInPath = true;
-            }
-
+            foundInPath = isPathContainsInOtherPath(name, *it);
         }
         else if(matchPattern(name,*it)) // based on wildcard expression
         {
@@ -158,7 +153,7 @@ AtNode* getShader(std::string name, std::vector<std::string> tags, ProcArgs & ar
         //check both path & tag
         if(it->first.find("/") != std::string::npos)
         {
-            if(name.find(it->first) != std::string::npos)
+            if(isPathContainsInOtherPath(name, it->first))
             {
                 appliedShader = it->second;
                 foundInPath = true;
