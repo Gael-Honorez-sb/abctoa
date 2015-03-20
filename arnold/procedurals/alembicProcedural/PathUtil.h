@@ -41,6 +41,7 @@
 
 typedef std::vector<std::string> PathList;
 
+bool isPathContainsInOtherPath(const std::string &path, const std::string &jsonString );
 void TokenizePath( const std::string &path, PathList &result );
 std::string replace_all(const std::string &str, const char *from, const char *to);
 static std::string translate(const char *pattern);
