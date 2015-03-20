@@ -214,14 +214,14 @@ std::string getHash(
             //check both path & tag
             if(it->first.find("/") != string::npos)
             {
-                if(name.find(it->first) != string::npos)
+                if(isPathContainsInOtherPath(originalName, it->first))
                 {
                     appliedDisplacement = it->second;
                     foundInPath = true;
                 }
 
             }
-            else if(matchPattern(name,it->first)) // based on wildcard expression
+            else if(matchPattern(originalName,it->first)) // based on wildcard expression
             {
                 appliedDisplacement = it->second;
                 foundInPath = true;
@@ -252,14 +252,14 @@ std::string getHash(
             Json::Value overrides;
             if(it->find("/") != string::npos)
             {
-                if(name.find(*it) != string::npos)
+                if(isPathContainsInOtherPath(originalName, *it))
                 {
                     overrides = args.attributesRoot[*it];
                     foundInPath = true;
                 }
 
             }
-            else if(matchPattern(name,*it)) // based on wildcard expression
+            else if(matchPattern(originalName,*it)) // based on wildcard expression
             {
                 overrides = args.attributesRoot[*it];
                 foundInPath = true;
@@ -589,7 +589,7 @@ AtNode* writeMesh(
 
     AiNodeSetStr( meshNode, "name", (name + ":src").c_str() );
     AiNodeSetByte( meshNode, "visibility", 0 );
-    AiNodeSetBool(meshNode, "smoothing", true);
+    //AiNodeSetBool(meshNode, "smoothing", true);
 
     //get tags
     std::vector<std::string> tags;
@@ -681,13 +681,13 @@ AtNode* writeMesh(
             //check both path & tag
             if(it->first.find("/") != string::npos)
             {
-                if(name.find(it->first) != string::npos)
+                if(isPathContainsInOtherPath(originalName, it->first))
                 {
                     appliedDisplacement = it->second;
                     foundInPath = true;
                 }
             }
-            else if(matchPattern(name,it->first)) // based on wildcard expression
+            else if(matchPattern(originalName,it->first)) // based on wildcard expression
             {
                 appliedDisplacement = it->second;
                 foundInPath = true;
@@ -887,7 +887,7 @@ void createInstance(
 
     // Arnold Attribute from json
     if(args.linkAttributes)
-        ApplyOverrides(name, instanceNode, tags, args);
+        ApplyOverrides(originalName, instanceNode, tags, args);
 
 
     // shader assignation
@@ -919,7 +919,7 @@ void createInstance(
             AiNodeSetArray(instanceNode, "shader", shadersArray);
         }
         else
-            ApplyShaders(name, instanceNode, tags, args);
+            ApplyShaders(originalName, instanceNode, tags, args);
     }
 
     args.createdNodes.push_back(instanceNode);
