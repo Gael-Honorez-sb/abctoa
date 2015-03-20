@@ -37,9 +37,11 @@
 #include "WritePoint.h"
 #include "WriteTransform.h"
 #include "WriteOverrides.h"
+#include "parseAttributes.h"
 
 #include "ArbGeomParams.h"
 #include "PathUtil.h"
+
 
 #include <ai.h>
 #include <sstream>
@@ -60,110 +62,49 @@
 
 //-*****************************************************************************
 
-
-template <typename geomParamT>
-void ProcessIndexedBuiltinParam(
-        geomParamT & param,
-        const SampleTimeSet & sampleTimes,
-        std::vector<float> & values,
-        std::vector<unsigned int> & idxs,
-        size_t elementSize)
-{
-    if ( !param.valid() ) { return; }
-
-    bool isFirstSample = true;
-    for ( SampleTimeSet::iterator I = sampleTimes.begin();
-          I != sampleTimes.end(); ++I, isFirstSample = false)
-    {
-        ISampleSelector sampleSelector( *I );
-
-
-        switch ( param.getScope() )
-        {
-        case kVaryingScope:
-        case kVertexScope:
-        {
-            // a value per-point, idxs should be the same as vidxs
-            // so we'll leave it empty
-
-            // we'll get the expanded form here
-            typename geomParamT::Sample sample = param.getExpandedValue(
-                    sampleSelector);
-
-            size_t footprint = sample.getVals()->size() * elementSize;
-
-            values.reserve( values.size() + footprint );
-            values.insert( values.end(),
-                    (float32_t*) sample.getVals()->get(),
-                    ((float32_t*) sample.getVals()->get()) + footprint );
-
-            break;
-        }
-        case kFacevaryingScope:
-        {
-            // get the indexed form and feed to nidxs
-
-            typename geomParamT::Sample sample = param.getIndexedValue(
-                    sampleSelector);
-
-            if ( isFirstSample )
-            {
-                idxs.reserve( sample.getIndices()->size() );
-                idxs.insert( idxs.end(),
-                        sample.getIndices()->get(),
-                        sample.getIndices()->get() +
-                                sample.getIndices()->size() );
-            }
-
-            size_t footprint = sample.getVals()->size() * elementSize;
-            values.reserve( values.size() + footprint );
-            values.insert( values.end(),
-                    (const float32_t*) sample.getVals()->get(),
-                    ((const float32_t*) sample.getVals()->get()) + footprint );
-
-            break;
-        }
-        default:
-            break;
-        }
-
-
-    }
-
-
-}
-
-//-*****************************************************************************
-
 namespace
 {
     // Arnold scene build is single-threaded so we don't have to lock around
     // access to this for now.
     typedef std::map<std::string, AtNode *> NodeCache;
-    NodeCache g_meshCache;
+    NodeCache g_pointsCache;
+
+    boost::mutex gGlobalLock;
+    #define GLOBAL_LOCK	   boost::mutex::scoped_lock writeLock( gGlobalLock );
 }
 
 
-AtNode * ProcessPointsBase(
-        IPoints & prim, ProcArgs & args,
-        SampleTimeSet & sampleTimes,
-        std::vector<AtPoint> & vidxs,
-        std::vector<float> & radius,
-        MatrixSampleMap * xformSamples )
-{
-    if ( !prim.valid() )
-    {
-        return NULL;
-    }
 
+//-*************************************************************************
+// getSampleTimes
+// This function fill the sampleTimes timeSet array.
+
+void getSampleTimes(
+    IPoints & prim,
+    ProcArgs & args,
+    SampleTimeSet & sampleTimes
+    )
+{
     Alembic::AbcGeom::IPointsSchema  &ps = prim.getSchema();
     TimeSamplingPtr ts = ps.getTimeSampling();
 
     sampleTimes.insert( ts->getFloorIndex(args.frame / args.fps, ps.getNumSamples()).second );
+}
 
-    std::string name = args.nameprefix + prim.getFullName();
+//-*************************************************************************
+// getHash
+// This function return the hash of the points, with attributes applied to it.
+std::string getHash(
+    std::string name,
+    std::string originalName,
+    IPoints & prim,
+    ProcArgs & args,
+    SampleTimeSet sampleTimes
+    )
+{
+    Alembic::AbcGeom::IPointsSchema  &ps = prim.getSchema();
 
-    AtNode * instanceNode = NULL;
+    TimeSamplingPtr ts = ps.getTimeSampling();
 
     std::string cacheId;
 
@@ -172,40 +113,70 @@ AtNode * ProcessPointsBase(
 
     ICompoundProperty arbGeomParams = ps.getArbGeomParams();
     ISampleSelector frameSelector( *singleSampleTimes.begin() );
+
+  //get tags
     std::vector<std::string> tags;
+    getAllTags(prim, tags, &args);
 
-    //get tags
-    if ( arbGeomParams != NULL && arbGeomParams.valid() )
+
+    // overrides that can't be applied on instances
+    // we create a hash from that.
+    std::string hashAttributes("@");
+    Json::FastWriter writer;
+    Json::Value rootEncode;
+
+
+    if(args.linkAttributes)
     {
-        if (arbGeomParams.getPropertyHeader("mtoa_constant_tags") != NULL)
+        bool foundInPath = false;
+        for(std::vector<std::string>::iterator it=args.attributes.begin(); it!=args.attributes.end(); ++it)
         {
-            const PropertyHeader * tagsHeader = arbGeomParams.getPropertyHeader("mtoa_constant_tags");
-            if (IStringGeomParam::matches( *tagsHeader ))
+            Json::Value overrides;
+            if(it->find("/") != string::npos)
             {
-                IStringGeomParam param( arbGeomParams,  "mtoa_constant_tags" );
-                if ( param.valid() )
+                if(isPathContainsInOtherPath(originalName, *it))
                 {
-                    IStringGeomParam::prop_type::sample_ptr_type valueSample =
-                                    param.getExpandedValue( frameSelector ).getVals();
+                    overrides = args.attributesRoot[*it];
+                    foundInPath = true;
+                }
 
-                    if ( param.getScope() == kConstantScope || param.getScope() == kUnknownScope)
+            }
+            else if(matchPattern(originalName,*it)) // based on wildcard expression
+            {
+                overrides = args.attributesRoot[*it];
+                foundInPath = true;
+            }
+            else if(foundInPath == false)
+            {
+                if (std::find(tags.begin(), tags.end(), *it) != tags.end())
+                {
+                    overrides = args.attributesRoot[*it];
+                }
+            }
+            if(overrides.size() > 0)
+            {
+                for( Json::ValueIterator itr = overrides.begin() ; itr != overrides.end() ; itr++ )
+                {
+                    std::string attribute = itr.key().asString();
+
+                    if (attribute=="mode"
+                        || attribute=="min_pixel_width"
+                        || attribute=="step_size"
+                        || attribute=="invert_normals"
+                        )
                     {
-                        Json::Value jtags;
-                        Json::Reader reader;
-                        if(reader.parse(valueSample->get()[0], jtags))
-                            for( Json::ValueIterator itr = jtags.begin() ; itr != jtags.end() ; itr++ )
-                            {
-                                tags.push_back(jtags[itr.key().asUInt()].asString());
-                            }
+                        Json::Value val = args.attributesRoot[*it][itr.key().asString()];
+                        rootEncode[attribute]=val;
                     }
                 }
             }
         }
     }
 
+    hashAttributes += writer.write(rootEncode);
+
     std::ostringstream buffer;
     AbcA::ArraySampleKey sampleKey;
-
 
     for ( SampleTimeSet::iterator I = sampleTimes.begin();
             I != sampleTimes.end(); ++I )
@@ -218,54 +189,63 @@ AtNode * ProcessPointsBase(
         buffer << ":";
     }
 
+    buffer << "@" << hash(hashAttributes);
+
     cacheId = buffer.str();
 
-    instanceNode = AiNode( "ginstance" );
-    AiNodeSetStr( instanceNode, "name", name.c_str() );
-    args.createdNodes.push_back(instanceNode);
+    return cacheId;
 
-    if ( args.proceduralNode )
-    {
-        AiNodeSetByte( instanceNode, "visibility",
-                AiNodeGetByte( args.proceduralNode, "visibility" ) );
+}
 
-    }
-    else
-    {
-        AiNodeSetByte( instanceNode, "visibility", AI_RAY_ALL );
-    }
+//-*************************************************************************
+// getCachePointsdNode
+// This function return the the points node if already in the cache.
+// Otherwise, return NULL.
+AtNode* getCachedPointsNode(std::string cacheId)
+{
+    NodeCache::iterator I = g_pointsCache.find(cacheId);
+    if (I != g_pointsCache.end())
+        return (*I).second;
 
-    ApplyTransformation( instanceNode, xformSamples, args );
+    return NULL;
+}
 
-    NodeCache::iterator I = g_meshCache.find(cacheId);
+AtNode* writePoints(  
+    std::string name,
+    std::string originalName,
+    std::string cacheId,
+    IPoints & prim,
+    ProcArgs & args,
+    SampleTimeSet sampleTimes
+    )
 
-    // parameters overrides
-    if(args.linkAttributes)
-        ApplyOverrides(name, instanceNode, tags, args);
+{
+    GLOBAL_LOCK;
 
-    // shader assignation
-    if (nodeHasParameter( instanceNode, "shader" ) )
-    {
-        if(args.linkShader)
-        {
-            ApplyShaders(name, instanceNode, tags, args);
-        }
-        else
-        {
-            AtArray* shaders = AiNodeGetArray(args.proceduralNode, "shader");
-            if (shaders->nelements != 0)
-                AiNodeSetArray(instanceNode, "shader", AiArrayCopy(shaders));
-        }
-    }
+    std::vector<AtPoint> vidxs;
+    std::vector<float> radius;
 
-    if ( I != g_meshCache.end() )
-    {
-        AiNodeSetPtr(instanceNode, "node", (*I).second );
-        return NULL;
-    }
+    Alembic::AbcGeom::IPointsSchema  &ps = prim.getSchema();
+    TimeSamplingPtr ts = ps.getTimeSampling();
+
+    SampleTimeSet singleSampleTimes;
+    singleSampleTimes.insert( ts->getFloorIndex(args.frame / args.fps, ps.getNumSamples()).second );
+
+    ICompoundProperty arbGeomParams = ps.getArbGeomParams();
+    ISampleSelector frameSelector( *singleSampleTimes.begin() );
+ 
+    std::string prefixname = args.nameprefix + name;
+
+    //get tags
+    
+    std::vector<std::string> tags;
+    getAllTags(prim, tags, &args);
 
 
     AtNode* pointsNode = AiNode( "points" );
+
+    AiNodeSetStr( pointsNode, "name", (name + ":src").c_str() );
+    AiNodeSetByte( pointsNode, "visibility", 0 );
 
     if (!pointsNode)
     {
@@ -283,7 +263,7 @@ AtNode * ProcessPointsBase(
     if (AiNodeLookUpUserParameter(args.proceduralNode, "radiusPoint") !=NULL )
         radiusPoint = AiNodeGetFlt(args.proceduralNode, "radiusPoint");
     
-    // Attribute overrides. We assume instance mode all the time here.
+    // Attribute overrides..
     if(args.linkAttributes)
     {
         for(std::vector<std::string>::iterator it=args.attributes.begin(); it!=args.attributes.end(); ++it)
@@ -450,17 +430,6 @@ AtNode * ProcessPointsBase(
         }
     }
 
-
-    if ( instanceNode != NULL)
-    {
-        AiNodeSetStr( pointsNode, "name", (name + ":src").c_str() );
-    }
-    else
-    {
-        AiNodeSetStr( pointsNode, "name", name.c_str() );
-    }
-
-
     if(!useVelocities)
     {
         AiNodeSetArray(pointsNode, "points",
@@ -508,57 +477,102 @@ AtNode * ProcessPointsBase(
     }
 
     ICompoundProperty arbPointsParams = ps.getArbGeomParams();
+    AddArbitraryGeomParams( arbGeomParams, frameSelector, pointsNode );
 
-    for ( size_t i = 0; i < arbPointsParams.getNumProperties(); ++i )
-    {
-        const PropertyHeader &propHeader = arbPointsParams.getPropertyHeader( i );
-        const std::string &propName = propHeader.getName();
-    }
+    g_pointsCache[cacheId] = pointsNode;
+    return pointsNode;
 
-
-    if ( instanceNode == NULL )
-    {
-        if ( xformSamples )
-        {
-            ApplyTransformation( pointsNode, xformSamples, args );
-        }
-
-        return pointsNode;
-    }
-    else
-    {
-        AiNodeSetByte( pointsNode, "visibility", 0 );
-
-        //AiNodeSetInt( pointsNode, "mode", 1 );
-
-        AiNodeSetPtr(instanceNode, "node", pointsNode );
-        g_meshCache[cacheId] = pointsNode;
-        return pointsNode;
-    }
 
 }
 
 
+//-*************************************************************************
+// createInstance
+// This function create & return a instance node with shaders & attributes applied.
+void createInstance(
+    std::string name,
+    std::string originalName,
+    IPoints & prim,
+    ProcArgs & args,
+    MatrixSampleMap * xformSamples,
+    AtNode* points)
+{
+    std::string prefixname = args.nameprefix + name;
+
+    Alembic::AbcGeom::IPointsSchema  &ps = prim.getSchema();
+    ICompoundProperty arbGeomParams = ps.getArbGeomParams();
+
+    SampleTimeSet singleSampleTimes;
+    TimeSamplingPtr ts = ps.getTimeSampling();
+    singleSampleTimes.insert( ts->getFloorIndex(args.frame / args.fps, ps.getNumSamples()).second );
+
+    ISampleSelector frameSelector( *singleSampleTimes.begin() );
+
+    AtNode* instanceNode = AiNode( "ginstance" );
+
+    AiNodeSetStr( instanceNode, "name", name.c_str() );
+    AiNodeSetPtr(instanceNode, "node", points );
+    AiNodeSetBool( instanceNode, "inherit_xform", false );
+    
+    if ( args.proceduralNode )
+        AiNodeSetByte( instanceNode, "visibility", AiNodeGetByte( args.proceduralNode, "visibility" ) );
+    else
+        AiNodeSetByte( instanceNode, "visibility", AI_RAY_ALL );
+
+    // Xform
+    ApplyTransformation( instanceNode, xformSamples, args );
+
+    // adding arbitary parameters
+    AddArbitraryGeomParams(
+            arbGeomParams,
+            frameSelector,
+            instanceNode );
+
+    // adding attributes on procedural
+    AddArbitraryProceduralParams(args.proceduralNode, instanceNode);
+
+    //get tags
+    std::vector<std::string> tags;
+    getAllTags(prim, tags, &args);
+
+    // Arnold Attribute from json
+    if(args.linkAttributes)
+        ApplyOverrides(originalName, instanceNode, tags, args);
+
+
+    // shader assignation
+    if (nodeHasParameter( instanceNode, "shader" ))
+        ApplyShaders(originalName, instanceNode, tags, args);
+
+    args.createdNodes.push_back(instanceNode);
+
+}
 
 void ProcessPoint( IPoints &points, ProcArgs &args,
                     MatrixSampleMap * xformSamples)
 {
-    SampleTimeSet sampleTimes;
-    std::vector<AtPoint> vidxs;
-    std::vector<float> radius;
 
-    AtNode * pointsNode = ProcessPointsBase(
-            points, args, sampleTimes, vidxs, radius, xformSamples);
-
-    // This is a valid condition for the second instance onward and just
-    // means that we don't need to do anything further.
-    if ( !pointsNode )
-    {
+    if ( !points.valid() )
         return;
+
+    std::string originalName = points.getFullName();
+    std::string name = args.nameprefix + originalName;
+
+
+    SampleTimeSet sampleTimes;
+    getSampleTimes(points, args, sampleTimes);
+
+    std::string cacheId = getHash(name, originalName, points, args, sampleTimes);
+    AtNode* pointsNode = getCachedPointsNode(cacheId);
+
+    if(pointsNode == NULL)
+    { // We don't have a cache, so we much create this points object.
+        pointsNode = writePoints(name, originalName, cacheId, points, args, sampleTimes);
     }
 
-    IPointsSchema &ps = points.getSchema();
-
+    // we can create the instance, with correct transform, attributes & shaders.
+    if(pointsNode != NULL)
+        createInstance(name, originalName, points, args, xformSamples, pointsNode);
 
 }
 
