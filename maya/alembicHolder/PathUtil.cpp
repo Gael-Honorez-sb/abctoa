@@ -43,10 +43,8 @@
 
 bool pathInJsonString(const std::string &path, const std::string &jsonString )
 {
-
     std::vector<std::string> pathParts;
     std::vector<std::string> jsonPathParts;
-    std::cout << path << std::endl;
     pystring::split(path, pathParts, "/");
 
     Json::Value jroot;
