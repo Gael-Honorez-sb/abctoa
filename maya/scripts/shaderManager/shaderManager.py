@@ -694,6 +694,9 @@ class List(QMainWindow, UI_ABCHierarchy.Ui_NAM):
         for item in self.hierarchyWidget.selectedItems():
             allSelected.append(item.getPath())
 
+        if "/" in allSelected:
+            allSelected = []
+
         cache.setSelection(allSelected)
 
         if self.isolateCheckbox.checkState() == Qt.Checked:
