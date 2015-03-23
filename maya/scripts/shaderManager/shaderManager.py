@@ -150,8 +150,13 @@ class ShaderManager(QMainWindow, UI_ABCHierarchy.Ui_NAM):
 
     def showEvent(self, event):
         self.reset()
+        self.isolateCheckbox.setChecked(0)
         return QtGui.QMainWindow.showEvent(self, event)
 
+    def hideEvent(self, event):
+        self.reset()
+        self.isolateCheckbox.setChecked(0)
+        return QtGui.QMainWindow.hideEvent(self, event)
 
     def reset(self):
         try:
@@ -163,7 +168,7 @@ class ShaderManager(QMainWindow, UI_ABCHierarchy.Ui_NAM):
         self.shadersList.clear()
         self.displacementList.clear()
         self.propertyEditor.resetToDefault()
-        
+
         self.curPath = ""
         self.ABCcurPath = ""        
         
@@ -512,7 +517,7 @@ class ShaderManager(QMainWindow, UI_ABCHierarchy.Ui_NAM):
     def clearing(self):
         self.clearCBs()
 
-        Message.removeCallback( self.afterNewSceneCBId )
+        MMessage.removeCallback( self.afterNewSceneCBId )
         MMessage.removeCallback( self.afterOpenSceneCBId )
 
 
