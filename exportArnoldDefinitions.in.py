@@ -93,7 +93,7 @@ while not AiNodeEntryIteratorFinished(it):
 	nodename = AiNodeEntryGetName(nentry)
 	typename = AiNodeEntryGetTypeName(nentry)
 
-	if typename != "shape":
+	if typename != "shape" and typename != "light":
 		continue
 
 	nodes[nodename] = {}
