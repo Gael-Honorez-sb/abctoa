@@ -17,6 +17,9 @@ import maya.OpenMayaUI as apiUI
 import shiboken
 from PySide import QtGui
 
+global _shadermanager
+_shadermanager = None
+
 def getMayaWindow():
     """
     Get the main Maya window as a QtGui.QMainWindow instance
@@ -27,9 +30,19 @@ def getMayaWindow():
         return shiboken.wrapInstance(long(ptr), QtGui.QMainWindow)
 
 def alembicShaderManager(mayaWindow):
+    global _shadermanager
     import shaderManager
+    
     reload(shaderManager)
-    shaderManager.manager(mayaWindow).show()
+    return shaderManager.manager(mayaWindow)
+
+def reloadShaderManager(mayaWindow):
+    global _shadermanager
+    import shaderManager
+    _shadermanager.clearing()
+    _shadermanager.deleteLater()
+    reload(shaderManager)
+    _shadermanager = shaderManager.manager(mayaWindow)
 
 def createAlembicHolder():
     x = cmds.createNode('alembicHolder', n="AlembicHolderShape")
@@ -72,10 +85,13 @@ def assignTagsFromSetName():
 				
 def registerAlembicHolder():
     if not cmds.about(b=1):
-        mayawin = getMayaWindow()
+        mayaWindow = getMayaWindow()
+        global _shadermanager
+        _shadermanager = alembicShaderManager(mayaWindow)        
         cmds.menu('AlembicHolderMenu', label='Alembic Holder', parent='MayaWindow', tearOff=True )
         cmds.menuItem('CreateAlembicHolder', label='Create Holder', parent='AlembicHolderMenu', c=lambda *args: createAlembicHolder())
-        cmds.menuItem('AlembicShaderManager', label='Shader Manager', parent='AlembicHolderMenu', c=lambda *args: alembicShaderManager(mayawin))
+        cmds.menuItem('AlembicShaderManager', label='Shader Manager', parent='AlembicHolderMenu', c=lambda *args: _shadermanager.show())
+        cmds.menuItem('ReloadAlembicShaderManager', label='Reload Shader Manager', parent='AlembicHolderMenu', c=lambda *args: reloadShaderManager(mayaWindow))
         cmds.menuItem( divider=True )
         cmds.menuItem('exportAssign', label='Export Assignations on selected caches', parent='AlembicHolderMenu', c=lambda *args: exportAssignations())
         cmds.menuItem('importtAssign', label='Import Assignation on selected caches', parent='AlembicHolderMenu', c=lambda *args: importAssignations())

@@ -41,9 +41,9 @@
      </widget>
     </item>
     <item row="2" column="1">
-     <widget class="QPushButton" name="refreshShadersBtn">
+     <widget class="QPushButton" name="refreshManagerBtn">
       <property name="text">
-       <string>Refresh Shaders</string>
+       <string>Refresh Manager</string>
       </property>
      </widget>
     </item>

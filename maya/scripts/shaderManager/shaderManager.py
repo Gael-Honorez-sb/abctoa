@@ -13,8 +13,6 @@
 
 
 import os
-import shiboken
-
 
 d = os.path.dirname(__file__)
 
@@ -42,23 +40,16 @@ reload(UI_ABCHierarchy)
 
 
 import maya.cmds as cmds
-import maya.mel as mel
 
 from maya.OpenMaya import MObjectHandle, MDGMessage, MMessage, MNodeMessage, MFnDependencyNode, MObject, MSceneMessage
-import maya.OpenMayaUI as apiUI
-
-
 
 class ShaderManager(QMainWindow, UI_ABCHierarchy.Ui_NAM):
     def __init__(self, parent=None):
         super(ShaderManager, self).__init__(parent)
         
         self.setAttribute(QtCore.Qt.WA_DeleteOnClose)        
-        
 
         self.setupUi(self)
-
-
 
         self.shadersFromFile = []
         self.displaceFromFile = []
@@ -133,7 +124,7 @@ class ShaderManager(QMainWindow, UI_ABCHierarchy.Ui_NAM):
         self.displacementList.itemPressed.connect(self.shaderCLicked)
         self.displacementList.mouseMoveEvent = self.newdisplaceListmouseMoveEvent
 
-        self.refreshShadersBtn.pressed.connect(self.refreshShaders)
+        self.refreshManagerBtn.pressed.connect(self.reset)
 
         self.refreshShaders()
 
@@ -142,11 +133,8 @@ class ShaderManager(QMainWindow, UI_ABCHierarchy.Ui_NAM):
         
         self.addCBs()
 
-        self.beforeNewSceneCBId = MSceneMessage.addCallback(MSceneMessage.kBeforeNew, self.clearCBs)
-        self.beforeOpenSceneCBId = MSceneMessage.addCallback(MSceneMessage.kBeforeOpen, self.clearCBs)
-
-        self.afterNewSceneCBId = MSceneMessage.addCallback(MSceneMessage.kAfterNew, self.addCBs)
-        self.afterOpenSceneCBId = MSceneMessage.addCallback(MSceneMessage.kAfterOpen, self.addCBs)
+        self.afterNewSceneCBId = MSceneMessage.addCallback(MSceneMessage.kAfterNew, self.reset)
+        self.afterOpenSceneCBId = MSceneMessage.addCallback(MSceneMessage.kAfterOpen, self.reset)
 
         self.disableLayerOverrides()
 
@@ -158,6 +146,53 @@ class ShaderManager(QMainWindow, UI_ABCHierarchy.Ui_NAM):
 
         #Widcard management
         self.wildCardButton.pressed.connect(self.addWildCard)
+
+
+    def showEvent(self, event):
+        self.reset()
+        return QtGui.QMainWindow.showEvent(self, event)
+
+
+    def reset(self):
+        try:
+            self.renderLayer.currentIndexChanged.disconnect()
+        except:
+            pass
+
+        self.hierarchyWidget.clear()
+        self.shadersList.clear()
+        self.displacementList.clear()
+        self.propertyEditor.resetToDefault()
+        
+        self.curPath = ""
+        self.ABCcurPath = ""        
+        
+        self.shadersFromFile = []
+        self.displaceFromFile = []
+        self.ABCViewerNode = {}
+        self.curLayer = None
+
+        self.getLayers()
+        self.setCurrentLayer()
+
+        self.shaderToAssign = None
+
+        self.tags = {}
+        self.getNode()
+        self.getCache()   
+        self.updateTags()
+        self.populate()
+        self.thisTagItem = None
+        self.thisTreeItem = None
+
+        self.lastClick = -1
+
+        self.propertyEditing = False    
+        self.refreshShaders()
+
+        self.renderLayer.currentIndexChanged.connect(self.layerChanged)
+
+        
 
         
     def filterShader(self, text):
@@ -470,14 +505,16 @@ class ShaderManager(QMainWindow, UI_ABCHierarchy.Ui_NAM):
 
 
     def closeEvent(self, event):
+        event.ignore()
+        self.hide()
+        return
+
+    def clearing(self):
         self.clearCBs()
 
-        MMessage.removeCallback( self.beforeNewSceneCBId )
-        MMessage.removeCallback( self.beforeOpenSceneCBId )
-        MMessage.removeCallback( self.afterNewSceneCBId )
+        Message.removeCallback( self.afterNewSceneCBId )
         MMessage.removeCallback( self.afterOpenSceneCBId )
 
-        return QtGui.QMainWindow.closeEvent(self, event)
 
     def setCurrentLayer(self):
         curLayer = cmds.editRenderLayerGlobals(query=1, currentRenderLayer=1)
