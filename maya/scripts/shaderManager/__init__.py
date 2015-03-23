@@ -23,5 +23,5 @@ reload(_assignationGroup)
 reload(_assignations)
 reload(shaderManager)
 
-from shaderManager import List as manager
+from shaderManager import ShaderManager as manager
 
