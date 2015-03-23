@@ -585,7 +585,7 @@ AtNode* writeMesh(
 
     AiNodeSetStr( meshNode, "name", (name + ":src").c_str() );
     AiNodeSetByte( meshNode, "visibility", 0 );
-    //AiNodeSetBool(meshNode, "smoothing", true);
+    AiNodeSetBool(meshNode, "smoothing", true);
 
     //get tags
     std::vector<std::string> tags;
@@ -1030,8 +1030,6 @@ void createMeshLight(
     if(args.linkAttributes)
         ApplyOverrides(originalName, meshLightNode, tags, args);
 
-    // Xform
-    ApplyTransformation( meshLightNode, xformSamples, args );
 
     // adding arbitary parameters
     AddArbitraryGeomParams(
