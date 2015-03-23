@@ -19,6 +19,7 @@ import shiboken
 d = os.path.dirname(__file__)
 
 import json
+from arnold import *
 
 from PySide import QtGui, QtCore
 from PySide.QtGui import *
@@ -134,7 +135,7 @@ class List(QMainWindow, UI_ABCHierarchy.Ui_NAM):
         self.filterShaderLineEdit.textChanged.connect(self.filterShader)
 
         #self.shadersList.startDrag = self.newshadersListStartDrag
-        self.shadersList.itemPressed.connect(self.shaderCLicked)
+        self.shadersList.itemDoubleClicked.connect(self.shaderCLicked)
         self.shadersList.mouseMoveEvent = self.newshadersListmouseMoveEvent
 
 
