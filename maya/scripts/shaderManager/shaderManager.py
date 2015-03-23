@@ -48,19 +48,10 @@ from maya.OpenMaya import MObjectHandle, MDGMessage, MMessage, MNodeMessage, MFn
 import maya.OpenMayaUI as apiUI
 
 
-def getMayaWindow():
-    """
-    Get the main Maya window as a QtGui.QMainWindow instance
-    @return: QtGui.QMainWindow instance of the top level Maya windows
-    """
-    ptr = apiUI.MQtUtil.mainWindow()
-    if ptr is not None:
-        return shiboken.wrapInstance(long(ptr), QtGui.QMainWindow)
 
-
-class List(QMainWindow, UI_ABCHierarchy.Ui_NAM):
-    def __init__(self, parent=getMayaWindow()):
-        super(List, self).__init__(parent)
+class ShaderManager(QMainWindow, UI_ABCHierarchy.Ui_NAM):
+    def __init__(self, parent=None):
+        super(ShaderManager, self).__init__(parent)
         
         self.setAttribute(QtCore.Qt.WA_DeleteOnClose)        
         

@@ -13,10 +13,23 @@
 
 import maya.cmds as cmds
 
-def alembicShaderManager():
+import maya.OpenMayaUI as apiUI
+import shiboken
+from PySide import QtGui
+
+def getMayaWindow():
+    """
+    Get the main Maya window as a QtGui.QMainWindow instance
+    @return: QtGui.QMainWindow instance of the top level Maya windows
+    """
+    ptr = apiUI.MQtUtil.mainWindow()
+    if ptr is not None:
+        return shiboken.wrapInstance(long(ptr), QtGui.QMainWindow)
+
+def alembicShaderManager(mayaWindow):
     import shaderManager
     reload(shaderManager)
-    shaderManager.manager().show()
+    shaderManager.manager(mayaWindow).show()
 
 def createAlembicHolder():
     x = cmds.createNode('alembicHolder', n="AlembicHolderShape")
@@ -59,9 +72,10 @@ def assignTagsFromSetName():
 				
 def registerAlembicHolder():
     if not cmds.about(b=1):
+        mayawin = getMayaWindow()
         cmds.menu('AlembicHolderMenu', label='Alembic Holder', parent='MayaWindow', tearOff=True )
         cmds.menuItem('CreateAlembicHolder', label='Create Holder', parent='AlembicHolderMenu', c=lambda *args: createAlembicHolder())
-        cmds.menuItem('AlembicShaderManager', label='Shader Manager', parent='AlembicHolderMenu', c=lambda *args: alembicShaderManager())
+        cmds.menuItem('AlembicShaderManager', label='Shader Manager', parent='AlembicHolderMenu', c=lambda *args: alembicShaderManager(mayawin))
         cmds.menuItem( divider=True )
         cmds.menuItem('exportAssign', label='Export Assignations on selected caches', parent='AlembicHolderMenu', c=lambda *args: exportAssignations())
         cmds.menuItem('importtAssign', label='Import Assignation on selected caches', parent='AlembicHolderMenu', c=lambda *args: importAssignations())
