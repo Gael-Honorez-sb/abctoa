@@ -32,6 +32,11 @@ class gpucache(object):
         self.tags = {}
         self.itemsTree = []
 
+    def isValid(self):
+        ''' check if this cache is still valid'''
+        return cmds.objExists(self.shape)
+
+
     def getAbcShader(self):
         return cmds.getAttr(self.shape + ".abcShaders")
 
@@ -81,8 +86,9 @@ class gpucache(object):
         self.assignations.renameDisplacement(oldname, newname)
 
     def updateCache(self):
-        self.ABCcache =  cmds.getAttr("%s.cacheFileName" % self.shape)
-        self.ABCcurPath = cmds.getAttr("%s.cacheGeomPath" % self.shape)
+        if self.isValid():
+            self.ABCcache =  cmds.getAttr("%s.cacheFileName" % self.shape)
+            self.ABCcurPath = cmds.getAttr("%s.cacheGeomPath" % self.shape)
 
     def updateTags(self):
         tags = cmds.ABCGetTags(self.ABCcache)
@@ -93,51 +99,59 @@ class gpucache(object):
         print self.tags
 
     def updateShaders(self, shaders):
-        cmds.setAttr(self.shape + ".shadersAssignation", json.dumps(shaders), type="string")
-        cmds.setAttr(self.shape + ".forceReload", 1)
+        if self.isValid():
+            cmds.setAttr(self.shape + ".shadersAssignation", json.dumps(shaders), type="string")
+            cmds.setAttr(self.shape + ".forceReload", 1)
 
     def updateDisplacements(self, shaders):
-        cmds.setAttr(self.shape + ".displacementsAssignation", json.dumps(shaders), type="string")
+        if self.isValid():
+            cmds.setAttr(self.shape + ".displacementsAssignation", json.dumps(shaders), type="string")
 
     def updateOverrides(self, val):
-        cmds.setAttr(self.shape + ".attributes", json.dumps(val), type="string")
+        if self.isValid():
+            cmds.setAttr(self.shape + ".attributes", json.dumps(val), type="string")
 
     def updateLayerOverrides(self, val):
-        cmds.setAttr(self.shape + ".layersOverride", json.dumps(val), type="string")
+        if self.isValid():
+            cmds.setAttr(self.shape + ".layersOverride", json.dumps(val), type="string")
 
     def updateConnections(self):
-        pm.disconnectAttr("%s.shaders" % self.shape)
-        port = 0
+        if self.isValid():
+            pm.disconnectAttr("%s.shaders" % self.shape)
+            port = 0
 
-        added = []
-        for shader in self.assignations.getAllShaders():
-            if not shader in added:
-                if cmds.objExists(shader):
-                    cmds.connectAttr( shader + ".message", self.shape + ".shaders[%i]" % port)
-                    added.append(shader)
-                    port = port + 1
+            added = []
+            for shader in self.assignations.getAllShaders():
+                if not shader in added:
+                    if cmds.objExists(shader):
+                        cmds.connectAttr( shader + ".message", self.shape + ".shaders[%i]" % port)
+                        added.append(shader)
+                        port = port + 1
 
-        for shader in self.assignations.getAllDisplacements():
-            shaderClean = shader.replace(".message", "")
-            if not shaderClean in added:
-                if cmds.objExists(shaderClean):
-                    cmds.connectAttr( shaderClean + ".message", self.shape + ".shaders[%i]" % port)
-                    added.append(shaderClean)
-                    port = port + 1
+            for shader in self.assignations.getAllDisplacements():
+                shaderClean = shader.replace(".message", "")
+                if not shaderClean in added:
+                    if cmds.objExists(shaderClean):
+                        cmds.connectAttr( shaderClean + ".message", self.shape + ".shaders[%i]" % port)
+                        added.append(shaderClean)
+                        port = port + 1
 
     def setSelection(self, topath):
-        if len(topath) == 0:
-            topath = ""
-        else:
-            topath = json.dumps(topath)
+        if self.isValid():
+            if len(topath) == 0:
+                topath = ""
+            else:
+                topath = json.dumps(topath)
 
-        cmds.setAttr("%s.cacheSelectionPath" % self.shape, topath, type="string")
+            cmds.setAttr("%s.cacheSelectionPath" % self.shape, topath, type="string")
 
     def getSelection(self):
-        return cmds.getAttr("%s.cacheSelectionPath" % self.shape)
+        if self.isValid():
+            return cmds.getAttr("%s.cacheSelectionPath" % self.shape)
 
     def setToPath(self, topath):
-        cmds.setAttr("%s.cacheGeomPath" % self.shape, topath, type="string")
+        if self.isValid():
+            cmds.setAttr("%s.cacheGeomPath" % self.shape, topath, type="string")
         # for item in self.itemsTree:
         #     if item.getPath() != topath:
         #         item.setCheckState(0, QtCore.Qt.Unchecked)

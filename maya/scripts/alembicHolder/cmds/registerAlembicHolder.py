@@ -91,12 +91,14 @@ def registerAlembicHolder():
         cmds.menu('AlembicHolderMenu', label='Alembic Holder', parent='MayaWindow', tearOff=True )
         cmds.menuItem('CreateAlembicHolder', label='Create Holder', parent='AlembicHolderMenu', c=lambda *args: createAlembicHolder())
         cmds.menuItem('AlembicShaderManager', label='Shader Manager', parent='AlembicHolderMenu', c=lambda *args: _shadermanager.show())
-        cmds.menuItem('ReloadAlembicShaderManager', label='Reload Shader Manager', parent='AlembicHolderMenu', c=lambda *args: reloadShaderManager(mayaWindow))
+        
         cmds.menuItem( divider=True )
         cmds.menuItem('exportAssign', label='Export Assignations on selected caches', parent='AlembicHolderMenu', c=lambda *args: exportAssignations())
         cmds.menuItem('importtAssign', label='Import Assignation on selected caches', parent='AlembicHolderMenu', c=lambda *args: importAssignations())
         cmds.menuItem( divider=True )
         cmds.menuItem('assignTagsSets', label='Assign tags from Selected Selection Sets', parent='AlembicHolderMenu', c=lambda *args: assignTagsFromSetName())
+        cmds.menuItem( divider=True )
+        cmds.menuItem('ReloadAlembicShaderManager', label='Reload Shader Manager(coding)', parent='AlembicHolderMenu', c=lambda *args: reloadShaderManager(mayaWindow))
         cmds.menuItem( divider=True )
         cmds.menuItem('OnlineDocumentation', label='Online Documentation', parent='AlembicHolderMenu', c=lambda *args: cmds.launch(webPage='http://bitbucket.org/thepilot/abctoarnold/wiki/Home'))
 
