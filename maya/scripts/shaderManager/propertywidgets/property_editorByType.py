@@ -11,6 +11,25 @@
 # You should have received a copy of the GNU Lesser General Public
 # License along with this library.
 
+AI_TYPE_BYTE =          0x00  ## Byte (an 8-bit sized unsigned integer)
+AI_TYPE_INT =           0x01  ## Integer
+AI_TYPE_UINT =          0x02  ## Unsigned integer
+AI_TYPE_BOOLEAN =       0x03  ## Boolean (either TRUE or FALSE)
+AI_TYPE_FLOAT =         0x04  ## Single-precision floating point number
+AI_TYPE_RGB =           0x05  ## RGB struct
+AI_TYPE_RGBA =          0x06  ## RGBA struct
+AI_TYPE_VECTOR =        0x07  ## XYZ vector
+AI_TYPE_POINT =         0x08  ## XYZ point
+AI_TYPE_POINT2 =        0x09  ## XY point
+AI_TYPE_STRING =        0x0A  ## C-style character string
+AI_TYPE_POINTER =       0x0B  ## Arbitrary pointer
+AI_TYPE_NODE =          0x0C  ## Pointer to an Arnold node
+AI_TYPE_ARRAY =         0x0D  ## AtArray
+AI_TYPE_MATRIX =        0x0E  ## 4x4 matrix
+AI_TYPE_ENUM =          0x0F  ## Enumeration (see \ref AtEnum)
+AI_TYPE_UNDEFINED =     0xFF  ## Undefined, you should never encounter a parameter of this type
+AI_TYPE_NONE =          0xFF  ## No type
+
 from PySide.QtGui import *
 from PySide.QtCore import *
 import json, os
