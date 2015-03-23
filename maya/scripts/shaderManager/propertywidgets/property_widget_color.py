@@ -28,13 +28,20 @@ class PropertyWidgetColor(PropertyWidget):
       self.button.clicked.connect(self.ShowColorDialog)
       self.layout().addWidget(self.button)
 
-      data = AtColor()
-      if AiMetaDataGetRGB(nentry, name, "default", byref(data)):
-         data = data.clamp(0, 1)
-         color = QColor(data.r * 255, data.g * 255, data.b * 255)
-         self.ColorChanged(color)
-      else:
-         self.__ReadFromArnold()
+      param_value = AiParamGetDefault(pentry)
+      param_type = AiParamGetType(pentry)
+
+      self.default = self.GetParamValueAsString(pentry, param_value, param_type)
+
+      #data = AtColor()
+      #if AiMetaDataGetRGB(nentry, name, "default", byref(data)):
+         #data = data.clamp(0, 1)
+         #color = QColor(data.r * 255, data.g * 255, data.b * 255)
+         #self.ColorChanged(color)
+      #else:
+         #self.__ReadFromArnold()
+
+
    def ShowColorDialog(self):
       try:
          Global.propertyEditor.colorDialog.currentColorChanged.disconnect()

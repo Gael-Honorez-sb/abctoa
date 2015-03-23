@@ -16,20 +16,16 @@ from PySide.QtCore import *
 from arnold import *
 from property_widget import *
 class PropertyWidgetFloat(PropertyWidget):
-   def __init__(self, controller,  pentry, name, parent = None):
-      PropertyWidget.__init__(self, name, parent)
+   def __init__(self, controller,  param, parent = None):
+      PropertyWidget.__init__(self, param, parent)
 
-      self.paramName = name
+      self.paramName = param["name"]
 
       self.controller = controller
       self.controller.setPropertyValue.connect(self.changed)
       self.controller.reset.connect(self.resetValue)
 
-      param_value = AiParamGetDefault(pentry)
-      param_type = AiParamGetType(pentry)
-      self.default = self.GetParamValueAsString(pentry, param_value, param_type)
-
-
+      self.default = param["value"]
 
       self.widget = QDoubleSpinBox()
       self.widget.setValue(self.default)

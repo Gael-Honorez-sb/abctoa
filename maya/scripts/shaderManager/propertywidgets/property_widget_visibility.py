@@ -18,10 +18,10 @@ from property_widget import PropertyWidget
 
 
 class PropertyWidgetVisibility(PropertyWidget):
-  def __init__(self, controller, pentry, name, parent = None):
-    PropertyWidget.__init__(self, name, parent)
+  def __init__(self, controller, params, parent = None):
+    PropertyWidget.__init__(self, params, parent)
 
-    self.paramName = name
+    self.paramName = params["name"]
 
 
     self.controller = controller
@@ -42,11 +42,7 @@ class PropertyWidgetVisibility(PropertyWidget):
     self.viz["reflection"] = QCheckBox(self)
     self.viz["refraction"] = QCheckBox(self)
 
-    param_value = AiParamGetDefault(pentry)
-    param_type = AiParamGetType(pentry)
-
-
-    self.default = self.GetParamValueAsString(pentry, param_value, param_type)
+    self.default = params["value"]
     self.setViz(self.default)
     #self.widget.setChecked(self.default)
     #self.PropertyChanged(self.default)

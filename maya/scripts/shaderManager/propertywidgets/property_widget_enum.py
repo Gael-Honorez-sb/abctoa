@@ -17,10 +17,10 @@ from arnold import *
 from property_widget import PropertyWidget
 
 class PropertyWidgetEnum(PropertyWidget):
-   def __init__(self, controller,  pentry, name, enum, parent = None):
-      PropertyWidget.__init__(self, name, parent)
+   def __init__(self, controller,  param, parent = None):
+      PropertyWidget.__init__(self, param, parent)
 
-      self.paramName = name
+      self.paramName = param["name"]
 
       self.widget = QComboBox(self)
 
@@ -28,18 +28,11 @@ class PropertyWidgetEnum(PropertyWidget):
       self.controller.setPropertyValue.connect(self.changed)
       self.controller.reset.connect(self.resetValue)
 
-      param_value = AiParamGetDefault(pentry)
-      param_type = AiParamGetType(pentry)
-      self.default = self.GetParamValueAsString(pentry, param_value, param_type)
+      self.default = param["value"]["default"]
 
       self.widget.setCurrentIndex(self.default)
 
-      index = 0
-      while True:
-         value = AiEnumGetString(enum, index)
-         index += 1
-         if not value:
-            break
+      for value in param["value"]["values"]:
          self.widget.addItem(value)
 
 
