@@ -89,33 +89,36 @@ i = 0
 it = AiUniverseGetNodeEntryIterator(AI_NODE_ALL)
 while not AiNodeEntryIteratorFinished(it):
 
-	nentry   = AiNodeEntryIteratorGetNext(it)
-	nodename = AiNodeEntryGetName(nentry)
-	typename = AiNodeEntryGetTypeName(nentry)
+  nentry   = AiNodeEntryIteratorGetNext(it)
+  nodename = AiNodeEntryGetName(nentry)
+  typename = AiNodeEntryGetTypeName(nentry)
 
-	if typename != "shape" and typename != "light":
-		continue
+  if typename != "shape" and typename != "light":
+    continue
 
-	nodes[nodename] = {}
+  nodes[nodename] = {}
 
-	nodes[nodename]["type"] = typename
-	nodes[nodename]["params"] = []
+  nodes[nodename]["type"] = typename
+  nodes[nodename]["params"] = []
 
-	node_entry = AiNodeEntryLookUp(nodename)
-	num_params = AiNodeEntryGetNumParams(node_entry)
-	for p in range(num_params):
-		pentry = AiNodeEntryGetParameter(node_entry, p)
+  node_entry = AiNodeEntryLookUp(nodename)
+  num_params = AiNodeEntryGetNumParams(node_entry)
+  for p in range(num_params):
+    pentry = AiNodeEntryGetParameter(node_entry, p)
 
-		param_type  = AiParamGetType(pentry)
-		param_value = AiParamGetDefault(pentry)
-		param_name  = AiParamGetName(pentry)
-		if param_type == AI_TYPE_POINTER:
-			continue
-		param = {}
-		param["name"] = param_name
-		param["value"] = GetParamValue(pentry, param_value, param_type)
-		param["type"] = param_type
-		nodes[nodename]["params"].append(param)
+    param_type  = AiParamGetType(pentry)
+    param_value = AiParamGetDefault(pentry)
+    param_name  = AiParamGetName(pentry)
+    if param_type == AI_TYPE_POINTER:
+      continue
+		
+    param = {}
+    param["name"] = param_name
+    param["value"] = GetParamValue(pentry, param_value, param_type)
+    param["type"] = param_type
+    if param_name == "smoothing":
+      param["value"] = not param["value"]
+    nodes[nodename]["params"].append(param)
 
 
 
