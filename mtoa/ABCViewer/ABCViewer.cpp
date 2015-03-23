@@ -108,20 +108,20 @@ void CABCViewerTranslator::Update(AtNode* procedural)
 AtNode* CABCViewerTranslator::ExportProcedural(AtNode* procedural, bool update)
 {
     m_DagNode.setObject(m_dagPath.node());
-    AiNodeSetStr(procedural, "name", m_dagPath.partialPathName().asChar());
+    
     ExportMatrix(procedural, 0);
     ProcessRenderFlagsCustom(procedural);
 
-    if (m_DagNode.findPlug("overrideGlobalShader").asBool() == true)
-    {
-
-        ExportStandinsShaders(procedural);
-    }
-
-
-
     if (!update)
     {
+        if (m_DagNode.findPlug("overrideGlobalShader").asBool() == true)
+        {
+
+            ExportStandinsShaders(procedural);
+        }
+
+        AiNodeSetStr(procedural, "name", m_dagPath.partialPathName().asChar());
+
         MString procLib = MString("arnoldAlembicProcedural") + LIBEXT ;
 
         AiNodeSetStr(procedural, "dso", procLib.asChar() );

@@ -234,8 +234,6 @@ AtNode* writePoints(
     ICompoundProperty arbGeomParams = ps.getArbGeomParams();
     ISampleSelector frameSelector( *singleSampleTimes.begin() );
  
-    std::string prefixname = args.nameprefix + name;
-
     //get tags
     
     std::vector<std::string> tags;
@@ -497,8 +495,6 @@ void createInstance(
     MatrixSampleMap * xformSamples,
     AtNode* points)
 {
-    std::string prefixname = args.nameprefix + name;
-
     Alembic::AbcGeom::IPointsSchema  &ps = prim.getSchema();
     ICompoundProperty arbGeomParams = ps.getArbGeomParams();
 
