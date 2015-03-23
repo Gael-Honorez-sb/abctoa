@@ -197,11 +197,11 @@ class PropertyEditor(QWidget):
       elif type == AI_TYPE_FLOAT:
          widget = property_widget_float.PropertyWidgetFloat(self, param, parent)
       elif type == AI_TYPE_VECTOR:
-         widget = property_widget_vector.PropertyWidgetVector(self, param, PropertyWidget.VECTOR, parent)
+         widget = property_widget_vector.PropertyWidgetVector(self, param, property_widget.PropertyWidget.VECTOR, parent)
       elif type == AI_TYPE_POINT:
-         widget = property_widget_vector.PropertyWidgetVector(self, param, PropertyWidget.POINT, parent)
+         widget = property_widget_vector.PropertyWidgetVector(self, param, property_widget.PropertyWidget.POINT, parent)
       elif type == AI_TYPE_POINT2:
-         widget = property_widget_vector.PropertyWidgetVector(self, param, PropertyWidget.POINT2, parent)
+         widget = property_widget_vector.PropertyWidgetVector(self, param, property_widget.PropertyWidget.POINT2, parent)
       if type == AI_TYPE_BOOLEAN:
          widget = property_widget_bool.PropertyWidgetBool(self, param, parent)
       elif type == AI_TYPE_STRING:
@@ -209,9 +209,9 @@ class PropertyEditor(QWidget):
       elif type == AI_TYPE_ENUM:
          widget = property_widget_enum.PropertyWidgetEnum(self, param, parent)
       elif type == AI_TYPE_RGB:
-         widget = property_widget_color.PropertyWidgetColor(self, param, PropertyWidget.RGB, parent)
+         widget = property_widget_color.PropertyWidgetColor(self, param, property_widget.PropertyWidget.RGB, parent)
       elif type == AI_TYPE_RGBA:
-         widget = property_widget_color.PropertyWidgetColor(self, param, PropertyWidget.RGBA, parent)
+         widget = property_widget_color.PropertyWidgetColor(self, param, property_widget.PropertyWidget.RGBA, parent)
       ##elif type == AI_TYPE_POINTER:
       ##   widget = PropertyWidgetPointer(nentry, name, parent)
       # elif type == AI_TYPE_NODE:

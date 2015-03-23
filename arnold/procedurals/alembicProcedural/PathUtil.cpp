@@ -38,14 +38,14 @@
 #include <algorithm>
 #include <boost/tokenizer.hpp>
 #include <boost/regex.hpp>
-
+#include "ai.h"
 //-*****************************************************************************
 bool isPathContainsInOtherPath(const std::string &path, const std::string &otherPath )
 {
     std::vector<std::string> pathParts;
     std::vector<std::string> jsonPathParts;
-    TokenizePath(path, pathParts);
 
+    TokenizePath(path, pathParts);
     TokenizePath(otherPath, jsonPathParts);
 
     if(jsonPathParts.size() > pathParts.size())
@@ -75,7 +75,6 @@ void TokenizePath( const std::string &path, std::vector<std::string> &result )
           ++iter )
     {
         if ( (*iter).empty() ) { continue; }
-
         result.push_back( *iter );
     }
 }

@@ -424,10 +424,6 @@ AtNode* writeMesh(
     singleSampleTimes.insert( ts->getFloorIndex(args.frame / args.fps, ps.getNumSamples()).second );
     ISampleSelector frameSelector( *singleSampleTimes.begin() );
 
-
-    std::string prefixname = args.nameprefix + name;
-
-
     // Getting all the data relative to the mesh.
     std::vector<unsigned int> vidxs;
     std::vector<AtByte> nsides;
@@ -839,7 +835,7 @@ AtNode* writeMesh(
 // createInstance
 // This function create & return a instance node with shaders & attributes applied.
 template <typename primT>
-void createInstance(
+AtNode* createInstance(
     std::string name,
     std::string originalName,
     primT & prim,
@@ -847,8 +843,6 @@ void createInstance(
     MatrixSampleMap * xformSamples,
     AtNode* mesh)
 {
-    std::string prefixname = args.nameprefix + name;
-
     typename primT::schema_type  &ps = prim.getSchema();
     ICompoundProperty arbGeomParams = ps.getArbGeomParams();
 
@@ -923,8 +917,136 @@ void createInstance(
     }
 
     args.createdNodes.push_back(instanceNode);
+    return instanceNode;
 
 }
+
+
+// ****************************
+// Check if we want a meshlight
+template <typename primT>
+bool isMeshLight(
+    std::string originalName,
+    primT & prim,
+    ProcArgs & args
+    )
+{
+    typename primT::schema_type  &ps = prim.getSchema();
+
+    TimeSamplingPtr ts = ps.getTimeSampling();
+
+    SampleTimeSet singleSampleTimes;
+    singleSampleTimes.insert( ts->getFloorIndex(args.frame / args.fps, ps.getNumSamples()).second );
+
+    ICompoundProperty arbGeomParams = ps.getArbGeomParams();
+    ISampleSelector frameSelector( *singleSampleTimes.begin() );
+
+  //get tags
+    std::vector<std::string> tags;
+    getAllTags(prim, tags, &args);
+
+    if(args.linkAttributes)
+    {
+        bool foundInPath = false;
+        for(std::vector<std::string>::iterator it=args.attributes.begin(); it!=args.attributes.end(); ++it)
+        {
+            Json::Value overrides;
+            if(it->find("/") != string::npos)
+            {
+                if(isPathContainsInOtherPath(originalName, *it))
+                {
+                    overrides = args.attributesRoot[*it];
+                    foundInPath = true;
+                }
+
+            }
+            else if(matchPattern(originalName,*it)) // based on wildcard expression
+            {
+                overrides = args.attributesRoot[*it];
+                foundInPath = true;
+            }
+            else if(foundInPath == false)
+            {
+                if (std::find(tags.begin(), tags.end(), *it) != tags.end())
+                {
+                    overrides = args.attributesRoot[*it];
+                }
+            }
+            if(overrides.size() > 0)
+            {
+                for( Json::ValueIterator itr = overrides.begin() ; itr != overrides.end() ; itr++ )
+                {
+                    std::string attribute = itr.key().asString();
+
+                    if (attribute=="convert_to_mesh_light")
+                    {
+                        Json::Value val = args.attributesRoot[*it][itr.key().asString()];
+                        return val.asBool();
+                    }
+                }
+            }
+        }
+    }
+
+    return false;
+}
+
+
+
+//-*************************************************************************
+// createMeshLight
+// This function create a meshlight.
+template <typename primT>
+void createMeshLight(
+    std::string name,
+    std::string originalName,
+    primT & prim,
+    ProcArgs & args,
+    MatrixSampleMap * xformSamples,
+    AtNode* mesh)
+{
+    std::string meshlightname = name + ":Meshlight";
+
+    typename primT::schema_type  &ps = prim.getSchema();
+    ICompoundProperty arbGeomParams = ps.getArbGeomParams();
+
+    SampleTimeSet singleSampleTimes;
+    TimeSamplingPtr ts = ps.getTimeSampling();
+    singleSampleTimes.insert( ts->getFloorIndex(args.frame / args.fps, ps.getNumSamples()).second );
+
+    ISampleSelector frameSelector( *singleSampleTimes.begin() );
+
+    AtNode* meshLightNode = AiNode( "mesh_light" );
+
+    AiNodeSetStr( meshLightNode, "name", meshlightname.c_str() );
+    AiNodeSetPtr(meshLightNode, "mesh", mesh );
+
+
+    //get tags
+    std::vector<std::string> tags;
+    getAllTags(prim, tags, &args);
+
+    // Arnold Attribute from json
+    if(args.linkAttributes)
+        ApplyOverrides(originalName, meshLightNode, tags, args);
+
+    // Xform
+    ApplyTransformation( meshLightNode, xformSamples, args );
+
+    // adding arbitary parameters
+    AddArbitraryGeomParams(
+            arbGeomParams,
+            frameSelector,
+            meshLightNode );
+
+
+    // adding attributes on procedural
+    AddArbitraryProceduralParams(args.proceduralNode, meshLightNode);
+
+    args.createdNodes.push_back(meshLightNode);
+
+}
+
 
 //-*************************************************************************
 
@@ -949,10 +1071,14 @@ void ProcessPolyMesh( IPolyMesh &polymesh, ProcArgs &args,
         meshNode = writeMesh(name, originalName, cacheId, polymesh, args, sampleTimes);
     }
 
+    AtNode *instanceNode = NULL;
     // we can create the instance, with correct transform, attributes & shaders.
     if(meshNode != NULL)
-        createInstance(name, originalName, polymesh, args, xformSamples, meshNode);
+        instanceNode = createInstance(name, originalName, polymesh, args, xformSamples, meshNode);
 
+    // Handling meshLights.
+    if(isMeshLight(originalName, polymesh, args))
+        createMeshLight(name, originalName, polymesh, args, xformSamples, instanceNode);
 }
 
 //-*************************************************************************
@@ -985,7 +1111,7 @@ void ProcessSubD( ISubD &subd, ProcArgs &args,
     // we can create the instance, with correct transform, attributes & shaders.
     if(meshNode != NULL)
         createInstance(name, originalName, subd, args, xformSamples, meshNode);
-   
+
 }
 
 
