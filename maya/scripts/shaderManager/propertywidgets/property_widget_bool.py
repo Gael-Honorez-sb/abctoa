@@ -15,14 +15,14 @@ from PySide.QtGui import *
 from PySide.QtCore import *
 from arnold import *
 from property_widget import PropertyWidget
-
+import property_widget
+reload(property_widget)
 
 class PropertyWidgetBool(PropertyWidget):
-  def __init__(self, controller, pentry, name, parent = None):
-    PropertyWidget.__init__(self, name, parent)
+  def __init__(self, controller, param, parent = None):
+    PropertyWidget.__init__(self, param, parent)
 
-    self.paramName = str(name)
-
+    self.paramName = param["name"]
     self.controller = controller
     self.controller.setPropertyValue.connect(self.changed)
     self.controller.reset.connect(self.resetValue)
@@ -30,10 +30,7 @@ class PropertyWidgetBool(PropertyWidget):
     self.widget = QCheckBox(self)
     self.widget.setTristate(False)
 
-    param_value = AiParamGetDefault(pentry)
-    param_type = AiParamGetType(pentry)
-
-    self.default = self.GetParamValueAsString(pentry, param_value, param_type)
+    self.default = param["value"]
 
     self.widget.setChecked(self.default)
     #self.PropertyChanged(self.default)

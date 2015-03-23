@@ -16,15 +16,13 @@ from PySide.QtCore import *
 from arnold import *
 from property_widget import *
 class PropertyWidgetString(PropertyWidget):
-   def __init__(self, controller, pentry, name, parent = None):
-      PropertyWidget.__init__(self, name, parent)
-      self.node = node
-      self.paramName = name
+   def __init__(self, controller, param, parent = None):
+      PropertyWidget.__init__(self, param, parent)
+      #self.node = node
+      self.paramName = param["name"]
 
       self.widget = QLineEdit(self)
-      param_value = AiParamGetDefault(pentry)
-      param_type = AiParamGetType(pentry)
-      default = self.GetParamValueAsString(pentry, param_value, param_type)
+      self.default = param["value"]
 
 
 

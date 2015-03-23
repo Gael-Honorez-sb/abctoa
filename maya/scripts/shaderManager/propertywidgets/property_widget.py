@@ -31,7 +31,7 @@ class PropertyWidget(QFrame):
 
    propertyChanged = Signal(dict)
 
-   def __init__(self, paramname, parent = None):
+   def __init__(self, param, parent = None):
       QFrame.__init__(self, parent)
 
       self.setBackgroundRole(QPalette.Dark)
@@ -40,7 +40,7 @@ class PropertyWidget(QFrame):
 
       layout = QHBoxLayout()
 
-      self.title = QLabel(paramname, self)
+      self.title = QLabel(param["name"], self)
       layout.addWidget(self.title)
       layout.addStretch()
 

@@ -18,19 +18,17 @@ from property_widget import *
 
 class PropertyWidgetInt(PropertyWidget):
 
-   def __init__(self, controller,  pentry, param, parent = None):
+   def __init__(self, controller,  param, parent = None):
       PropertyWidget.__init__(self, param, parent)
 
 
-      self.paramName = param
+      self.paramName = param["name"]
 
       self.controller = controller
       self.controller.setPropertyValue.connect(self.changed)
       self.controller.reset.connect(self.resetValue)
 
-      param_value = AiParamGetDefault(pentry)
-      param_type = AiParamGetType(pentry)
-      self.default = self.GetParamValueAsString(pentry, param_value, param_type)
+      self.default = param["value"]
 
 
       self.widget = QSpinBox()

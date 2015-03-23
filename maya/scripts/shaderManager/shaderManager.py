@@ -19,7 +19,6 @@ import shiboken
 d = os.path.dirname(__file__)
 
 import json
-from arnold import *
 
 from PySide import QtGui, QtCore
 from PySide.QtGui import *

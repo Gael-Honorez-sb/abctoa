@@ -75,6 +75,11 @@ find_package(PyString REQUIRED)
 
 find_package(AlembicZlib REQUIRED)
 
+configure_file(
+    "${PROJECT_SOURCE_DIR}/exportArnoldDefinitions.in.py"
+    "${PROJECT_SOURCE_DIR}/exportArnoldDefinitions.py"
+)
+
 if (NOT DEFINED INSTALL_DIR)
     if (DEFINED INSTALL_ROOT)
         set(INSTALL_DIR "${INSTALL_ROOT}/AbcToA-${ABCTOA_VERSION}")
