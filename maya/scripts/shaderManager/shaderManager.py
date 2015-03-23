@@ -158,9 +158,14 @@ class ShaderManager(QMainWindow, UI_ABCHierarchy.Ui_NAM):
         self.isolateCheckbox.setChecked(0)
         return QtGui.QMainWindow.hideEvent(self, event)
 
-    def reset(self):
+    def reset(self, *args, **kwargs):
         try:
             self.renderLayer.currentIndexChanged.disconnect()
+        except:
+            pass
+
+        try:
+            self.propertyEditor.propertyChanged.disconnect()
         except:
             pass
 
@@ -196,7 +201,7 @@ class ShaderManager(QMainWindow, UI_ABCHierarchy.Ui_NAM):
         self.refreshShaders()
 
         self.renderLayer.currentIndexChanged.connect(self.layerChanged)
-
+        self.propertyEditor.propertyChanged.connect(self.propertyChanged)
         
 
         
@@ -628,10 +633,13 @@ class ShaderManager(QMainWindow, UI_ABCHierarchy.Ui_NAM):
         if self.lastClick == 1:
 
             item = self.hierarchyWidget.currentItem()
-            curPath = item.getPath()
-            if curPath is None:
+            if item:
+                curPath = item.getPath()
+                if curPath is None:
+                    return
+            else:
                 return
-
+                
             cache = item.cache
             layer = self.getLayer()
             cache.updateOverride(propName, default, value, curPath, layer)
