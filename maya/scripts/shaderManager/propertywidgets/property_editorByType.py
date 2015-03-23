@@ -17,16 +17,13 @@ import json, os
 
 from shaderManager.propertywidgets import property_widget
 from shaderManager.propertywidgets import property_widget_bool
-from shaderManager.propertywidgets import property_widget_bool2
 from shaderManager.propertywidgets import property_widget_color 
 from shaderManager.propertywidgets import property_widget_enum 
 from shaderManager.propertywidgets import property_widget_float 
-from shaderManager.propertywidgets import property_widget_float2 
 from shaderManager.propertywidgets import property_widget_int 
 from shaderManager.propertywidgets import property_widget_node 
 from shaderManager.propertywidgets import property_widget_pointer 
 from shaderManager.propertywidgets import property_widget_string 
-from shaderManager.propertywidgets import property_widget_string2
 from shaderManager.propertywidgets import property_widget_vector 
 from shaderManager.propertywidgets import property_widget_visibility 
 
@@ -52,13 +49,17 @@ PROPERTY_ADD_LIST = {
                     {'name' :'radius_multiplier', 'type': AI_TYPE_FLOAT, 'value' : 1.0},
                     {'name' :'velocity_multiplier', 'type': AI_TYPE_FLOAT, 'value' : 1.0}
                     ],
+'mesh_light'    :  [
+                    {'name' :'convert_to_mesh_light', 'type': AI_TYPE_BOOLEAN, 'value' : False}
+                   ]                    
 }
 
 PROPERTY_BLACK_LIST = {
 'options'        : ['outputs'],
-'polymesh'       : ['nidxs', 'nlist', 'nsides', 'shidxs', 'uvidxs', 'uvlist', 'vidxs', 'vlist', 'autobump_visibility', 'sidedness', 'ray_bias'],
+'polymesh'       : ['nidxs', 'nlist', 'nsides', 'shidxs', 'uvidxs', 'uvlist', 'vidxs', 'crease_idxs', 'vlist', 'autobump_visibility', 'sidedness', 'ray_bias'],
 'points'         : ['sidedness', 'ray_bias'],
-'driver_display' : ['callback', 'callback_data']
+'driver_display' : ['callback', 'callback_data'],
+'mesh_light'    :  []
 }
 
 class PropertyEditor(QWidget):
@@ -67,8 +68,8 @@ class PropertyEditor(QWidget):
     reset = Signal()
     def __init__(self, mainEditor, nodetype, parent = None):
         QWidget.__init__(self, parent)
-        mainLayout = QVBoxLayout()
-        self.setLayout(mainLayout)
+        self.mainLayout = QVBoxLayout()
+        self.setLayout(self.mainLayout)
 
         
         with open(os.path.join(os.path.dirname(os.path.realpath(__file__)),"arnold_nodes.json"), "r") as node_definition:
@@ -76,61 +77,26 @@ class PropertyEditor(QWidget):
 
         self.mainEditor = mainEditor
         
-        name = nodetype
-        self.node = self.nodes[name]
+        self.name = nodetype
+        self.node = self.nodes[self.name]
 
+        self.scrollArea = None
         labelLayout = QHBoxLayout()
-        mainLayout.addLayout(labelLayout)
-        labelLayout.addWidget(QLabel("Node: %s" % name))
+        self.mainLayout.addLayout(labelLayout)
+        self.switch = QPushButton(self)
+        self.switch.pressed.connect(self.switchPressed)
+        labelLayout.addWidget(QLabel("Node: %s" % self.name))
+        labelLayout.addWidget(self.switch)
         labelLayout.addStretch()
 
-        #shaderButton = QPushButton("S", self)
-
         self.propertyWidgets = {}
-
-        #labelLayout.addWidget(shaderButton)
-        mainLayout.addSpacing(10)
-
-        if self.node:
-            frameLayout = QVBoxLayout()
-            scrollArea = QScrollArea()
-            scrollArea.setWidgetResizable(True)
-            frame = QFrame()
-            frame.setLayout(frameLayout)
-            mainLayout.addWidget(scrollArea)
-
-            for prop in PROPERTY_ADD_LIST[name]:
-              propertyWidget = self.GetPropertyWidget(prop, frame, False)
-
-              self.propertyWidgets[prop["name"]] = propertyWidget
-              if propertyWidget:
-                frameLayout.addWidget(propertyWidget)
-
-          ## Built-in parameters
-            for param in self.node["params"]:
-  
-                paramName = param["name"]
-
-                blackList = PROPERTY_BLACK_LIST[name] if name in PROPERTY_BLACK_LIST else []
-                if paramName != 'name' and not paramName in blackList:
-                  propertyWidget = self.GetPropertyWidget(param, frame, False)
-                  self.propertyWidgets[paramName] = propertyWidget
-                  if propertyWidget:
-                    frameLayout.addWidget(propertyWidget)
-
-
-            frameLayout.addStretch(0)
-
-            scrollArea.setWidget(frame)
-        else:
-            mainLayout.addStretch()
-
-        self.colorDialog = QColorDialog(self)
-
+        self.resetTo(nodetype)
 
     def propertyValue(self, message):
-      self.propertyWidgets[message["paramname"]].changed(message)
-      self.propertyWidgets[message["paramname"]].title.setText("<font color='red'>%s</font>" % message["paramname"])
+      param = message["paramname"]
+      if param in self.propertyWidgets:
+        self.propertyWidgets[param].changed(message)
+        self.propertyWidgets[param].title.setText("<font color='red'>%s</font>" % message["paramname"])
 
     def resetToDefault(self):
       self.reset.emit()
@@ -138,6 +104,65 @@ class PropertyEditor(QWidget):
         if hasattr(self.propertyWidgets[param], "title"):
           self.propertyWidgets[param].title.setText(param)
 
+    def clearAll(self):
+      for name in self.propertyWidgets:
+        self.propertyWidgets[name].deleteLater()
+      self.propertyWidgets = {}
+
+      if self.scrollArea :
+        self.scrollArea.deleteLater()
+
+    def resetTo(self, nodetype):
+      self.resetToDefault()
+      self.clearAll()
+      self.name = nodetype
+      self.node = self.nodes[self.name]
+
+      if self.node:
+          if nodetype == "polymesh":
+            #for polymesh, we are adding meshlight.
+            self.switch.setText("Mesh Light")
+            self.switch.setVisible(1)
+          elif nodetype == "mesh_light":
+            self.switch.setText("Polymesh")
+            self.switch.setVisible(1)
+          else:
+            self.switch.setVisible(0)
+
+          frameLayout = QVBoxLayout()
+          self.scrollArea = QScrollArea()
+          self.scrollArea.setWidgetResizable(True)
+          frame = QFrame()
+          frame.setLayout(frameLayout)
+          self.mainLayout.addWidget(self.scrollArea)
+
+          for prop in PROPERTY_ADD_LIST[self.name]:
+            propertyWidget = self.GetPropertyWidget(prop, frame, False)
+
+            self.propertyWidgets[prop["name"]] = propertyWidget
+            if propertyWidget:
+              frameLayout.addWidget(propertyWidget)
+
+        ## Built-in parameters
+          for param in self.node["params"]:
+
+              paramName = param["name"]
+
+              blackList = PROPERTY_BLACK_LIST[self.name] if self.name in PROPERTY_BLACK_LIST else []
+              if paramName != 'name' and not paramName in blackList:
+                propertyWidget = self.GetPropertyWidget(param, frame, False)
+                if propertyWidget:
+                  self.propertyWidgets[paramName] = propertyWidget
+                  frameLayout.addWidget(propertyWidget)
+
+
+          frameLayout.addStretch(0)
+
+          self.scrollArea.setWidget(frame)
+      else:
+          self.mainLayout.addStretch()
+
+      self.mainEditor.updateAttributeEditor()
 
     def GetPropertyWidget(self, param, parent, userData):
       widget = None
@@ -175,3 +200,11 @@ class PropertyEditor(QWidget):
       if widget and userData:
          widget.setBackgroundRole(QPalette.Base)
       return widget
+
+    def switchPressed(self):
+      if self.name == "polymesh":
+        self.switch.setText("Polymesh")
+        self.resetTo("mesh_light")
+      else:
+        self.switch.setText("Mesh Light")
+        self.resetTo("polymesh")

@@ -16,24 +16,27 @@ from PySide.QtCore import *
 from arnold import *
 from property_widget import *
 class PropertyWidgetColor(PropertyWidget):
-   def __init__(self, controller,  pentry, name, colorType, parent = None):
-      PropertyWidget.__init__(self, name, parent)
+   def __init__(self, controller,  params, colorType, parent = None):
+      PropertyWidget.__init__(self, params, parent)
 
-      self.paramName = name
+      self.paramName = params["name"]
       self.colorType = colorType
 
-      self.button = QPushButton(self)
-      self.button.setFlat(True)
-      self.button.setAutoFillBackground(True)
-      self.button.clicked.connect(self.ShowColorDialog)
-      self.layout().addWidget(self.button)
+      self.controller = controller
 
-      param_value = AiParamGetDefault(pentry)
-      param_type = AiParamGetType(pentry)
+      self.widget = QPushButton(self)
+      self.widget.setFlat(True)
+      self.widget.setAutoFillBackground(True)
+      self.widget.clicked.connect(self.ShowColorDialog)
+      self.layout().addWidget(self.widget)
 
-      self.default = self.GetParamValueAsString(pentry, param_value, param_type)
+      self.default = params["value"]
 
-      #data = AtColor()
+      color = QColor(self.default[0] * 255, self.default[1] * 255, self.default[2]* 255)
+
+      self.colorDialog = QColorDialog(self)
+      self.ColorChanged(color)
+      ##data = AtColor()
       #if AiMetaDataGetRGB(nentry, name, "default", byref(data)):
          #data = data.clamp(0, 1)
          #color = QColor(data.r * 255, data.g * 255, data.b * 255)
@@ -41,37 +44,42 @@ class PropertyWidgetColor(PropertyWidget):
       #else:
          #self.__ReadFromArnold()
 
+      #self.widget.stateChanged.connect(self.PropertyChanged)
 
-   def ShowColorDialog(self):
-      try:
-         Global.propertyEditor.colorDialog.currentColorChanged.disconnect()
-      except:
-         pass
-      Global.propertyEditor.colorDialog.currentColorChanged.connect(self.ColorChanged)
-      color = self.button.palette().color(QPalette.Button)
-      Global.propertyEditor.colorDialog.setCurrentColor(color)
-      Global.propertyEditor.colorDialog.setOption(QColorDialog.ShowAlphaChannel, self.colorType == PropertyWidget.RGBA)
-      Global.propertyEditor.colorDialog.show()
    def ColorChanged(self, color):
       palette = QPalette()
       palette.setColor(QPalette.Button, color)
-      self.button.setPalette(palette)
+      self.widget.setPalette(palette)
 
-      self.__WriteToArnold()
-      self.propertyChanged.emit(self.paramName)
+   def ShowColorDialog(self):
+      try:
+         self.colorDialog.ValueChanged.disconnect()
+      except:
+         pass
+      self.colorDialog.currentColorChanged.connect(self.ValueChanged)
+      color = self.widget.palette().color(QPalette.Button)
+      self.colorDialog.setCurrentColor(color)
+      self.colorDialog.setOption(QColorDialog.ShowAlphaChannel, self.colorType == PropertyWidget.RGBA)
+      self.colorDialog.show()
 
-   def __ReadFromArnold(self):
-      palette = QPalette()
-      if self.colorType == PropertyWidget.RGB:
-         color = AiNodeGetRGB(self.node, self.paramName).clamp(0, 1)
-      elif self.colorType == PropertyWidget.RGBA:
-         color = AiNodeGetRGBA(self.node, self.paramName).clamp(0, 1)
 
-      palette.setColor(QPalette.Button, QColor(color.r * 255, color.g * 255, color.b * 255))
-      self.button.setPalette(palette)
-   def __WriteToArnold(self):
-      color = self.button.palette().color(QPalette.Button)
-      if self.colorType == PropertyWidget.RGB:
-         AiNodeSetRGB(self.node, self.paramName, float(color.red()) / 255, float(color.green()) / 255, float(color.blue()) / 255)
-      elif self.colorType == PropertyWidget.RGBA:
-         AiNodeSetRGBA(self.node, self.paramName, float(color.red()) / 255, float(color.green()) / 255, float(color.blue()) / 255, float(color.alpha()) / 255)
+   def ValueChanged(self, color):
+      self.ColorChanged(color)
+      value = []
+      value.append( color.redF())
+      value.append( color.greenF())
+      value.append( color.blueF())
+      if  self.colorType == PropertyWidget.RGBA:
+         value.append( color.alphaF())
+      self.controller.mainEditor.propertyChanged(dict(propname=self.paramName, default=value == self.default, value=value))
+
+   def changed(self, message):
+      value = message["value"]
+      color = QColor(value[0]*255, value[1]*255, value[2]*255)
+      self.ColorChanged(color)
+
+
+   def resetValue(self):
+    self.widget.setValue(self.default)
+
+
