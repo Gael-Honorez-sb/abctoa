@@ -705,34 +705,52 @@ class List(QMainWindow, UI_ABCHierarchy.Ui_NAM):
 
         self.propertyEditor.resetToDefault()
 
-        layer = self.getLayer()
+        self.updateAttributeEditor()
 
-        attributes = {}
+        self.propertyEditing = False
 
-        if layer:
-            layerOverrides = cache.getAssignations().getLayerOverrides(layer)
-            if not layerOverrides:
-                layerOverrides = dict(removeDisplacements=False, removeProperties=False, removeShaders=False)
+        
 
-            if layerOverrides["removeProperties"] == False:
-                attributes = cache.getAssignations().getOverrides(curPath, layer)
+    def updateAttributeEditor(self):
+        ''' this will update what is inside the attribute editor (red text,....)'''
+
+        try:
+            self.propertyEditor.propertyChanged.disconnect()
+        except:
+            pass
+
+        for item in self.hierarchyWidget.selectedItems():
+            curPath = item.getPath()
+            cache = item.cache
+            layer = self.getLayer()
+            attributes = {}
+
+            if layer:
+                layerOverrides = cache.getAssignations().getLayerOverrides(layer)
+                if not layerOverrides:
+                    layerOverrides = dict(removeDisplacements=False, removeProperties=False, removeShaders=False)
+
+                if layerOverrides["removeProperties"] == False:
+                    attributes = cache.getAssignations().getOverrides(curPath, layer)
+                else:
+                    attributes = cache.getAssignations().getOverrides(curPath, None)
+
             else:
                 attributes = cache.getAssignations().getOverrides(curPath, None)
 
-        else:
-            attributes = cache.getAssignations().getOverrides(curPath, None)
 
+            if len(attributes) > 0 :
+                for propname in attributes:
+                    value = attributes[propname].get("override") 
+                    self.propertyEditor.propertyValue(dict(paramname=propname, value=value))
 
-        if len(attributes) > 0 :
-            for propname in attributes:
-                value = attributes[propname].get("override") 
-                self.propertyEditor.propertyValue(dict(paramname=propname, value=value))
+                    if propname in self.propertyEditor.propertyWidgets :
+                        self.updatePropertyColor(cache, layer, propname, curPath)
 
-                self.updatePropertyColor(cache, layer, propname, curPath)
-
-        self.propertyEditor.propertyChanged.connect(self.propertyChanged)
-
-        self.propertyEditing = False
+        try:            
+            self.propertyEditor.propertyChanged.connect(self.propertyChanged)
+        except:
+            pass
 
     def itemPressed(self, item, col) :
         self.lastClick = 1

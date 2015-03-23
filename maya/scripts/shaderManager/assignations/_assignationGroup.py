@@ -42,8 +42,8 @@ class assignationGroup(object):
             if propName in self.overrides[curPath]:
                 del self.overrides[curPath][propName]
 
-        if len(self.overrides[curPath]) == 0:
-            del self.overrides[curPath]
+            if len(self.overrides[curPath]) == 0:
+                del self.overrides[curPath]
 
 
     def updateOverride(self, propName, default, value, curPath):

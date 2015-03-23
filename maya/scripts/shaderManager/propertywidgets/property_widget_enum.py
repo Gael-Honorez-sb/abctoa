@@ -41,7 +41,6 @@ class PropertyWidgetEnum(PropertyWidget):
       self.layout().addWidget(self.widget)
 
    def ValueChanged(self, value):
-    #self.__WriteToArnold()
     self.controller.mainEditor.propertyChanged(dict(propname=self.paramName, default=value == self.default, value=value))
 
    def changed(self, message):
