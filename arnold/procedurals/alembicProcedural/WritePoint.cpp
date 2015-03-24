@@ -257,10 +257,13 @@ AtNode* writePoints(
 
     float radiusPoint = 1.0f;
     float scaleVelocity = 1.0f/args.fps;
+    std::string radiusParam = "pscale";
 
     if (AiNodeLookUpUserParameter(args.proceduralNode, "radiusPoint") !=NULL )
         radiusPoint = AiNodeGetFlt(args.proceduralNode, "radiusPoint");
     
+    
+
     // Attribute overrides..
     if(args.linkAttributes)
     {
@@ -274,6 +277,12 @@ AtNode* writePoints(
                     for( Json::ValueIterator itr = overrides.begin() ; itr != overrides.end() ; itr++ )
                     {
                         std::string attribute = itr.key().asString();
+
+                        if(attribute == "radius_attribute")
+                        {
+                            Json::Value val = args.attributesRoot[*it][itr.key().asString()];
+                            radiusParam = val.asString();
+                        }
 
                         if(attribute == "radius_multiplier")
                         {
@@ -329,8 +338,6 @@ AtNode* writePoints(
 
     bool isFirstSample = true;
 
-
-    std::string radiusParam = "pscale";
     if (AiNodeLookUpUserParameter(args.proceduralNode, "radiusProperty") !=NULL )
         radiusParam = std::string(AiNodeGetStr(args.proceduralNode, "radiusProperty"));
 

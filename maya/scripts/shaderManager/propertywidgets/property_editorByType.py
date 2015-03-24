@@ -65,6 +65,7 @@ PROPERTY_ADD_LIST = {
                   ],
 'points'         : [
                     {'name' :'forceVisible', 'type': AI_TYPE_BOOLEAN, 'value' : False}, 
+                    {'name' :'radius_attribute', 'type': AI_TYPE_STRING, 'value' : "pscale"},
                     {'name' :'radius_multiplier', 'type': AI_TYPE_FLOAT, 'value' : 1.0},
                     {'name' :'velocity_multiplier', 'type': AI_TYPE_FLOAT, 'value' : 1.0}
                     ],

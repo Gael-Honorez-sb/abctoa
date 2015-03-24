@@ -52,7 +52,7 @@ std::string CleanAttributeName(std::string str)
 
 
 
-std::string GetArnoldTypeString( GeometryScope scope, int arnoldAPIType)
+std::string GetArnoldTypeString( GeometryScope scope, int arnoldAPIType, AtNode *primNode)
 {
     std::ostringstream buffer;
     switch (scope)
@@ -62,6 +62,11 @@ std::string GetArnoldTypeString( GeometryScope scope, int arnoldAPIType)
         buffer << "uniform";
         break;
     case kVaryingScope:
+        if(AiNodeIs(primNode, "points"))
+            buffer << "uniform";
+        else
+            buffer << "varying";
+        break;
     case kVertexScope:
         buffer << "varying";
         break;
@@ -137,7 +142,7 @@ void AddArbitraryGeomParam( ICompoundProperty & parent,
     }
 
     std::string declStr = GetArnoldTypeString( param.getScope(),
-            arnoldAPIType );
+            arnoldAPIType, primNode );
 
 
 
@@ -152,6 +157,10 @@ void AddArbitraryGeomParam( ICompoundProperty & parent,
     {
         return;
     }
+
+    // Varying and faceVarying attributes are not supported on instance!
+    if((param.getScope() == kVaryingScope || param.getScope() == kFacevaryingScope ) && AiNodeIs(primNode, "ginstance"))
+        return;
 
     if ( !AiNodeDeclare( primNode, CleanAttributeName(param.getName()).c_str(), declStr.c_str() ) )
     {
@@ -345,7 +354,7 @@ void AddArbitraryStringGeomParam( ICompoundProperty & parent,
     }
 
     std::string declStr = GetArnoldTypeString( param.getScope(),
-            AI_TYPE_STRING );
+            AI_TYPE_STRING, primNode );
     if ( declStr.empty() )
     {
         return;
@@ -576,7 +585,7 @@ void AddArbitraryProceduralParams(AtNode* proc, AtNode * primNode)
 
 
 
-        std::string declStr = GetArnoldTypeString( toAbcCategory, arnoldAPIType );
+        std::string declStr = GetArnoldTypeString( toAbcCategory, arnoldAPIType, primNode );
         if ( declStr.empty() )
         {
             continue;
