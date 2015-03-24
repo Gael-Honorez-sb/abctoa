@@ -38,7 +38,7 @@
 
 
 #include <Alembic/AbcGeom/All.h>
-#include <json\json.h>
+#include <json/json.h>
 
 typedef std::vector<std::string> PathList;
 

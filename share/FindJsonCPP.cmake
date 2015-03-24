@@ -41,6 +41,7 @@ if(CMAKE_COMPILER_IS_GNUCXX)
 		OUTPUT_STRIP_TRAILING_WHITESPACE)
 	list(APPEND
 		_jsoncppnames
+		jsoncpp
 		json_linux-gcc-${_gnucxx_ver}_libmt
 		json_linux-gcc_libmt)
 	list(APPEND _pathsuffixes linux-gcc-${_gnucxx_ver})
@@ -81,7 +82,7 @@ find_path(JSONCPP_INCLUDE_DIR
 	PATHS
 	"${JSONCPP_ROOT_DIR}"
 	PATH_SUFFIXES
-	include)
+	include include/jsoncpp)
 
 include(FindPackageHandleStandardArgs)
 find_package_handle_standard_args(JSONCPP
