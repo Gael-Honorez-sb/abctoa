@@ -335,53 +335,54 @@ class ShaderManager(QMainWindow, UI_ABCHierarchy.Ui_NAM):
         ''' Callback when creating a new node '''
         mobject = MObjectHandle( newNode ).object()
         nodeFn = MFnDependencyNode ( mobject )
-        nodeName = nodeFn.name()
-        if cmds.getClassification(cmds.nodeType(nodeName), satisfies="shader"):
-            if cmds.nodeType(nodeName) == "displacementShader":
-                icon = QtGui.QIcon()
-                icon.addFile(os.path.join(d, "../../icons/sg.xpm"), QtCore.QSize(25,25))
-                item = QtGui.QListWidgetItem(nodeName)
-                item.setIcon(icon)
-                self.displacementList.addItem(item)
-            else:
-
-                icon = QtGui.QIcon()
-                icon.addFile(os.path.join(d, "../../icons/sg.xpm"), QtCore.QSize(25,25))
-                item = QtGui.QListWidgetItem(nodeName)
-                item.setIcon(icon)
-                self.shadersList.addItem(item)
+        if nodeFn.hasUniqueName():
+            nodeName = nodeFn.name()
+            if cmds.getClassification(cmds.nodeType(nodeName), satisfies="shader"):
+                if cmds.nodeType(nodeName) == "displacementShader":
+                    icon = QtGui.QIcon()
+                    icon.addFile(os.path.join(d, "../../icons/sg.xpm"), QtCore.QSize(25,25))
+                    item = QtGui.QListWidgetItem(nodeName)
+                    item.setIcon(icon)
+                    self.displacementList.addItem(item)
+                else:
+                    icon = QtGui.QIcon()
+                    icon.addFile(os.path.join(d, "../../icons/sg.xpm"), QtCore.QSize(25,25))
+                    item = QtGui.QListWidgetItem(nodeName)
+                    item.setIcon(icon)
+                    self.shadersList.addItem(item)
 
 
     def delNodeCB(self, node, data ):
         ''' Callback when a node has been deleted '''
         mobject = MObjectHandle( node ).object()
         nodeFn = MFnDependencyNode ( mobject )
-        nodeName = nodeFn.name()
+        if nodeFn.hasUniqueName():
+            nodeName = nodeFn.name()
 
-        didSomething = False
+            didSomething = False
 
-        if cmds.nodeType(nodeName) == "displacementShader":
-            items = self.displacementList.findItems(nodeName, QtCore.Qt.MatchExactly)
-            for item in items:
-                self.displacementList.takeItem(self.displacementList.row(item))   
+            if cmds.nodeType(nodeName) == "displacementShader":
+                items = self.displacementList.findItems(nodeName, QtCore.Qt.MatchExactly)
+                for item in items:
+                    self.displacementList.takeItem(self.displacementList.row(item))   
 
-            # remove shaders from caches
-            for cache in self.ABCViewerNode.values():
-                didSomething = True
-                cache.removeDisplacement(nodeName)
+                # remove shaders from caches
+                for cache in self.ABCViewerNode.values():
+                    didSomething = True
+                    cache.removeDisplacement(nodeName)
 
-        else:
-            items = self.shadersList.findItems(nodeName, QtCore.Qt.MatchExactly)
-            for item in items:
-                self.shadersList.takeItem(self.shadersList.row(item))
+            else:
+                items = self.shadersList.findItems(nodeName, QtCore.Qt.MatchExactly)
+                for item in items:
+                    self.shadersList.takeItem(self.shadersList.row(item))
 
-            # remove shaders from caches
-            for cache in self.ABCViewerNode.values():
-                didSomething = True
-                cache.removeShader(nodeName)                
-        
-        if didSomething:
-            self.checkShaders()
+                # remove shaders from caches
+                for cache in self.ABCViewerNode.values():
+                    didSomething = True
+                    cache.removeShader(nodeName)                
+            
+            if didSomething:
+                self.checkShaders()
 
     def shaderCLicked(self, item):
         shader = item.text()
@@ -639,7 +640,7 @@ class ShaderManager(QMainWindow, UI_ABCHierarchy.Ui_NAM):
                     return
             else:
                 return
-                
+
             cache = item.cache
             layer = self.getLayer()
             cache.updateOverride(propName, default, value, curPath, layer)
