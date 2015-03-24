@@ -82,11 +82,11 @@ configure_file(
 
 if (NOT DEFINED INSTALL_DIR)
     if (DEFINED INSTALL_ROOT)
-        set(INSTALL_DIR "${INSTALL_ROOT}/AbcToA-${ABCTOA_VERSION}")
+        set(INSTALL_DIR "${INSTALL_ROOT}/abcToA-${ABCTOA_VERSION}")
         message("INSTALL_ROOT defined. Adding versions automatically:\n\t${INSTALL_DIR}")
     else()
 		set(INSTALL_ROOT "${CMAKE_BINARY_DIR}/dist")
-        set(INSTALL_DIR "${INSTALL_ROOT}/AbcToA-${ABCTOA_VERSION}")
+        set(INSTALL_DIR "${INSTALL_ROOT}/abcToA-${ABCTOA_VERSION}")
 		
         message("INSTALL_DIR not defined. Defaulting to:\n\t${INSTALL_DIR}")
     endif()
