@@ -305,30 +305,30 @@ class ShaderManager(QMainWindow, UI_ABCHierarchy.Ui_NAM):
         mobject = handle.object()
 
         nodeFn = MFnDependencyNode ( mobject )
-        nodeName = nodeFn.name()
-        
-        if cmds.getClassification(cmds.nodeType(nodeName), satisfies="shader"):
+        if nodeFn.hasUniqueName():
+            nodeName = nodeFn.name()
+            if cmds.getClassification(cmds.nodeType(nodeName), satisfies="shader"):
 
-            if cmds.nodeType(nodeName) == "displacementShader":
-                items = self.displacementList.findItems(prevName, QtCore.Qt.MatchExactly)
-                for item in items:
-                    item.setText(nodeName)
+                if cmds.nodeType(nodeName) == "displacementShader":
+                    items = self.displacementList.findItems(prevName, QtCore.Qt.MatchExactly)
+                    for item in items:
+                        item.setText(nodeName)
 
-                # renaming shaders in caches
-                for cache in self.ABCViewerNode.values():
-                    cache.renameDisplacement(prevName, nodeName)
-                self.checkShaders()
-            else:
-                items = self.shadersList.findItems(prevName, QtCore.Qt.MatchExactly)
-                for item in items:
-                    item.setText(nodeName)
+                    # renaming shaders in caches
+                    for cache in self.ABCViewerNode.values():
+                        cache.renameDisplacement(prevName, nodeName)
+                    self.checkShaders()
+                else:
+                    items = self.shadersList.findItems(prevName, QtCore.Qt.MatchExactly)
+                    for item in items:
+                        item.setText(nodeName)
 
-        if cmds.nodeType(nodeName) == "shadingEngine":
-                # renaming shaders in caches
-                for cache in self.ABCViewerNode.values():
-                    cache.renameShader(prevName, nodeName)
+            if cmds.nodeType(nodeName) == "shadingEngine":
+                    # renaming shaders in caches
+                    for cache in self.ABCViewerNode.values():
+                        cache.renameShader(prevName, nodeName)
 
-                self.checkShaders()
+                    self.checkShaders()
 
 
     def newNodeCB(self, newNode, data ):
