@@ -1,0 +1,3435 @@
+{
+    "box": {
+        "params": [
+            {
+                "name": "min", 
+                "type": 8, 
+                "value": [
+                    -0.5, 
+                    -0.5, 
+                    -0.5
+                ]
+            }, 
+            {
+                "name": "max", 
+                "type": 8, 
+                "value": [
+                    0.5, 
+                    0.5, 
+                    0.5
+                ]
+            }, 
+            {
+                "name": "step_size", 
+                "type": 4, 
+                "value": 0.0
+            }, 
+            {
+                "name": "visibility", 
+                "type": 0, 
+                "value": 255
+            }, 
+            {
+                "name": "sidedness", 
+                "type": 0, 
+                "value": 255
+            }, 
+            {
+                "name": "receive_shadows", 
+                "type": 3, 
+                "value": true
+            }, 
+            {
+                "name": "self_shadows", 
+                "type": 3, 
+                "value": true
+            }, 
+            {
+                "name": "invert_normals", 
+                "type": 3, 
+                "value": false
+            }, 
+            {
+                "name": "ray_bias", 
+                "type": 4, 
+                "value": 9.999999974752427e-07
+            }, 
+            {
+                "name": "matrix", 
+                "type": 13, 
+                "value": 0
+            }, 
+            {
+                "name": "shader", 
+                "type": 13, 
+                "value": 0
+            }, 
+            {
+                "name": "opaque", 
+                "type": 3, 
+                "value": true
+            }, 
+            {
+                "name": "matte", 
+                "type": 3, 
+                "value": false
+            }, 
+            {
+                "name": "use_light_group", 
+                "type": 3, 
+                "value": false
+            }, 
+            {
+                "name": "light_group", 
+                "type": 13, 
+                "value": 0
+            }, 
+            {
+                "name": "use_shadow_group", 
+                "type": 3, 
+                "value": false
+            }, 
+            {
+                "name": "shadow_group", 
+                "type": 13, 
+                "value": 0
+            }, 
+            {
+                "name": "trace_sets", 
+                "type": 13, 
+                "value": 0
+            }, 
+            {
+                "name": "transform_time_samples", 
+                "type": 13, 
+                "value": 2
+            }, 
+            {
+                "name": "deform_time_samples", 
+                "type": 13, 
+                "value": 2
+            }, 
+            {
+                "name": "id", 
+                "type": 1, 
+                "value": 0
+            }, 
+            {
+                "name": "name", 
+                "type": 10, 
+                "value": ""
+            }
+        ], 
+        "type": "shape"
+    }, 
+    "cone": {
+        "params": [
+            {
+                "name": "bottom", 
+                "type": 8, 
+                "value": [
+                    0.0, 
+                    0.0, 
+                    -0.5
+                ]
+            }, 
+            {
+                "name": "top", 
+                "type": 8, 
+                "value": [
+                    0.0, 
+                    0.0, 
+                    0.5
+                ]
+            }, 
+            {
+                "name": "bottom_radius", 
+                "type": 4, 
+                "value": 0.5
+            }, 
+            {
+                "name": "top_radius", 
+                "type": 4, 
+                "value": 0.0
+            }, 
+            {
+                "name": "visibility", 
+                "type": 0, 
+                "value": 255
+            }, 
+            {
+                "name": "sidedness", 
+                "type": 0, 
+                "value": 255
+            }, 
+            {
+                "name": "receive_shadows", 
+                "type": 3, 
+                "value": true
+            }, 
+            {
+                "name": "self_shadows", 
+                "type": 3, 
+                "value": true
+            }, 
+            {
+                "name": "invert_normals", 
+                "type": 3, 
+                "value": false
+            }, 
+            {
+                "name": "ray_bias", 
+                "type": 4, 
+                "value": 9.999999974752427e-07
+            }, 
+            {
+                "name": "matrix", 
+                "type": 13, 
+                "value": 0
+            }, 
+            {
+                "name": "shader", 
+                "type": 13, 
+                "value": 0
+            }, 
+            {
+                "name": "opaque", 
+                "type": 3, 
+                "value": true
+            }, 
+            {
+                "name": "matte", 
+                "type": 3, 
+                "value": false
+            }, 
+            {
+                "name": "use_light_group", 
+                "type": 3, 
+                "value": false
+            }, 
+            {
+                "name": "light_group", 
+                "type": 13, 
+                "value": 0
+            }, 
+            {
+                "name": "use_shadow_group", 
+                "type": 3, 
+                "value": false
+            }, 
+            {
+                "name": "shadow_group", 
+                "type": 13, 
+                "value": 0
+            }, 
+            {
+                "name": "trace_sets", 
+                "type": 13, 
+                "value": 0
+            }, 
+            {
+                "name": "transform_time_samples", 
+                "type": 13, 
+                "value": 2
+            }, 
+            {
+                "name": "deform_time_samples", 
+                "type": 13, 
+                "value": 2
+            }, 
+            {
+                "name": "id", 
+                "type": 1, 
+                "value": 0
+            }, 
+            {
+                "name": "name", 
+                "type": 10, 
+                "value": ""
+            }
+        ], 
+        "type": "shape"
+    }, 
+    "curves": {
+        "params": [
+            {
+                "name": "num_points", 
+                "type": 13, 
+                "value": 0
+            }, 
+            {
+                "name": "points", 
+                "type": 13, 
+                "value": 0
+            }, 
+            {
+                "name": "radius", 
+                "type": 13, 
+                "value": 0
+            }, 
+            {
+                "name": "orientations", 
+                "type": 13, 
+                "value": 0
+            }, 
+            {
+                "name": "basis", 
+                "type": 15, 
+                "value": {
+                    "default": 0, 
+                    "values": [
+                        "bezier", 
+                        "b-spline", 
+                        "catmull-rom", 
+                        "linear"
+                    ]
+                }
+            }, 
+            {
+                "name": "mode", 
+                "type": 15, 
+                "value": {
+                    "default": 0, 
+                    "values": [
+                        "ribbon", 
+                        "thick", 
+                        "oriented"
+                    ]
+                }
+            }, 
+            {
+                "name": "min_pixel_width", 
+                "type": 4, 
+                "value": 0.0
+            }, 
+            {
+                "name": "shidxs", 
+                "type": 13, 
+                "value": 0
+            }, 
+            {
+                "name": "visibility", 
+                "type": 0, 
+                "value": 255
+            }, 
+            {
+                "name": "sidedness", 
+                "type": 0, 
+                "value": 255
+            }, 
+            {
+                "name": "receive_shadows", 
+                "type": 3, 
+                "value": true
+            }, 
+            {
+                "name": "self_shadows", 
+                "type": 3, 
+                "value": true
+            }, 
+            {
+                "name": "invert_normals", 
+                "type": 3, 
+                "value": false
+            }, 
+            {
+                "name": "ray_bias", 
+                "type": 4, 
+                "value": 9.999999974752427e-07
+            }, 
+            {
+                "name": "matrix", 
+                "type": 13, 
+                "value": 0
+            }, 
+            {
+                "name": "shader", 
+                "type": 13, 
+                "value": 0
+            }, 
+            {
+                "name": "opaque", 
+                "type": 3, 
+                "value": true
+            }, 
+            {
+                "name": "matte", 
+                "type": 3, 
+                "value": false
+            }, 
+            {
+                "name": "use_light_group", 
+                "type": 3, 
+                "value": false
+            }, 
+            {
+                "name": "light_group", 
+                "type": 13, 
+                "value": 0
+            }, 
+            {
+                "name": "use_shadow_group", 
+                "type": 3, 
+                "value": false
+            }, 
+            {
+                "name": "shadow_group", 
+                "type": 13, 
+                "value": 0
+            }, 
+            {
+                "name": "trace_sets", 
+                "type": 13, 
+                "value": 0
+            }, 
+            {
+                "name": "transform_time_samples", 
+                "type": 13, 
+                "value": 2
+            }, 
+            {
+                "name": "deform_time_samples", 
+                "type": 13, 
+                "value": 2
+            }, 
+            {
+                "name": "id", 
+                "type": 1, 
+                "value": 0
+            }, 
+            {
+                "name": "name", 
+                "type": 10, 
+                "value": ""
+            }
+        ], 
+        "type": "shape"
+    }, 
+    "cylinder": {
+        "params": [
+            {
+                "name": "bottom", 
+                "type": 8, 
+                "value": [
+                    0.0, 
+                    0.0, 
+                    -0.5
+                ]
+            }, 
+            {
+                "name": "top", 
+                "type": 8, 
+                "value": [
+                    0.0, 
+                    0.0, 
+                    0.5
+                ]
+            }, 
+            {
+                "name": "radius", 
+                "type": 4, 
+                "value": 0.5
+            }, 
+            {
+                "name": "bevel_width", 
+                "type": 4, 
+                "value": 0.0
+            }, 
+            {
+                "name": "bevel_angle", 
+                "type": 4, 
+                "value": 0.5
+            }, 
+            {
+                "name": "visibility", 
+                "type": 0, 
+                "value": 255
+            }, 
+            {
+                "name": "sidedness", 
+                "type": 0, 
+                "value": 255
+            }, 
+            {
+                "name": "receive_shadows", 
+                "type": 3, 
+                "value": true
+            }, 
+            {
+                "name": "self_shadows", 
+                "type": 3, 
+                "value": true
+            }, 
+            {
+                "name": "invert_normals", 
+                "type": 3, 
+                "value": false
+            }, 
+            {
+                "name": "ray_bias", 
+                "type": 4, 
+                "value": 9.999999974752427e-07
+            }, 
+            {
+                "name": "matrix", 
+                "type": 13, 
+                "value": 0
+            }, 
+            {
+                "name": "shader", 
+                "type": 13, 
+                "value": 0
+            }, 
+            {
+                "name": "opaque", 
+                "type": 3, 
+                "value": true
+            }, 
+            {
+                "name": "matte", 
+                "type": 3, 
+                "value": false
+            }, 
+            {
+                "name": "use_light_group", 
+                "type": 3, 
+                "value": false
+            }, 
+            {
+                "name": "light_group", 
+                "type": 13, 
+                "value": 0
+            }, 
+            {
+                "name": "use_shadow_group", 
+                "type": 3, 
+                "value": false
+            }, 
+            {
+                "name": "shadow_group", 
+                "type": 13, 
+                "value": 0
+            }, 
+            {
+                "name": "trace_sets", 
+                "type": 13, 
+                "value": 0
+            }, 
+            {
+                "name": "transform_time_samples", 
+                "type": 13, 
+                "value": 2
+            }, 
+            {
+                "name": "deform_time_samples", 
+                "type": 13, 
+                "value": 2
+            }, 
+            {
+                "name": "id", 
+                "type": 1, 
+                "value": 0
+            }, 
+            {
+                "name": "name", 
+                "type": 10, 
+                "value": ""
+            }
+        ], 
+        "type": "shape"
+    }, 
+    "cylinder_light": {
+        "params": [
+            {
+                "name": "bottom", 
+                "type": 13, 
+                "value": "0, -1, 0"
+            }, 
+            {
+                "name": "top", 
+                "type": 13, 
+                "value": "0, 1, 0"
+            }, 
+            {
+                "name": "radius", 
+                "type": 4, 
+                "value": 1.0
+            }, 
+            {
+                "name": "decay_type", 
+                "type": 15, 
+                "value": {
+                    "default": 1, 
+                    "values": [
+                        "constant", 
+                        "quadratic"
+                    ]
+                }
+            }, 
+            {
+                "name": "matrix", 
+                "type": 13, 
+                "value": ""
+            }, 
+            {
+                "name": "color", 
+                "type": 5, 
+                "value": [
+                    1.0, 
+                    1.0, 
+                    1.0
+                ]
+            }, 
+            {
+                "name": "intensity", 
+                "type": 4, 
+                "value": 1.0
+            }, 
+            {
+                "name": "exposure", 
+                "type": 4, 
+                "value": 0.0
+            }, 
+            {
+                "name": "cast_shadows", 
+                "type": 3, 
+                "value": true
+            }, 
+            {
+                "name": "cast_volumetric_shadows", 
+                "type": 3, 
+                "value": true
+            }, 
+            {
+                "name": "shadow_density", 
+                "type": 4, 
+                "value": 1.0
+            }, 
+            {
+                "name": "shadow_color", 
+                "type": 5, 
+                "value": [
+                    0.0, 
+                    0.0, 
+                    0.0
+                ]
+            }, 
+            {
+                "name": "samples", 
+                "type": 1, 
+                "value": 1
+            }, 
+            {
+                "name": "normalize", 
+                "type": 3, 
+                "value": true
+            }, 
+            {
+                "name": "affect_diffuse", 
+                "type": 3, 
+                "value": true
+            }, 
+            {
+                "name": "affect_specular", 
+                "type": 3, 
+                "value": true
+            }, 
+            {
+                "name": "affect_volumetrics", 
+                "type": 3, 
+                "value": true
+            }, 
+            {
+                "name": "diffuse", 
+                "type": 4, 
+                "value": 1.0
+            }, 
+            {
+                "name": "specular", 
+                "type": 4, 
+                "value": 1.0
+            }, 
+            {
+                "name": "sss", 
+                "type": 4, 
+                "value": 1.0
+            }, 
+            {
+                "name": "indirect", 
+                "type": 4, 
+                "value": 1.0
+            }, 
+            {
+                "name": "max_bounces", 
+                "type": 1, 
+                "value": 999
+            }, 
+            {
+                "name": "volume_density", 
+                "type": 12, 
+                "value": "None"
+            }, 
+            {
+                "name": "filters", 
+                "type": 13, 
+                "value": 0
+            }, 
+            {
+                "name": "time_samples", 
+                "type": 13, 
+                "value": 2
+            }, 
+            {
+                "name": "volume_samples", 
+                "type": 1, 
+                "value": 2
+            }, 
+            {
+                "name": "name", 
+                "type": 10, 
+                "value": ""
+            }
+        ], 
+        "type": "light"
+    }, 
+    "disk": {
+        "params": [
+            {
+                "name": "center", 
+                "type": 8, 
+                "value": [
+                    0.0, 
+                    0.0, 
+                    0.0
+                ]
+            }, 
+            {
+                "name": "normal", 
+                "type": 7, 
+                "value": [
+                    0.0, 
+                    0.0, 
+                    1.0
+                ]
+            }, 
+            {
+                "name": "radius", 
+                "type": 4, 
+                "value": 0.5
+            }, 
+            {
+                "name": "hole", 
+                "type": 4, 
+                "value": 0.0
+            }, 
+            {
+                "name": "bevel_width", 
+                "type": 4, 
+                "value": 0.0
+            }, 
+            {
+                "name": "bevel_angle", 
+                "type": 4, 
+                "value": 0.5
+            }, 
+            {
+                "name": "visibility", 
+                "type": 0, 
+                "value": 255
+            }, 
+            {
+                "name": "sidedness", 
+                "type": 0, 
+                "value": 255
+            }, 
+            {
+                "name": "receive_shadows", 
+                "type": 3, 
+                "value": true
+            }, 
+            {
+                "name": "self_shadows", 
+                "type": 3, 
+                "value": true
+            }, 
+            {
+                "name": "invert_normals", 
+                "type": 3, 
+                "value": false
+            }, 
+            {
+                "name": "ray_bias", 
+                "type": 4, 
+                "value": 9.999999974752427e-07
+            }, 
+            {
+                "name": "matrix", 
+                "type": 13, 
+                "value": 0
+            }, 
+            {
+                "name": "shader", 
+                "type": 13, 
+                "value": 0
+            }, 
+            {
+                "name": "opaque", 
+                "type": 3, 
+                "value": true
+            }, 
+            {
+                "name": "matte", 
+                "type": 3, 
+                "value": false
+            }, 
+            {
+                "name": "use_light_group", 
+                "type": 3, 
+                "value": false
+            }, 
+            {
+                "name": "light_group", 
+                "type": 13, 
+                "value": 0
+            }, 
+            {
+                "name": "use_shadow_group", 
+                "type": 3, 
+                "value": false
+            }, 
+            {
+                "name": "shadow_group", 
+                "type": 13, 
+                "value": 0
+            }, 
+            {
+                "name": "trace_sets", 
+                "type": 13, 
+                "value": 0
+            }, 
+            {
+                "name": "transform_time_samples", 
+                "type": 13, 
+                "value": 2
+            }, 
+            {
+                "name": "deform_time_samples", 
+                "type": 13, 
+                "value": 2
+            }, 
+            {
+                "name": "id", 
+                "type": 1, 
+                "value": 0
+            }, 
+            {
+                "name": "name", 
+                "type": 10, 
+                "value": ""
+            }
+        ], 
+        "type": "shape"
+    }, 
+    "disk_light": {
+        "params": [
+            {
+                "name": "position", 
+                "type": 13, 
+                "value": "0, 0, 0"
+            }, 
+            {
+                "name": "direction", 
+                "type": 13, 
+                "value": "0, 0, -1"
+            }, 
+            {
+                "name": "radius", 
+                "type": 4, 
+                "value": 0.5
+            }, 
+            {
+                "name": "decay_type", 
+                "type": 15, 
+                "value": {
+                    "default": 1, 
+                    "values": [
+                        "constant", 
+                        "quadratic"
+                    ]
+                }
+            }, 
+            {
+                "name": "matrix", 
+                "type": 13, 
+                "value": ""
+            }, 
+            {
+                "name": "color", 
+                "type": 5, 
+                "value": [
+                    1.0, 
+                    1.0, 
+                    1.0
+                ]
+            }, 
+            {
+                "name": "intensity", 
+                "type": 4, 
+                "value": 1.0
+            }, 
+            {
+                "name": "exposure", 
+                "type": 4, 
+                "value": 0.0
+            }, 
+            {
+                "name": "cast_shadows", 
+                "type": 3, 
+                "value": true
+            }, 
+            {
+                "name": "cast_volumetric_shadows", 
+                "type": 3, 
+                "value": true
+            }, 
+            {
+                "name": "shadow_density", 
+                "type": 4, 
+                "value": 1.0
+            }, 
+            {
+                "name": "shadow_color", 
+                "type": 5, 
+                "value": [
+                    0.0, 
+                    0.0, 
+                    0.0
+                ]
+            }, 
+            {
+                "name": "samples", 
+                "type": 1, 
+                "value": 1
+            }, 
+            {
+                "name": "normalize", 
+                "type": 3, 
+                "value": true
+            }, 
+            {
+                "name": "affect_diffuse", 
+                "type": 3, 
+                "value": true
+            }, 
+            {
+                "name": "affect_specular", 
+                "type": 3, 
+                "value": true
+            }, 
+            {
+                "name": "affect_volumetrics", 
+                "type": 3, 
+                "value": true
+            }, 
+            {
+                "name": "diffuse", 
+                "type": 4, 
+                "value": 1.0
+            }, 
+            {
+                "name": "specular", 
+                "type": 4, 
+                "value": 1.0
+            }, 
+            {
+                "name": "sss", 
+                "type": 4, 
+                "value": 1.0
+            }, 
+            {
+                "name": "indirect", 
+                "type": 4, 
+                "value": 1.0
+            }, 
+            {
+                "name": "max_bounces", 
+                "type": 1, 
+                "value": 999
+            }, 
+            {
+                "name": "volume_density", 
+                "type": 12, 
+                "value": "None"
+            }, 
+            {
+                "name": "filters", 
+                "type": 13, 
+                "value": 0
+            }, 
+            {
+                "name": "time_samples", 
+                "type": 13, 
+                "value": 2
+            }, 
+            {
+                "name": "volume_samples", 
+                "type": 1, 
+                "value": 2
+            }, 
+            {
+                "name": "name", 
+                "type": 10, 
+                "value": ""
+            }
+        ], 
+        "type": "light"
+    }, 
+    "distant_light": {
+        "params": [
+            {
+                "name": "direction", 
+                "type": 7, 
+                "value": [
+                    0.0, 
+                    0.0, 
+                    -1.0
+                ]
+            }, 
+            {
+                "name": "angle", 
+                "type": 4, 
+                "value": 0.0
+            }, 
+            {
+                "name": "matrix", 
+                "type": 13, 
+                "value": ""
+            }, 
+            {
+                "name": "color", 
+                "type": 5, 
+                "value": [
+                    1.0, 
+                    1.0, 
+                    1.0
+                ]
+            }, 
+            {
+                "name": "intensity", 
+                "type": 4, 
+                "value": 1.0
+            }, 
+            {
+                "name": "exposure", 
+                "type": 4, 
+                "value": 0.0
+            }, 
+            {
+                "name": "cast_shadows", 
+                "type": 3, 
+                "value": true
+            }, 
+            {
+                "name": "cast_volumetric_shadows", 
+                "type": 3, 
+                "value": true
+            }, 
+            {
+                "name": "shadow_density", 
+                "type": 4, 
+                "value": 1.0
+            }, 
+            {
+                "name": "shadow_color", 
+                "type": 5, 
+                "value": [
+                    0.0, 
+                    0.0, 
+                    0.0
+                ]
+            }, 
+            {
+                "name": "samples", 
+                "type": 1, 
+                "value": 1
+            }, 
+            {
+                "name": "normalize", 
+                "type": 3, 
+                "value": true
+            }, 
+            {
+                "name": "affect_diffuse", 
+                "type": 3, 
+                "value": true
+            }, 
+            {
+                "name": "affect_specular", 
+                "type": 3, 
+                "value": true
+            }, 
+            {
+                "name": "affect_volumetrics", 
+                "type": 3, 
+                "value": true
+            }, 
+            {
+                "name": "diffuse", 
+                "type": 4, 
+                "value": 1.0
+            }, 
+            {
+                "name": "specular", 
+                "type": 4, 
+                "value": 1.0
+            }, 
+            {
+                "name": "sss", 
+                "type": 4, 
+                "value": 1.0
+            }, 
+            {
+                "name": "indirect", 
+                "type": 4, 
+                "value": 1.0
+            }, 
+            {
+                "name": "max_bounces", 
+                "type": 1, 
+                "value": 999
+            }, 
+            {
+                "name": "volume_density", 
+                "type": 12, 
+                "value": "None"
+            }, 
+            {
+                "name": "filters", 
+                "type": 13, 
+                "value": 0
+            }, 
+            {
+                "name": "time_samples", 
+                "type": 13, 
+                "value": 2
+            }, 
+            {
+                "name": "volume_samples", 
+                "type": 1, 
+                "value": 2
+            }, 
+            {
+                "name": "name", 
+                "type": 10, 
+                "value": ""
+            }
+        ], 
+        "type": "light"
+    }, 
+    "ginstance": {
+        "params": [
+            {
+                "name": "node", 
+                "type": 12, 
+                "value": "None"
+            }, 
+            {
+                "name": "inherit_xform", 
+                "type": 3, 
+                "value": true
+            }, 
+            {
+                "name": "visibility", 
+                "type": 0, 
+                "value": 255
+            }, 
+            {
+                "name": "sidedness", 
+                "type": 0, 
+                "value": 255
+            }, 
+            {
+                "name": "receive_shadows", 
+                "type": 3, 
+                "value": true
+            }, 
+            {
+                "name": "self_shadows", 
+                "type": 3, 
+                "value": true
+            }, 
+            {
+                "name": "invert_normals", 
+                "type": 3, 
+                "value": false
+            }, 
+            {
+                "name": "ray_bias", 
+                "type": 4, 
+                "value": 9.999999974752427e-07
+            }, 
+            {
+                "name": "matrix", 
+                "type": 13, 
+                "value": 0
+            }, 
+            {
+                "name": "shader", 
+                "type": 13, 
+                "value": 0
+            }, 
+            {
+                "name": "opaque", 
+                "type": 3, 
+                "value": true
+            }, 
+            {
+                "name": "matte", 
+                "type": 3, 
+                "value": false
+            }, 
+            {
+                "name": "use_light_group", 
+                "type": 3, 
+                "value": false
+            }, 
+            {
+                "name": "light_group", 
+                "type": 13, 
+                "value": 0
+            }, 
+            {
+                "name": "use_shadow_group", 
+                "type": 3, 
+                "value": false
+            }, 
+            {
+                "name": "shadow_group", 
+                "type": 13, 
+                "value": 0
+            }, 
+            {
+                "name": "trace_sets", 
+                "type": 13, 
+                "value": 0
+            }, 
+            {
+                "name": "transform_time_samples", 
+                "type": 13, 
+                "value": 2
+            }, 
+            {
+                "name": "deform_time_samples", 
+                "type": 13, 
+                "value": 2
+            }, 
+            {
+                "name": "id", 
+                "type": 1, 
+                "value": 0
+            }, 
+            {
+                "name": "name", 
+                "type": 10, 
+                "value": ""
+            }
+        ], 
+        "type": "shape"
+    }, 
+    "implicit": {
+        "params": [
+            {
+                "name": "field", 
+                "type": 12, 
+                "value": "None"
+            }, 
+            {
+                "name": "threshold", 
+                "type": 4, 
+                "value": 0.0
+            }, 
+            {
+                "name": "samples", 
+                "type": 2, 
+                "value": 10
+            }, 
+            {
+                "name": "solver", 
+                "type": 15, 
+                "value": {
+                    "default": 0, 
+                    "values": [
+                        "uniform", 
+                        "levelset"
+                    ]
+                }
+            }, 
+            {
+                "name": "min", 
+                "type": 8, 
+                "value": [
+                    -0.5, 
+                    -0.5, 
+                    -0.5
+                ]
+            }, 
+            {
+                "name": "max", 
+                "type": 8, 
+                "value": [
+                    0.5, 
+                    0.5, 
+                    0.5
+                ]
+            }, 
+            {
+                "name": "visibility", 
+                "type": 0, 
+                "value": 255
+            }, 
+            {
+                "name": "sidedness", 
+                "type": 0, 
+                "value": 255
+            }, 
+            {
+                "name": "receive_shadows", 
+                "type": 3, 
+                "value": true
+            }, 
+            {
+                "name": "self_shadows", 
+                "type": 3, 
+                "value": true
+            }, 
+            {
+                "name": "invert_normals", 
+                "type": 3, 
+                "value": false
+            }, 
+            {
+                "name": "ray_bias", 
+                "type": 4, 
+                "value": 9.999999974752427e-07
+            }, 
+            {
+                "name": "matrix", 
+                "type": 13, 
+                "value": 0
+            }, 
+            {
+                "name": "shader", 
+                "type": 13, 
+                "value": 0
+            }, 
+            {
+                "name": "opaque", 
+                "type": 3, 
+                "value": true
+            }, 
+            {
+                "name": "matte", 
+                "type": 3, 
+                "value": false
+            }, 
+            {
+                "name": "use_light_group", 
+                "type": 3, 
+                "value": false
+            }, 
+            {
+                "name": "light_group", 
+                "type": 13, 
+                "value": 0
+            }, 
+            {
+                "name": "use_shadow_group", 
+                "type": 3, 
+                "value": false
+            }, 
+            {
+                "name": "shadow_group", 
+                "type": 13, 
+                "value": 0
+            }, 
+            {
+                "name": "trace_sets", 
+                "type": 13, 
+                "value": 0
+            }, 
+            {
+                "name": "transform_time_samples", 
+                "type": 13, 
+                "value": 2
+            }, 
+            {
+                "name": "deform_time_samples", 
+                "type": 13, 
+                "value": 2
+            }, 
+            {
+                "name": "id", 
+                "type": 1, 
+                "value": 0
+            }, 
+            {
+                "name": "name", 
+                "type": 10, 
+                "value": ""
+            }
+        ], 
+        "type": "shape"
+    }, 
+    "list_aggregate": {
+        "params": [
+            {
+                "name": "visibility", 
+                "type": 0, 
+                "value": 255
+            }, 
+            {
+                "name": "sidedness", 
+                "type": 0, 
+                "value": 255
+            }, 
+            {
+                "name": "receive_shadows", 
+                "type": 3, 
+                "value": true
+            }, 
+            {
+                "name": "self_shadows", 
+                "type": 3, 
+                "value": true
+            }, 
+            {
+                "name": "invert_normals", 
+                "type": 3, 
+                "value": false
+            }, 
+            {
+                "name": "ray_bias", 
+                "type": 4, 
+                "value": 9.999999974752427e-07
+            }, 
+            {
+                "name": "matrix", 
+                "type": 13, 
+                "value": 0
+            }, 
+            {
+                "name": "shader", 
+                "type": 13, 
+                "value": 0
+            }, 
+            {
+                "name": "opaque", 
+                "type": 3, 
+                "value": true
+            }, 
+            {
+                "name": "matte", 
+                "type": 3, 
+                "value": false
+            }, 
+            {
+                "name": "use_light_group", 
+                "type": 3, 
+                "value": false
+            }, 
+            {
+                "name": "light_group", 
+                "type": 13, 
+                "value": 0
+            }, 
+            {
+                "name": "use_shadow_group", 
+                "type": 3, 
+                "value": false
+            }, 
+            {
+                "name": "shadow_group", 
+                "type": 13, 
+                "value": 0
+            }, 
+            {
+                "name": "trace_sets", 
+                "type": 13, 
+                "value": 0
+            }, 
+            {
+                "name": "transform_time_samples", 
+                "type": 13, 
+                "value": 2
+            }, 
+            {
+                "name": "deform_time_samples", 
+                "type": 13, 
+                "value": 2
+            }, 
+            {
+                "name": "id", 
+                "type": 1, 
+                "value": 0
+            }, 
+            {
+                "name": "name", 
+                "type": 10, 
+                "value": ""
+            }
+        ], 
+        "type": "shape"
+    }, 
+    "mesh_light": {
+        "params": [
+            {
+                "name": "mesh", 
+                "type": 12, 
+                "value": "None"
+            }, 
+            {
+                "name": "decay_type", 
+                "type": 15, 
+                "value": {
+                    "default": 1, 
+                    "values": [
+                        "constant", 
+                        "quadratic"
+                    ]
+                }
+            }, 
+            {
+                "name": "matrix", 
+                "type": 13, 
+                "value": ""
+            }, 
+            {
+                "name": "color", 
+                "type": 5, 
+                "value": [
+                    1.0, 
+                    1.0, 
+                    1.0
+                ]
+            }, 
+            {
+                "name": "intensity", 
+                "type": 4, 
+                "value": 1.0
+            }, 
+            {
+                "name": "exposure", 
+                "type": 4, 
+                "value": 0.0
+            }, 
+            {
+                "name": "cast_shadows", 
+                "type": 3, 
+                "value": true
+            }, 
+            {
+                "name": "cast_volumetric_shadows", 
+                "type": 3, 
+                "value": true
+            }, 
+            {
+                "name": "shadow_density", 
+                "type": 4, 
+                "value": 1.0
+            }, 
+            {
+                "name": "shadow_color", 
+                "type": 5, 
+                "value": [
+                    0.0, 
+                    0.0, 
+                    0.0
+                ]
+            }, 
+            {
+                "name": "samples", 
+                "type": 1, 
+                "value": 1
+            }, 
+            {
+                "name": "normalize", 
+                "type": 3, 
+                "value": true
+            }, 
+            {
+                "name": "affect_diffuse", 
+                "type": 3, 
+                "value": true
+            }, 
+            {
+                "name": "affect_specular", 
+                "type": 3, 
+                "value": true
+            }, 
+            {
+                "name": "affect_volumetrics", 
+                "type": 3, 
+                "value": true
+            }, 
+            {
+                "name": "diffuse", 
+                "type": 4, 
+                "value": 1.0
+            }, 
+            {
+                "name": "specular", 
+                "type": 4, 
+                "value": 1.0
+            }, 
+            {
+                "name": "sss", 
+                "type": 4, 
+                "value": 1.0
+            }, 
+            {
+                "name": "indirect", 
+                "type": 4, 
+                "value": 1.0
+            }, 
+            {
+                "name": "max_bounces", 
+                "type": 1, 
+                "value": 999
+            }, 
+            {
+                "name": "volume_density", 
+                "type": 12, 
+                "value": "None"
+            }, 
+            {
+                "name": "filters", 
+                "type": 13, 
+                "value": 0
+            }, 
+            {
+                "name": "time_samples", 
+                "type": 13, 
+                "value": 2
+            }, 
+            {
+                "name": "volume_samples", 
+                "type": 1, 
+                "value": 2
+            }, 
+            {
+                "name": "name", 
+                "type": 10, 
+                "value": ""
+            }
+        ], 
+        "type": "light"
+    }, 
+    "nurbs": {
+        "params": [
+            {
+                "name": "degree_u", 
+                "type": 1, 
+                "value": 3
+            }, 
+            {
+                "name": "degree_v", 
+                "type": 1, 
+                "value": 3
+            }, 
+            {
+                "name": "knots_u", 
+                "type": 13, 
+                "value": 0
+            }, 
+            {
+                "name": "knots_v", 
+                "type": 13, 
+                "value": 0
+            }, 
+            {
+                "name": "cvs", 
+                "type": 13, 
+                "value": 0
+            }, 
+            {
+                "name": "tesselate_u", 
+                "type": 1, 
+                "value": 5
+            }, 
+            {
+                "name": "tesselate_v", 
+                "type": 1, 
+                "value": 5
+            }, 
+            {
+                "name": "disp_map", 
+                "type": 12, 
+                "value": "None"
+            }, 
+            {
+                "name": "disp_padding", 
+                "type": 4, 
+                "value": 0.0
+            }, 
+            {
+                "name": "disp_height", 
+                "type": 4, 
+                "value": 0.0
+            }, 
+            {
+                "name": "disp_zero_value", 
+                "type": 4, 
+                "value": 0.0
+            }, 
+            {
+                "name": "smoothing", 
+                "type": 3, 
+                "value": true
+            }, 
+            {
+                "name": "visibility", 
+                "type": 0, 
+                "value": 255
+            }, 
+            {
+                "name": "sidedness", 
+                "type": 0, 
+                "value": 255
+            }, 
+            {
+                "name": "receive_shadows", 
+                "type": 3, 
+                "value": true
+            }, 
+            {
+                "name": "self_shadows", 
+                "type": 3, 
+                "value": true
+            }, 
+            {
+                "name": "invert_normals", 
+                "type": 3, 
+                "value": false
+            }, 
+            {
+                "name": "ray_bias", 
+                "type": 4, 
+                "value": 9.999999974752427e-07
+            }, 
+            {
+                "name": "matrix", 
+                "type": 13, 
+                "value": 0
+            }, 
+            {
+                "name": "shader", 
+                "type": 13, 
+                "value": 0
+            }, 
+            {
+                "name": "opaque", 
+                "type": 3, 
+                "value": true
+            }, 
+            {
+                "name": "matte", 
+                "type": 3, 
+                "value": false
+            }, 
+            {
+                "name": "use_light_group", 
+                "type": 3, 
+                "value": false
+            }, 
+            {
+                "name": "light_group", 
+                "type": 13, 
+                "value": 0
+            }, 
+            {
+                "name": "use_shadow_group", 
+                "type": 3, 
+                "value": false
+            }, 
+            {
+                "name": "shadow_group", 
+                "type": 13, 
+                "value": 0
+            }, 
+            {
+                "name": "trace_sets", 
+                "type": 13, 
+                "value": 0
+            }, 
+            {
+                "name": "transform_time_samples", 
+                "type": 13, 
+                "value": 2
+            }, 
+            {
+                "name": "deform_time_samples", 
+                "type": 13, 
+                "value": 2
+            }, 
+            {
+                "name": "id", 
+                "type": 1, 
+                "value": 0
+            }, 
+            {
+                "name": "name", 
+                "type": 10, 
+                "value": ""
+            }
+        ], 
+        "type": "shape"
+    }, 
+    "photometric_light": {
+        "params": [
+            {
+                "name": "filename", 
+                "type": 10, 
+                "value": ""
+            }, 
+            {
+                "name": "matrix", 
+                "type": 13, 
+                "value": ""
+            }, 
+            {
+                "name": "color", 
+                "type": 5, 
+                "value": [
+                    1.0, 
+                    1.0, 
+                    1.0
+                ]
+            }, 
+            {
+                "name": "intensity", 
+                "type": 4, 
+                "value": 1.0
+            }, 
+            {
+                "name": "exposure", 
+                "type": 4, 
+                "value": 0.0
+            }, 
+            {
+                "name": "cast_shadows", 
+                "type": 3, 
+                "value": true
+            }, 
+            {
+                "name": "cast_volumetric_shadows", 
+                "type": 3, 
+                "value": true
+            }, 
+            {
+                "name": "shadow_density", 
+                "type": 4, 
+                "value": 1.0
+            }, 
+            {
+                "name": "shadow_color", 
+                "type": 5, 
+                "value": [
+                    0.0, 
+                    0.0, 
+                    0.0
+                ]
+            }, 
+            {
+                "name": "samples", 
+                "type": 1, 
+                "value": 1
+            }, 
+            {
+                "name": "normalize", 
+                "type": 3, 
+                "value": true
+            }, 
+            {
+                "name": "affect_diffuse", 
+                "type": 3, 
+                "value": true
+            }, 
+            {
+                "name": "affect_specular", 
+                "type": 3, 
+                "value": true
+            }, 
+            {
+                "name": "affect_volumetrics", 
+                "type": 3, 
+                "value": true
+            }, 
+            {
+                "name": "diffuse", 
+                "type": 4, 
+                "value": 1.0
+            }, 
+            {
+                "name": "specular", 
+                "type": 4, 
+                "value": 1.0
+            }, 
+            {
+                "name": "sss", 
+                "type": 4, 
+                "value": 1.0
+            }, 
+            {
+                "name": "indirect", 
+                "type": 4, 
+                "value": 1.0
+            }, 
+            {
+                "name": "max_bounces", 
+                "type": 1, 
+                "value": 999
+            }, 
+            {
+                "name": "volume_density", 
+                "type": 12, 
+                "value": "None"
+            }, 
+            {
+                "name": "filters", 
+                "type": 13, 
+                "value": 0
+            }, 
+            {
+                "name": "time_samples", 
+                "type": 13, 
+                "value": 2
+            }, 
+            {
+                "name": "volume_samples", 
+                "type": 1, 
+                "value": 2
+            }, 
+            {
+                "name": "name", 
+                "type": 10, 
+                "value": ""
+            }
+        ], 
+        "type": "light"
+    }, 
+    "plane": {
+        "params": [
+            {
+                "name": "point", 
+                "type": 8, 
+                "value": [
+                    0.0, 
+                    0.0, 
+                    0.0
+                ]
+            }, 
+            {
+                "name": "normal", 
+                "type": 7, 
+                "value": [
+                    0.0, 
+                    0.0, 
+                    1.0
+                ]
+            }, 
+            {
+                "name": "visibility", 
+                "type": 0, 
+                "value": 255
+            }, 
+            {
+                "name": "sidedness", 
+                "type": 0, 
+                "value": 255
+            }, 
+            {
+                "name": "receive_shadows", 
+                "type": 3, 
+                "value": true
+            }, 
+            {
+                "name": "self_shadows", 
+                "type": 3, 
+                "value": true
+            }, 
+            {
+                "name": "invert_normals", 
+                "type": 3, 
+                "value": false
+            }, 
+            {
+                "name": "ray_bias", 
+                "type": 4, 
+                "value": 9.999999974752427e-07
+            }, 
+            {
+                "name": "matrix", 
+                "type": 13, 
+                "value": 0
+            }, 
+            {
+                "name": "shader", 
+                "type": 13, 
+                "value": 0
+            }, 
+            {
+                "name": "opaque", 
+                "type": 3, 
+                "value": true
+            }, 
+            {
+                "name": "matte", 
+                "type": 3, 
+                "value": false
+            }, 
+            {
+                "name": "use_light_group", 
+                "type": 3, 
+                "value": false
+            }, 
+            {
+                "name": "light_group", 
+                "type": 13, 
+                "value": 0
+            }, 
+            {
+                "name": "use_shadow_group", 
+                "type": 3, 
+                "value": false
+            }, 
+            {
+                "name": "shadow_group", 
+                "type": 13, 
+                "value": 0
+            }, 
+            {
+                "name": "trace_sets", 
+                "type": 13, 
+                "value": 0
+            }, 
+            {
+                "name": "transform_time_samples", 
+                "type": 13, 
+                "value": 2
+            }, 
+            {
+                "name": "deform_time_samples", 
+                "type": 13, 
+                "value": 2
+            }, 
+            {
+                "name": "id", 
+                "type": 1, 
+                "value": 0
+            }, 
+            {
+                "name": "name", 
+                "type": 10, 
+                "value": ""
+            }
+        ], 
+        "type": "shape"
+    }, 
+    "point_light": {
+        "params": [
+            {
+                "name": "position", 
+                "type": 13, 
+                "value": "0, 0, 0"
+            }, 
+            {
+                "name": "radius", 
+                "type": 4, 
+                "value": 0.0
+            }, 
+            {
+                "name": "decay_type", 
+                "type": 15, 
+                "value": {
+                    "default": 1, 
+                    "values": [
+                        "constant", 
+                        "quadratic"
+                    ]
+                }
+            }, 
+            {
+                "name": "matrix", 
+                "type": 13, 
+                "value": ""
+            }, 
+            {
+                "name": "color", 
+                "type": 5, 
+                "value": [
+                    1.0, 
+                    1.0, 
+                    1.0
+                ]
+            }, 
+            {
+                "name": "intensity", 
+                "type": 4, 
+                "value": 1.0
+            }, 
+            {
+                "name": "exposure", 
+                "type": 4, 
+                "value": 0.0
+            }, 
+            {
+                "name": "cast_shadows", 
+                "type": 3, 
+                "value": true
+            }, 
+            {
+                "name": "cast_volumetric_shadows", 
+                "type": 3, 
+                "value": true
+            }, 
+            {
+                "name": "shadow_density", 
+                "type": 4, 
+                "value": 1.0
+            }, 
+            {
+                "name": "shadow_color", 
+                "type": 5, 
+                "value": [
+                    0.0, 
+                    0.0, 
+                    0.0
+                ]
+            }, 
+            {
+                "name": "samples", 
+                "type": 1, 
+                "value": 1
+            }, 
+            {
+                "name": "normalize", 
+                "type": 3, 
+                "value": true
+            }, 
+            {
+                "name": "affect_diffuse", 
+                "type": 3, 
+                "value": true
+            }, 
+            {
+                "name": "affect_specular", 
+                "type": 3, 
+                "value": true
+            }, 
+            {
+                "name": "affect_volumetrics", 
+                "type": 3, 
+                "value": true
+            }, 
+            {
+                "name": "diffuse", 
+                "type": 4, 
+                "value": 1.0
+            }, 
+            {
+                "name": "specular", 
+                "type": 4, 
+                "value": 1.0
+            }, 
+            {
+                "name": "sss", 
+                "type": 4, 
+                "value": 1.0
+            }, 
+            {
+                "name": "indirect", 
+                "type": 4, 
+                "value": 1.0
+            }, 
+            {
+                "name": "max_bounces", 
+                "type": 1, 
+                "value": 999
+            }, 
+            {
+                "name": "volume_density", 
+                "type": 12, 
+                "value": "None"
+            }, 
+            {
+                "name": "filters", 
+                "type": 13, 
+                "value": 0
+            }, 
+            {
+                "name": "time_samples", 
+                "type": 13, 
+                "value": 2
+            }, 
+            {
+                "name": "volume_samples", 
+                "type": 1, 
+                "value": 2
+            }, 
+            {
+                "name": "name", 
+                "type": 10, 
+                "value": ""
+            }
+        ], 
+        "type": "light"
+    }, 
+    "points": {
+        "params": [
+            {
+                "name": "points", 
+                "type": 13, 
+                "value": 0
+            }, 
+            {
+                "name": "radius", 
+                "type": 13, 
+                "value": 0
+            }, 
+            {
+                "name": "aspect", 
+                "type": 13, 
+                "value": "1"
+            }, 
+            {
+                "name": "rotation", 
+                "type": 13, 
+                "value": "0"
+            }, 
+            {
+                "name": "mode", 
+                "type": 15, 
+                "value": {
+                    "default": 0, 
+                    "values": [
+                        "disk", 
+                        "sphere", 
+                        "quad"
+                    ]
+                }
+            }, 
+            {
+                "name": "min_pixel_width", 
+                "type": 4, 
+                "value": 0.0
+            }, 
+            {
+                "name": "step_size", 
+                "type": 4, 
+                "value": 0.0
+            }, 
+            {
+                "name": "visibility", 
+                "type": 0, 
+                "value": 255
+            }, 
+            {
+                "name": "sidedness", 
+                "type": 0, 
+                "value": 255
+            }, 
+            {
+                "name": "receive_shadows", 
+                "type": 3, 
+                "value": true
+            }, 
+            {
+                "name": "self_shadows", 
+                "type": 3, 
+                "value": true
+            }, 
+            {
+                "name": "invert_normals", 
+                "type": 3, 
+                "value": false
+            }, 
+            {
+                "name": "ray_bias", 
+                "type": 4, 
+                "value": 9.999999974752427e-07
+            }, 
+            {
+                "name": "matrix", 
+                "type": 13, 
+                "value": 0
+            }, 
+            {
+                "name": "shader", 
+                "type": 13, 
+                "value": 0
+            }, 
+            {
+                "name": "opaque", 
+                "type": 3, 
+                "value": true
+            }, 
+            {
+                "name": "matte", 
+                "type": 3, 
+                "value": false
+            }, 
+            {
+                "name": "use_light_group", 
+                "type": 3, 
+                "value": false
+            }, 
+            {
+                "name": "light_group", 
+                "type": 13, 
+                "value": 0
+            }, 
+            {
+                "name": "use_shadow_group", 
+                "type": 3, 
+                "value": false
+            }, 
+            {
+                "name": "shadow_group", 
+                "type": 13, 
+                "value": 0
+            }, 
+            {
+                "name": "trace_sets", 
+                "type": 13, 
+                "value": 0
+            }, 
+            {
+                "name": "transform_time_samples", 
+                "type": 13, 
+                "value": 2
+            }, 
+            {
+                "name": "deform_time_samples", 
+                "type": 13, 
+                "value": 2
+            }, 
+            {
+                "name": "id", 
+                "type": 1, 
+                "value": 0
+            }, 
+            {
+                "name": "name", 
+                "type": 10, 
+                "value": ""
+            }
+        ], 
+        "type": "shape"
+    }, 
+    "polymesh": {
+        "params": [
+            {
+                "name": "nsides", 
+                "type": 13, 
+                "value": 0
+            }, 
+            {
+                "name": "vidxs", 
+                "type": 13, 
+                "value": 0
+            }, 
+            {
+                "name": "nidxs", 
+                "type": 13, 
+                "value": 0
+            }, 
+            {
+                "name": "uvidxs", 
+                "type": 13, 
+                "value": 0
+            }, 
+            {
+                "name": "crease_idxs", 
+                "type": 13, 
+                "value": 0
+            }, 
+            {
+                "name": "crease_sharpness", 
+                "type": 13, 
+                "value": 0
+            }, 
+            {
+                "name": "shidxs", 
+                "type": 13, 
+                "value": 0
+            }, 
+            {
+                "name": "vlist", 
+                "type": 13, 
+                "value": 0
+            }, 
+            {
+                "name": "nlist", 
+                "type": 13, 
+                "value": 0
+            }, 
+            {
+                "name": "uvlist", 
+                "type": 13, 
+                "value": 0
+            }, 
+            {
+                "name": "smoothing", 
+                "type": 3, 
+                "value": true
+            }, 
+            {
+                "name": "subdiv_type", 
+                "type": 15, 
+                "value": {
+                    "default": 0, 
+                    "values": [
+                        "none", 
+                        "catclark", 
+                        "linear"
+                    ]
+                }
+            }, 
+            {
+                "name": "subdiv_iterations", 
+                "type": 0, 
+                "value": 1
+            }, 
+            {
+                "name": "subdiv_pixel_error", 
+                "type": 4, 
+                "value": 0.0
+            }, 
+            {
+                "name": "subdiv_dicing_camera", 
+                "type": 12, 
+                "value": "None"
+            }, 
+            {
+                "name": "subdiv_adaptive_metric", 
+                "type": 15, 
+                "value": {
+                    "default": 0, 
+                    "values": [
+                        "auto", 
+                        "edge_length", 
+                        "flatness"
+                    ]
+                }
+            }, 
+            {
+                "name": "subdiv_uv_smoothing", 
+                "type": 15, 
+                "value": {
+                    "default": 0, 
+                    "values": [
+                        "pin_corners", 
+                        "pin_borders", 
+                        "linear", 
+                        "smooth"
+                    ]
+                }
+            }, 
+            {
+                "name": "subdiv_smooth_derivs", 
+                "type": 3, 
+                "value": false
+            }, 
+            {
+                "name": "disp_map", 
+                "type": 13, 
+                "value": 0
+            }, 
+            {
+                "name": "disp_padding", 
+                "type": 4, 
+                "value": 0.0
+            }, 
+            {
+                "name": "disp_height", 
+                "type": 4, 
+                "value": 1.0
+            }, 
+            {
+                "name": "disp_zero_value", 
+                "type": 4, 
+                "value": 0.0
+            }, 
+            {
+                "name": "disp_autobump", 
+                "type": 3, 
+                "value": false
+            }, 
+            {
+                "name": "autobump_visibility", 
+                "type": 0, 
+                "value": 159
+            }, 
+            {
+                "name": "visibility", 
+                "type": 0, 
+                "value": 255
+            }, 
+            {
+                "name": "sidedness", 
+                "type": 0, 
+                "value": 255
+            }, 
+            {
+                "name": "receive_shadows", 
+                "type": 3, 
+                "value": true
+            }, 
+            {
+                "name": "self_shadows", 
+                "type": 3, 
+                "value": true
+            }, 
+            {
+                "name": "invert_normals", 
+                "type": 3, 
+                "value": false
+            }, 
+            {
+                "name": "ray_bias", 
+                "type": 4, 
+                "value": 9.999999974752427e-07
+            }, 
+            {
+                "name": "matrix", 
+                "type": 13, 
+                "value": 0
+            }, 
+            {
+                "name": "shader", 
+                "type": 13, 
+                "value": 0
+            }, 
+            {
+                "name": "opaque", 
+                "type": 3, 
+                "value": true
+            }, 
+            {
+                "name": "matte", 
+                "type": 3, 
+                "value": false
+            }, 
+            {
+                "name": "use_light_group", 
+                "type": 3, 
+                "value": false
+            }, 
+            {
+                "name": "light_group", 
+                "type": 13, 
+                "value": 0
+            }, 
+            {
+                "name": "use_shadow_group", 
+                "type": 3, 
+                "value": false
+            }, 
+            {
+                "name": "shadow_group", 
+                "type": 13, 
+                "value": 0
+            }, 
+            {
+                "name": "trace_sets", 
+                "type": 13, 
+                "value": 0
+            }, 
+            {
+                "name": "transform_time_samples", 
+                "type": 13, 
+                "value": 2
+            }, 
+            {
+                "name": "deform_time_samples", 
+                "type": 13, 
+                "value": 2
+            }, 
+            {
+                "name": "id", 
+                "type": 1, 
+                "value": 0
+            }, 
+            {
+                "name": "name", 
+                "type": 10, 
+                "value": ""
+            }
+        ], 
+        "type": "shape"
+    }, 
+    "procedural": {
+        "params": [
+            {
+                "name": "dso", 
+                "type": 10, 
+                "value": ""
+            }, 
+            {
+                "name": "data", 
+                "type": 10, 
+                "value": ""
+            }, 
+            {
+                "name": "load_at_init", 
+                "type": 3, 
+                "value": false
+            }, 
+            {
+                "name": "min", 
+                "type": 8, 
+                "value": [
+                    0.0, 
+                    0.0, 
+                    0.0
+                ]
+            }, 
+            {
+                "name": "max", 
+                "type": 8, 
+                "value": [
+                    0.0, 
+                    0.0, 
+                    0.0
+                ]
+            }, 
+            {
+                "name": "visibility", 
+                "type": 0, 
+                "value": 255
+            }, 
+            {
+                "name": "sidedness", 
+                "type": 0, 
+                "value": 255
+            }, 
+            {
+                "name": "receive_shadows", 
+                "type": 3, 
+                "value": true
+            }, 
+            {
+                "name": "self_shadows", 
+                "type": 3, 
+                "value": true
+            }, 
+            {
+                "name": "invert_normals", 
+                "type": 3, 
+                "value": false
+            }, 
+            {
+                "name": "ray_bias", 
+                "type": 4, 
+                "value": 9.999999974752427e-07
+            }, 
+            {
+                "name": "matrix", 
+                "type": 13, 
+                "value": 0
+            }, 
+            {
+                "name": "shader", 
+                "type": 13, 
+                "value": 0
+            }, 
+            {
+                "name": "opaque", 
+                "type": 3, 
+                "value": true
+            }, 
+            {
+                "name": "matte", 
+                "type": 3, 
+                "value": false
+            }, 
+            {
+                "name": "use_light_group", 
+                "type": 3, 
+                "value": false
+            }, 
+            {
+                "name": "light_group", 
+                "type": 13, 
+                "value": 0
+            }, 
+            {
+                "name": "use_shadow_group", 
+                "type": 3, 
+                "value": false
+            }, 
+            {
+                "name": "shadow_group", 
+                "type": 13, 
+                "value": 0
+            }, 
+            {
+                "name": "trace_sets", 
+                "type": 13, 
+                "value": 0
+            }, 
+            {
+                "name": "transform_time_samples", 
+                "type": 13, 
+                "value": 2
+            }, 
+            {
+                "name": "deform_time_samples", 
+                "type": 13, 
+                "value": 2
+            }, 
+            {
+                "name": "id", 
+                "type": 1, 
+                "value": 0
+            }, 
+            {
+                "name": "name", 
+                "type": 10, 
+                "value": ""
+            }
+        ], 
+        "type": "shape"
+    }, 
+    "quad_light": {
+        "params": [
+            {
+                "name": "vertices", 
+                "type": 13, 
+                "value": 4
+            }, 
+            {
+                "name": "decay_type", 
+                "type": 15, 
+                "value": {
+                    "default": 1, 
+                    "values": [
+                        "constant", 
+                        "quadratic"
+                    ]
+                }
+            }, 
+            {
+                "name": "resolution", 
+                "type": 1, 
+                "value": 512
+            }, 
+            {
+                "name": "matrix", 
+                "type": 13, 
+                "value": ""
+            }, 
+            {
+                "name": "color", 
+                "type": 5, 
+                "value": [
+                    1.0, 
+                    1.0, 
+                    1.0
+                ]
+            }, 
+            {
+                "name": "intensity", 
+                "type": 4, 
+                "value": 1.0
+            }, 
+            {
+                "name": "exposure", 
+                "type": 4, 
+                "value": 0.0
+            }, 
+            {
+                "name": "cast_shadows", 
+                "type": 3, 
+                "value": true
+            }, 
+            {
+                "name": "cast_volumetric_shadows", 
+                "type": 3, 
+                "value": true
+            }, 
+            {
+                "name": "shadow_density", 
+                "type": 4, 
+                "value": 1.0
+            }, 
+            {
+                "name": "shadow_color", 
+                "type": 5, 
+                "value": [
+                    0.0, 
+                    0.0, 
+                    0.0
+                ]
+            }, 
+            {
+                "name": "samples", 
+                "type": 1, 
+                "value": 1
+            }, 
+            {
+                "name": "normalize", 
+                "type": 3, 
+                "value": true
+            }, 
+            {
+                "name": "affect_diffuse", 
+                "type": 3, 
+                "value": true
+            }, 
+            {
+                "name": "affect_specular", 
+                "type": 3, 
+                "value": true
+            }, 
+            {
+                "name": "affect_volumetrics", 
+                "type": 3, 
+                "value": true
+            }, 
+            {
+                "name": "diffuse", 
+                "type": 4, 
+                "value": 1.0
+            }, 
+            {
+                "name": "specular", 
+                "type": 4, 
+                "value": 1.0
+            }, 
+            {
+                "name": "sss", 
+                "type": 4, 
+                "value": 1.0
+            }, 
+            {
+                "name": "indirect", 
+                "type": 4, 
+                "value": 1.0
+            }, 
+            {
+                "name": "max_bounces", 
+                "type": 1, 
+                "value": 999
+            }, 
+            {
+                "name": "volume_density", 
+                "type": 12, 
+                "value": "None"
+            }, 
+            {
+                "name": "filters", 
+                "type": 13, 
+                "value": 0
+            }, 
+            {
+                "name": "time_samples", 
+                "type": 13, 
+                "value": 2
+            }, 
+            {
+                "name": "volume_samples", 
+                "type": 1, 
+                "value": 2
+            }, 
+            {
+                "name": "name", 
+                "type": 10, 
+                "value": ""
+            }
+        ], 
+        "type": "light"
+    }, 
+    "skydome_light": {
+        "params": [
+            {
+                "name": "resolution", 
+                "type": 1, 
+                "value": 1000
+            }, 
+            {
+                "name": "format", 
+                "type": 15, 
+                "value": {
+                    "default": 1, 
+                    "values": [
+                        "mirrored_ball", 
+                        "angular", 
+                        "latlong"
+                    ]
+                }
+            }, 
+            {
+                "name": "matrix", 
+                "type": 13, 
+                "value": ""
+            }, 
+            {
+                "name": "color", 
+                "type": 5, 
+                "value": [
+                    1.0, 
+                    1.0, 
+                    1.0
+                ]
+            }, 
+            {
+                "name": "intensity", 
+                "type": 4, 
+                "value": 1.0
+            }, 
+            {
+                "name": "exposure", 
+                "type": 4, 
+                "value": 0.0
+            }, 
+            {
+                "name": "cast_shadows", 
+                "type": 3, 
+                "value": true
+            }, 
+            {
+                "name": "cast_volumetric_shadows", 
+                "type": 3, 
+                "value": true
+            }, 
+            {
+                "name": "shadow_density", 
+                "type": 4, 
+                "value": 1.0
+            }, 
+            {
+                "name": "shadow_color", 
+                "type": 5, 
+                "value": [
+                    0.0, 
+                    0.0, 
+                    0.0
+                ]
+            }, 
+            {
+                "name": "samples", 
+                "type": 1, 
+                "value": 1
+            }, 
+            {
+                "name": "normalize", 
+                "type": 3, 
+                "value": true
+            }, 
+            {
+                "name": "affect_diffuse", 
+                "type": 3, 
+                "value": true
+            }, 
+            {
+                "name": "affect_specular", 
+                "type": 3, 
+                "value": true
+            }, 
+            {
+                "name": "affect_volumetrics", 
+                "type": 3, 
+                "value": true
+            }, 
+            {
+                "name": "diffuse", 
+                "type": 4, 
+                "value": 1.0
+            }, 
+            {
+                "name": "specular", 
+                "type": 4, 
+                "value": 1.0
+            }, 
+            {
+                "name": "sss", 
+                "type": 4, 
+                "value": 1.0
+            }, 
+            {
+                "name": "indirect", 
+                "type": 4, 
+                "value": 1.0
+            }, 
+            {
+                "name": "max_bounces", 
+                "type": 1, 
+                "value": 999
+            }, 
+            {
+                "name": "volume_density", 
+                "type": 12, 
+                "value": "None"
+            }, 
+            {
+                "name": "filters", 
+                "type": 13, 
+                "value": 0
+            }, 
+            {
+                "name": "time_samples", 
+                "type": 13, 
+                "value": 2
+            }, 
+            {
+                "name": "volume_samples", 
+                "type": 1, 
+                "value": 2
+            }, 
+            {
+                "name": "name", 
+                "type": 10, 
+                "value": ""
+            }
+        ], 
+        "type": "light"
+    }, 
+    "sphere": {
+        "params": [
+            {
+                "name": "center", 
+                "type": 13, 
+                "value": "0, 0, 0"
+            }, 
+            {
+                "name": "radius", 
+                "type": 13, 
+                "value": "0.5"
+            }, 
+            {
+                "name": "step_size", 
+                "type": 4, 
+                "value": 0.0
+            }, 
+            {
+                "name": "visibility", 
+                "type": 0, 
+                "value": 255
+            }, 
+            {
+                "name": "sidedness", 
+                "type": 0, 
+                "value": 255
+            }, 
+            {
+                "name": "receive_shadows", 
+                "type": 3, 
+                "value": true
+            }, 
+            {
+                "name": "self_shadows", 
+                "type": 3, 
+                "value": true
+            }, 
+            {
+                "name": "invert_normals", 
+                "type": 3, 
+                "value": false
+            }, 
+            {
+                "name": "ray_bias", 
+                "type": 4, 
+                "value": 9.999999974752427e-07
+            }, 
+            {
+                "name": "matrix", 
+                "type": 13, 
+                "value": 0
+            }, 
+            {
+                "name": "shader", 
+                "type": 13, 
+                "value": 0
+            }, 
+            {
+                "name": "opaque", 
+                "type": 3, 
+                "value": true
+            }, 
+            {
+                "name": "matte", 
+                "type": 3, 
+                "value": false
+            }, 
+            {
+                "name": "use_light_group", 
+                "type": 3, 
+                "value": false
+            }, 
+            {
+                "name": "light_group", 
+                "type": 13, 
+                "value": 0
+            }, 
+            {
+                "name": "use_shadow_group", 
+                "type": 3, 
+                "value": false
+            }, 
+            {
+                "name": "shadow_group", 
+                "type": 13, 
+                "value": 0
+            }, 
+            {
+                "name": "trace_sets", 
+                "type": 13, 
+                "value": 0
+            }, 
+            {
+                "name": "transform_time_samples", 
+                "type": 13, 
+                "value": 2
+            }, 
+            {
+                "name": "deform_time_samples", 
+                "type": 13, 
+                "value": 2
+            }, 
+            {
+                "name": "id", 
+                "type": 1, 
+                "value": 0
+            }, 
+            {
+                "name": "name", 
+                "type": 10, 
+                "value": ""
+            }
+        ], 
+        "type": "shape"
+    }, 
+    "spot_light": {
+        "params": [
+            {
+                "name": "position", 
+                "type": 13, 
+                "value": "0, 0, 0"
+            }, 
+            {
+                "name": "look_at", 
+                "type": 13, 
+                "value": "0, 0, -1"
+            }, 
+            {
+                "name": "up", 
+                "type": 13, 
+                "value": "0, 1, 0"
+            }, 
+            {
+                "name": "radius", 
+                "type": 4, 
+                "value": 0.0
+            }, 
+            {
+                "name": "lens_radius", 
+                "type": 4, 
+                "value": 0.0
+            }, 
+            {
+                "name": "cone_angle", 
+                "type": 4, 
+                "value": 65.0
+            }, 
+            {
+                "name": "penumbra_angle", 
+                "type": 4, 
+                "value": 0.0
+            }, 
+            {
+                "name": "cosine_power", 
+                "type": 4, 
+                "value": 0.0
+            }, 
+            {
+                "name": "aspect_ratio", 
+                "type": 4, 
+                "value": 1.0
+            }, 
+            {
+                "name": "decay_type", 
+                "type": 15, 
+                "value": {
+                    "default": 1, 
+                    "values": [
+                        "constant", 
+                        "quadratic"
+                    ]
+                }
+            }, 
+            {
+                "name": "matrix", 
+                "type": 13, 
+                "value": ""
+            }, 
+            {
+                "name": "color", 
+                "type": 5, 
+                "value": [
+                    1.0, 
+                    1.0, 
+                    1.0
+                ]
+            }, 
+            {
+                "name": "intensity", 
+                "type": 4, 
+                "value": 1.0
+            }, 
+            {
+                "name": "exposure", 
+                "type": 4, 
+                "value": 0.0
+            }, 
+            {
+                "name": "cast_shadows", 
+                "type": 3, 
+                "value": true
+            }, 
+            {
+                "name": "cast_volumetric_shadows", 
+                "type": 3, 
+                "value": true
+            }, 
+            {
+                "name": "shadow_density", 
+                "type": 4, 
+                "value": 1.0
+            }, 
+            {
+                "name": "shadow_color", 
+                "type": 5, 
+                "value": [
+                    0.0, 
+                    0.0, 
+                    0.0
+                ]
+            }, 
+            {
+                "name": "samples", 
+                "type": 1, 
+                "value": 1
+            }, 
+            {
+                "name": "normalize", 
+                "type": 3, 
+                "value": true
+            }, 
+            {
+                "name": "affect_diffuse", 
+                "type": 3, 
+                "value": true
+            }, 
+            {
+                "name": "affect_specular", 
+                "type": 3, 
+                "value": true
+            }, 
+            {
+                "name": "affect_volumetrics", 
+                "type": 3, 
+                "value": true
+            }, 
+            {
+                "name": "diffuse", 
+                "type": 4, 
+                "value": 1.0
+            }, 
+            {
+                "name": "specular", 
+                "type": 4, 
+                "value": 1.0
+            }, 
+            {
+                "name": "sss", 
+                "type": 4, 
+                "value": 1.0
+            }, 
+            {
+                "name": "indirect", 
+                "type": 4, 
+                "value": 1.0
+            }, 
+            {
+                "name": "max_bounces", 
+                "type": 1, 
+                "value": 999
+            }, 
+            {
+                "name": "volume_density", 
+                "type": 12, 
+                "value": "None"
+            }, 
+            {
+                "name": "filters", 
+                "type": 13, 
+                "value": 0
+            }, 
+            {
+                "name": "time_samples", 
+                "type": 13, 
+                "value": 2
+            }, 
+            {
+                "name": "volume_samples", 
+                "type": 1, 
+                "value": 2
+            }, 
+            {
+                "name": "name", 
+                "type": 10, 
+                "value": ""
+            }
+        ], 
+        "type": "light"
+    }, 
+    "volume": {
+        "params": [
+            {
+                "name": "dso", 
+                "type": 10, 
+                "value": ""
+            }, 
+            {
+                "name": "data", 
+                "type": 10, 
+                "value": ""
+            }, 
+            {
+                "name": "load_at_init", 
+                "type": 3, 
+                "value": false
+            }, 
+            {
+                "name": "min", 
+                "type": 8, 
+                "value": [
+                    0.0, 
+                    0.0, 
+                    0.0
+                ]
+            }, 
+            {
+                "name": "max", 
+                "type": 8, 
+                "value": [
+                    0.0, 
+                    0.0, 
+                    0.0
+                ]
+            }, 
+            {
+                "name": "step_size", 
+                "type": 4, 
+                "value": 0.0
+            }, 
+            {
+                "name": "visibility", 
+                "type": 0, 
+                "value": 255
+            }, 
+            {
+                "name": "sidedness", 
+                "type": 0, 
+                "value": 255
+            }, 
+            {
+                "name": "receive_shadows", 
+                "type": 3, 
+                "value": true
+            }, 
+            {
+                "name": "self_shadows", 
+                "type": 3, 
+                "value": true
+            }, 
+            {
+                "name": "invert_normals", 
+                "type": 3, 
+                "value": false
+            }, 
+            {
+                "name": "ray_bias", 
+                "type": 4, 
+                "value": 9.999999974752427e-07
+            }, 
+            {
+                "name": "matrix", 
+                "type": 13, 
+                "value": 0
+            }, 
+            {
+                "name": "shader", 
+                "type": 13, 
+                "value": 0
+            }, 
+            {
+                "name": "opaque", 
+                "type": 3, 
+                "value": true
+            }, 
+            {
+                "name": "matte", 
+                "type": 3, 
+                "value": false
+            }, 
+            {
+                "name": "use_light_group", 
+                "type": 3, 
+                "value": false
+            }, 
+            {
+                "name": "light_group", 
+                "type": 13, 
+                "value": 0
+            }, 
+            {
+                "name": "use_shadow_group", 
+                "type": 3, 
+                "value": false
+            }, 
+            {
+                "name": "shadow_group", 
+                "type": 13, 
+                "value": 0
+            }, 
+            {
+                "name": "trace_sets", 
+                "type": 13, 
+                "value": 0
+            }, 
+            {
+                "name": "transform_time_samples", 
+                "type": 13, 
+                "value": 2
+            }, 
+            {
+                "name": "deform_time_samples", 
+                "type": 13, 
+                "value": 2
+            }, 
+            {
+                "name": "id", 
+                "type": 1, 
+                "value": 0
+            }, 
+            {
+                "name": "name", 
+                "type": 10, 
+                "value": ""
+            }
+        ], 
+        "type": "shape"
+    }
+}
