@@ -36,6 +36,8 @@
 
 #include <cstring>
 #include <memory>
+#include <vector>
+
 #include "ProcArgs.h"
 #include "PathUtil.h"
 #include "SampleUtil.h"
@@ -56,7 +58,12 @@
 #include <boost/tokenizer.hpp>
 #include <boost/algorithm/string.hpp>
 #include <boost/thread.hpp>
-#include <vector>
+
+#ifdef WIN32
+#include <boost/atomic/atomic.hpp>
+#endif
+
+
 
 #include <iostream>
 #include <fstream>
@@ -64,6 +71,10 @@
 namespace
 {
 using namespace Alembic::AbcGeom;
+
+#ifdef WIN32
+boost::atomic<bool> schemaInitialized(false);
+#endif
 
 boost::mutex gGlobalLock;
 #define GLOBAL_LOCK	   boost::mutex::scoped_lock writeLock( gGlobalLock );
@@ -249,7 +260,21 @@ void WalkObject( IObject & parent, const ObjectHeader &ohead, ProcArgs &args,
 
 int ProcInit( struct AtNode *node, void **user_ptr )
 {
-    GLOBAL_LOCK;
+#ifdef WIN32
+    // DIRTY FIX 
+    // magic static* used in the Alembic Schemas are not threadSafe in Visual Studio, so we need to initialized them first.
+
+    if(!schemaInitialized)
+    {
+        IPolyMesh::getSchemaTitle();
+        IPoints::getSchemaTitle();
+        ICurves::getSchemaTitle();
+        INuPatch::getSchemaTitle();
+        IXform::getSchemaTitle();
+        ISubD::getSchemaTitle();
+        schemaInitialized = true;
+    }
+#endif
 
     bool skipJson = false;
     bool skipShaders = false;
