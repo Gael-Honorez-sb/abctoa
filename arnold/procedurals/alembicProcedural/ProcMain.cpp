@@ -276,6 +276,9 @@ int ProcInit( struct AtNode *node, void **user_ptr )
     }
 #endif
 
+    boost::mutex::scoped_lock writeLock( gGlobalLock );
+    writeLock.unlock();
+
     bool skipJson = false;
     bool skipShaders = false;
     bool skipAttributes = false;
@@ -317,13 +320,16 @@ int ProcInit( struct AtNode *node, void **user_ptr )
         const char* assfile = AiNodeGetStr(node, "assShaders");
         if(*assfile != 0)
         {
+            writeLock.lock();
             // if we don't find the ass file, we can load it. This avoid multiple load of the same file.
             if(std::find(g_loadedAss.begin(), g_loadedAss.end(), std::string(assfile)) == g_loadedAss.end())
             {
+                
                 if(AiASSLoad(assfile, AI_NODE_SHADER) == 0)
                     g_loadedAss.push_back(std::string(assfile));
-
+                
             }
+            writeLock.unlock();
 
         }
     }
@@ -332,6 +338,7 @@ int ProcInit( struct AtNode *node, void **user_ptr )
     {
         const char* abcfile = AiNodeGetStr(node, "abcShaders");
 
+        writeLock.lock();
         FileCache::iterator I = g_abcShaders.find(abcfile);
         if (I != g_abcShaders.end())
         {
@@ -357,6 +364,7 @@ int ProcInit( struct AtNode *node, void **user_ptr )
                 args->abcShaderFile = abcfile;
             }
         }
+        writeLock.unlock();
     }
 
     // check if we have a UV archive attribute
@@ -589,6 +597,7 @@ int ProcInit( struct AtNode *node, void **user_ptr )
     
     IObject root;
 
+    writeLock.lock();
     FileCache::iterator I = g_fileCache.find(args->filename);
     if (I != g_fileCache.end())
         root = (*I).second;
@@ -609,6 +618,7 @@ int ProcInit( struct AtNode *node, void **user_ptr )
         }
 
     }
+    writeLock.unlock();
 
     PathList path;
     TokenizePath( args->objectpath, path );

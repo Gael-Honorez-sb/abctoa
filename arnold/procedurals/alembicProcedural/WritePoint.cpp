@@ -203,6 +203,7 @@ std::string getHash(
 // Otherwise, return NULL.
 AtNode* getCachedPointsNode(std::string cacheId)
 {
+    GLOBAL_LOCK;
     NodeCache::iterator I = g_pointsCache.find(cacheId);
     if (I != g_pointsCache.end())
         return (*I).second;

@@ -2,6 +2,11 @@
 #include "parseAttributes.h"
 #include "abcshaderutils.h"
 #include <pystring.h>
+#include <boost/thread.hpp>
+
+boost::mutex gGlobalLock;
+#define GLOBAL_LOCK	   boost::mutex::scoped_lock writeLock( gGlobalLock );
+
 
 namespace
 {
@@ -271,6 +276,8 @@ Json::Value OverrideAssignations(Json::Value jroot, Json::Value jrootOverrides)
 
 AtNode* createNetwork(IObject object, std::string prefix, ProcArgs & args)
 {
+    // We have to lock here as we need to be sure that another thread is not checking the root while we are creating it here.
+    GLOBAL_LOCK;
     std::map<std::string,AtNode*> aShaders;
     Mat::IMaterial matObj(object, kWrapExisting);
     for (size_t i = 0, e = matObj.getSchema().getNumNetworkNodes(); i < e; ++i)
@@ -364,6 +371,7 @@ void ParseShaders(Json::Value jroot, std::string ns, std::string nameprefix, Pro
 {
     for( Json::ValueIterator itr = jroot.begin() ; itr != jroot.end() ; itr++ )
     {
+        
         AiMsgDebug( "[ABC] Parsing shader %s", itr.key().asCString());
         std::string shaderName = ns + itr.key().asString();
         AtNode* shaderNode = AiNodeLookUpByName(shaderName.c_str());
