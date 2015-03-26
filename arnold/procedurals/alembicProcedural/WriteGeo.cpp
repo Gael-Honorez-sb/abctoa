@@ -789,26 +789,27 @@ AtNode* writeMesh(
     // facesets
     std::vector< std::string > faceSetNames;
     ps.getFaceSetNames(faceSetNames);
-
+    
     if ( faceSetNames.size() > 0 )
     {
+
         std::vector<AtByte> faceSetArray;
         // By default, we are using all the faces.
         faceSetArray.resize(nsides.size());
-        for ( int i = 0; i < (int) faceSetArray.size(); ++i )
+        for ( int i = 0; i < (int) nsides.size(); ++i )
             faceSetArray[i] = 0;
 
         for(int i = 0; i < faceSetNames.size(); i++)
         {
             if ( ps.hasFaceSet( faceSetNames[i] ) )
             {
-                std::string faceSetNameForShading = originalName + "/" + faceSetNames[i];
-                {
-                    IFaceSet faceSet = ps.getFaceSet( faceSetNames[i] );
-                    IFaceSetSchema::Sample faceSetSample = faceSet.getSchema().getValue( frameSelector );
+                IFaceSet faceSet = ps.getFaceSet( faceSetNames[i] );
+                IFaceSetSchema::Sample faceSetSample = faceSet.getSchema().getValue( frameSelector );
 
-                    const int* faceArray((int *)faceSetSample.getFaces()->getData()); 
-                    for( int f = 0; f < (int) faceSetSample.getFaces()->size(); f++)
+                const int* faceArray((int *)faceSetSample.getFaces()->getData()); 
+                for( int f = 0; f < (int) faceSetSample.getFaces()->size(); f++)
+                {
+                    if(faceArray[f] <= nsides.size() )
                         faceSetArray[faceArray[f]] = (AtByte) i;
                 }
             }
@@ -1057,6 +1058,7 @@ void ProcessPolyMesh( IPolyMesh &polymesh, ProcArgs &args,
 
     std::string originalName = polymesh.getFullName();
     std::string name = args.nameprefix + originalName;
+
 
     SampleTimeSet sampleTimes;
 
