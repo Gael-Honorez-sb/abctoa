@@ -276,8 +276,6 @@ Json::Value OverrideAssignations(Json::Value jroot, Json::Value jrootOverrides)
 
 AtNode* createNetwork(IObject object, std::string prefix, ProcArgs & args)
 {
-    // We have to lock here as we need to be sure that another thread is not checking the root while we are creating it here.
-    GLOBAL_LOCK;
     std::map<std::string,AtNode*> aShaders;
     Mat::IMaterial matObj(object, kWrapExisting);
     for (size_t i = 0, e = matObj.getSchema().getNumNetworkNodes(); i < e; ++i)
@@ -369,6 +367,8 @@ AtNode* createNetwork(IObject object, std::string prefix, ProcArgs & args)
 
 void ParseShaders(Json::Value jroot, std::string ns, std::string nameprefix, ProcArgs* args, AtByte type)
 {
+    // We have to lock here as we need to be sure that another thread is not checking the root while we are creating it here.
+    GLOBAL_LOCK;
     for( Json::ValueIterator itr = jroot.begin() ; itr != jroot.end() ; itr++ )
     {
         
