@@ -583,7 +583,7 @@ AtNode* writeMesh(
         return NULL;
     }
 
-    AiNodeSetStr( meshNode, "name", (name + ":src").c_str() );
+    AiNodeSetStr( meshNode, "name", cacheId.c_str() );
     AiNodeSetByte( meshNode, "visibility", 0 );
     AiNodeSetBool(meshNode, "smoothing", true);
 
@@ -1064,7 +1064,7 @@ void ProcessPolyMesh( IPolyMesh &polymesh, ProcArgs &args,
 
     getSampleTimes(polymesh, args, sampleTimes);
     std::string cacheId = getHash(name, originalName, polymesh, args, sampleTimes);
-    AtNode* meshNode = getCachedNode(cacheId);
+    AtNode* meshNode = AiNodeLookUpByName(cacheId.c_str()); //getCachedNode(cacheId);
 
     if(meshNode == NULL)
     { // We don't have a cache, so we much create this mesh.
