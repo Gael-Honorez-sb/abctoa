@@ -138,8 +138,8 @@ namespace
 {
     // Arnold scene build is single-threaded so we don't have to lock around
     // access to this for now.
-    typedef std::map<std::string, AtNode *> NodeCache;
-    NodeCache g_meshCache;
+    //typedef std::map<std::string, AtNode *> NodeCache;
+   // NodeCache g_meshCache;
 
     boost::mutex gGlobalLock;
     #define GLOBAL_LOCK	   boost::mutex::scoped_lock writeLock( gGlobalLock );
@@ -334,14 +334,14 @@ std::string getHash(
 // getCachedNode
 // This function return the the mesh node if already in the cache.
 // Otherwise, return NULL.
-AtNode* getCachedNode(std::string cacheId)
+/*AtNode* getCachedNode(std::string cacheId)
 {
     NodeCache::iterator I = g_meshCache.find(cacheId);
     if (I != g_meshCache.end())
         return (*I).second;
 
     return NULL;
-}
+}*/
 
 //-*************************************************************************
 // doNormals
@@ -827,7 +827,7 @@ AtNode* writeMesh(
     }
 
     args.createdNodes.push_back(meshNode);
-    g_meshCache[cacheId] = meshNode;
+    //g_meshCache[cacheId] = meshNode;
     return meshNode;
 
 }
@@ -1098,7 +1098,7 @@ void ProcessSubD( ISubD &subd, ProcArgs &args,
     getSampleTimes( subd, args, sampleTimes);
     std::string cacheId = getHash(name, originalName, subd, args, sampleTimes);
 
-    AtNode* meshNode = getCachedNode(cacheId);
+    AtNode* meshNode = AiNodeLookUpByName(cacheId.c_str());//getCachedNode(cacheId);
 
     if(meshNode == NULL) // We don't have a cache, so we much create this mesh.
     {
