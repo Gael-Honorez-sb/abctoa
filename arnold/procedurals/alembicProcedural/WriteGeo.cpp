@@ -336,6 +336,7 @@ std::string getHash(
 // Otherwise, return NULL.
 /*AtNode* getCachedNode(std::string cacheId)
 {
+    GLOBAL_LOCK;
     NodeCache::iterator I = g_meshCache.find(cacheId);
     if (I != g_meshCache.end())
         return (*I).second;

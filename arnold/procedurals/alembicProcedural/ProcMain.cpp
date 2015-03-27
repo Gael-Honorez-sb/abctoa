@@ -36,6 +36,8 @@
 
 #include <cstring>
 #include <memory>
+#include <vector>
+
 #include "ProcArgs.h"
 #include "PathUtil.h"
 #include "SampleUtil.h"
@@ -56,7 +58,12 @@
 #include <boost/tokenizer.hpp>
 #include <boost/algorithm/string.hpp>
 #include <boost/thread.hpp>
-#include <vector>
+
+#ifdef WIN32
+#include <boost/atomic/atomic.hpp>
+#endif
+
+
 
 #include <iostream>
 #include <fstream>
@@ -64,6 +71,10 @@
 namespace
 {
 using namespace Alembic::AbcGeom;
+
+#ifdef WIN32
+boost::atomic<bool> schemaInitialized(false);
+#endif
 
 boost::mutex gGlobalLock;
 #define GLOBAL_LOCK	   boost::mutex::scoped_lock writeLock( gGlobalLock );
@@ -249,7 +260,24 @@ void WalkObject( IObject & parent, const ObjectHeader &ohead, ProcArgs &args,
 
 int ProcInit( struct AtNode *node, void **user_ptr )
 {
-    GLOBAL_LOCK;
+#ifdef WIN32
+    // DIRTY FIX 
+    // magic static* used in the Alembic Schemas are not threadSafe in Visual Studio, so we need to initialized them first.
+
+    if(!schemaInitialized)
+    {
+        IPolyMesh::getSchemaTitle();
+        IPoints::getSchemaTitle();
+        ICurves::getSchemaTitle();
+        INuPatch::getSchemaTitle();
+        IXform::getSchemaTitle();
+        ISubD::getSchemaTitle();
+        schemaInitialized = true;
+    }
+#endif
+
+    boost::mutex::scoped_lock writeLock( gGlobalLock );
+    writeLock.unlock();
 
     bool skipJson = false;
     bool skipShaders = false;
@@ -292,13 +320,16 @@ int ProcInit( struct AtNode *node, void **user_ptr )
         const char* assfile = AiNodeGetStr(node, "assShaders");
         if(*assfile != 0)
         {
+            writeLock.lock();
             // if we don't find the ass file, we can load it. This avoid multiple load of the same file.
             if(std::find(g_loadedAss.begin(), g_loadedAss.end(), std::string(assfile)) == g_loadedAss.end())
             {
+                
                 if(AiASSLoad(assfile, AI_NODE_SHADER) == 0)
                     g_loadedAss.push_back(std::string(assfile));
-
+                
             }
+            writeLock.unlock();
 
         }
     }
@@ -307,6 +338,7 @@ int ProcInit( struct AtNode *node, void **user_ptr )
     {
         const char* abcfile = AiNodeGetStr(node, "abcShaders");
 
+        writeLock.lock();
         FileCache::iterator I = g_abcShaders.find(abcfile);
         if (I != g_abcShaders.end())
         {
@@ -332,6 +364,7 @@ int ProcInit( struct AtNode *node, void **user_ptr )
                 args->abcShaderFile = abcfile;
             }
         }
+        writeLock.unlock();
     }
 
     // check if we have a UV archive attribute
@@ -564,6 +597,7 @@ int ProcInit( struct AtNode *node, void **user_ptr )
     
     IObject root;
 
+    writeLock.lock();
     FileCache::iterator I = g_fileCache.find(args->filename);
     if (I != g_fileCache.end())
         root = (*I).second;
@@ -584,6 +618,7 @@ int ProcInit( struct AtNode *node, void **user_ptr )
         }
 
     }
+    writeLock.unlock();
 
     PathList path;
     TokenizePath( args->objectpath, path );
