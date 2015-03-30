@@ -195,7 +195,7 @@ void ProcessLight( ILight &light, ProcArgs &args,
                         lightNode = AiNode("spot_light");
                         break;
                     case 3:
-                        lightNode = AiNode("area_light");
+                        lightNode = AiNode("quad_light");
                         AtPoint vertices[4];
                         AiV3Create(vertices[3], 1, 1, 0);
                         AiV3Create(vertices[0], 1, -1, 0);
@@ -204,7 +204,7 @@ void ProcessLight( ILight &light, ProcArgs &args,
                         AiNodeSetArray(lightNode, "vertices", AiArrayConvert(4, 1, AI_TYPE_POINT, vertices));
                         break;
                     case 4:
-                        lightNode = AiNode("photometric_ligh");
+                        lightNode = AiNode("photometric_light");
                         break;
                     default:
                         return;

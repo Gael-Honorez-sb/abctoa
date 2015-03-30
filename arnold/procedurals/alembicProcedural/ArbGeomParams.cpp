@@ -389,11 +389,31 @@ void AddArbitraryStringGeomParam( ICompoundProperty & parent,
         return;
     }
 
-    if ( !AiNodeDeclare( primNode, CleanAttributeName(param.getName()).c_str(), declStr.c_str() ) )
+    std::string cleanAttributeName = CleanAttributeName(param.getName());
+    bool paramExists = false;
+
+    const AtNodeEntry *nentry = AiNodeGetNodeEntry(primNode);
+    AtParamIterator *iter = AiNodeEntryGetParamIterator(nentry);
+    while (!AiParamIteratorFinished(iter))
     {
-        //TODO, AiWarning
-        return;
+        const AtParamEntry *pentry = AiParamIteratorGetNext(iter);
+        
+        if (strcmp(cleanAttributeName.c_str(), AiParamGetName(pentry)) == 0)
+        {
+            paramExists = true;
+            break;
+        }
+
+        
     }
+    AiParamIteratorDestroy(iter);
+
+    if(!paramExists)
+        if ( !AiNodeDeclare( primNode, CleanAttributeName(param.getName()).c_str(), declStr.c_str() ) )
+        {
+            //TODO, AiWarning
+            return;
+        }
 
     IStringGeomParam::prop_type::sample_ptr_type valueSample =
                 param.getExpandedValue( sampleSelector ).getVals();
