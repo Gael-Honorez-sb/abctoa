@@ -42,6 +42,7 @@
 #include "WriteGeo.h"
 #include "WritePoint.h"
 #include "WriteCurves.h"
+#include "WriteLight.h"
 #include "json/json.h"
 #include "parseAttributes.h"
 
@@ -199,6 +200,15 @@ void WalkObject( IObject & parent, const ObjectHeader &ohead, ProcArgs &args,
         ICamera camera( parent, ohead.getName() );
 
         nextParentObject = camera;
+    }
+    else if ( ILight::matches( ohead ) )
+    {
+        ILight light( parent, ohead.getName() );
+        
+        if(isVisibleForArnold(parent, &args)) // check if the object is invisible for arnold. It is there to avoid skipping the whole hierarchy.
+            ProcessLight( light, args, xformSamples);
+
+        nextParentObject = light;
     }
     else if ( IFaceSet::matches( ohead ) )
     {
