@@ -1,0 +1,50 @@
+# vim: filetype=python
+
+## load our own python modules
+import system
+from build_tools import find_files_recursive
+
+import os, glob
+
+# import build env
+Import('mtoa_env')
+local_env = mtoa_env.Clone()
+
+# Add new plugin directory names here
+EXTENSIONS = ['abcShader', "ABCViewer"]
+
+source_files = []
+include_files = []
+
+MTOA_TRANSLATORS = []
+
+#local_env.Append(CPPPATH = ['.'])
+#local_env.Append(LIBS = Split('ai'))
+
+# For every procedural found, get a list of source and include files
+for dir in EXTENSIONS:
+    base_dir = os.path.join(local_env['ROOT_DIR'], 'mtoa', dir)
+    if os.path.isdir(base_dir) and dir != '.svn':
+        sconscriptPath = os.path.join(base_dir, "SConscript")
+        if os.path.exists(sconscriptPath):
+            plugin_env = local_env.Clone()
+            MTOA_TRANSLATORS    += plugin_env.SConscript(sconscriptPath,
+                             duplicate   = 0,
+                             variant_dir = dir,
+                             exports     = 'mtoa_env')
+        else:
+            proc_src_files = [os.path.join(dir, name) for name in find_files_recursive(base_dir, ['.c', '.cpp'])]
+            proc_inc_files = [os.path.join(dir, name) for name in find_files_recursive(base_dir, ['.h'])]
+            source_files  += proc_src_files
+            include_files += proc_inc_files
+            # Name of the final dll will be "mtoa_<directory>_proc"
+            MTOA_TRANSLATORS    += local_env.SharedLibrary(os.path.join(dir, '%s' % dir), proc_src_files)
+
+if system.os() == 'darwin':
+    local_env.Append(CCFLAGS = Split('-fvisibility=hidden')) # hide symbols by default
+    #local_env.Append(LINKFLAGS = Split('-Wl,-rpath="\\$$ORIGIN" -z origin'))
+elif system.os() != 'windows':
+    local_env.Append(CCFLAGS = Split('-fvisibility=hidden')) # hide symbols by default
+    local_env.Append(LINKFLAGS = Split('-Wl,-rpath="\\$$ORIGIN" -z origin'))
+
+Return('MTOA_TRANSLATORS')
