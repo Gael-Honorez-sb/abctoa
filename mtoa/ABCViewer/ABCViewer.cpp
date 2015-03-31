@@ -163,6 +163,8 @@ AtNode* CABCViewerTranslator::ExportProcedural(AtNode* procedural, bool update)
         }
 
         MPlug jsonFile = m_DagNode.findPlug("jsonFile");
+        MPlug secondaryJsonFile = m_DagNode.findPlug("secondaryJsonFile");
+        MPlug shadersNamespace = m_DagNode.findPlug("shadersNamespace");
         MPlug abcShaders = m_DagNode.findPlug("abcShaders");
         MPlug uvsArchive = m_DagNode.findPlug("uvsArchive");
         MPlug shadersAssignation = m_DagNode.findPlug("shadersAssignation");
@@ -238,6 +240,23 @@ AtNode* CABCViewerTranslator::ExportProcedural(AtNode* procedural, bool update)
 
             AiNodeDeclare(procedural, "jsonFile", "constant STRING");
             AiNodeSetStr(procedural, "jsonFile", JSONfile.asChar());
+        }
+
+        if(secondaryJsonFile.asString() != "")
+        {
+            MFileObject JSONfileObject;
+            JSONfileObject.setRawFullName(secondaryJsonFile.asString().expandFilePath());
+            JSONfileObject.setResolveMethod(MFileObject::kInputFile);
+            MString JSONfile = JSONfileObject.resolvedFullName();
+
+            AiNodeDeclare(procedural, "secondaryJsonFile", "constant STRING");
+            AiNodeSetStr(procedural, "secondaryJsonFile", JSONfile.asChar());
+        }
+
+        if(shadersNamespace.asString() != "")
+        {
+            AiNodeDeclare(procedural, "shadersNamespace", "constant STRING");
+            AiNodeSetStr(procedural, "shadersNamespace", shadersNamespace.asString().asChar());
         }
 
         if(shadersAssignation.asString() != "")
@@ -357,6 +376,18 @@ void CABCViewerTranslator::NodeInitializer(CAbTranslator context)
     data.defaultValue.STR = "";
     data.name = "jsonFile";
     data.shortName = "jf";
+    data.channelBox = false;
+    helper.MakeInputString(data);
+
+    data.defaultValue.STR = "";
+    data.name = "secondaryJsonFile";
+    data.shortName = "sjf";
+    data.channelBox = false;
+    helper.MakeInputString(data);
+
+    data.defaultValue.STR = "";
+    data.name = "shadersNamespace";
+    data.shortName = "sn";
     data.channelBox = false;
     helper.MakeInputString(data);
 
