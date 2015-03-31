@@ -52,7 +52,8 @@ void ApplyOverrides(std::string name, AtNode* node, std::vector<std::string> tag
         if(it->find("/") != std::string::npos)
         {
             foundInPath = isPathContainsInOtherPath(name, *it);
-            overrides = args.attributesRoot[*it];
+            if(foundInPath)
+                overrides = args.attributesRoot[*it];
         }
         else if(matchPattern(name,*it)) // based on wildcard expression
         {
