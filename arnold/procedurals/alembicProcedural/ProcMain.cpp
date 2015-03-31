@@ -88,6 +88,22 @@ LoadedAss g_loadedAss;
 typedef std::map<std::string, IObject> LoadedAbcShaders;
 LoadedAbcShaders g_abcShaders;
 
+
+// Recursively copy the values of b into a.
+void update(Json::Value& a, Json::Value& b) {
+    Json::Value::Members memberNames = b.getMemberNames();
+    for (Json::Value::Members::const_iterator it = memberNames.begin();
+            it != memberNames.end(); ++it)
+    {
+        const std::string& key = *it;
+        if (a[key].isObject()) {
+            update(a[key], b[key]);
+        } else {
+            a[key] = b[key];
+        }
+    }
+}
+
 void WalkObject( IObject & parent, const ObjectHeader &ohead, ProcArgs &args,
              PathList::const_iterator I, PathList::const_iterator E,
                     MatrixSampleMap * xformSamples)
@@ -400,13 +416,21 @@ int ProcInit( struct AtNode *node, void **user_ptr )
         Json::Reader reader;
         std::ifstream test(AiNodeGetStr(node, "jsonFile"), std::ifstream::binary);
         parsingSuccessful = reader.parse( test, jroot, false );
+
+        if (AiNodeLookUpUserParameter(node, "secondaryJsonFile") !=NULL)
+        {
+            std::ifstream test2(AiNodeGetStr(node, "secondaryJsonFile"), std::ifstream::binary);
+            Json::Value jroot2;
+            if (reader.parse( test2, jroot2, false ))
+                update(jroot, jroot2);
+        }
+        
         if ( parsingSuccessful )
         {
             if(skipShaders == false)
             {
                 if(jroot["namespace"].isString())
                     args->ns = jroot["namespace"].asString() + ":";
-
 
                 jrootShaders = jroot["shaders"];
                 if (AiNodeLookUpUserParameter(node, "shadersAssignation") !=NULL)
@@ -424,6 +448,7 @@ int ProcInit( struct AtNode *node, void **user_ptr )
             if(skipAttributes == false)
             {
                 jrootattributes = jroot["attributes"];
+
                 if (AiNodeLookUpUserParameter(node, "attributes") !=NULL)
                 {
                     Json::Reader readerOverride;
@@ -540,6 +565,13 @@ int ProcInit( struct AtNode *node, void **user_ptr )
         }
     }
 
+    // If shaderNamespace attribute is set it has priority
+    if (AiNodeLookUpUserParameter(node, "shadersNamespace") !=NULL)
+    {
+        const char* shadersNamespace = AiNodeGetStr(node, "shadersNamespace");
+        if (shadersNamespace && strlen(shadersNamespace))
+            args->ns = std::string(shadersNamespace) + ":";
+    }
 
     //Check displacements
 
