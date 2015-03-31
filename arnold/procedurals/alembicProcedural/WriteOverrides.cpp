@@ -46,6 +46,7 @@
 void ApplyOverrides(std::string name, AtNode* node, std::vector<std::string> tags, ProcArgs & args)
 {
     bool foundInPath = false;
+    int pathSize = 0;
     for(std::vector<std::string>::iterator it=args.attributes.begin(); it!=args.attributes.end(); ++it)
     {
         Json::Value overrides;
@@ -53,18 +54,36 @@ void ApplyOverrides(std::string name, AtNode* node, std::vector<std::string> tag
         {
             foundInPath = isPathContainsInOtherPath(name, *it);
             if(foundInPath)
-                overrides = args.attributesRoot[*it];
+            {
+                std::string overridePath = *it;
+                if(overridePath.length() > pathSize)
+                {
+                    pathSize = overridePath.length();
+                    overrides = args.attributesRoot[*it];
+                }
+            }
         }
         else if(matchPattern(name,*it)) // based on wildcard expression
         {
-            overrides = args.attributesRoot[*it];
             foundInPath = true;
+            std::string overridePath = *it;
+            if(overridePath.length() > pathSize)
+            {   
+                pathSize = overridePath.length();
+                overrides = args.attributesRoot[*it];
+            }
+            
         }
         else if(foundInPath == false)
         {
             if (std::find(tags.begin(), tags.end(), *it) != tags.end())
             {
-                overrides = args.attributesRoot[*it];
+                std::string overridePath = *it;
+                if(overridePath.length() > pathSize)
+                {
+                    pathSize = overridePath.length();
+                    overrides = args.attributesRoot[*it];
+                }
             }
         }
         if(overrides.size() > 0)
