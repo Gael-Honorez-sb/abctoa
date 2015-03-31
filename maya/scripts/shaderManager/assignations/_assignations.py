@@ -220,7 +220,6 @@ class cacheAssignations(object):
         attributes = self.getOverrides(curPath, layer, onlyInherited=True)
 
         if propName in attributes:
-            print propName, attributes[propName]
             fromFile = attributes[propName].get("fromfile", False)
             inherited = attributes[propName].get("inherited", False)
 

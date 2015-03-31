@@ -96,7 +96,6 @@ class gpucache(object):
             self.tags = json.loads(tags)
         except:
             self.tags = {}
-        print self.tags
 
     def updateShaders(self, shaders):
         if self.isValid():
