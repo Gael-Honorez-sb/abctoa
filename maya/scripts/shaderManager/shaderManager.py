@@ -111,6 +111,7 @@ class ShaderManager(QMainWindow, UI_ABCHierarchy.Ui_NAM):
         self.hierarchyWidget.itemClicked.connect(self.itemCLicked)
         self.hierarchyWidget.itemSelectionChanged.connect(self.itemSelectionChanged)
         self.hierarchyWidget.itemPressed.connect(self.itemPressed)
+        self.hierarchyWidget.setExpandsOnDoubleClick(False)
 
 
 
@@ -496,23 +497,29 @@ class ShaderManager(QMainWindow, UI_ABCHierarchy.Ui_NAM):
         event.accept()
 
     def addCBs(self, event=None):
-        print "adding callbacks"
-        self.renderLayer.currentIndexChanged.connect(self.layerChanged)
-        self.NodeNameMsgId  = MNodeMessage.addNameChangedCallback( MObject(), self.nameChangedCB )
-        self.newNodeCBMsgId = MDGMessage.addNodeAddedCallback( self.newNodeCB )
-        self.delNodeCBMsgId = MDGMessage.addNodeRemovedCallback( self.delNodeCB )
-        print "adding scriptjob"
-        self.layerChangedJob = cmds.scriptJob( e= ["renderLayerManagerChange",self.setCurrentLayer])
+        try:
+            print "adding callbacks"
+            self.renderLayer.currentIndexChanged.connect(self.layerChanged)
+            self.NodeNameMsgId  = MNodeMessage.addNameChangedCallback( MObject(), self.nameChangedCB )
+            self.newNodeCBMsgId = MDGMessage.addNodeAddedCallback( self.newNodeCB )
+            self.delNodeCBMsgId = MDGMessage.addNodeRemovedCallback( self.delNodeCB )
+            print "adding scriptjob"
+            self.layerChangedJob = cmds.scriptJob( e= ["renderLayerManagerChange",self.setCurrentLayer])
+        except:
+            pass
 
     def clearCBs(self, event=None):
-        print "removing scriptjob"
-        cmds.scriptJob( kill=self.layerChangedJob, force=True)
-        for cache in self.ABCViewerNode.values():
-            cache.setSelection("")
-        print "removing callbacks"
-        MMessage.removeCallback( self.newNodeCBMsgId )
-        MMessage.removeCallback( self.delNodeCBMsgId )
-        MNodeMessage.removeCallback( self.NodeNameMsgId )
+        try:
+            print "removing scriptjob"
+            cmds.scriptJob( kill=self.layerChangedJob, force=True)
+            for cache in self.ABCViewerNode.values():
+                cache.setSelection("")
+            print "removing callbacks"
+            MMessage.removeCallback( self.newNodeCBMsgId )
+            MMessage.removeCallback( self.delNodeCBMsgId )
+            MNodeMessage.removeCallback( self.NodeNameMsgId )
+        except:
+            pass
 
 
     def closeEvent(self, event):
@@ -813,15 +820,31 @@ class ShaderManager(QMainWindow, UI_ABCHierarchy.Ui_NAM):
         self.expandItem(item)
 
     def itemDoubleClicked(self, item, column) :
-        if item.isWildCard:
-            if not item.protected:
-                text, ok = QtGui.QInputDialog.getText(self, 'WildCard expression',  'Enter the expression:', QtGui.QLineEdit.Normal, item.getPath())
-                if ok:
-                    #first change the path
-                    item.setExpression(text)
+        '''  An item on the hierarchy is double clicked '''
+        if column == 0:
+            if item.isWildCard:
+                if not item.protected:
+                    text, ok = QtGui.QInputDialog.getText(self, 'WildCard expression',  'Enter the expression:', QtGui.QLineEdit.Normal, item.getPath())
+                    if ok:
+                        #first change the path
+                        item.setExpression(text)
 
-        else:
-            self.expandItem(item)
+            else:
+                self.expandItem(item)
+                item.setExpanded(True)
+
+        elif column == 1:
+            shader = item.getShader(self.getLayer())
+            if shader:
+                if shader["fromfile"] == False:
+                    cmds.select(shader["shader"], r=1, ne=1)
+
+        elif column == 2:
+            shader = item.getDisplacement(self.getLayer())
+            if shader:
+                if shader["fromfile"] == False:
+                    cmds.select(shader["shader"], r=1, ne=1)
+
 
     def expandItem(self, item) :
         expandAll = False
