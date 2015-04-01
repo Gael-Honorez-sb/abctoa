@@ -89,6 +89,47 @@ MStatus ABCHierarchy::doIt( const MArgList& args )
             typeObj = "Shape:";
         else if(IPoints::matches(iObj->getHeader()))
             typeObj = "Points:";
+        else if(ILight::matches(iObj->getHeader()))
+        {
+            typeObj = "Light:";
+            ILight light( iObj->getParent(), iObj->getName() );
+            ILightSchema ps = light.getSchema();
+            ICompoundProperty arbGeomParams = ps.getArbGeomParams();
+            const PropertyHeader * lightTypeHeader = arbGeomParams.getPropertyHeader("light_type");
+            if (IInt32GeomParam::matches( *lightTypeHeader ))
+            {
+                IInt32GeomParam param( arbGeomParams,  "light_type" );
+                if ( param.valid() )
+                {
+                    if ( param.getScope() == kConstantScope || param.getScope() == kUnknownScope)
+                    {
+                        IInt32GeomParam::prop_type::sample_ptr_type valueSample = param.getExpandedValue().getVals();
+                        Alembic::Abc::int32_t lightType = valueSample->get()[0];
+                        switch(lightType)
+                        {
+                            case 0:
+                                typeObj = "DistantLight:";
+                                break;
+                            case 1:
+                                typeObj = "PointLight:";
+                                break;
+                            case 2:
+                                typeObj = "SpotLight:";
+                                break;
+                            case 3:
+                                typeObj = "QuadLight:";
+                                break;
+                            case 4:
+                                typeObj = "PhotometricLight:";
+                                break;
+                            default:
+                                return MS::kSuccess;
+                        }
+                    }
+                }
+
+            }
+        }
         else
             typeObj = "Unknown:";
 
