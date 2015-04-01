@@ -1,0 +1,46 @@
+syntax: glob
+maya/alembicHolder/Version.h
+INSTALL*
+.git
+*.autosave
+abcToA.mod
+package.py
+*.zip
+local.cmake
+build
+*.rej
+*.pyc
+*~
+*.orig
+custom.py
+custom*.py
+.*
+*.bak
+Debug
+*.project
+*.settings*
+*.cproject
+*.external*
+*.pydev*
+*.vcproj
+*.sln
+*.pdb
+*.ncb
+*.suo
+*.user
+*.bat
+x64
+*.log
+*.css
+*.gif
+*.old
+*.pyd
+syntax: regexp
+\.launch$
+syntax: regexp
+^UpgradeLog\.XML$
+syntax: regexp
+\.rar$
+syntax: regexp
+\.tgz$
+
