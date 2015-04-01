@@ -12,6 +12,7 @@
 #include <sstream>
 
 
+
 #include "json/json.h"
 
 // reference, public domain code : http://www.fourmilab.ch/documents/specrend/specrend.c
@@ -22,6 +23,21 @@ double BBSpectrum(double wavelength, double bbTemp)
 
     return (3.74183e-16 * pow(wlm, -5.0)) /
            (exp(1.4388e-2 / (wlm * bbTemp)) - 1.0);
+} 
+
+float ScaleLightExposure(float exposure, ProcArgs &args)
+{
+    // Scale the light intensity to match the scale of the procedural
+    double e = static_cast<double>(exposure);
+    AtMatrix m;
+    AtVector scaleVector = AiVector(1.0, 0.0, 0.0);
+    
+    AiNodeGetMatrix(args.proceduralNode, "matrix", m);
+    AiM4VectorByMatrixMult (&scaleVector, m, &scaleVector);  
+    float scaleFactor = AiV3Length(scaleVector);
+    e += log(scaleFactor * scaleFactor) / log(2.0);
+    exposure = static_cast<float>(e);
+    return exposure;
 } 
 
 AtRGB XYZtoRGB(double x, double y, double z)
@@ -344,6 +360,10 @@ void ProcessLight( ILight &light, ProcArgs &args,
 
     // Xform
     ApplyTransformation( lightNode, xformSamples, args );
+
+    // Scale the light intensity
+    float exposure = AiNodeGetFlt(lightNode, "exposure");
+    AiNodeSetFlt(lightNode, "exposure", ScaleLightExposure(exposure, args));
 
     args.createdNodes.push_back(lightNode);
 }
