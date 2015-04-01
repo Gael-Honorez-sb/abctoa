@@ -60,6 +60,26 @@ class assignationGroup(object):
     def setFromFile(self, state):
         self.fromFile = state
 
+    def isPathContainsInOtherPath(self, path, otherpath):
+        if otherpath == "/":
+            return True
+            
+        pathParts = path.split("/")
+        jsonPathParts = otherpath.split("/")
+
+        if len(jsonPathParts) > len(pathParts):
+            return False
+
+        validPath = True
+
+        for i in range(len(jsonPathParts)):
+            if pathParts[i] != jsonPathParts[i]:
+                validPath = False
+
+
+        return validPath
+
+
     def getShaderFromPath(self, path):
         for shader in self.shaders:
             if path in self.shaders[shader]:
@@ -70,7 +90,7 @@ class assignationGroup(object):
         # get the closest path possible
         for shader in self.shaders:
             for shaderpath in self.shaders[shader]:
-                if shaderpath in path:
+                if self.isPathContainsInOtherPath(path, shaderpath):
                     if shaderpath > foundPath:
                         foundPath = shaderpath
                         foundShader = shader
@@ -108,7 +128,7 @@ class assignationGroup(object):
         # get the closest path possible
         for shader in self.displacements:
             for shaderpath in self.displacements[shader]:
-                if shaderpath in path:
+                if self.isPathContainsInOtherPath(path, shaderpath):
                     if shaderpath > foundPath:
                         foundPath = shaderpath
                         foundShader = shader
@@ -150,7 +170,7 @@ class assignationGroup(object):
 
         for attributepath in sorted(self.overrides):
             # by sorting, we are iterating from the smaller to biggest attr. 
-            if attributepath in path and attributepath != path:
+            if self.isPathContainsInOtherPath(path, attributepath) and attributepath != path:
                 overrides = self.overrides[attributepath]
                 for attr in overrides:
                     concatenedOverrides[attr] = self.createOverrideEntity(overrides[attr], inherited=True)
