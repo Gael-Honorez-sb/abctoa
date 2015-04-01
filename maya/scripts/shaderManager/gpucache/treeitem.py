@@ -32,6 +32,7 @@ WILDCARD = 4
 DISPLACE = 5
 TAG = 6
 POINTS = 7
+LIGHT = 8
 
 class abcTreeItem(QtGui.QTreeWidgetItem):
     def __init__(self, cache, path, itemType, parent=None, *args, **kwargs):
@@ -39,7 +40,7 @@ class abcTreeItem(QtGui.QTreeWidgetItem):
         self.interface = parent
         self.cache = cache
         self.path = path
-
+        self.itemType = itemType
         self.tags = []
 
         self.isWildCard = False
@@ -64,6 +65,8 @@ class abcTreeItem(QtGui.QTreeWidgetItem):
             self.icon = TRANSFORM
         elif itemType == "Points":
             self.icon = POINTS
+        elif "Light" in itemType:
+            self.icon = LIGHT
         else:
             self.icon = SHAPE
 
@@ -311,10 +314,18 @@ class abcTreeItem(QtGui.QTreeWidgetItem):
         self.interface.checkShaders(self.interface.getLayer(), item=self)
         self.interface.hierarchyWidget.resizeColumnToContents(1)
 
+    def getShader(self, layer=None):
+        path = self.getPath()
+        return self.cacheAssignations.getShader(path, layer)
+
+    def getDisplacement(self, layer=None):
+        path = self.getPath()
+        return self.cacheAssignations.getDisplace(path, layer)
+
     def checkShaders(self, layer=None):
         path = self.getPath()
-        shader = self.cacheAssignations.getShader(path, layer)
-        displace = self.cacheAssignations.getDisplace(path, layer)
+        shader = self.getShader(layer)
+        displace = self.getDisplacement(layer)
 
         shaderFromMainLayer = False
         displaceFromMainLayer = False
