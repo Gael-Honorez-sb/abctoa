@@ -826,7 +826,7 @@ class ShaderManager(QMainWindow, UI_ABCHierarchy.Ui_NAM):
         self.expandItem(item)
 
     def itemDoubleClicked(self, item, column) :
-        '''  An item on the hierarchy is double clicked'''
+        '''  An item on the hierarchy is double clicked '''
         if column == 0:
             if item.isWildCard:
                 if not item.protected:
