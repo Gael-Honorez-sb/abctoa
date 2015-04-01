@@ -151,6 +151,72 @@ AtRGB ConvertKelvinToRGB(float kelvin)
 } 
 
 
+void GetColorTemperatureOverride(std::string name, std::vector<std::string> tags, ProcArgs & args, bool & use_temperature, float & temperature)
+{
+    bool foundInPath = false;
+    int pathSize = 0;
+    for(std::vector<std::string>::iterator it=args.attributes.begin(); it!=args.attributes.end(); ++it)
+    {
+        Json::Value overrides;
+        if(it->find("/") != std::string::npos)
+        {
+            bool curFoundInPath = isPathContainsInOtherPath(name, *it);
+            if(curFoundInPath)
+            {
+                foundInPath = true;
+                std::string overridePath = *it;
+                if(overridePath.length() > pathSize)
+                {
+                    pathSize = overridePath.length();
+                    overrides = args.attributesRoot[*it];
+                }
+            }
+        }
+        else if(matchPattern(name,*it)) // based on wildcard expression
+        {
+            foundInPath = true;
+            std::string overridePath = *it;
+            if(overridePath.length() > pathSize)
+            {   
+                pathSize = overridePath.length();
+                overrides = args.attributesRoot[*it];
+            }
+            
+        }
+        else if(foundInPath == false)
+        {
+            if (std::find(tags.begin(), tags.end(), *it) != tags.end())
+            {
+                std::string overridePath = *it;
+                if(overridePath.length() > pathSize)
+                {
+                    pathSize = overridePath.length();
+                    overrides = args.attributesRoot[*it];
+                }
+            }
+        }
+        if(overrides.size() > 0)
+        {
+            for( Json::ValueIterator itr = overrides.begin() ; itr != overrides.end() ; itr++ )
+            {
+                std::string attribute = itr.key().asString();
+                
+                if(attribute.compare("use_color_temperature") == 0)
+                {
+                    Json::Value val = args.attributesRoot[*it][itr.key().asString()];
+                    use_temperature = val.asBool();
+                }
+                else if (attribute.compare("color_temperature") == 0)
+                {
+                    Json::Value val = args.attributesRoot[*it][itr.key().asString()];
+                    temperature = val.asFloat();
+                }
+            }
+        }
+    }
+}
+
+
 void ProcessLight( ILight &light, ProcArgs &args,
         MatrixSampleMap * xformSamples)
 {
@@ -227,15 +293,14 @@ void ProcessLight( ILight &light, ProcArgs &args,
     getAllTags(light, tags, &args);
 
 
-    if(args.linkAttributes)
-        ApplyOverrides(originalName, lightNode, tags, args);
-
     // adding arbitary parameters
     AddArbitraryGeomParams(
             arbGeomParams,
             frameSelector,
             lightNode );
 
+    bool useTemperature = false;
+    float colorTemperature = 6500.0;
 
     // Eventually override color with temperature
     const PropertyHeader * useTempHeader = arbGeomParams.getPropertyHeader("use_color_temperature");
@@ -247,28 +312,35 @@ void ProcessLight( ILight &light, ProcArgs &args,
             if ( param.getScope() == kConstantScope || param.getScope() == kUnknownScope)
             {
                 IBoolGeomParam::prop_type::sample_ptr_type valueSample = param.getExpandedValue().getVals();
-                Alembic::Abc::bool_t useTemperature = valueSample->get()[0];
-                if(useTemperature)
-                {
-                    const PropertyHeader * TempHeader = arbGeomParams.getPropertyHeader("color_temperature");
-                    
-                    if (IFloatGeomParam::matches( *useTempHeader ))
-                    {
-                        IFloatGeomParam param( arbGeomParams,  "color_temperature" );
-                        if ( param.valid() )
-                            if ( param.getScope() == kConstantScope || param.getScope() == kUnknownScope)
-                            {
-                                IFloatGeomParam::prop_type::sample_ptr_type valueSample = param.getExpandedValue().getVals();
-                                float temperature = valueSample->get()[0];
-                                AtRGB color = ConvertKelvinToRGB(temperature);
-                                AiNodeSetRGB(lightNode, "color", color.r, color.g, color.b);
-                            }
-                    }
-                }
+                useTemperature = valueSample->get()[0];
             }
         }
-
     }
+
+
+    const PropertyHeader * TempHeader = arbGeomParams.getPropertyHeader("color_temperature");
+                    
+    if (IFloatGeomParam::matches( *TempHeader ))
+    {
+        IFloatGeomParam param( arbGeomParams,  "color_temperature" );
+        if ( param.valid() )
+            if ( param.getScope() == kConstantScope || param.getScope() == kUnknownScope)
+            {
+                IFloatGeomParam::prop_type::sample_ptr_type valueSample = param.getExpandedValue().getVals();
+                colorTemperature = valueSample->get()[0];
+            }
+    }
+
+    GetColorTemperatureOverride(originalName, tags, args, useTemperature, colorTemperature);
+
+    if(useTemperature)
+    {
+        AtRGB color = ConvertKelvinToRGB(colorTemperature);
+        AiNodeSetRGB(lightNode, "color", color.r, color.g, color.b);
+    }
+
+    if(args.linkAttributes)
+        ApplyOverrides(originalName, lightNode, tags, args);
 
     // Xform
     ApplyTransformation( lightNode, xformSamples, args );
