@@ -162,11 +162,33 @@ void AddArbitraryGeomParam( ICompoundProperty & parent,
     if((param.getScope() == kVaryingScope || param.getScope() == kFacevaryingScope ) && AiNodeIs(primNode, "ginstance"))
         return;
 
-    if ( !AiNodeDeclare( primNode, CleanAttributeName(param.getName()).c_str(), declStr.c_str() ) )
+    // Check if that attribute is not existing already as a standard attribute.
+
+    std::string cleanAttributeName = CleanAttributeName(param.getName());
+    bool paramExists = false;
+
+    const AtNodeEntry *nentry = AiNodeGetNodeEntry(primNode);
+    AtParamIterator *iter = AiNodeEntryGetParamIterator(nentry);
+    while (!AiParamIteratorFinished(iter))
     {
-        //TODO, AiWarning
-        return;
+        const AtParamEntry *pentry = AiParamIteratorGetNext(iter);
+        
+        if (strcmp(cleanAttributeName.c_str(), AiParamGetName(pentry)) == 0)
+        {
+            paramExists = true;
+            break;
+        }
+
+        
     }
+    AiParamIteratorDestroy(iter);
+
+    if(!paramExists)
+        if ( !AiNodeDeclare( primNode, cleanAttributeName.c_str(), declStr.c_str() ) )
+        {
+            //TODO, AiWarning
+            return;
+        }
 
     if ( param.getScope() == kConstantScope ||
             param.getScope() == kUnknownScope)
@@ -367,11 +389,31 @@ void AddArbitraryStringGeomParam( ICompoundProperty & parent,
         return;
     }
 
-    if ( !AiNodeDeclare( primNode, CleanAttributeName(param.getName()).c_str(), declStr.c_str() ) )
+    std::string cleanAttributeName = CleanAttributeName(param.getName());
+    bool paramExists = false;
+
+    const AtNodeEntry *nentry = AiNodeGetNodeEntry(primNode);
+    AtParamIterator *iter = AiNodeEntryGetParamIterator(nentry);
+    while (!AiParamIteratorFinished(iter))
     {
-        //TODO, AiWarning
-        return;
+        const AtParamEntry *pentry = AiParamIteratorGetNext(iter);
+        
+        if (strcmp(cleanAttributeName.c_str(), AiParamGetName(pentry)) == 0)
+        {
+            paramExists = true;
+            break;
+        }
+
+        
     }
+    AiParamIteratorDestroy(iter);
+
+    if(!paramExists)
+        if ( !AiNodeDeclare( primNode, CleanAttributeName(param.getName()).c_str(), declStr.c_str() ) )
+        {
+            //TODO, AiWarning
+            return;
+        }
 
     IStringGeomParam::prop_type::sample_ptr_type valueSample =
                 param.getExpandedValue( sampleSelector ).getVals();
@@ -451,6 +493,15 @@ void AddArbitraryGeomParams( ICompoundProperty &parent,
                     sampleSelector,
                     primNode,
                     AI_TYPE_FLOAT);
+        }
+        else if ( IBoolGeomParam::matches( propHeader ) )
+        {
+            AddArbitraryGeomParam<IBoolGeomParam>(
+                    parent,
+                    propHeader,
+                    sampleSelector,
+                    primNode,
+                    AI_TYPE_BOOLEAN);
         }
         else if ( IInt32GeomParam::matches( propHeader ) )
         {

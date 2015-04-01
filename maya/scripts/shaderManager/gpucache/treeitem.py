@@ -311,10 +311,18 @@ class abcTreeItem(QtGui.QTreeWidgetItem):
         self.interface.checkShaders(self.interface.getLayer(), item=self)
         self.interface.hierarchyWidget.resizeColumnToContents(1)
 
+    def getShader(self, layer=None):
+        path = self.getPath()
+        return self.cacheAssignations.getShader(path, layer)
+
+    def getDisplacement(self, layer=None):
+        path = self.getPath()
+        return self.cacheAssignations.getDisplace(path, layer)
+
     def checkShaders(self, layer=None):
         path = self.getPath()
-        shader = self.cacheAssignations.getShader(path, layer)
-        displace = self.cacheAssignations.getDisplace(path, layer)
+        shader = self.getShader(layer)
+        displace = self.getDisplacement(layer)
 
         shaderFromMainLayer = False
         displaceFromMainLayer = False
