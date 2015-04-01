@@ -52,9 +52,10 @@ void ApplyOverrides(std::string name, AtNode* node, std::vector<std::string> tag
         Json::Value overrides;
         if(it->find("/") != std::string::npos)
         {
-            foundInPath = isPathContainsInOtherPath(name, *it);
-            if(foundInPath)
+            bool curFoundInPath = isPathContainsInOtherPath(name, *it);
+            if(curFoundInPath)
             {
+                foundInPath = true;
                 std::string overridePath = *it;
                 if(overridePath.length() > pathSize)
                 {
