@@ -151,12 +151,28 @@ class cacheAssignations(object):
 
         if not layerOnly:
             # get the overrides from the main file, main layer.
-            overridesMainFile = self.mainAssignationsFromFile.getOverridesFromPath(path, onlyInherited=onlyInherited)
+            overridesMainFile = {}
+            if layer != None:
+                # if we are not on the main layer, we need anything from the main layer.
+                overridesMainFile = self.mainAssignationsFromFile.getOverridesFromPath(path, onlyInherited=False)
+                # and we tag them as inherited
+                for attr in overridesMainFile:
+                    overridesMainFile[attr]["inherited"] = True
+            else:
+                overridesMainFile = self.mainAssignationsFromFile.getOverridesFromPath(path, onlyInherited=onlyInherited)
             for attr in overridesMainFile:
                 overrides[attr] = overridesMainFile[attr]
 
             # Then the ones from the direct assignation.
-            overridesMain = self.mainAssignations.getOverridesFromPath(path, onlyInherited=onlyInherited)
+            overridesMain = {}
+            if layer != None:
+                overridesMain = self.mainAssignations.getOverridesFromPath(path, onlyInherited=False)
+                # and we tag them as inherited
+                for attr in overridesMain:
+                    overridesMain[attr]["inherited"] = True                
+            else:
+                overridesMain = self.mainAssignations.getOverridesFromPath(path, onlyInherited=onlyInherited)
+
             for attr in overridesMain:
                 overrides[attr] = overridesMain[attr]            
 
@@ -215,12 +231,11 @@ class cacheAssignations(object):
 
 
     def updateOverride(self, propName, default, value, curPath, layer):
-
+        ''' Update overrides'''
         valueInherited = None
         attributes = self.getOverrides(curPath, layer, onlyInherited=True)
 
         if propName in attributes:
-            print propName, attributes[propName]
             fromFile = attributes[propName].get("fromfile", False)
             inherited = attributes[propName].get("inherited", False)
 

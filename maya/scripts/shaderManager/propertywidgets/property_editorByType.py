@@ -71,8 +71,30 @@ PROPERTY_ADD_LIST = {
                     ],
 'mesh_light'    :  [
                     {'name' :'convert_to_mesh_light', 'type': AI_TYPE_BOOLEAN, 'value' : False}
-                   ]                    
+                   ],               
+'point_light'    :  [
+                    {'name' :'use_color_temperature', 'type': AI_TYPE_BOOLEAN, 'value' : False},
+                    {'name' :'color_temperature', 'type': AI_TYPE_FLOAT, 'value' : 6500}
+                   ],
+'quad_light'    :  [
+                    {'name' :'use_color_temperature', 'type': AI_TYPE_BOOLEAN, 'value' : False},
+                    {'name' :'color_temperature', 'type': AI_TYPE_FLOAT, 'value' : 6500}
+                   ],
+'spot_light'    :  [
+                    {'name' :'use_color_temperature', 'type': AI_TYPE_BOOLEAN, 'value' : False},
+                    {'name' :'color_temperature', 'type': AI_TYPE_FLOAT, 'value' : 6500}
+                   ],
+'distant_light' :  [
+                    {'name' :'use_color_temperature', 'type': AI_TYPE_BOOLEAN, 'value' : False},
+                    {'name' :'color_temperature', 'type': AI_TYPE_FLOAT, 'value' : 6500}
+                   ],
+'photometric_light' :  [
+                    {'name' :'use_color_temperature', 'type': AI_TYPE_BOOLEAN, 'value' : False},
+                    {'name' :'color_temperature', 'type': AI_TYPE_FLOAT, 'value' : 6500}
+                   ],
 }
+
+
 
 PROPERTY_BLACK_LIST = {
 'options'        : ['outputs'],
@@ -105,7 +127,8 @@ class PropertyEditor(QWidget):
         self.mainLayout.addLayout(labelLayout)
         self.switch = QPushButton(self)
         self.switch.pressed.connect(self.switchPressed)
-        labelLayout.addWidget(QLabel("Node: %s" % self.name))
+        self.label = QLabel("Node: %s" % self.name)
+        labelLayout.addWidget(self.label)
         labelLayout.addWidget(self.switch)
         labelLayout.addStretch()
 
@@ -149,6 +172,7 @@ class PropertyEditor(QWidget):
           else:
             self.switch.setVisible(0)
 
+          self.label.setText("Node: %s" % self.name)
           frameLayout = QVBoxLayout()
           self.scrollArea = QScrollArea()
           self.scrollArea.setWidgetResizable(True)
@@ -156,12 +180,13 @@ class PropertyEditor(QWidget):
           frame.setLayout(frameLayout)
           self.mainLayout.addWidget(self.scrollArea)
 
-          for prop in PROPERTY_ADD_LIST[self.name]:
-            propertyWidget = self.GetPropertyWidget(prop, frame, False)
+          if self.name in PROPERTY_ADD_LIST:
+            for prop in PROPERTY_ADD_LIST[self.name]:
+              propertyWidget = self.GetPropertyWidget(prop, frame, False)
 
-            self.propertyWidgets[prop["name"]] = propertyWidget
-            if propertyWidget:
-              frameLayout.addWidget(propertyWidget)
+              self.propertyWidgets[prop["name"]] = propertyWidget
+              if propertyWidget:
+                frameLayout.addWidget(propertyWidget)
 
         ## Built-in parameters
           for param in self.node["params"]:
