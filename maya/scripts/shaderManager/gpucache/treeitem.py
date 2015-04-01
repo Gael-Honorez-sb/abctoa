@@ -320,7 +320,7 @@ class abcTreeItem(QtGui.QTreeWidgetItem):
         return self.cacheAssignations.getDisplace(path, layer)
 
     def checkShaders(self, layer=None):
-        
+        path = self.getPath()
         shader = self.getShader(layer)
         displace = self.getDisplacement(layer)
 
