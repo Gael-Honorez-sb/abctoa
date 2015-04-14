@@ -45,6 +45,7 @@
 #include <sstream>
 
 #include "json/json.h"
+#include "json/value.h"
 
 #include <boost/regex.hpp>
 #include <boost/thread.hpp>
@@ -631,16 +632,18 @@ AtNode* writeMesh(
                                     AiNodeDeclare(meshNode, attribute.c_str(), "constant STRING");
                                 else if( val.isBool() )
                                     AiNodeDeclare(meshNode, attribute.c_str(), "constant BOOL");
+                                else if ( val.type() == Json::realValue )
+                                    AiNodeDeclare(meshNode, attribute.c_str(), "constant FLOAT");
                                 else if( val.isInt() || val.isUInt() )
                                     AiNodeDeclare(meshNode, attribute.c_str(), "constant INT");
-                                else if( val.isDouble() )
-                                    AiNodeDeclare(meshNode, attribute.c_str(), "constant FLOAT");
                             }
                                 
                             if( val.isString() )
                                 AiNodeSetStr(meshNode, attribute.c_str(), val.asCString());
                             else if( val.isBool() )
                                 AiNodeSetBool(meshNode, attribute.c_str(), val.asBool());
+                            else if ( val.type() == Json::realValue )
+                              AiNodeSetFlt(meshNode, attribute.c_str(), val.asDouble());
                             else if( val.isInt() )
                             {
                                 //make the difference between Byte & int!
@@ -657,9 +660,6 @@ AtNode* writeMesh(
                             }
                             else if( val.isUInt() )
                                 AiNodeSetUInt(meshNode, attribute.c_str(), val.asUInt());
-                            else if( val.isDouble() )
-                                AiNodeSetFlt(meshNode, attribute.c_str(), val.asDouble());
-
                         }
                     }
                 }
