@@ -122,6 +122,12 @@ MStatus ABCHierarchy::doIt( const MArgList& args )
                             case 4:
                                 typeObj = "PhotometricLight:";
                                 break;
+                            case 5:
+                                typeObj = "DiskLight:";
+                                break;
+                            case 6:
+                                typeObj = "CylinderLight:";
+                                break;
                             default:
                                 return MS::kSuccess;
                         }

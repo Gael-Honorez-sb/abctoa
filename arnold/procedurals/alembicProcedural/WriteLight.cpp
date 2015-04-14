@@ -288,6 +288,12 @@ void ProcessLight( ILight &light, ProcArgs &args,
                     case 4:
                         lightNode = AiNode("photometric_light");
                         break;
+                    case 5:
+                        lightNode = AiNode("disk_light");
+                        break;
+                    case 6:
+                        lightNode = AiNode("cylinder_light");
+                        break;
                     default:
                         return;
                 }
