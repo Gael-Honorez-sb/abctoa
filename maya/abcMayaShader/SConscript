@@ -1,0 +1,36 @@
+# vim: filetype=python
+
+## load our own python modules
+import system
+from build_tools import find_files_recursive
+
+import os
+
+# import build env
+Import('plugin_env')
+local_env = plugin_env.Clone()
+
+# Automatically add all source and include files found in the source path
+src_base_dir  = os.path.join(local_env['ROOT_DIR'], 'maya', 'abcMayaShader')
+source_files  = find_files_recursive(src_base_dir, ['.c', '.cpp'])
+include_files = find_files_recursive(src_base_dir, ['.h'])
+
+#local_env.Append(CPPPATH = ['.'])
+MTOA_API_INCLUDE_PATH = local_env['MTOA_API_INCLUDE_PATH']
+ARNOLD_API_INCLUDE_PATH = local_env['ARNOLD_API_INCLUDE_PATH']
+MTOA_API_LIBRARY_PATH = local_env['MTOA_API_LIBRARY_PATH']
+PYSTRING_INCLUDE_PATH = local_env['PYSTRING_INCLUDE_PATH']
+PYSTRING_LIBRARY_PATH = local_env['PYSTRING_LIBRARY_PATH']
+
+
+local_env.Append(CPPPATH = [MTOA_API_INCLUDE_PATH, ARNOLD_API_INCLUDE_PATH, PYSTRING_INCLUDE_PATH])
+
+local_env.Append(LIBPATH = [MTOA_API_LIBRARY_PATH, PYSTRING_LIBRARY_PATH])
+
+local_env.Append(LIBS = ["ai", "mtoa_api", "pystring"] )
+
+#maya_env.Append(LIBS=Split(
+
+MAYA_ABC_SHADER = local_env.SharedLibrary('abcMayaShader', source_files, LIBPREFIX='')
+
+Return('MAYA_ABC_SHADER')
