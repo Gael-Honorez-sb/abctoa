@@ -730,7 +730,13 @@ class ShaderManager(QMainWindow, UI_ABCHierarchy.Ui_NAM):
             elif item.itemType == "PhotometricLight":
                 self.propertyEditor.resetTo("photometric_light")                                
 
-        elif item.icon != 7 and self.propertyType != "polymesh":
+            elif item.itemType == "DiskLight":
+                self.propertyEditor.resetTo("disk_light")
+
+            elif item.itemType == "CylinderLight":
+                self.propertyEditor.resetTo("cylinder_light")
+
+        elif (item.icon == 1 or item.icon == 2) and self.propertyType != "polymesh":
             self.propertyType = "polymesh"
             self.propertyEditor.resetTo("polymesh")
 
@@ -826,7 +832,7 @@ class ShaderManager(QMainWindow, UI_ABCHierarchy.Ui_NAM):
         self.expandItem(item)
 
     def itemDoubleClicked(self, item, column) :
-        '''  An item on the hierarchy is double clicked '''
+        '''  An item on the hierarchy is double clicked'''
         if column == 0:
             if item.isWildCard:
                 if not item.protected:
@@ -947,12 +953,13 @@ class ShaderManager(QMainWindow, UI_ABCHierarchy.Ui_NAM):
                         if not name in tagsAdded :
                             tagsAdded.append(name)
                             self.createTag(root, name, wild["fromfile"])
+                            fromTag = True
 
                 if not fromTag:
                     if not name in wildsAdded :
                         wildsAdded.append(name)
                         self.createWildCard(root, name, wild["fromfile"])
-                        fromTag = True
+                        
 
             if tags:
                 for tag in tags:
@@ -1013,12 +1020,14 @@ class ShaderManager(QMainWindow, UI_ABCHierarchy.Ui_NAM):
             toRemove = []
             for shader in shaders:
                 for path in shader:
-                    try:
-                        cmds.ABCHierarchy(self.ABCViewerNode[shape].getAbcPath(), path.replace("/", "|"))
-                    except:
-                        toRemove.append(path)
+                    if path.startswith("/"):
+                        try:
+                            cmds.ABCHierarchy(self.ABCViewerNode[shape].getAbcPath(), path.replace("/", "|"))
+                        except:
+                            toRemove.append(path)
             
             for remove in toRemove:
+
                 print "Cleaning non existing path", remove
                 assignations.assignShader(None, remove, None)
 

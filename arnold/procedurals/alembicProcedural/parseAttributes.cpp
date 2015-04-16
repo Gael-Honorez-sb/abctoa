@@ -14,7 +14,7 @@ namespace
     using namespace Alembic::AbcMaterial;
 }
 
-void getTags(IObject &iObj, std::vector<std::string> & tags, ProcArgs* args)
+void getTags(IObject iObj, std::vector<std::string> & tags, ProcArgs* args)
 {
     const MetaData &md = iObj.getMetaData();
 
@@ -52,7 +52,12 @@ void getTags(IObject &iObj, std::vector<std::string> & tags, ProcArgs* args)
         ICurvesSchema ms = curves.getSchema();
         arbGeomParams = ms.getArbGeomParams();
     }
-
+    else if ( ILight::matches( md ) )
+    {
+        ILight lights( iObj, kWrapExisting );
+        ILightSchema ms = lights.getSchema();
+        arbGeomParams = ms.getArbGeomParams();
+    }
 
     if ( arbGeomParams != NULL && arbGeomParams.valid() )
     {
@@ -86,7 +91,7 @@ void getTags(IObject &iObj, std::vector<std::string> & tags, ProcArgs* args)
 }
 
 
-void getAllTags(IObject &iObj, std::vector<std::string> & tags, ProcArgs* args)
+void getAllTags(IObject iObj, std::vector<std::string> & tags, ProcArgs* args)
 {
     while ( iObj )
     {
