@@ -16,7 +16,7 @@
 
 
 //void getTags(Alembic::AbcGeom::IObject &iObj, std::vector<std::string> & tags, ProcArgs* args);
-void getAllTags(Alembic::AbcGeom::IObject &iObj, std::vector<std::string> & tags, ProcArgs* args);
+void getAllTags(Alembic::AbcGeom::IObject iObj, std::vector<std::string> & tags, ProcArgs* args);
 bool isVisible(Alembic::AbcGeom::IObject child, const Alembic::AbcGeom::IXformSchema xs, ProcArgs* args);
 bool isVisibleForArnold(Alembic::AbcGeom::IObject child, ProcArgs* args);
 void OverrideProperties(Json::Value & jroot, Json::Value jrootOverrides);
