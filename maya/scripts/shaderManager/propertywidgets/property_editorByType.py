@@ -92,6 +92,14 @@ PROPERTY_ADD_LIST = {
                     {'name' :'use_color_temperature', 'type': AI_TYPE_BOOLEAN, 'value' : False},
                     {'name' :'color_temperature', 'type': AI_TYPE_FLOAT, 'value' : 6500}
                    ],
+'disk_light' :  [
+                    {'name' :'use_color_temperature', 'type': AI_TYPE_BOOLEAN, 'value' : False},
+                    {'name' :'color_temperature', 'type': AI_TYPE_FLOAT, 'value' : 6500}
+                   ],                   
+'cylinder_light' :  [
+                    {'name' :'use_color_temperature', 'type': AI_TYPE_BOOLEAN, 'value' : False},
+                    {'name' :'color_temperature', 'type': AI_TYPE_FLOAT, 'value' : 6500}
+                   ]                    
 }
 
 
