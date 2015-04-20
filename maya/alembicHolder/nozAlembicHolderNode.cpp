@@ -156,8 +156,8 @@ nozAlembicHolder::~nozAlembicHolder() {
 }
 
 void nozAlembicHolder::setHolderTime() const {
-    nozAlembicHolder* nonConstThis = const_cast<nozAlembicHolder*> (this);
-    CAlembicDatas* geom = nonConstThis->alembicData();
+
+    const CAlembicDatas* geom = const_cast<nozAlembicHolder*> (this)->alembicData();
 
     if(geom != NULL)
     {
@@ -180,7 +180,8 @@ void nozAlembicHolder::setHolderTime() const {
 }
 
 
-bool nozAlembicHolder::isBounded() const {
+bool nozAlembicHolder::isBounded() const 
+{
     return true;
 }
 
@@ -188,25 +189,22 @@ bool nozAlembicHolder::isBounded() const {
 
 MBoundingBox nozAlembicHolder::boundingBox() const
 {
-
-    nozAlembicHolder* nonConstThis = const_cast<nozAlembicHolder*> (this);
-    CAlembicDatas* geom = nonConstThis->alembicData();
-
-    
+    const CAlembicDatas* geom = const_cast<nozAlembicHolder*> (this)->alembicData();
     MBoundingBox bbox = MBoundingBox(MPoint(-1.0f, -1.0f, -1.0f), MPoint(1.0f, 1.0f, 1.0f));
 
     if(geom != NULL)
         bbox = geom->bbox;
 
     return bbox;
-
 }
 
-void* nozAlembicHolder::creator() {
+void* nozAlembicHolder::creator() 
+{
     return new nozAlembicHolder();
 }
 
-void nozAlembicHolder::postConstructor() {
+void nozAlembicHolder::postConstructor() 
+{
     // This call allows the shape to have shading groups assigned
     setRenderable(true);
 
@@ -222,12 +220,8 @@ void nozAlembicHolder::copyInternalData(MPxNode* srcNode) {
     // here we ensure that the scene manager stays up to date when duplicating nodes
 
     const nozAlembicHolder& node = *(nozAlembicHolder*)srcNode;
-/*    nozAlembicHolder::nozAlembicHolder *node =
-            (nozAlembicHolder::nozAlembicHolder *) srcNode;*/
 
-    nozAlembicHolder* nonConstThis = const_cast<nozAlembicHolder*> (this);
-    CAlembicDatas* geom = nonConstThis->alembicData();
-
+    CAlembicDatas* geom = const_cast<nozAlembicHolder*> (this)->alembicData();
 
     MFnDagNode fn(node.thisMObject());
     MString abcfile;
@@ -514,9 +508,8 @@ MStatus nozAlembicHolder::compute( const MPlug& plug, MDataBlock& block )
 
 bool nozAlembicHolder::GetPlugData()
 {
-    MObject thisNode = thisMObject();
     int update = 0;
-    MPlug updatePlug(thisNode, aUpdateCache );
+    MPlug updatePlug(thisMObject(), aUpdateCache );
     updatePlug.getValue( update );
     if (update != dUpdate)
     {
@@ -682,12 +675,15 @@ void CAlembicHolderUI::draw(const MDrawRequest & request, M3dView & view) const
             gGLFT->glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 
         }
+        else
+            drawBoundingBox( request, view );
         break;
     case kDrawSmoothShaded:
     case kDrawFlatShaded:
         if (cache->abcSceneManager.hasKey(sceneKey))
             drawingMeshes(sceneKey, cache, "");
-
+        else
+            drawBoundingBox( request, view );
         break;
     }
 
@@ -1050,24 +1046,24 @@ bool CAlembicHolderUI::select(MSelectInfo &selectInfo,
 
     std::string sceneKey = shapeNode->getSceneKey();
 
-     GLfloat minZ;
-     {
-         Select* selector;
+    GLfloat minZ;
+    Select* selector;
 
-        size_t numTriangles = geom->abcSceneManager.getScene(sceneKey)->getNumTriangles();
-        const unsigned int bufferSize = (unsigned int)std::min(numTriangles,(size_t)100000);
+    SimpleAbcViewer::ScenePtr _ptr = geom->abcSceneManager.getScene(sceneKey);
+    size_t numTriangles = _ptr->getNumTriangles();
+    const unsigned int bufferSize = (unsigned int)std::min(numTriangles,(size_t)100000);
         
-        if (numTriangles < 1024)
-            selector = new GLPickingSelect(selectInfo);
-        else
-            selector = new RasterSelect(selectInfo);
+    if (numTriangles < 1024)
+        selector = new GLPickingSelect(selectInfo);
+    else
+        selector = new RasterSelect(selectInfo);
 
-        selector->processTriangles(geom, sceneKey, numTriangles);
+    selector->processTriangles(geom, sceneKey, numTriangles);
         
-        selector->end();
-        minZ = selector->minZ();
-        delete selector;
-    }
+    selector->end();
+    minZ = selector->minZ();
+    delete selector;
+
   
     bool selected = (minZ <= 1.0f);
     if ( selected ) 
