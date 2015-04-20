@@ -660,7 +660,8 @@ int ProcInit( struct AtNode *node, void **user_ptr )
         }
 
     }
-    writeLock.unlock();
+    
+    //writeLock.unlock();
 
     PathList path;
     TokenizePath( args->objectpath, path );
