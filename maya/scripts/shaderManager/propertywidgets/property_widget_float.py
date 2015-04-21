@@ -30,7 +30,7 @@ class PropertyWidgetFloat(PropertyWidget):
       self.widget = QDoubleSpinBox()
       self.widget.setValue(self.default)
       self.widget.setSingleStep(0.1)
-      self.widget.setMaximum(999)
+      self.widget.setMaximum(9999)
       self.widget.setMinimum(-999)
       # if AiMetaDataGetFlt(nentry, name, "min", byref(data)):
       #    self.widget.setMinimum(data.value)

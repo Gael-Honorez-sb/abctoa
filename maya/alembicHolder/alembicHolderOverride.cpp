@@ -222,7 +222,7 @@ void AlembicHolderOverride::draw(const MHWRender::MDrawContext& context, const M
             displayStyle = 0;
 
         // draw bounding box
-        if(selectionKey != "" || displayStyle == 0)
+        if(selectionKey != "" || displayStyle == 0 || cache->abcSceneManager.hasKey(sceneKey) == false)
         {
 
             MBoundingBox box = shapeNode->boundingBox();

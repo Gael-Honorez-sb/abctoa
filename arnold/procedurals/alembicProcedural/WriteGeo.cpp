@@ -337,7 +337,7 @@ std::string getHash(
 // Otherwise, return NULL.
 AtNode* getCachedNode(std::string cacheId)
 {
-    GLOBAL_LOCK;
+    //GLOBAL_LOCK;
     NodeCache::iterator I = g_meshCache.find(cacheId);
     if (I != g_meshCache.end())
         return (*I).second;
@@ -417,7 +417,7 @@ AtNode* writeMesh(
     )
 
 {
-    GLOBAL_LOCK;
+    //GLOBAL_LOCK;
     typename primT::schema_type  &ps = prim.getSchema();
     TimeSamplingPtr ts = ps.getTimeSampling();
 

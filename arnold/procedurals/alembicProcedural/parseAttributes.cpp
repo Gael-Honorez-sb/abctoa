@@ -1,8 +1,11 @@
 
 #include "parseAttributes.h"
 #include "abcshaderutils.h"
+
 #include <pystring.h>
 #include <boost/thread.hpp>
+#include <boost/regex.hpp>
+#include <boost/lexical_cast.hpp>
 
 boost::mutex gGlobalLock;
 #define GLOBAL_LOCK	   boost::mutex::scoped_lock writeLock( gGlobalLock );
@@ -14,7 +17,7 @@ namespace
     using namespace Alembic::AbcMaterial;
 }
 
-void getTags(IObject &iObj, std::vector<std::string> & tags, ProcArgs* args)
+void getTags(IObject iObj, std::vector<std::string> & tags, ProcArgs* args)
 {
     const MetaData &md = iObj.getMetaData();
 
@@ -52,7 +55,12 @@ void getTags(IObject &iObj, std::vector<std::string> & tags, ProcArgs* args)
         ICurvesSchema ms = curves.getSchema();
         arbGeomParams = ms.getArbGeomParams();
     }
-
+    else if ( ILight::matches( md ) )
+    {
+        ILight lights( iObj, kWrapExisting );
+        ILightSchema ms = lights.getSchema();
+        arbGeomParams = ms.getArbGeomParams();
+    }
 
     if ( arbGeomParams != NULL && arbGeomParams.valid() )
     {
@@ -86,7 +94,7 @@ void getTags(IObject &iObj, std::vector<std::string> & tags, ProcArgs* args)
 }
 
 
-void getAllTags(IObject &iObj, std::vector<std::string> & tags, ProcArgs* args)
+void getAllTags(IObject iObj, std::vector<std::string> & tags, ProcArgs* args)
 {
     while ( iObj )
     {
@@ -327,7 +335,16 @@ AtNode* createNetwork(IObject object, std::string prefix, ProcArgs & args)
         Mat::IMaterialSchema::NetworkNode abcnode = matObj.getSchema().getNetworkNode(i);
 
         std::string target = "<undefined>";
+        std::string nodeType = "<undefined>";
+        bool nodeArray = false;
+        
+        boost::regex expr ("(.*)\\[([\\d]+)\\]");
+        boost::smatch what;
         abcnode.getTarget(target);
+
+        std::map<std::string, std::vector<AtNode*>> nodeArrayConnections;
+        std::map<std::string, std::vector<AtNode*>>::iterator nodeArrayConnectionsIterator;
+
         if(target == "arnold")
         {
             size_t numConnections = abcnode.getNumConnections();
@@ -339,11 +356,64 @@ AtNode* createNetwork(IObject object, std::string prefix, ProcArgs & args)
                 {
                     if (abcnode.getConnection(j, inputName, connectedNodeName, connectedOutputName))
                     {
-                        AiMsgDebug("Linking %s.%s to %s.%s", connectedNodeName.c_str(), connectedOutputName.c_str(), abcnode.getName().c_str(), inputName.c_str());
-                        AiNodeLinkOutput(aShaders[connectedNodeName.c_str()], connectedOutputName.c_str(), aShaders[abcnode.getName().c_str()], inputName.c_str());
+                        nodeArray = false;
+                        if (boost::regex_search(inputName, what, expr))
+                        {
+                            std::string realInputName = what[1];
+                            int inputIndex = boost::lexical_cast<int>(what[2]);
+                            abcnode.getNodeType(nodeType);
+                            const AtNodeEntry * nentry = AiNodeEntryLookUp(nodeType.c_str());
+                            const AtParamEntry * pentry = AiNodeEntryLookUpParameter(nentry, realInputName.c_str());
+                            if(AiParamGetType(pentry) == AI_TYPE_ARRAY)
+                            {
+                                AtArray* parray = AiNodeGetArray(aShaders[abcnode.getName().c_str()], realInputName.c_str());
+                                if(parray->type == AI_TYPE_NODE)
+                                {
+                                    nodeArray = true;
+                                    std::vector<AtNode*> connArray;
+                                    nodeArrayConnectionsIterator = nodeArrayConnections.find(realInputName);
+                                    if(nodeArrayConnectionsIterator != nodeArrayConnections.end())
+                                        connArray = nodeArrayConnectionsIterator->second;
+                                    
+                                    if(connArray.size() < inputIndex+1)
+                                        connArray.resize(inputIndex+1);
+
+                                    connArray[inputIndex] = aShaders[connectedNodeName.c_str()];
+                                    nodeArrayConnections[realInputName] = connArray;
+
+                                }
+                            }
+                        }
+
+                        if(!nodeArray)
+                        {
+                            if(connectedOutputName.length() == 0)
+                            {
+                                AiMsgDebug("Linking %s to %s.%s", connectedNodeName.c_str(), abcnode.getName().c_str(), inputName.c_str());
+                                AiNodeLink(aShaders[connectedNodeName.c_str()], inputName.c_str(), aShaders[abcnode.getName().c_str()]);
+                            }
+                            else
+                            {
+                                AiMsgDebug("Linking %s.%s to %s.%s", connectedNodeName.c_str(), connectedOutputName.c_str(), abcnode.getName().c_str(), inputName.c_str());
+                                AiNodeLinkOutput(aShaders[connectedNodeName.c_str()], connectedOutputName.c_str(), aShaders[abcnode.getName().c_str()], inputName.c_str());
+                            }
+                        }
                     }
                 }
 
+                for (nodeArrayConnectionsIterator=nodeArrayConnections.begin(); nodeArrayConnectionsIterator!=nodeArrayConnections.end(); ++nodeArrayConnectionsIterator)
+                {
+                    AtArray* a = AiArray (nodeArrayConnectionsIterator->second.size(), 1, AI_TYPE_NODE);
+                    for(int n = 0; n < nodeArrayConnectionsIterator->second.size(); n++)
+                    {
+                        AiArraySetPtr(a, n, nodeArrayConnectionsIterator->second[n]);
+
+                    }
+                    AiNodeSetArray(aShaders[abcnode.getName().c_str()], nodeArrayConnectionsIterator->first.c_str(), a);
+
+                    nodeArrayConnectionsIterator->second.clear();
+                }
+                nodeArrayConnections.clear();
             }
         }
     }

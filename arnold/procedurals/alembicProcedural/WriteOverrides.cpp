@@ -76,16 +76,11 @@ void ApplyOverrides(std::string name, AtNode* node, std::vector<std::string> tag
             }
             
         }
-        else if(foundInPath == false)
+        //else if(foundInPath == false || pathSize != name.length())
         {
             if (std::find(tags.begin(), tags.end(), *it) != tags.end())
             {
-                std::string overridePath = *it;
-                if(overridePath.length() > pathSize)
-                {
-                    pathSize = overridePath.length();
-                    overrides = args.attributesRoot[*it];
-                }
+                overrides = args.attributesRoot[*it];
             }
         }
         if(overrides.size() > 0)
@@ -170,6 +165,7 @@ void ApplyOverrides(std::string name, AtNode* node, std::vector<std::string> tag
 AtNode* getShader(std::string name, std::vector<std::string> tags, ProcArgs & args)
 {
     bool foundInPath = false;
+    int pathSize = 0;
     AtNode* appliedShader = NULL;
     for(std::map<std::string, AtNode*>::iterator it = args.shaders.begin(); it != args.shaders.end(); ++it)
     {
@@ -178,19 +174,33 @@ AtNode* getShader(std::string name, std::vector<std::string> tags, ProcArgs & ar
         {
             if(isPathContainsInOtherPath(name, it->first))
             {
-                appliedShader = it->second;
                 foundInPath = true;
+                std::string shaderPath = it->first;
+                if(shaderPath.length() > pathSize)
+                {
+                    pathSize = shaderPath.length();
+                    appliedShader = it->second;
+                }
             }
         }
         else if(matchPattern(name,it->first)) // based on wildcard expression
         {
             appliedShader = it->second;
             foundInPath = true;
+            std::string shaderPath = it->first;
+            if(shaderPath.length() > pathSize)
+            {
+                pathSize = shaderPath.length();
+                appliedShader = it->second;
+            }
         }
-        else if(foundInPath == false)
+
+        //else if(foundInPath == false)
         {
             if (std::find(tags.begin(), tags.end(), it->first) != tags.end())
+            {
                 appliedShader = it->second;
+            }
         }
     }
 
