@@ -40,6 +40,7 @@
 #include <sstream>
 
 #include "json/json.h"
+#include "json/value.h"
 
 
 
@@ -98,6 +99,8 @@ void ApplyOverrides(std::string name, AtNode* node, std::vector<std::string> tag
                         AiNodeSetStr(node, attribute.c_str(), val.asCString());
                     else if( val.isBool() )
                         AiNodeSetBool(node, attribute.c_str(), val.asBool());
+                    else if ( val.type() == Json::realValue )
+                        AiNodeSetFlt(node, attribute.c_str(), val.asDouble());
                     else if( val.isInt() )
                     {
                         //make the difference between Byte & int!
@@ -153,8 +156,6 @@ void ApplyOverrides(std::string name, AtNode* node, std::vector<std::string> tag
                     }
                     else if( val.isUInt() )
                         AiNodeSetUInt(node, attribute.c_str(), val.asUInt());
-                    else if( val.isDouble() )
-                        AiNodeSetFlt(node, attribute.c_str(), val.asDouble());
                 }
             }
         }

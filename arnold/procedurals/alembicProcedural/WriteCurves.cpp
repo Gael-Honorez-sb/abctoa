@@ -46,6 +46,8 @@
 #include <ai.h>
 #include <sstream>
 
+#include "json/value.h"
+
 #include <boost/regex.hpp>
 // #include <boost/thread.hpp>
 //-*****************************************************************************
@@ -640,6 +642,8 @@ AtNode * ProcessCurvesBase(
                   AiNodeSetStr(curvesNode, attribute.c_str(), val.asCString());
                 else if( val.isBool() ) 
                   AiNodeSetBool(curvesNode, attribute.c_str(), val.asBool());
+                else if ( val.type() == Json::realValue )
+                  AiNodeSetFlt(curvesNode, attribute.c_str(), val.asDouble());
                 else if( val.isInt() ) 
                 {
                   //make the difference between Byte & int!
@@ -651,8 +655,6 @@ AtNode * ProcessCurvesBase(
                 }
                 else if( val.isUInt() ) 
                   AiNodeSetUInt(curvesNode, attribute.c_str(), val.asUInt());
-                else if( val.isDouble() ) 
-                  AiNodeSetFlt(curvesNode, attribute.c_str(), val.asDouble());
               }
             }
           }
