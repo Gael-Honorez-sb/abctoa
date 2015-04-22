@@ -33,36 +33,69 @@
 // OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 //
 //-*****************************************************************************
-#ifndef _Alembic_Arnold_WriteGeo_h_
-#define _Alembic_Arnold_WriteGeo_h_
 
-#include <Alembic/AbcGeom/All.h>
+#ifndef _Alembic_Arnold_ArchiveWalker_h_
+#define _Alembic_Arnold_ArchiveWalker_h_
 
 #include "ProcArgs.h"
 #include "SampleUtil.h"
 
+#include <Alembic/Abc/All.h>
+#include <Alembic/AbcCoreFactory/All.h>
+#include <Alembic/AbcGeom/All.h>
+
+#include <algorithm>
+#include <vector>
+
+//using namespace Alembic;
 using namespace Alembic::AbcGeom;
-//-*****************************************************************************
 
+namespace
+{
+    // Arnold scene build is single-threaded so we don't have to lock around
+    // access to this for now.
+    typedef std::vector<std::string> IObjects;
+    IObjects g_IObjects;
 
-std::string GetPolyMeshHash(IPolyMesh &polymesh, ProcArgs &args);
+}
 
-void ProcessPolyMesh( IPolyMesh &polymesh, ProcArgs &args);
+struct ArchiveAndData
+{
+    Abc::IArchive archive;
+    std::vector< Abc::IObject > instances;
+    std::vector< Abc::IObject > toExport;
+};
 
-void ProcessPolyMeshInstance( IPolyMesh &polymesh, ProcArgs &args,
-        MatrixSampleMap * xformSamples);
+class ArchiveWalker;
 
-/*void ProcessPolyMesh( IPolyMesh &polymesh, ProcArgs &args,
-        MatrixSampleMap * xformSamples);*/
+struct WorkUnit
+{
+    int start;
+    int end;
+    int archive;
+    ArchiveWalker * walker;
+};
 
-void ProcessSubD( ISubD &subd, ProcArgs &args,
-        MatrixSampleMap * xformSamples);
+class ArchiveWalker
+{
+    public:
 
-// void ProcessNuPatch( INuPatch &patch, ProcArgs &args );
-//
-//void ProcessPoints( IPoints &patch, ProcArgs &args );
-//
-//void ProcessCurves( ICurves &curves, ProcArgs &args );
+        ProcArgs *args;
+        std::vector< ArchiveAndData > mArchives;
 
+        void addArchive(Abc::IArchive iArchive);
+        void exportObjects(WorkUnit & data);
+        void exportInstances(WorkUnit & data);
+        void walkObjects(int iArchiveNum, Abc::IObject & iParent);
+        void walkArchives(WorkUnit & data);
+        void getXform(IObject & parent, MatrixSampleMap * xformSamples);
+        //size_t getNumObjects(int iArchiveNum) { return mArchives[iArchiveNum].objects.size(); };
+        
+
+};
+
+unsigned int walkArchivesWrap(void * ptr);
+unsigned int exportObjectsWrap(void * ptr);
+unsigned int exportInstancesWrap(void * ptr);
 
 #endif
