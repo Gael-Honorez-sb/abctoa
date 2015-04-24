@@ -51,11 +51,16 @@ bool isPathContainsInOtherPath(const std::string &path, const std::string &other
     if(jsonPathParts.size() > pathParts.size())
         return false;
 
+    unsigned int pathDifference = pathParts.size() - jsonPathParts.size();
+
     bool validPath = true;
-    for(int i = 0; i < jsonPathParts.size(); i++)
+    for(int i = jsonPathParts.size() - 1; i >= 0 ; i--)
     {
-        if(pathParts[i].compare(jsonPathParts[i]) != 0)
+        if(pathParts[i + pathDifference].compare(jsonPathParts[i]) != 0)
+        {
             validPath = false;
+            break;
+        }
     }
     if(validPath)
         return validPath;
