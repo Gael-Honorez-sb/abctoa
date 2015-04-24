@@ -105,14 +105,17 @@ void update(Json::Value& a, Json::Value& b) {
     }
 }
 
-void WalkObject( IObject & parent, const ObjectHeader &ohead, ProcArgs &args,
+void WalkObject( IObject & parent, const ObjectHeader &i_ohead, ProcArgs &args,
              PathList::const_iterator I, PathList::const_iterator E,
                     MatrixSampleMap * xformSamples)
 {
     //Accumulate transformation samples and pass along as an argument
     //to WalkObject
-    IObject nextParentObject;
+    IObject nextParentObject = parent.getChild(i_ohead.getName());
     std::auto_ptr<MatrixSampleMap> concatenatedXformSamples;
+
+    // Check for instances
+    const ObjectHeader& ohead = parent.isChildInstance(i_ohead.getName()) ? nextParentObject.getHeader() : i_ohead;
 
     if ( IXform::matches( ohead ) )
     {
@@ -248,7 +251,7 @@ void WalkObject( IObject & parent, const ObjectHeader &ohead, ProcArgs &args,
         AiMsgError("%s has MetaData: %s", ohead.getName().c_str(), ohead.getMetaData().serialize().c_str());
         if ( IXform::matches( ohead ) )
             AiMsgError("but we are matching");
-        nextParentObject = parent.getChild(ohead.getName());
+//        nextParentObject = parent.getChild(ohead.getName());
     }
 
     if ( nextParentObject.valid() )
