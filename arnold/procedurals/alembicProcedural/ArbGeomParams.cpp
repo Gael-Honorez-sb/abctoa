@@ -641,11 +641,32 @@ void AddArbitraryProceduralParams(AtNode* proc, AtNode * primNode)
         {
             continue;
         }
-        if ( !AiNodeDeclare( primNode, paramName, declStr.c_str() ) )
+
+        // Check if that attribute is not existing already as a standard attribute.
+
+        bool paramExists = false;
+
+        const AtNodeEntry *nentry = AiNodeGetNodeEntry(primNode);
+        AtParamIterator *piter = AiNodeEntryGetParamIterator(nentry);
+        while (!AiParamIteratorFinished(piter))
         {
-            //TODO, AiWarning
-            continue;
+            const AtParamEntry *pentry = AiParamIteratorGetNext(piter);
+            if (strcmp(paramName, AiParamGetName(pentry)) == 0)
+            {
+                paramExists = true;
+                break;
+            }
+
+        
         }
+        AiParamIteratorDestroy(piter);
+
+        if(!paramExists)
+            if ( !AiNodeDeclare( primNode, paramName, declStr.c_str() ) )
+            {
+                //TODO, AiWarning
+                continue;
+            }
 
         switch ( arnoldAPIType )
         {
