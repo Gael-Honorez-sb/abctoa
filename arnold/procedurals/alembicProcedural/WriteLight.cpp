@@ -239,6 +239,9 @@ void ProcessLight( ILight &light, ProcArgs &args,
     if (!light.valid())
         return;
 
+    std::string originalName = light.getFullName();
+    std::string name = args.nameprefix + originalName;
+
     SampleTimeSet sampleTimes;
 
     ILightSchema ps = light.getSchema();
@@ -252,6 +255,52 @@ void ProcessLight( ILight &light, ProcArgs &args,
     ICompoundProperty arbGeomParams = ps.getArbGeomParams();
     ISampleSelector frameSelector( *singleSampleTimes.begin() );
     bool gotType = false;
+
+    //get tags
+    std::vector<std::string> tags;
+    getAllTags(light, tags, &args);
+
+    // Checking if the light must be exported.
+    const PropertyHeader * lightIntensityHeader = arbGeomParams.getPropertyHeader("intensity");
+    if (IFloatGeomParam::matches( *lightIntensityHeader ))
+    {
+        IFloatGeomParam param( arbGeomParams,  "intensity" );
+        if ( param.valid() )
+        {
+            if ( param.getScope() == kConstantScope || param.getScope() == kUnknownScope)
+            {
+                IFloatGeomParam::prop_type::sample_ptr_type valueSample = param.getExpandedValue().getVals();
+                if(valueSample->get()[0] <= 0.0)
+                    return;
+            }
+        }
+    }
+
+    if(args.linkAttributes)
+    {
+        for(std::vector<std::string>::iterator it=args.attributes.begin(); it!=args.attributes.end(); ++it)
+        {
+            if(name.find(*it) != string::npos || std::find(tags.begin(), tags.end(), *it) != tags.end() || matchPattern(name,*it))
+            {
+                const Json::Value overrides = args.attributesRoot[*it];
+                if(overrides.size() > 0)
+                {
+                    for( Json::ValueIterator itr = overrides.begin() ; itr != overrides.end() ; itr++ )
+                    {
+                        std::string attribute = itr.key().asString();
+                        if (attribute=="intensity")
+                        {
+                            Json::Value val = args.attributesRoot[*it][itr.key().asString()];
+                            if (val.type() == Json::realValue )
+                              if(val.asDouble() <= 0.0)
+                                  return;
+                        }
+                    }
+                }
+            }
+        }
+    }
+
 
     AtNode * lightNode;
 
@@ -305,14 +354,8 @@ void ProcessLight( ILight &light, ProcArgs &args,
     if(!gotType)
         return;
 
-    std::string originalName = light.getFullName();
-    std::string name = args.nameprefix + originalName;
     
     AiNodeSetStr(lightNode, "name", name.c_str());
-
-  //get tags
-    std::vector<std::string> tags;
-    getAllTags(light, tags, &args);
 
 
     // adding arbitary parameters
@@ -320,6 +363,9 @@ void ProcessLight( ILight &light, ProcArgs &args,
             arbGeomParams,
             frameSelector,
             lightNode );
+
+    // adding attributes from procedural
+    AddArbitraryProceduralParams(args.proceduralNode, lightNode);
 
     bool useTemperature = false;
     float colorTemperature = 6500.0;
