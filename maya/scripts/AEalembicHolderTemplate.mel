@@ -89,6 +89,7 @@ global proc AEalembicHolderTemplate(string $nodeName)
         editorTemplate -ac "visibleInRefractions";
         editorTemplate -ac "visibleInReflections";
         editorTemplate -ac "aiOpaque";
+        editorTemplate -ac "aiMatte";
         editorTemplate -ac "overrideGlobalShader";
         editorTemplate -ac "aiTraceSets";
         editorTemplate -ac "aiSssSetname";
