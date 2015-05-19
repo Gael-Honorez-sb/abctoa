@@ -711,7 +711,7 @@ class ShaderManager(QMainWindow, UI_ABCHierarchy.Ui_NAM):
 
         if item.icon == 7 and self.propertyType != "points":
             self.propertyType = "points"
-            self.propertyEditor.resetTo(item.itemType)
+            self.propertyEditor.resetTo(item.itemType.lower())
 
         elif item.icon == 8 and self.propertyType != item.itemType:
             self.propertyType = item.itemType
