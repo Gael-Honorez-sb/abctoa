@@ -385,7 +385,7 @@ AtNode* writePoints(
         else
             widthParam.getExpanded(widthSamp, sampleSelector);
 
-
+        
         if(useVelocities && isFirstSample)
         {
             
@@ -399,21 +399,23 @@ AtNode* writePoints(
 
             for ( size_t pId = 0; pId < pSize; ++pId )
             {
-                Alembic::Abc::V3f posAtOpen = ((*v3ptr)[pId] + (*velptr)[pId] * scaleVelocity *-timeoffset);
-                AtPoint pos1;
-                pos1.x = posAtOpen.x;
-                pos1.y = posAtOpen.y;
-                pos1.z = posAtOpen.z;
-                vidxs[pId]= pos1;
+                if(pId <= velptr->size())
+                {
+                    Alembic::Abc::V3f posAtOpen = ((*v3ptr)[pId] + (*velptr)[pId] * scaleVelocity *-timeoffset);
+                    AtPoint pos1;
+                    pos1.x = posAtOpen.x;
+                    pos1.y = posAtOpen.y;
+                    pos1.z = posAtOpen.z;
+                    vidxs[pId]= pos1;
 
-                Alembic::Abc::V3f posAtEnd = ((*v3ptr)[pId] + (*velptr)[pId]* scaleVelocity *(1.0f-timeoffset));
-                AtPoint pos2;
-                pos2.x = posAtEnd.x;
-                pos2.y = posAtEnd.y;
-                pos2.z = posAtEnd.z;
-                vidxs[pId+pSize]= pos2;
-
-                if(widthSamp)
+                    Alembic::Abc::V3f posAtEnd = ((*v3ptr)[pId] + (*velptr)[pId]* scaleVelocity *(1.0f-timeoffset));
+                    AtPoint pos2;
+                    pos2.x = posAtEnd.x;
+                    pos2.y = posAtEnd.y;
+                    pos2.z = posAtEnd.z;
+                    vidxs[pId+pSize]= pos2;
+                }
+                if(widthSamp && pId <= widthSamp.getVals()->size())
                     radius.push_back((*widthSamp.getVals())[pId] * radiusPoint);
                 else
                     radius.push_back(radiusPoint);
