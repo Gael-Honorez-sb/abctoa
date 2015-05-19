@@ -62,11 +62,18 @@ void CABCViewerTranslator::ProcessRenderFlagsCustom(AtNode* node)
     AiNodeSetByte(node, "visibility", ComputeVisibility());
 
     MPlug plug;
- 
-    ProcessParameter(node, "self_shadows", AI_TYPE_BOOLEAN, "aiSelfShadows");
-    ProcessParameter(node, "opaque", AI_TYPE_BOOLEAN, "aiOpaque");
-    ProcessParameter(node, "matte", AI_TYPE_BOOLEAN, "aiMatte");
-    ProcessParameter(node, "receive_shadows", AI_TYPE_BOOLEAN, "receiveShadows");
+
+    if(m_DagNode.findPlug("aiSelfShadows").asBool() == false)
+          ProcessParameter(node, "self_shadows", AI_TYPE_BOOLEAN, "aiSelfShadows");
+
+    if(m_DagNode.findPlug("aiOpaque").asBool() == false)
+          ProcessParameter(node, "opaque", AI_TYPE_BOOLEAN, "aiOpaque");
+
+        if(m_DagNode.findPlug("aiMatte").asBool() == true)
+          ProcessParameter(node, "matte", AI_TYPE_BOOLEAN, "aiMatte");
+
+    if(m_DagNode.findPlug("receiveShadows").asBool() == false)
+          ProcessParameter(node, "receive_shadows", AI_TYPE_BOOLEAN, "receiveShadows");
     MStatus status;
 
     plug = FindMayaPlug("aiSssSetname", &status);
