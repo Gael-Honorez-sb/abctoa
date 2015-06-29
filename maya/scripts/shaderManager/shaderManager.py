@@ -176,8 +176,8 @@ class ShaderManager(QMainWindow, UI_ABCHierarchy.Ui_NAM):
         self.propertyEditor.resetToDefault()
 
         self.curPath = ""
-        self.ABCcurPath = ""        
-        
+        self.ABCcurPath = ""
+
         self.shadersFromFile = []
         self.displaceFromFile = []
         self.ABCViewerNode = {}
@@ -190,7 +190,7 @@ class ShaderManager(QMainWindow, UI_ABCHierarchy.Ui_NAM):
 
         self.tags = {}
         self.getNode()
-        self.getCache()   
+        self.getCache()
         self.updateTags()
         self.populate()
         self.thisTagItem = None
@@ -198,13 +198,11 @@ class ShaderManager(QMainWindow, UI_ABCHierarchy.Ui_NAM):
 
         self.lastClick = -1
 
-        self.propertyEditing = False    
+        self.propertyEditing = False
         self.refreshShaders()
 
         self.renderLayer.currentIndexChanged.connect(self.layerChanged)
         self.propertyEditor.propertyChanged.connect(self.propertyChanged)
-        
-
         
     def filterShader(self, text):
         '''
@@ -515,12 +513,11 @@ class ShaderManager(QMainWindow, UI_ABCHierarchy.Ui_NAM):
             for cache in self.ABCViewerNode.values():
                 cache.setSelection("")
             print "removing callbacks"
-            MMessage.removeCallback( self.newNodeCBMsgId )
-            MMessage.removeCallback( self.delNodeCBMsgId )
-            MNodeMessage.removeCallback( self.NodeNameMsgId )
+            MMessage.removeCallback(self.newNodeCBMsgId)
+            MMessage.removeCallback(self.delNodeCBMsgId)
+            MNodeMessage.removeCallback(self.NodeNameMsgId)
         except:
             pass
-
 
     def closeEvent(self, event):
         event.ignore()
@@ -529,18 +526,20 @@ class ShaderManager(QMainWindow, UI_ABCHierarchy.Ui_NAM):
 
     def clearing(self):
         self.clearCBs()
-
-        MMessage.removeCallback( self.afterNewSceneCBId )
-        MMessage.removeCallback( self.afterOpenSceneCBId )
-
+        MMessage.removeCallback(self.afterNewSceneCBId)
+        MMessage.removeCallback(self.afterOpenSceneCBId)
 
     def setCurrentLayer(self):
-        curLayer = cmds.editRenderLayerGlobals(query=1, currentRenderLayer=1)
-        curLayeridx = self.renderLayer.findText(curLayer)
-        if curLayeridx != -1:
-            self.renderLayer.setCurrentIndex(curLayeridx)
-        self.curLayer = curLayer
-
+        curLayer = None
+        try:
+            curLayer = cmds.editRenderLayerGlobals(query=1, currentRenderLayer=1)
+        except:
+            curLayer = "defaultRenderLayer"
+        if curLayer:
+            curLayeridx = self.renderLayer.findText(curLayer)
+            if curLayeridx != -1:
+                self.renderLayer.setCurrentIndex(curLayeridx)
+            self.curLayer = curLayer
 
     def layerChanged(self, index):
 
