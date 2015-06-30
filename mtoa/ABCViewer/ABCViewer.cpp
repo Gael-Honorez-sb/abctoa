@@ -140,15 +140,10 @@ AtNode* CABCViewerTranslator::ExportProcedural(AtNode* procedural, bool update)
         abcfile = fileObject.resolvedFullName();
 
 
-        MTime timeEvaluation = MTime(GetExportFrame(), MTime::uiUnit());
-        MTime timePlug, timeOffset;
-		MDGContext context = MDGContext (timeEvaluation);
-		
-		m_DagNode.findPlug("time").getValue(timePlug, context);
-		m_DagNode.findPlug("timeOffset").getValue(timeOffset, context);
+        //MTime timeEvaluation = MTime(GetExportFrame(), MTime::uiUnit());
+        //MDGContext context = MDGContext (timeEvaluation);
 
-		timePlug += timeOffset;
-
+        MTime time = m_DagNode.findPlug("time").asMTime() + m_DagNode.findPlug("timeOffset").asMTime();
 
         MPlug objectPath = m_DagNode.findPlug("cacheGeomPath");
 
@@ -305,7 +300,7 @@ AtNode* CABCViewerTranslator::ExportProcedural(AtNode* procedural, bool update)
         fps = sec.as(MTime::uiUnit());
 
         MString data;
-        data += "-filename " +  abcfile + " -objectpath " + MString(objectPathStr.c_str()) + " -nameprefix " + m_dagPath.partialPathName() + " -frame " + timePlug.as(timePlug.unit()) + " -fps " + fps;
+        data += "-filename " +  abcfile + " -objectpath " + MString(objectPathStr.c_str()) + " -nameprefix " + m_dagPath.partialPathName() + " -frame " + time.as(time.unit()) + " -fps " + fps;
 
         AiNodeSetStr(procedural, "data", data.expandEnvironmentVariablesAndTilde().asChar());
 
