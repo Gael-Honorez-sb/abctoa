@@ -211,18 +211,16 @@ void AlembicHolderOverride::draw(const MHWRender::MDrawContext& context, const M
         glLoadMatrixd(transform.matrix[0]);
 
         nozAlembicHolder* shapeNode = data->fShapeNode;
-
-        std::string sceneKey = shapeNode->getSceneKey();
-        CAlembicDatas* cache = shapeNode->alembicData();
-        std::string selectionKey = shapeNode->getSelectionKey();
+		CAlembicDatas* cache = shapeNode->alembicData();
+       
 
         
         bool forceBoundingBox = (cache->m_bbextendedmode && data->fIsSelected == false);
-        if(selectionKey == "" && forceBoundingBox)
+		if(cache->m_currselectionkey == "" && forceBoundingBox)
             displayStyle = 0;
 
         // draw bounding box
-        if(selectionKey != "" || displayStyle == 0 || cache->abcSceneManager.hasKey(sceneKey) == false)
+		if(cache->m_currselectionkey != "" || displayStyle == 0 || cache->abcSceneManager.hasKey(cache->m_currscenekey) == false)
         {
 
             MBoundingBox box = shapeNode->boundingBox();
@@ -302,11 +300,11 @@ void AlembicHolderOverride::draw(const MHWRender::MDrawContext& context, const M
             {
                 glColor3fv(data->fWireframeColor);
                 glPolygonMode(GL_FRONT_AND_BACK, MGL_LINE);
-                if (cache->abcSceneManager.hasKey(sceneKey))
-                    if(selectionKey != "")
-                        cache->abcSceneManager.getScene(sceneKey)->drawOnly(cache->abcSceneState, selectionKey, std::map<std::string, MColor>());
+                if (cache->abcSceneManager.hasKey(cache->m_currscenekey))
+					if(cache->m_currselectionkey != "")
+                        cache->abcSceneManager.getScene(cache->m_currscenekey)->drawOnly(cache->abcSceneState, cache->m_currselectionkey, std::map<std::string, MColor>());
                     else
-                        cache->abcSceneManager.getScene(sceneKey)->draw(cache->abcSceneState, std::map<std::string, MColor>());
+                        cache->abcSceneManager.getScene(cache->m_currscenekey)->draw(cache->abcSceneState, std::map<std::string, MColor>());
                 glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
             }
         }
@@ -330,20 +328,20 @@ void AlembicHolderOverride::draw(const MHWRender::MDrawContext& context, const M
             }
             glEnable(MGL_CULL_FACE);
             glCullFace(MGL_FRONT);
-            if (cache->abcSceneManager.hasKey(sceneKey))
+            if (cache->abcSceneManager.hasKey(cache->m_currscenekey))
             {
-                if(selectionKey != "")
-                    cache->abcSceneManager.getScene(sceneKey)->drawOnly(cache->abcSceneState, selectionKey, cache->shaderColors, true);
+                if(cache->m_currselectionkey != "")
+                    cache->abcSceneManager.getScene(cache->m_currscenekey)->drawOnly(cache->abcSceneState, cache->m_currselectionkey, cache->shaderColors, true);
                 else
-                    cache->abcSceneManager.getScene(sceneKey)->draw(cache->abcSceneState, cache->shaderColors, true);
+                    cache->abcSceneManager.getScene(cache->m_currscenekey)->draw(cache->abcSceneState, cache->shaderColors, true);
             }
             glCullFace(MGL_BACK);
-            if (cache->abcSceneManager.hasKey(sceneKey))
+            if (cache->abcSceneManager.hasKey(cache->m_currscenekey))
             {
-                if(selectionKey != "")
-                    cache->abcSceneManager.getScene(sceneKey)->drawOnly(cache->abcSceneState, selectionKey, cache->shaderColors, false);
+                if(cache->m_currselectionkey != "")
+                    cache->abcSceneManager.getScene(cache->m_currscenekey)->drawOnly(cache->abcSceneState, cache->m_currselectionkey, cache->shaderColors, false);
                 else
-                    cache->abcSceneManager.getScene(sceneKey)->draw(cache->abcSceneState, cache->shaderColors, false);
+                    cache->abcSceneManager.getScene(cache->m_currscenekey)->draw(cache->abcSceneState, cache->shaderColors, false);
             }
             glDisable(MGL_CULL_FACE);
 

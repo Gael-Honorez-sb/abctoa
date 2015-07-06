@@ -56,6 +56,7 @@ public:
     int token;
     bool m_abcdirty;
     std::string m_currscenekey;
+	std::string m_currselectionkey;
     bool m_bbextendedmode;
     double time;
 
