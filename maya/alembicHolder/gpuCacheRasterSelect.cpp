@@ -109,7 +109,7 @@ void RasterSelect::processEdges(
         DrawWireframeState state(frustum, seconds);
         DrawWireframeTraversal traveral(state, xform, false, Frustum::kUnknown);
         rootNode->accept(traveral);*/
-        geom->abcSceneManager.getScene(sceneKey)->draw(geom->abcSceneState, std::map<std::string, MColor>());
+		geom->abcSceneManager.getScene(sceneKey)->draw(geom->abcSceneState, geom->m_currselectionkey, std::map<std::string, MColor>());
     }
 }
 
@@ -138,7 +138,7 @@ void RasterSelect::processTriangles(
         DrawShadedState state(frustum, seconds);
         DrawShadedTraversal traveral(state, xform, false, Frustum::kUnknown);
         rootNode->accept(traveral);*/
-        geom->abcSceneManager.getScene(sceneKey)->draw(geom->abcSceneState, std::map<std::string, MColor>());
+		geom->abcSceneManager.getScene(sceneKey)->draw(geom->abcSceneState, geom->m_currselectionkey, std::map<std::string, MColor>());
     }
 }
 

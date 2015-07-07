@@ -183,7 +183,7 @@ int Scene::getNumTriangles() const
 
 
 //-*****************************************************************************
-void Scene::draw( SceneState &s_state, std::map<std::string, MColor> shaderColors, bool flippedNormal)
+void Scene::draw( SceneState &s_state, std::string selection, std::map<std::string, MColor> shaderColors, bool flippedNormal)
 {
 
    static MGLFunctionTable *gGLFT = NULL;
@@ -194,12 +194,6 @@ void Scene::draw( SceneState &s_state, std::map<std::string, MColor> shaderColor
                  m_drawable && m_drawable->valid(),
                  "Invalid Scene: " << m_fileName );
 
-//    glDrawBuffer( GL_BACK );
-//    s_state.cam.apply();
-
-//    glEnable( GL_LIGHTING );
-//    setMaterials( 1.0, true );
-
     // Get the matrix
     M44d currentMatrix;
     gGLFT->glGetDoublev( MGL_MODELVIEW_MATRIX, ( MGLdouble * )&(currentMatrix[0][0]) );
@@ -207,43 +201,12 @@ void Scene::draw( SceneState &s_state, std::map<std::string, MColor> shaderColor
     DrawContext dctx;
     dctx.setWorldToCamera( currentMatrix );
     dctx.setPointSize( s_state.pointSize );
-    dctx.setSelection("");
+    dctx.setSelection(selection);
     dctx.setShaderColors(shaderColors);
     dctx.setNormalFlipped(flippedNormal);
 
     m_drawable->draw( dctx );
 
 }
-
-void Scene::drawOnly( SceneState &s_state, std::string selection, std::map<std::string, MColor> shaderColors, bool flippedNormal)
-{
-       static MGLFunctionTable *gGLFT = NULL;
-       if (gGLFT == NULL)
-          gGLFT = MHardwareRenderer::theRenderer()->glFunctionTable();
-
-       ABCA_ASSERT( m_archive && m_topObject &&
-                     m_drawable && m_drawable->valid(),
-                     "Invalid Scene: " << m_fileName );
-
-    //    glDrawBuffer( GL_BACK );
-    //    s_state.cam.apply();
-
-    //    glEnable( GL_LIGHTING );
-    //    setMaterials( 1.0, true );
-
-        // Get the matrix
-        M44d currentMatrix;
-        gGLFT->glGetDoublev( MGL_MODELVIEW_MATRIX, ( MGLdouble * )&(currentMatrix[0][0]) );
-
-        DrawContext dctx;
-        dctx.setWorldToCamera( currentMatrix );
-        dctx.setPointSize( s_state.pointSize );
-        dctx.setSelection(selection);
-        dctx.setShaderColors(shaderColors);
-        dctx.setNormalFlipped(flippedNormal);
-        m_drawable->draw( dctx );
-
-}
-
 
 } // End namespace SimpleAbcViewer
