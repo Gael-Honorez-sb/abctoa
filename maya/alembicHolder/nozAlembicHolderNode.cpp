@@ -578,9 +578,6 @@ void CAlembicHolderUI::getDrawRequests(const MDrawInfo & info,
 
 void CAlembicHolderUI::draw(const MDrawRequest & request, M3dView & view) const
 {
-
-	
-
     int token = request.token();
 
     M3dView::DisplayStatus displayStatus = request.displayStatus();
@@ -592,20 +589,12 @@ void CAlembicHolderUI::draw(const MDrawRequest & request, M3dView & view) const
     CAlembicDatas * cache = (CAlembicDatas*) data.geometry();
 
     bool refresh = cache->m_abcdirty;
-    bool forceBoundingBox = (cache->m_bbextendedmode && cacheSelected == false);
+    bool forceBoundingBox = cache->m_bbextendedmode && cacheSelected == false;
+	bool selectionMode = cache->m_currselectionkey.size() != 0; 
 
     int oldToken = cache->token;
 
     cache->token = token;
-
-
-    if(cache->m_currselectionkey.size() != 0)
-        token = kDrawBoundingBox;
-    else if(forceBoundingBox)
-        token = kDrawBoundingBox;
-	
-	
-
     view.beginGL();
 
     // Setup the OpenGL state as necessary
@@ -618,7 +607,7 @@ void CAlembicHolderUI::draw(const MDrawRequest & request, M3dView & view) const
 
     // handling refreshes
     GLuint glcache = -1;
-    if(token == kDrawBoundingBox)
+    if( token == kDrawBoundingBox || forceBoundingBox || selectionMode )
     {
         NodeCache::iterator I = g_bboxCache.find(cache->m_currscenekey);
         if (I == g_bboxCache.end())
@@ -638,56 +627,37 @@ void CAlembicHolderUI::draw(const MDrawRequest & request, M3dView & view) const
             glEndList();
             g_bboxCache[cache->m_currscenekey] = glcache;
         }
-    }
 
+		glCallList(glcache);
+    }
+	
+	if (forceBoundingBox)
+		return;
+	
     switch (token)
     {
-    case kDrawBoundingBox :
-        glCallList(glcache);
-        break;
-
-    case kDrawWireframe:
-    case kDrawWireframeOnShaded:
-        if (cache->abcSceneManager.hasKey(cache->m_currscenekey))
-        {
-            gGLFT->glPolygonMode(GL_FRONT_AND_BACK, MGL_LINE);
-            gGLFT->glPushMatrix();
-			cache->abcSceneManager.getScene(cache->m_currscenekey)->draw(cache->abcSceneState, std::map<std::string, MColor>());
-            gGLFT->glPopMatrix();
-            gGLFT->glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-
-        }
-        else
-            drawBoundingBox( request, view );
-        break;
-    case kDrawSmoothShaded:
-    case kDrawFlatShaded:
-        if (cache->abcSceneManager.hasKey(cache->m_currscenekey))
-            drawingMeshes(cache->m_currscenekey, cache, "");
-        else
-            drawBoundingBox( request, view );
-        break;
-    }
-
-    if(cache->m_currselectionkey.size() != 0 && cache->abcSceneManager.hasKey(cache->m_currscenekey))
-    {
-        switch (cache->token)
-        {
-        case kDrawBoundingBox :
-            break;
-        case kDrawWireframe:
-        case kDrawWireframeOnShaded:
-            gGLFT->glPolygonMode(GL_FRONT_AND_BACK, MGL_LINE);
-            gGLFT->glPushMatrix();
-            cache->abcSceneManager.getScene(cache->m_currscenekey)->drawOnly(cache->abcSceneState, cache->m_currselectionkey, std::map<std::string, MColor>());
-            gGLFT->glPopMatrix();
-            gGLFT->glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-            break;
-        case kDrawSmoothShaded:
-        case kDrawFlatShaded:
-            drawingMeshes(cache->m_currscenekey, cache, cache->m_currselectionkey);
-            break;
-        }
+		case kDrawBoundingBox :
+			break;
+		case kDrawWireframe:
+		case kDrawWireframeOnShaded:
+			if (cache->abcSceneManager.hasKey(cache->m_currscenekey))
+			{
+				gGLFT->glPolygonMode(GL_FRONT_AND_BACK, MGL_LINE);
+				gGLFT->glPushMatrix();
+				cache->abcSceneManager.getScene(cache->m_currscenekey)->draw(cache->abcSceneState, cache->m_currselectionkey, std::map<std::string, MColor>());
+				gGLFT->glPopMatrix();
+				gGLFT->glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+			}
+			else
+				drawBoundingBox( request, view );
+			break;
+		case kDrawSmoothShaded:
+		case kDrawFlatShaded:
+			if (cache->abcSceneManager.hasKey(cache->m_currscenekey))
+				drawingMeshes(cache->m_currscenekey, cache, cache->m_currselectionkey);
+			else
+				drawBoundingBox( request, view );
+			break;
     }
 
     cache->m_abcdirty = false;
@@ -721,25 +691,14 @@ void CAlembicHolderUI::drawingMeshes( std::string sceneKey, CAlembicDatas * cach
         glEnable(MGL_CULL_FACE);
         glLightModeli(MGL_LIGHT_MODEL_TWO_SIDE, 0);
         glCullFace(MGL_FRONT);
-		if(selectionKey.size() != 0)
-            cache->abcSceneManager.getScene(sceneKey)->drawOnly(cache->abcSceneState, selectionKey, cache->shaderColors, true);
-        else
-            cache->abcSceneManager.getScene(sceneKey)->draw(cache->abcSceneState, cache->shaderColors, true);
+		cache->abcSceneManager.getScene(sceneKey)->draw(cache->abcSceneState, selectionKey, cache->shaderColors, true);
         glCullFace(MGL_BACK);
-        if(selectionKey.size() != 0)
-            cache->abcSceneManager.getScene(sceneKey)->drawOnly(cache->abcSceneState, selectionKey, cache->shaderColors, false);
-        else
-            cache->abcSceneManager.getScene(sceneKey)->draw(cache->abcSceneState, cache->shaderColors, false);
+        cache->abcSceneManager.getScene(sceneKey)->draw(cache->abcSceneState, selectionKey, cache->shaderColors, false);
         gGLFT->glLightModeli(MGL_LIGHT_MODEL_TWO_SIDE, 1);
         glDisable(MGL_CULL_FACE);
     }
     else
-    {
-       if(selectionKey.size() != 0)
-            cache->abcSceneManager.getScene(sceneKey)->drawOnly(cache->abcSceneState, selectionKey, cache->shaderColors, true);
-        else
-            cache->abcSceneManager.getScene(sceneKey)->draw(cache->abcSceneState, cache->shaderColors, true);
-    }
+		cache->abcSceneManager.getScene(sceneKey)->draw(cache->abcSceneState, selectionKey, cache->shaderColors, true);
 
     glDisable(MGL_POLYGON_OFFSET_FILL);
     glFrontFace(MGL_CCW);
