@@ -90,13 +90,7 @@ MObject nozAlembicHolder::aForceReload;
 
 // for bbox
 MObject nozAlembicHolder::aBoundMin;
-MObject nozAlembicHolder::aBoundMinX;
-MObject nozAlembicHolder::aBoundMinY;
-MObject nozAlembicHolder::aBoundMinZ;
 MObject nozAlembicHolder::aBoundMax;
-MObject nozAlembicHolder::aBoundMaxX;
-MObject nozAlembicHolder::aBoundMaxY;
-MObject nozAlembicHolder::aBoundMaxZ;
 
 
 SimpleAbcViewer::SceneState CAlembicDatas::abcSceneState;
@@ -319,35 +313,11 @@ MStatus nozAlembicHolder::initialize() {
     nAttr.setDefault(false);
     nAttr.setKeyable(false);
 
-    aBoundMinX = nAttr.create( "outBoundMinX", "obminx", MFnNumericData::kFloat, 0, &stat);
+    aBoundMin = nAttr.create( "MinBoundingBox", "min", MFnNumericData::k3Float, -1.0, &stat);
     nAttr.setWritable( false );
     nAttr.setStorable( false );
 
-    aBoundMinY = nAttr.create( "outBoundMinY", "cobminy", MFnNumericData::kFloat, 0, &stat );
-    nAttr.setWritable( false );
-    nAttr.setStorable( false );
-
-    aBoundMinZ = nAttr.create( "outBoundMinZ", "obminz", MFnNumericData::kFloat, 0, &stat );
-    nAttr.setWritable( false );
-    nAttr.setStorable( false );
-
-    aBoundMin = nAttr.create( "outBoundMin", "obmin", aBoundMinX, aBoundMinY, aBoundMinZ, &stat );
-    nAttr.setWritable( false );
-    nAttr.setStorable( false );
-
-    aBoundMaxX = nAttr.create( "outBoundMaxX", "obmaxx", MFnNumericData::kFloat, 0, &stat );
-    nAttr.setWritable( false );
-    nAttr.setStorable( false );
-
-    aBoundMaxY = nAttr.create( "outBoundMaxY", "cobmaxy", MFnNumericData::kFloat, 0, &stat );
-    nAttr.setWritable( false );
-    nAttr.setStorable( false );
-
-    aBoundMaxZ = nAttr.create( "outBoundMaxZ", "obmaxz", MFnNumericData::kFloat, 0, &stat );
-    nAttr.setWritable( false );
-    nAttr.setStorable( false );
-
-    aBoundMax = nAttr.create( "outBoundMax", "obmax", aBoundMaxX, aBoundMaxY, aBoundMaxZ, &stat );
+    aBoundMax = nAttr.create( "MaxBoundingBox", "ma", MFnNumericData::k3Float, 1.0, &stat );
     nAttr.setWritable( false );
     nAttr.setStorable( false );
 
@@ -488,6 +458,12 @@ MStatus nozAlembicHolder::compute( const MPlug& plug, MDataBlock& block )
                 bb = CAlembicDatas::abcSceneManager.getScene(key)->getBounds();
                 fGeometry.bbox.expand(MPoint(bb.min.x, bb.min.y, bb.min.z));
                 fGeometry.bbox.expand(MPoint(bb.max.x, bb.max.y, bb.max.z));
+
+
+				block.outputValue(aBoundMin).set3Float(bb.min.x, bb.min.y, bb.min.z);
+				block.outputValue(aBoundMax).set3Float(bb.max.x, bb.max.y, bb.max.z);
+
+
                 // notify viewport 2.0 that we are dirty
                 MHWRender::MRenderer::setGeometryDrawDirty(thisMObject());
 
@@ -1049,13 +1025,10 @@ bool CAlembicHolderUI::select(MSelectInfo &selectInfo,
         return true;
     }
 
-
-    std::string sceneKey = shapeNode->getSceneKey();
-
     GLfloat minZ;
     Select* selector;
 
-    SimpleAbcViewer::ScenePtr _ptr = geom->abcSceneManager.getScene(sceneKey);
+	SimpleAbcViewer::ScenePtr _ptr = geom->abcSceneManager.getScene(geom->m_currscenekey);
     size_t numTriangles = _ptr->getNumTriangles();
     const unsigned int bufferSize = (unsigned int)std::min(numTriangles,(size_t)100000);
         
@@ -1064,7 +1037,7 @@ bool CAlembicHolderUI::select(MSelectInfo &selectInfo,
     else
         selector = new RasterSelect(selectInfo);
 
-    selector->processTriangles(geom, sceneKey, numTriangles);
+    selector->processTriangles(geom, geom->m_currscenekey, numTriangles);
         
     selector->end();
     minZ = selector->minZ();

@@ -111,16 +111,26 @@ MBoundingBox AlembicHolderOverride::boundingBox(
         const MDagPath& objPath,
         const MDagPath& cameraPath) const
 {
-    MBoundingBox bbox = MBoundingBox(MPoint(-1.0f, -1.0f, -1.0f), MPoint(1.0f, 1.0f, 1.0f));
-
+    
+	MBoundingBox bbox; 
     MStatus status;
-    MFnDependencyNode node(objPath.node(), &status);
+    MFnDependencyNode depNode(objPath.node(), &status);
     if (status)
     {
-        CAlembicDatas* geom = dynamic_cast<nozAlembicHolder*>(node.userNode())->alembicData();
-        if(geom != NULL)
-            bbox = geom->bbox;
+		bbox.expand(MPoint(
+			depNode.findPlug("MinBoundingBox0").asFloat(),
+			depNode.findPlug("MinBoundingBox1").asFloat(),
+			depNode.findPlug("MinBoundingBox2").asFloat(), 1.0));
+
+		bbox.expand(MPoint(
+			depNode.findPlug("MaxBoundingBox0").asFloat(),
+			depNode.findPlug("MaxBoundingBox1").asFloat(),
+			depNode.findPlug("MaxBoundingBox2").asFloat(), 1.0));
     }
+	else
+		return MBoundingBox(MPoint(-1.0f, -1.0f, -1.0f), MPoint(1.0f, 1.0f, 1.0f));
+
+
     return bbox;
 
 }
@@ -212,23 +222,22 @@ void AlembicHolderOverride::draw(const MHWRender::MDrawContext& context, const M
 
         nozAlembicHolder* shapeNode = data->fShapeNode;
 		CAlembicDatas* cache = shapeNode->alembicData();
-       
 
-        
         bool forceBoundingBox = (cache->m_bbextendedmode && data->fIsSelected == false);
-		if(cache->m_currselectionkey == "" && forceBoundingBox)
-            displayStyle = 0;
+		if(cache->m_currselectionkey.size() == 0 && forceBoundingBox)
+            displayStyle = MHWRender::MFrameContext::kBoundingBox;
 
         // draw bounding box
-		if(cache->m_currselectionkey != "" || displayStyle == 0 || cache->abcSceneManager.hasKey(cache->m_currscenekey) == false)
+		if(cache->m_currselectionkey.size() != 0 || displayStyle == MHWRender::MFrameContext::kBoundingBox || cache->abcSceneManager.hasKey(cache->m_currscenekey) == false)
         {
-
             MBoundingBox box = shapeNode->boundingBox();
             float w = (float) box.width();
             float h = (float) box.height();
             float d = (float) box.depth();
 
             {
+				glColor3fv(data->fWireframeColor);
+
                 // Query current state so it can be restored
                 //
                 bool lightingWasOn = glIsEnabled( MGL_LIGHTING ) == MGL_TRUE;
@@ -294,14 +303,14 @@ void AlembicHolderOverride::draw(const MHWRender::MDrawContext& context, const M
 
         }
 
-        if(displayStyle != 0)
+        if(displayStyle != MHWRender::MFrameContext::kBoundingBox)
         {
             if(displayStyle & MHWRender::MDrawContext::kWireFrame || data->fIsSelected)
             {
                 glColor3fv(data->fWireframeColor);
                 glPolygonMode(GL_FRONT_AND_BACK, MGL_LINE);
                 if (cache->abcSceneManager.hasKey(cache->m_currscenekey))
-					if(cache->m_currselectionkey != "")
+					if(cache->m_currselectionkey.size() != 0)
                         cache->abcSceneManager.getScene(cache->m_currscenekey)->drawOnly(cache->abcSceneState, cache->m_currselectionkey, std::map<std::string, MColor>());
                     else
                         cache->abcSceneManager.getScene(cache->m_currscenekey)->draw(cache->abcSceneState, std::map<std::string, MColor>());
@@ -330,7 +339,7 @@ void AlembicHolderOverride::draw(const MHWRender::MDrawContext& context, const M
             glCullFace(MGL_FRONT);
             if (cache->abcSceneManager.hasKey(cache->m_currscenekey))
             {
-                if(cache->m_currselectionkey != "")
+                if(cache->m_currselectionkey.size() != 0)
                     cache->abcSceneManager.getScene(cache->m_currscenekey)->drawOnly(cache->abcSceneState, cache->m_currselectionkey, cache->shaderColors, true);
                 else
                     cache->abcSceneManager.getScene(cache->m_currscenekey)->draw(cache->abcSceneState, cache->shaderColors, true);
@@ -338,7 +347,7 @@ void AlembicHolderOverride::draw(const MHWRender::MDrawContext& context, const M
             glCullFace(MGL_BACK);
             if (cache->abcSceneManager.hasKey(cache->m_currscenekey))
             {
-                if(cache->m_currselectionkey != "")
+                if(cache->m_currselectionkey.size() != 0)
                     cache->abcSceneManager.getScene(cache->m_currscenekey)->drawOnly(cache->abcSceneState, cache->m_currselectionkey, cache->shaderColors, false);
                 else
                     cache->abcSceneManager.getScene(cache->m_currscenekey)->draw(cache->abcSceneState, cache->shaderColors, false);

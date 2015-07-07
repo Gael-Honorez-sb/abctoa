@@ -123,13 +123,7 @@ private:
     static    MObject    aForceReload;
     static    MObject    aUpdateCache;
     static    MObject    aBoundMin;
-    static    MObject    aBoundMinX;
-    static    MObject    aBoundMinY;
-    static    MObject    aBoundMinZ;
     static    MObject    aBoundMax;
-    static    MObject    aBoundMaxX;
-    static    MObject    aBoundMaxY;
-    static    MObject    aBoundMaxZ;
 
 public:
     static  MTypeId     id;
