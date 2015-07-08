@@ -106,7 +106,12 @@ void IPolyMeshDrw::setTime( chrono_t iSeconds )
 		for (std::map<double, MeshDrwHelper>::iterator iter = m_drwHelpers.begin(); iter != m_drwHelpers.end(); ++iter) 
 			iter->second.makeInvalid();
 
+		for (std::map<double, Box3d>::iterator iter = m_bounds.begin(); iter != m_bounds.end(); ++iter) 
+			iter->second.makeEmpty();
+
 		m_drwHelpers.clear();
+		m_bounds.clear();
+
 		m_currentFrame = MAnimControl::currentTime().value();
 	}
 
@@ -170,17 +175,17 @@ void IPolyMeshDrw::setTime( chrono_t iSeconds )
 
         }
 
-        m_bounds.makeEmpty();
+        m_bounds[iSeconds].makeEmpty();
         m_needtoupdate = true;
     }
 }
 
 Box3d IPolyMeshDrw::getBounds()
 {
-    if(m_bounds.isEmpty())
-        m_bounds = m_boundsProp.getValue( m_ss );
+    if(m_bounds[m_currentTime].isEmpty())
+        m_bounds[m_currentTime] = m_boundsProp.getValue( m_ss );
 
-    return m_bounds;
+    return m_bounds[m_currentTime];
 }
 
 

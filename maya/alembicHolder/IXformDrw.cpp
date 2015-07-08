@@ -87,74 +87,52 @@ bool IXformDrw::valid()
 //-*****************************************************************************
 void IXformDrw::setTime( chrono_t iSeconds )
 {
-    // Let the object set the time of all the children
-    IObjectDrw::setTime( iSeconds );
-    if ( !valid() )
-    {
-        m_localToParent.makeIdentity();
-        return;
-    }
 
-    // Use nearest to get our matrix.
-    // Use nearest for now.
-    ISampleSelector ss( iSeconds, ISampleSelector::kNearIndex );
-    XformSample tmpXform;
-    m_xform.getSchema().get(tmpXform,ss);
-    m_localToParent = tmpXform.getMatrix();
+	if(m_currentFrame != MAnimControl::currentTime().value())
+	{
+		for (std::map<double, Box3d>::iterator iter = m_bounds.begin(); iter != m_bounds.end(); ++iter) 
+			iter->second.makeEmpty();
 
-/*    ICompoundProperty arbGeomParams = m_xform.getSchema().getArbGeomParams();
-    if ( arbGeomParams != NULL && arbGeomParams.valid() )
-    {
-        cout << "reading tags" << endl;
-        std::vector<std::string> tags;
-        if (arbGeomParams.getPropertyHeader("mtoa_constant_tags") != NULL)
-        {
-            const PropertyHeader * tagsHeader = arbGeomParams.getPropertyHeader("mtoa_constant_tags");
-            if (IStringGeomParam::matches( *tagsHeader ))
-            {
-                IStringGeomParam param( arbGeomParams,  "mtoa_constant_tags" );
-                if ( param.valid() )
-                {
-                    IStringGeomParam::prop_type::sample_ptr_type valueSample =
-                                    param.getExpandedValue( ss ).getVals();
+		m_bounds.clear();
 
-                    if ( param.getScope() == kConstantScope || param.getScope() == kUnknownScope)
-                    {
-                        Json::Value jtags;
-                        Json::Reader reader;
-                        if(reader.parse(valueSample->get()[0], jtags))
-                            for( Json::ValueIterator itr = jtags.begin() ; itr != jtags.end() ; itr++ )
-                            {
+		m_currentFrame = MAnimControl::currentTime().value();
+	}
 
-                                if (jtags[itr.key().asUInt()].asString() == "RENDER" )
-                                {
-                                    cout << "skipping this" << endl;
-                                    // we skip this thing
-                                    return;
-                                }
-                            }
-                    }
-                }
-            }
-        }
-    }*/
+	// Let the object set the time of all the children
+	IObjectDrw::setTime( iSeconds );
+	if ( !valid() )
+	{
+		m_localToParent.makeIdentity();
+		return;
+	}
 
-    // Okay, now we need to recalculate the bounds.
-    m_bounds.makeEmpty();
-    for ( DrawablePtrVec::iterator iter = m_children.begin();
-          iter != m_children.end(); ++iter )
-    {
-        DrawablePtr dptr = (*iter);
-        if ( dptr )
-        {
-            Box3d bnds = dptr->getBounds();
-            if ( !bnds.isEmpty() )
-            {
-                bnds = Imath::transform( bnds, m_localToParent );
-                m_bounds.extendBy( bnds );
-            }
-        }
-    }
+	// Use nearest to get our matrix.
+	// Use nearest for now.
+	ISampleSelector ss( iSeconds, ISampleSelector::kNearIndex );
+	XformSample tmpXform;
+	m_xform.getSchema().get(tmpXform,ss);
+	m_localToParent = tmpXform.getMatrix();
+
+	if (iSeconds != m_currentTime)
+	{
+		m_currentTime = iSeconds;
+		// Okay, now we need to recalculate the bounds.
+		m_bounds[iSeconds].makeEmpty();
+		for ( DrawablePtrVec::iterator iter = m_children.begin();
+				iter != m_children.end(); ++iter )
+		{
+			DrawablePtr dptr = (*iter);
+			if ( dptr )
+			{
+				Box3d bnds = dptr->getBounds();
+				if ( !bnds.isEmpty() )
+				{
+					bnds = Imath::transform( bnds, m_localToParent );
+					m_bounds[iSeconds].extendBy( bnds );
+				}
+			}
+		}
+	}
 }
 
 int IXformDrw::getNumTriangles()
