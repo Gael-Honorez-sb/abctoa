@@ -34,8 +34,8 @@
 //
 //-*****************************************************************************
 
-#ifndef _SimpleAbcViewer_Foundation_h_
-#define _SimpleAbcViewer_Foundation_h_
+#ifndef _AlembicHolder_Foundation_h_
+#define _AlembicHolder_Foundation_h_
 
 #include <Alembic/AbcGeom/All.h>
 #include <Alembic/AbcCoreHDF5/All.h>
@@ -78,7 +78,7 @@
 
 
 
-namespace SimpleAbcViewer {
+namespace AlembicHolder {
 
 //-*****************************************************************************
 namespace Abc = Alembic::AbcGeom;
@@ -162,6 +162,6 @@ while( 0 )
 
 
 
-} // End namespace SimpleAbcViewer
+} // End namespace AlembicHolder
 
 #endif

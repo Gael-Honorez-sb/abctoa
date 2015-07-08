@@ -37,7 +37,7 @@
 #include "MeshDrwHelper.h"
 #include "samplingUtils.h"
 
-namespace SimpleAbcViewer {
+namespace AlembicHolder {
 
 static MGLFunctionTable *gGLFT = NULL;
 
@@ -427,4 +427,4 @@ void MeshDrwHelper::computeBounds()
     }
 }
 
-} // End namespace SimpleAbcViewer
+} // End namespace AlembicHolder

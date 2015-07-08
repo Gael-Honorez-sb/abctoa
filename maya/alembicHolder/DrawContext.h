@@ -34,12 +34,12 @@
 //
 //-*****************************************************************************
 
-#ifndef _SimpleAbcViewer_DrawContext_h_
-#define _SimpleAbcViewer_DrawContext_h_
+#ifndef _AlembicHolder_DrawContext_h_
+#define _AlembicHolder_DrawContext_h_
 
 #include "Foundation.h"
 
-namespace SimpleAbcViewer {
+namespace AlembicHolder {
 
 //-*****************************************************************************
 class DrawContext
@@ -86,6 +86,6 @@ protected:
     bool m_normalFlipped;
 };
 
-} // End namespace SimpleAbcViewer
+} // End namespace AlembicHolder
 
 #endif

@@ -34,13 +34,13 @@
 //
 //-*****************************************************************************
 
-#ifndef _SimpleAbcViewer_IXformDrw_h_
-#define _SimpleAbcViewer_IXformDrw_h_
+#ifndef _AlembicHolder_IXformDrw_h_
+#define _AlembicHolder_IXformDrw_h_
 
 #include "Foundation.h"
 #include "IObjectDrw.h"
 
-namespace SimpleAbcViewer {
+namespace AlembicHolder {
 
 //-*****************************************************************************
 //! Transform applies a matrix transformation to all of its children
@@ -67,6 +67,6 @@ protected:
     M44d m_localToParent;
 };
 
-} // End namespace SimpleAbcViewer
+} // End namespace AlembicHolder
 
 #endif

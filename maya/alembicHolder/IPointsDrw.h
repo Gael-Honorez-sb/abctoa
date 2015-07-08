@@ -34,15 +34,15 @@
 //
 //-*****************************************************************************
 
-#ifndef _SimpleAbcViewer_IPointsDrw_h_
-#define _SimpleAbcViewer_IPointsDrw_h_
+#ifndef _AlembicHolder_IPointsDrw_h_
+#define _AlembicHolder_IPointsDrw_h_
 
 #include "Foundation.h"
 #include "IObjectDrw.h"
 #include "MeshDrwHelper.h"
 #include "RenderModules.h"
 
-namespace SimpleAbcViewer {
+namespace AlembicHolder {
 
 //-*****************************************************************************
 //! Draw a poly mesh!
@@ -79,6 +79,6 @@ protected:
 
 };
 
-} // End namespace SimpleAbcViewer
+} // End namespace AlembicHolder
 
 #endif

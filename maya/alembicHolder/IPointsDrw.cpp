@@ -38,7 +38,7 @@
 #include "RenderModules.h"
 #include "PathUtil.h"
 
-namespace SimpleAbcViewer {
+namespace AlembicHolder {
 
     static MGLFunctionTable *gGLFT = NULL;
 
@@ -180,4 +180,4 @@ void IPointsDrw::draw( const DrawContext &iCtx )
     gGLFT->glPopAttrib( );
 }
 
-} // End namespace SimpleAbcViewer
+} // End namespace AlembicHolder

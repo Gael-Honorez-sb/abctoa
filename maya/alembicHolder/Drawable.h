@@ -34,15 +34,15 @@
 //
 //-*****************************************************************************
 
-#ifndef _SimpleAbcViewer_Drawable_h_
-#define _SimpleAbcViewer_Drawable_h_
+#ifndef _AlembicHolder_Drawable_h_
+#define _AlembicHolder_Drawable_h_
 
 #include "Foundation.h"
 #include "DrawContext.h"
 #include "boost/noncopyable.hpp"
 #include "boost/shared_ptr.hpp"
 
-namespace SimpleAbcViewer {
+namespace AlembicHolder {
 
 //-*****************************************************************************
 //! What can a drawable do?
@@ -90,6 +90,6 @@ public:
 typedef boost::shared_ptr<Drawable> DrawablePtr;
 typedef std::vector<DrawablePtr> DrawablePtrVec;
 
-} // End namespace SimpleAbcViewer
+} // End namespace AlembicHolder
 
 #endif

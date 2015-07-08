@@ -13,32 +13,14 @@ License along with this library.*/
 
 
 #include "alembicHolderOverride.h"
+
 #include <maya/MHWGeometryUtilities.h>
 #include <maya/MFnDependencyNode.h>
 #include <maya/MTransformationMatrix.h>
 #include <maya/MUserData.h>
 #include <maya/MDrawContext.h>
-
 #include <maya/MAnimControl.h>
 
-namespace{
-    const char* shaderUniforms = "#version 150\n"
-"uniform mat4 modelViewProj;\n"
-"uniform vec4 scale;"
-"uniform vec4 offset;"
-"uniform vec4 shadeColor;\n";
-
-    const char* vertexShader =
-"in vec3 position;\n"
-"void main()\n"
-"{\n"
-"gl_Position = modelViewProj * vec4(position * scale.xyz + offset.xyz, 1.0f);\n"
-"}\n";
-
-    const char* fragmentShader =
-"out vec4 frag_color;\n"
-"void main() { frag_color = shadeColor;}\n";
-}
 
 // Wireframe line style defines
 #define LINE_STIPPLE_SHORTDASHED    0x0303

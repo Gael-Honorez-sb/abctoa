@@ -32,7 +32,7 @@
 #ifndef VIEWER_RENDERMODULES_HAS_BEEN_INCLUDED
 #define VIEWER_RENDERMODULES_HAS_BEEN_INCLUDED
 
-namespace SimpleAbcViewer {
+namespace AlembicHolder {
 
 // OpenGL helper objects.
 

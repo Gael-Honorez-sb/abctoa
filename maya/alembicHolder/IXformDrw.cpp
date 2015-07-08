@@ -37,7 +37,7 @@
 #include "IXformDrw.h"
 #include "json/json.h"
 
-namespace SimpleAbcViewer {
+namespace AlembicHolder {
 
 //-*****************************************************************************
 IXformDrw::IXformDrw( IXform &iXform, std::vector<std::string> path )
@@ -208,4 +208,4 @@ void IXformDrw::draw( const DrawContext & iCtx )
     gGLFT->glPopMatrix();
 }
 
-} // End namespace SimpleAbcViewer
+} // End namespace AlembicHolder

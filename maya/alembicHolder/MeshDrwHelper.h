@@ -34,8 +34,8 @@
 //
 //-*****************************************************************************
 
-#ifndef _SimpleAbcViewer_MeshDrwHelper_h_
-#define _SimpleAbcViewer_MeshDrwHelper_h_
+#ifndef _AlembicHolder_MeshDrwHelper_h_
+#define _AlembicHolder_MeshDrwHelper_h_
 
 #include "Foundation.h"
 #include "DrawContext.h"
@@ -43,7 +43,7 @@
 #include "boost/noncopyable.hpp"
 
 
-namespace SimpleAbcViewer {
+namespace AlembicHolder {
 
 
 //-*****************************************************************************
@@ -141,6 +141,6 @@ protected:
 
 
 
-} // End namespace SimpleAbcViewer
+} // End namespace AlembicHolder
 
 #endif

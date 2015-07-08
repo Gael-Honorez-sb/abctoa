@@ -34,15 +34,15 @@
 //
 //-*****************************************************************************
 
-#ifndef _SimpleAbcViewer_IPolyMeshDrw_h_
-#define _SimpleAbcViewer_IPolyMeshDrw_h_
+#ifndef _AlembicHolder_IPolyMeshDrw_h_
+#define _AlembicHolder_IPolyMeshDrw_h_
 
 #include "Foundation.h"
 #include "IObjectDrw.h"
 #include "MeshDrwHelper.h"
 #include "PathUtil.h"
 
-namespace SimpleAbcViewer {
+namespace AlembicHolder {
 
 //-*****************************************************************************
 //! Draw a poly mesh!
@@ -71,6 +71,6 @@ protected:
     Alembic::AbcCoreAbstract::index_t m_index, m_ceilIndex;
 };
 
-} // End namespace SimpleAbcViewer
+} // End namespace AlembicHolder
 
 #endif

@@ -38,7 +38,7 @@
 #include <Alembic/AbcGeom/Visibility.h>
 #include "samplingUtils.h"
 
-namespace SimpleAbcViewer {
+namespace AlembicHolder {
 
     static MGLFunctionTable *gGLFT = NULL;
 
@@ -275,4 +275,4 @@ void IPolyMeshDrw::draw( const DrawContext &iCtx )
     IObjectDrw::draw( iCtx );
 }
 
-} // End namespace SimpleAbcViewer
+} // End namespace AlembicHolder
