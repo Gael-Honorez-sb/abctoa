@@ -183,7 +183,7 @@ int Scene::getNumTriangles() const
 
 
 //-*****************************************************************************
-void Scene::draw( SceneState &s_state, std::string selection, std::map<std::string, MColor> shaderColors, bool flippedNormal)
+void Scene::draw( SceneState &s_state, std::string selection, chrono_t iSeconds, std::map<std::string, MColor> shaderColors, bool flippedNormal)
 {
 
    static MGLFunctionTable *gGLFT = NULL;
@@ -193,6 +193,15 @@ void Scene::draw( SceneState &s_state, std::string selection, std::map<std::stri
    ABCA_ASSERT( m_archive && m_topObject &&
                  m_drawable && m_drawable->valid(),
                  "Invalid Scene: " << m_fileName );
+
+   // Check if the holder is still at the right frame.
+   // This will make time offset working properly, but refreshing the display will be slower
+   // as we need to reload some data for each cache using the same scene at different time.
+   // A better solution would be to get all the "real time" for each instance, using MAnimControl::currentTime() 
+   // as the reference frame, and only forget all these samples if that value change.
+
+   if (iSeconds != m_curtime)
+	   setTime(iSeconds);
 
     // Get the matrix
     M44d currentMatrix;
