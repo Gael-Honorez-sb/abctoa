@@ -43,7 +43,7 @@
 
 #include "json/json.h"
 
-namespace SimpleAbcViewer {
+namespace AlembicHolder {
 
 //-*****************************************************************************
 IObjectDrw::IObjectDrw( IObject &iObj, bool iResetIfNoChildren, std::vector<std::string> path)
@@ -323,5 +323,5 @@ void IObjectDrw::draw( const DrawContext &iCtx )
     }
 }
 
-} // End namespace SimpleAbcViewer
+} // End namespace AlembicHolder
 

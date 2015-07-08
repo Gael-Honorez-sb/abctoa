@@ -41,7 +41,7 @@
 #include "boost/foreach.hpp"
 
 //-*****************************************************************************
-namespace SimpleAbcViewer {
+namespace AlembicHolder {
 
 
 
@@ -209,4 +209,4 @@ void Scene::draw( SceneState &s_state, std::string selection, std::map<std::stri
 
 }
 
-} // End namespace SimpleAbcViewer
+} // End namespace AlembicHolder

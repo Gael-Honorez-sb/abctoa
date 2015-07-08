@@ -62,8 +62,8 @@ public:
 
     //BufferObject buffer;
 
-    static SimpleAbcViewer::SceneState   abcSceneState;
-    static SimpleAbcViewer::SceneManager abcSceneManager;
+    static AlembicHolder::SceneState   abcSceneState;
+    static AlembicHolder::SceneManager abcSceneManager;
 
     std::map<std::string, MColor> shaderColors;
 };

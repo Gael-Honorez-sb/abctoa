@@ -34,8 +34,8 @@
 //
 //-*****************************************************************************
 
-#ifndef _SimpleAbcViewer_Scene_h_
-#define _SimpleAbcViewer_Scene_h_
+#ifndef _AlembicHolder_Scene_h_
+#define _AlembicHolder_Scene_h_
 
 #include "Foundation.h"
 //#include "GLCamera.h"
@@ -43,7 +43,7 @@
 
 #include <boost/shared_ptr.hpp>
 
-namespace SimpleAbcViewer {
+namespace AlembicHolder {
 
 //-*****************************************************************************
 struct SceneState
@@ -112,6 +112,6 @@ protected:
 
 typedef boost::shared_ptr<Scene> ScenePtr;
 
-} // End namespace SimpleAbcViewer
+} // End namespace AlembicHolder
 
 #endif

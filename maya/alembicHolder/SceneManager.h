@@ -1,5 +1,5 @@
-#ifndef _SimpleAbcViewer_SceneManager_h_
-#define _SimpleAbcViewer_SceneManager_h_
+#ifndef _AlembicHolder_SceneManager_h_
+#define _AlembicHolder_SceneManager_h_
 
 #include "Foundation.h"
 #include "Drawable.h"
@@ -11,9 +11,9 @@
 
 #include <boost/shared_ptr.hpp>
 
-namespace SimpleAbcViewer {
+namespace AlembicHolder {
 
-typedef std::pair<SimpleAbcViewer::ScenePtr, unsigned int> CountedScene;
+typedef std::pair<AlembicHolder::ScenePtr, unsigned int> CountedScene;
 
 class SceneManager
 {
@@ -33,7 +33,7 @@ class SceneManager
                         m_scenes[key].second++;
     //                std::cout << "add incr " << std::endl;
                     } else {
-                        CountedScene cs( SimpleAbcViewer::ScenePtr( new SimpleAbcViewer::Scene(abcFile,objectPath) ), 1);
+                        CountedScene cs( AlembicHolder::ScenePtr( new AlembicHolder::Scene(abcFile,objectPath) ), 1);
                         m_scenes[key] = cs;
                     }
                 }
@@ -51,12 +51,12 @@ class SceneManager
             }
         }
 
-        void addScene(std::string key, SimpleAbcViewer::ScenePtr scene_ptr) {
+        void addScene(std::string key, AlembicHolder::ScenePtr scene_ptr) {
             if (m_scenes.count(key)) { m_scenes[key].second++; }
             else { m_scenes[key] = CountedScene(scene_ptr, 1); }
         }
 
-        SimpleAbcViewer::ScenePtr getScene(std::string key) {
+        AlembicHolder::ScenePtr getScene(std::string key) {
             return m_scenes[key].first; }
 
         void removeScene(std::string key) {
@@ -80,6 +80,6 @@ class SceneManager
 
 };
 
-} // End namespace SimpleAbcViewer
+} // End namespace AlembicHolder
 
 #endif

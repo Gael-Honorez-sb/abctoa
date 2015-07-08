@@ -93,8 +93,8 @@ MObject nozAlembicHolder::aBoundMin;
 MObject nozAlembicHolder::aBoundMax;
 
 
-SimpleAbcViewer::SceneState CAlembicDatas::abcSceneState;
-SimpleAbcViewer::SceneManager CAlembicDatas::abcSceneManager;
+AlembicHolder::SceneState CAlembicDatas::abcSceneState;
+AlembicHolder::SceneManager CAlembicDatas::abcSceneManager;
 
 CAlembicDatas::CAlembicDatas() {
 
@@ -453,7 +453,7 @@ MStatus nozAlembicHolder::compute( const MPlug& plug, MDataBlock& block )
             if (CAlembicDatas::abcSceneManager.hasKey(key))
             {
                 fGeometry.bbox = MBoundingBox();
-                SimpleAbcViewer::Box3d bb;
+                AlembicHolder::Box3d bb;
                 setHolderTime();
                 bb = CAlembicDatas::abcSceneManager.getScene(key)->getBounds();
                 fGeometry.bbox.expand(MPoint(bb.min.x, bb.min.y, bb.min.z));
@@ -987,7 +987,7 @@ bool CAlembicHolderUI::select(MSelectInfo &selectInfo,
     GLfloat minZ;
     Select* selector;
 
-	SimpleAbcViewer::ScenePtr _ptr = geom->abcSceneManager.getScene(geom->m_currscenekey);
+	AlembicHolder::ScenePtr _ptr = geom->abcSceneManager.getScene(geom->m_currscenekey);
     size_t numTriangles = _ptr->getNumTriangles();
     const unsigned int bufferSize = (unsigned int)std::min(numTriangles,(size_t)100000);
         

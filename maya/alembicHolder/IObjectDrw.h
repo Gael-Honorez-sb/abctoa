@@ -34,13 +34,13 @@
 //
 //-*****************************************************************************
 
-#ifndef _SimpleAbcViewer_IObjectDrw_h_
-#define _SimpleAbcViewer_IObjectDrw_h_
+#ifndef _AlembicHolder_IObjectDrw_h_
+#define _AlembicHolder_IObjectDrw_h_
 
 //#include "Foundation.h"
 #include "Drawable.h"
 
-namespace SimpleAbcViewer {
+namespace AlembicHolder {
 
 //-*****************************************************************************
 //! Draw an object
@@ -83,6 +83,6 @@ protected:
     Box3d m_bounds;
 };
 
-} // End namespace SimpleAbcViewer
+} // End namespace AlembicHolder
 
 #endif

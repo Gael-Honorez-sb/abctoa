@@ -32,7 +32,7 @@
 #include <math.h>
 
 
-namespace SimpleAbcViewer {
+namespace AlembicHolder {
 
 // BufferObject
 static MGLFunctionTable *gGLFT = NULL;
