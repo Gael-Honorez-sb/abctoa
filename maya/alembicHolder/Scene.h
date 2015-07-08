@@ -86,7 +86,7 @@ public:
 
     //! This draws, assuming a camera matrix has already been set.
     //! ...
-    void draw( SceneState &s_state, std::string selection, std::map<std::string, MColor> shaderColors, bool flippedNormal = false);
+    void draw( SceneState &s_state, std::string selection, double time, std::map<std::string, MColor> shaderColors = std::map<std::string, MColor>(), bool flippedNormal = false);
 
     void setSelectionPath( std::string selectionPath );
 

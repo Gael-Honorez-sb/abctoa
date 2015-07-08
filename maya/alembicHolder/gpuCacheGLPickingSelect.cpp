@@ -130,7 +130,7 @@ void GLPickingSelect::processTriangles(
         DrawShadedState state(frustum, seconds);
         DrawShadedTraversal traveral(state, xform, false, Frustum::kUnknown);
         rootNode->accept(traveral);*/
-		geom->abcSceneManager.getScene(sceneKey)->draw(geom->abcSceneState, geom->m_currselectionkey, std::map<std::string, MColor>());
+		geom->abcSceneManager.getScene(sceneKey)->draw(geom->abcSceneState, geom->m_currselectionkey, geom->time);
     }
     view.popName();
     int nbPick = view.endSelect();

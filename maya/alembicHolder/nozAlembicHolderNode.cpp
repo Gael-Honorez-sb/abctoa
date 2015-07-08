@@ -1,4 +1,4 @@
-/*Alembic Holder
+/*Alembic HoldersetTime
 Copyright (c) 2014, Gaël Honorez, All rights reserved.
 This library is free software; you can redistribute it and/or
 modify it under the terms of the GNU Lesser General Public
@@ -152,7 +152,7 @@ nozAlembicHolder::~nozAlembicHolder() {
 
 void nozAlembicHolder::setHolderTime() const {
 
-    const CAlembicDatas* geom = const_cast<nozAlembicHolder*> (this)->alembicData();
+    CAlembicDatas* geom = const_cast<nozAlembicHolder*> (this)->alembicData();
 
     if(geom != NULL)
     {
@@ -167,6 +167,8 @@ void nozAlembicHolder::setHolderTime() const {
         double dtime;
 
         dtime = time.as(MTime::kSeconds) + timeOffset.as(MTime::kSeconds);
+
+		geom->time = dtime;
 
         std::string sceneKey = getSceneKey();
         if (geom->abcSceneManager.hasKey(sceneKey))
@@ -420,7 +422,6 @@ MStatus nozAlembicHolder::compute( const MPlug& plug, MDataBlock& block )
         if (fGeometry.time != time.value())
         {
             fGeometry.m_abcdirty = true;
-            fGeometry.time = time.value();
             hasToReload = true;
         }
 
@@ -644,7 +645,7 @@ void CAlembicHolderUI::draw(const MDrawRequest & request, M3dView & view) const
 			{
 				gGLFT->glPolygonMode(GL_FRONT_AND_BACK, MGL_LINE);
 				gGLFT->glPushMatrix();
-				cache->abcSceneManager.getScene(cache->m_currscenekey)->draw(cache->abcSceneState, cache->m_currselectionkey, std::map<std::string, MColor>());
+				cache->abcSceneManager.getScene(cache->m_currscenekey)->draw(cache->abcSceneState, cache->m_currselectionkey, cache->time);
 				gGLFT->glPopMatrix();
 				gGLFT->glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 			}
@@ -691,14 +692,14 @@ void CAlembicHolderUI::drawingMeshes( std::string sceneKey, CAlembicDatas * cach
         glEnable(MGL_CULL_FACE);
         glLightModeli(MGL_LIGHT_MODEL_TWO_SIDE, 0);
         glCullFace(MGL_FRONT);
-		cache->abcSceneManager.getScene(sceneKey)->draw(cache->abcSceneState, selectionKey, cache->shaderColors, true);
+		cache->abcSceneManager.getScene(sceneKey)->draw(cache->abcSceneState, selectionKey, cache->time, cache->shaderColors, true);
         glCullFace(MGL_BACK);
-        cache->abcSceneManager.getScene(sceneKey)->draw(cache->abcSceneState, selectionKey, cache->shaderColors, false);
+        cache->abcSceneManager.getScene(sceneKey)->draw(cache->abcSceneState, selectionKey, cache->time, cache->shaderColors, false);
         gGLFT->glLightModeli(MGL_LIGHT_MODEL_TWO_SIDE, 1);
         glDisable(MGL_CULL_FACE);
     }
     else
-		cache->abcSceneManager.getScene(sceneKey)->draw(cache->abcSceneState, selectionKey, cache->shaderColors, true);
+		cache->abcSceneManager.getScene(sceneKey)->draw(cache->abcSceneState, selectionKey, cache->time, cache->shaderColors, true);
 
     glDisable(MGL_POLYGON_OFFSET_FILL);
     glFrontFace(MGL_CCW);
