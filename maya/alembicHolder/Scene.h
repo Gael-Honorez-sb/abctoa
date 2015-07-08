@@ -41,6 +41,8 @@
 //#include "GLCamera.h"
 #include "Drawable.h"
 
+#include <maya/MAnimControl.h>
+
 #include <boost/shared_ptr.hpp>
 
 namespace AlembicHolder {
@@ -78,7 +80,7 @@ public:
 
     //! Cause the drawable state to be loaded to the given time.
     //! ...
-    void setTime( chrono_t newTime );
+    void setTime( chrono_t iSeconds );
 
     //! Return the bounds at the current time.
     //! ...
@@ -105,6 +107,7 @@ protected:
     chrono_t m_minTime;
     chrono_t m_maxTime;
     chrono_t m_curtime;
+	chrono_t m_curFrame;
     Box3d m_bounds;
 
     DrawablePtr m_drawable;

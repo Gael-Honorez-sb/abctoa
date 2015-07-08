@@ -39,6 +39,7 @@
 
 //#include "Foundation.h"
 #include "Drawable.h"
+#include <maya/MAnimControl.h>
 
 namespace AlembicHolder {
 
@@ -74,6 +75,8 @@ protected:
     chrono_t m_maxTime;
 
     chrono_t m_currentTime;
+
+	chrono_t m_currentFrame;
 
     bool m_visible;
 

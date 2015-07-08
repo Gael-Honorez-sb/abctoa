@@ -42,6 +42,7 @@ License along with this library.*/
 #include <maya/MHWGeometryUtilities.h>
 #include <maya/MFnMessageAttribute.h>
 #include <maya/MFileObject.h>
+
 #include <stdio.h>
 #include <map>
 #include <algorithm>
@@ -167,12 +168,12 @@ void nozAlembicHolder::setHolderTime() const {
         double dtime;
 
         dtime = time.as(MTime::kSeconds) + timeOffset.as(MTime::kSeconds);
-
+		
 		geom->time = dtime;
 
         std::string sceneKey = getSceneKey();
         if (geom->abcSceneManager.hasKey(sceneKey))
-            geom->abcSceneManager.getScene(sceneKey)->setTime(dtime);
+			geom->abcSceneManager.getScene(sceneKey)->setTime(dtime );
     }
 }
 
@@ -422,6 +423,7 @@ MStatus nozAlembicHolder::compute( const MPlug& plug, MDataBlock& block )
         if (fGeometry.time != time.value())
         {
             fGeometry.m_abcdirty = true;
+			fGeometry.time = time.value();
             hasToReload = true;
         }
 

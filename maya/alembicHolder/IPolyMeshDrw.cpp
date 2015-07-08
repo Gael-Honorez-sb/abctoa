@@ -53,9 +53,6 @@ IPolyMeshDrw::IPolyMeshDrw( IPolyMesh &iPmesh, std::vector<std::string> path )
         return;
     }
 
-    // set constancy on the mesh draw helper
-    m_drwHelper.setConstant( m_polyMesh.getSchema().isConstant() );
-
     if ( m_polyMesh.getSchema().getNumSamples() > 0 )
     {
         m_polyMesh.getSchema().get( m_samp );
@@ -82,7 +79,10 @@ IPolyMeshDrw::IPolyMeshDrw( IPolyMesh &iPmesh, std::vector<std::string> path )
             m_maxTime = std::max( m_maxTime, maxTime );
         }
     }
-    m_drwHelper.setName(m_object.getFullName());
+
+	m_currentFrame = MAnimControl::currentTime().value();
+
+    //m_drwHelper.setName(m_object.getFullName());
 }
 
 //-*****************************************************************************
@@ -100,6 +100,23 @@ bool IPolyMeshDrw::valid()
 //-*****************************************************************************
 void IPolyMeshDrw::setTime( chrono_t iSeconds )
 {
+	// The frame is different. We should clear all the data.
+	if(m_currentFrame != MAnimControl::currentTime().value())
+	{
+		for (std::map<double, MeshDrwHelper>::iterator iter = m_drwHelpers.begin(); iter != m_drwHelpers.end(); ++iter) 
+			iter->second.makeInvalid();
+
+		m_drwHelpers.clear();
+		m_currentFrame = MAnimControl::currentTime().value();
+	}
+
+	if(m_drwHelpers.count(iSeconds) == 1)
+	{
+		if (iSeconds != m_currentTime)
+			IObjectDrw::setTime( iSeconds );
+		return;
+	}
+
     // Use nearest for now.
     Alembic::AbcGeom::IPolyMeshSchema schema = m_polyMesh.getSchema();
 
@@ -117,12 +134,13 @@ void IPolyMeshDrw::setTime( chrono_t iSeconds )
         IObjectDrw::setTime( iSeconds );
         if ( !valid() )
         {
-            m_drwHelper.makeInvalid();
+			m_drwHelpers[iSeconds].makeInvalid();
             return;
         }
         //IPolyMeshSchema::Sample psamp;
         if ( m_polyMesh.getSchema().isConstant() )
         {
+			m_drwHelpers[iSeconds].setConstant( m_polyMesh.getSchema().isConstant() );
         }
         else if ( m_polyMesh.getSchema().getNumSamples() > 0 )
         {
@@ -173,8 +191,6 @@ void IPolyMeshDrw::updateData()
     // Get the stuff.
     if (m_alpha != 0.0 &&  m_polyMesh.getSchema().getTopologyVariance() != Alembic::AbcGeom::kHeterogenousTopology) 
     {
-        
-
         ceilPoints = m_polyMesh.getSchema().getPositionsProperty().getValue(
                 Alembic::Abc::ISampleSelector(m_ceilIndex) ); 
     }
@@ -204,10 +220,10 @@ void IPolyMeshDrw::updateData()
     }
 
     // update the mesh
-    m_drwHelper.update( points, ceilPoints, normals,
+    m_drwHelpers[m_currentTime].update( points, ceilPoints, normals,
                             indices, counts, getBounds(), m_alpha );
 
-    if ( !m_drwHelper.valid() )
+    if ( !m_drwHelpers[m_currentTime].valid() )
     {
         m_polyMesh.reset();
         return;
@@ -220,7 +236,7 @@ int IPolyMeshDrw::getNumTriangles()
     if ( !valid() || !m_visible)
         return 0;
 
-    return m_drwHelper.getNumTriangles();
+    return m_drwHelpers[m_currentTime].getNumTriangles();
 }
 
 //-*****************************************************************************
@@ -270,7 +286,7 @@ void IPolyMeshDrw::draw( const DrawContext &iCtx )
         updateData();
 
 
-    m_drwHelper.draw( iCtx );
+    m_drwHelpers[m_currentTime].draw( iCtx );
 
     IObjectDrw::draw( iCtx );
 }

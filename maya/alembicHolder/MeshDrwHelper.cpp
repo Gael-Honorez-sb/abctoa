@@ -53,6 +53,7 @@ MeshDrwHelper::MeshDrwHelper()
 MeshDrwHelper::~MeshDrwHelper()
 {
     makeInvalid();
+	buffer.clear();
 }
 
 //-*****************************************************************************
