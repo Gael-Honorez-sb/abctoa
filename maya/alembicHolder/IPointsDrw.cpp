@@ -84,6 +84,16 @@ bool IPointsDrw::valid()
 //-*****************************************************************************
 void IPointsDrw::setTime( chrono_t iSeconds )
 {
+	// The frame is different. We should clear all the data.
+	if(m_currentFrame != MAnimControl::currentTime().value())
+	{
+		for (std::map<double, Box3d>::iterator iter = m_bounds.begin(); iter != m_bounds.end(); ++iter) 
+			iter->second.makeEmpty();
+		m_bounds.clear();
+
+		m_currentFrame = MAnimControl::currentTime().value();
+	}
+	
     if (iSeconds != m_currentTime) {
 
         buffer.clear();
@@ -98,19 +108,8 @@ void IPointsDrw::setTime( chrono_t iSeconds )
 
         m_points.getSchema().get( m_samp, m_ss );
         // Update bounds from positions
-        m_bounds.makeEmpty();
+        m_bounds[iSeconds].makeEmpty();
         m_needtoupdate = true;
-
-        // If we have a color prop, update it
-        /*if ( m_colorProp )
-        {
-            m_colors = m_colorProp.getValue( ss );
-        }
-
-        if ( m_normalProp )
-        {
-            m_normals = m_normalProp.getValue( ss );
-        }*/
     }
 }
 
@@ -142,10 +141,10 @@ void IPointsDrw::updateData()
 
 Box3d IPointsDrw::getBounds()
 {
-    if(m_bounds.isEmpty())
-        m_bounds = m_boundsProp.getValue( m_ss );
+    if(m_bounds[m_currentTime].isEmpty())
+        m_bounds[m_currentTime] = m_boundsProp.getValue( m_ss );
 
-    return m_bounds;
+    return m_bounds[m_currentTime];
 
 }
 

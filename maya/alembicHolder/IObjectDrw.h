@@ -83,7 +83,7 @@ protected:
     DrawablePtrVec m_children;
     IBox3dProperty m_boundsProp;
     ISampleSelector m_ss;
-    Box3d m_bounds;
+    std::map<double,Box3d> m_bounds;
 };
 
 } // End namespace AlembicHolder

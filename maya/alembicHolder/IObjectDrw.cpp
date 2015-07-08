@@ -213,9 +213,6 @@ IObjectDrw::IObjectDrw( IObject &iObj, bool iResetIfNoChildren, std::vector<std:
         }
     }
 
-    // Make the bounds empty to start
-    m_bounds.makeEmpty();
-
     // If we have no children, just leave.
     if ( m_children.size() == 0 && iResetIfNoChildren )
     {
@@ -250,6 +247,17 @@ bool IObjectDrw::valid()
 //-*****************************************************************************
 void IObjectDrw::setTime( chrono_t iTime )
 {
+
+	if(m_currentFrame != MAnimControl::currentTime().value())
+	{
+		for (std::map<double, Box3d>::iterator iter = m_bounds.begin(); iter != m_bounds.end(); ++iter) 
+			iter->second.makeEmpty();
+
+		m_bounds.clear();
+
+		m_currentFrame = MAnimControl::currentTime().value();
+	}
+
     if (iTime != m_currentTime)
     {
         m_currentTime = iTime;
@@ -257,8 +265,8 @@ void IObjectDrw::setTime( chrono_t iTime )
         if ( !m_object ) { return; }
 
         // Object itself has no properties to worry about.
-        m_bounds.makeEmpty();
-        for ( DrawablePtrVec::iterator iter = m_children.begin();
+
+		for ( DrawablePtrVec::iterator iter = m_children.begin();
               iter != m_children.end(); ++iter )
         {
             DrawablePtr dptr = (*iter);
@@ -274,7 +282,7 @@ void IObjectDrw::setTime( chrono_t iTime )
 //-*****************************************************************************
 Box3d IObjectDrw::getBounds()
 {
-    if (m_bounds.isEmpty())
+	if (m_bounds[m_currentFrame].isEmpty())
     {
         for ( DrawablePtrVec::iterator iter = m_children.begin();
               iter != m_children.end(); ++iter )
@@ -282,12 +290,12 @@ Box3d IObjectDrw::getBounds()
             DrawablePtr dptr = (*iter);
             if ( dptr )
             {
-                m_bounds.extendBy( dptr->getBounds() );
+                m_bounds[m_currentFrame].extendBy( dptr->getBounds() );
             }
         }
     }
 
-    return m_bounds;
+    return m_bounds[m_currentFrame];
 }
 
 
