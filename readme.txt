@@ -20,7 +20,7 @@ This is the source code for the Maya Alembic Holder plugin & scripts.
 Pre-requisites are :
 
 - Maya > 2013
-- PySide for maya (ie. http://3devartist.blogspot.com.tr/2012/11/pyside-113-for-autodesk-maya-2013-x64.html)
+- For maya 2013 only : PySide for maya (ie. http://3devartist.blogspot.com.tr/2012/11/pyside-113-for-autodesk-maya-2013-x64.html).
 - Alembic libraries 
 - Arnold > 4.2.x.x
 - MtoA > 1.x.x.x
@@ -30,6 +30,13 @@ Pre-requisites are :
 - jsoncpp (https://github.com/open-source-parsers/jsoncpp)
 
 If you want to contribute back to the project, please make a fork and create pull-Requests of your changes.
+
+Contributors (in alphabetical order)
+-------------------------------------
+Kjelle Apers
+Chad Dombrova
+
+Thanks to all testers for their feedback and bug reports !
 
 Alembic Code:
 © 2009-2013 Lucasfilm Entertainment Company Ltd. or Lucasfilm Ltd.
