@@ -336,20 +336,6 @@ std::string getHash(
 
 
 //-*************************************************************************
-// getCachedNode
-// This function return the the mesh node if already in the cache.
-// Otherwise, return NULL.
-/*AtNode* getCachedNode(std::string cacheId)
-{
-    //GLOBAL_LOCK;
-    NodeCache::iterator I = g_meshCache.find(cacheId);
-    if (I != g_meshCache.end())
-        return (*I).second;
-
-    return NULL;
-}*/
-
-//-*************************************************************************
 // doNormals
 // This function does nothing for subdv, but write normals for non-subdvided meshes. Called in writeMesh.
 template<typename primT> 
