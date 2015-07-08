@@ -342,8 +342,8 @@ AtNode* createNetwork(IObject object, std::string prefix, ProcArgs & args)
         boost::smatch what;
         abcnode.getTarget(target);
 
-        std::map<std::string, std::vector<AtNode*>> nodeArrayConnections;
-        std::map<std::string, std::vector<AtNode*>>::iterator nodeArrayConnectionsIterator;
+        std::map<std::string, std::vector<AtNode*> > nodeArrayConnections;
+        std::map<std::string, std::vector<AtNode*> >::iterator nodeArrayConnectionsIterator;
 
         if(target == "arnold")
         {

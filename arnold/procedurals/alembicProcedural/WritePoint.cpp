@@ -38,6 +38,7 @@
 #include "WriteTransform.h"
 #include "WriteOverrides.h"
 #include "parseAttributes.h"
+#include "NodeCache.h"
 
 #include "ArbGeomParams.h"
 #include "PathUtil.h"
@@ -67,8 +68,10 @@ namespace
 {
     // Arnold scene build is single-threaded so we don't have to lock around
     // access to this for now.
-    typedef std::map<std::string, AtNode *> NodeCache;
-    NodeCache g_pointsCache;
+	NodeCache* g_pointsCache = new NodeCache();
+
+    //typedef std::map<std::string, AtNode *> NodeCache;
+    //NodeCache g_meshCache;
 
     boost::mutex gGlobalLock;
     #define GLOBAL_LOCK	   boost::mutex::scoped_lock writeLock( gGlobalLock );
@@ -196,20 +199,6 @@ std::string getHash(
 
     return cacheId;
 
-}
-
-//-*************************************************************************
-// getCachePointsdNode
-// This function return the the points node if already in the cache.
-// Otherwise, return NULL.
-AtNode* getCachedPointsNode(std::string cacheId)
-{
-    //GLOBAL_LOCK;
-    NodeCache::iterator I = g_pointsCache.find(cacheId);
-    if (I != g_pointsCache.end())
-        return (*I).second;
-
-    return NULL;
 }
 
 AtNode* writePoints(  
@@ -488,7 +477,7 @@ AtNode* writePoints(
     ICompoundProperty arbPointsParams = ps.getArbGeomParams();
     AddArbitraryGeomParams( arbGeomParams, frameSelector, pointsNode );
 
-    g_pointsCache[cacheId] = pointsNode;
+    g_pointsCache->addNode(cacheId, pointsNode);
     return pointsNode;
 
 
@@ -570,7 +559,7 @@ void ProcessPoint( IPoints &points, ProcArgs &args,
     getSampleTimes(points, args, sampleTimes);
 
     std::string cacheId = getHash(name, originalName, points, args, sampleTimes);
-    AtNode* pointsNode = getCachedPointsNode(cacheId);
+    AtNode* pointsNode = g_pointsCache->getCachedNode(cacheId);
 
     if(pointsNode == NULL)
     { // We don't have a cache, so we much create this points object.
