@@ -52,7 +52,7 @@ namespace AlembicHolder {
 
 
 
-class MeshDrwHelper : private boost::noncopyable
+class MeshDrwHelper
 {
 public:
     // Default constructor

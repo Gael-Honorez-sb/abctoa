@@ -65,7 +65,7 @@ protected:
     IPolyMeshSchema::Sample m_samp;
     IN3fGeomParam::Sample m_normal_samp;
     IBox3dProperty m_boundsProp;
-    MeshDrwHelper m_drwHelper;
+    std::map<chrono_t, MeshDrwHelper> m_drwHelpers;
     bool m_needtoupdate;
     double m_alpha;
     Alembic::AbcCoreAbstract::index_t m_index, m_ceilIndex;

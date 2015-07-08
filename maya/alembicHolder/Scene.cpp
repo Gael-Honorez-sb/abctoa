@@ -167,6 +167,8 @@ void Scene::setTime( chrono_t iSeconds )
         m_curtime = iSeconds;
     }
 
+	m_curFrame = MAnimControl::currentTime().value();
+
     m_bounds = m_drawable->getBounds();
 }
 
@@ -195,11 +197,6 @@ void Scene::draw( SceneState &s_state, std::string selection, chrono_t iSeconds,
                  "Invalid Scene: " << m_fileName );
 
    // Check if the holder is still at the right frame.
-   // This will make time offset working properly, but refreshing the display will be slower
-   // as we need to reload some data for each cache using the same scene at different time.
-   // A better solution would be to get all the "real time" for each instance, using MAnimControl::currentTime() 
-   // as the reference frame, and only forget all these samples if that value change.
-
    if (iSeconds != m_curtime)
 	   setTime(iSeconds);
 
@@ -214,7 +211,7 @@ void Scene::draw( SceneState &s_state, std::string selection, chrono_t iSeconds,
     dctx.setShaderColors(shaderColors);
     dctx.setNormalFlipped(flippedNormal);
 
-    m_drawable->draw( dctx );
+	m_drawable->draw( dctx );
 
 }
 
