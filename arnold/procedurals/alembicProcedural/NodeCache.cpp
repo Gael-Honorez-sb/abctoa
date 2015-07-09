@@ -2,6 +2,7 @@
 
 NodeCache::NodeCache()
 {
+	
 }
 
 NodeCache::~NodeCache()
@@ -16,11 +17,14 @@ NodeCache::~NodeCache()
 //-*************************************************************************
 AtNode* NodeCache::getCachedNode(std::string cacheId)
 {
+	AtNode* node = NULL;
+	boost::mutex::scoped_lock readLock( lock );
     std::map<std::string, std::string>::iterator I = ArnoldNodeCache.find(cacheId);
     if (I != ArnoldNodeCache.end())
-		return AiNodeLookUpByName(I->second.c_str());
+		node = AiNodeLookUpByName(I->second.c_str());
 
-    return NULL;
+	readLock.unlock();
+    return node;
 }
 
 //-*************************************************************************
@@ -29,6 +33,8 @@ AtNode* NodeCache::getCachedNode(std::string cacheId)
 //-*************************************************************************
 void NodeCache::addNode(std::string cacheId, AtNode* node)
 {
+	boost::mutex::scoped_lock writeLock( lock );
 	ArnoldNodeCache[cacheId] = std::string(AiNodeGetName(node));
+	writeLock.unlock();
 
 }
