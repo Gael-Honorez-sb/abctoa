@@ -47,6 +47,7 @@
 #include "WriteLight.h"
 #include "json/json.h"
 #include "parseAttributes.h"
+#include "ArchiveWalker.h"
 
 #include <Alembic/AbcGeom/All.h>
 #include <Alembic/AbcCoreHDF5/All.h>
@@ -77,8 +78,8 @@ using namespace Alembic::AbcGeom;
 boost::atomic<bool> schemaInitialized(false);
 #endif
 
-boost::mutex gGlobalLock;
-#define GLOBAL_LOCK	   boost::mutex::scoped_lock writeLock( gGlobalLock );
+//boost::mutex gGlobalLock;
+//#define GLOBAL_LOCK	   boost::mutex::scoped_lock writeLock( gGlobalLock );
 
 typedef std::map<std::string, IObject> FileCache;
 FileCache g_fileCache;
@@ -104,7 +105,7 @@ void update(Json::Value& a, Json::Value& b) {
         }
     }
 }
-
+/*
 void WalkObject( IObject & parent, const ObjectHeader &i_ohead, ProcArgs &args,
              PathList::const_iterator I, PathList::const_iterator E,
                     MatrixSampleMap * xformSamples)
@@ -281,9 +282,9 @@ void WalkObject( IObject & parent, const ObjectHeader &i_ohead, ProcArgs &args,
         }
     }
 
-
-
+    
 }
+*/
 
 //-*************************************************************************
 
@@ -305,8 +306,8 @@ int ProcInit( struct AtNode *node, void **user_ptr )
     }
 #endif
 
-    boost::mutex::scoped_lock writeLock( gGlobalLock );
-    writeLock.unlock();
+    //boost::mutex::scoped_lock writeLock( gGlobalLock );
+    //writeLock.unlock();
 
     bool skipJson = false;
     bool skipShaders = false;
@@ -349,7 +350,7 @@ int ProcInit( struct AtNode *node, void **user_ptr )
         const char* assfile = AiNodeGetStr(node, "assShaders");
         if(*assfile != 0)
         {
-            writeLock.lock();
+            //writeLock.lock();
             // if we don't find the ass file, we can load it. This avoid multiple load of the same file.
             if(std::find(g_loadedAss.begin(), g_loadedAss.end(), std::string(assfile)) == g_loadedAss.end())
             {
@@ -358,7 +359,7 @@ int ProcInit( struct AtNode *node, void **user_ptr )
                     g_loadedAss.push_back(std::string(assfile));
                 
             }
-            writeLock.unlock();
+           //writeLock.unlock();
 
         }
     }
@@ -367,7 +368,7 @@ int ProcInit( struct AtNode *node, void **user_ptr )
     {
         const char* abcfile = AiNodeGetStr(node, "abcShaders");
 
-        writeLock.lock();
+        //writeLock.lock();
         FileCache::iterator I = g_abcShaders.find(abcfile);
         if (I != g_abcShaders.end())
         {
@@ -393,7 +394,7 @@ int ProcInit( struct AtNode *node, void **user_ptr )
                 args->abcShaderFile = abcfile;
             }
         }
-        writeLock.unlock();
+        //writeLock.unlock();
     }
 
     // check if we have a UV archive attribute
@@ -639,17 +640,21 @@ int ProcInit( struct AtNode *node, void **user_ptr )
     }
 
 
+    // Trying the new archiveWalker.
+    ArchiveWalker walker;
+    walker.args = args;
     
-    IObject root;
+    //IObject root;
 
-    writeLock.lock();
-    FileCache::iterator I = g_fileCache.find(args->filename);
+    //writeLock.lock();
+  /*  FileCache::iterator I = g_fileCache.find(args->filename);
     if (I != g_fileCache.end())
         root = (*I).second;
 
-    else
+    else*/
     {
         Alembic::AbcCoreFactory::IFactory factory;
+        factory.setOgawaNumStreams(32);
         IArchive archive = factory.getArchive(args->filename);
         if (!archive.valid())
         {
@@ -657,50 +662,153 @@ int ProcInit( struct AtNode *node, void **user_ptr )
         }
         else
         {
+            walker.addArchive(archive);
             AiMsgDebug ( "reading file %s", args->filename.c_str());
-            g_fileCache[args->filename] = archive.getTop();
-            root = archive.getTop();
+            //g_fileCache[args->filename] = archive.getTop();
+            //root = archive.getTop();
         }
+
+    }
+    WorkUnit traverseArchives;
+    traverseArchives.archive = 0;
+    traverseArchives.start = 0;
+    traverseArchives.end = 1;
+    traverseArchives.walker = &walker;
+    walker.walkArchives(traverseArchives);
+    /*int numTraverse = std::min(1, (int)walker.mArchives.size());
+    std::vector<WorkUnit> traverseArchives(numTraverse);
+    int lastEnd = 0;
+    if(numTraverse == 0)
+        return 1;
+    int workSize = walker.mArchives.size() / numTraverse;
+    int workRem = 0;
+    if ((int)walker.mArchives.size() > numTraverse)
+        workRem = walker.mArchives.size() % numTraverse;
+
+    std::vector<void *> t;
+    for (int i = 0; i < numTraverse; ++i)
+    {
+        traverseArchives[i].archive = i;
+        traverseArchives[i].start = lastEnd;
+        traverseArchives[i].walker = &walker;
+        lastEnd += workSize;
+        if (i < workRem)
+	        lastEnd++;
+        traverseArchives[i].end = lastEnd;
+
+        t.push_back(AiThreadCreate(walkArchivesWrap, (void *)&(traverseArchives[i]),  AI_PRIORITY_LOW));
+
 
     }
     
-    //writeLock.unlock();
-
-    PathList path;
-    TokenizePath( args->objectpath, path );
-
-    try
+    for (int i = 0; i < numTraverse; ++i)
     {
-        if ( path.empty() ) //walk the entire scene
-        {
-            for ( size_t i = 0; i < root.getNumChildren(); ++i )
-            {
-                std::vector<std::string> tags;
-                WalkObject( root, root.getChildHeader(i), *args,
-                            path.end(), path.end(), 0 );
-            }
-        }
-        else //walk to a location + its children
-        {
-            PathList::const_iterator I = path.begin();
-
-            const ObjectHeader *nextChildHeader =
-                    root.getChildHeader( *I );
-            if ( nextChildHeader != NULL )
-            {
-                std::vector<std::string> tags;
-                WalkObject( root, *nextChildHeader, *args, I+1,
-                        path.end(), 0);
-            }
-        }
+        AiThreadWait(t[i]);
     }
-    catch ( const std::exception &e )
+
+    for (int i = 0; i < numTraverse; ++i)
     {
-        AiMsgError("exception thrown during ProcInit: %s", e.what());
+        AiThreadClose(t[i]);
     }
-    catch (...)
+    */
+
+    // Now that we traversed the files, we can export to arnold.
+    size_t maxObjects = 0;
+    for (size_t i = 0; i < walker.mArchives.size(); ++i)
     {
-        AiMsgError("exception thrown");
+        maxObjects = std::max(walker.mArchives[i].toExport.size(), maxObjects);
+    }
+
+    int numObjects = std::min(32, (int)maxObjects);
+    if(numObjects > 0)
+    {
+        std::vector<WorkUnit> exportObjects(numObjects);
+        int lastEnd = 0;
+        int workSize = maxObjects / numObjects;
+        int workRem = 0;
+        if ((int)maxObjects > numObjects)
+            workRem = maxObjects % numObjects;
+
+        std::vector<void *> readThreads;
+    
+        for (int i = 0; i < numObjects; ++i)
+        {
+	        exportObjects[i].archive = i;  // ignored
+	        exportObjects[i].start = lastEnd;
+	        exportObjects[i].walker = &walker;
+	        lastEnd += workSize;
+	        if (i < workRem)
+		        lastEnd++;
+	        exportObjects[i].end = lastEnd;
+
+            readThreads.push_back(AiThreadCreate(exportObjectsWrap, (void *)&(exportObjects[i]),  AI_PRIORITY_LOW));
+        }
+
+        for (int i = 0; i < numObjects; ++i)
+        {
+            AiThreadWait(readThreads[i]);
+        }
+
+        for (int i = 0; i < numObjects; ++i)
+        {
+            AiThreadClose(readThreads[i]);
+        }
+        readThreads.clear();
+        exportObjects.clear();
+
+    }
+
+    // Now that we have exported the meshes, we can export the instances.
+    maxObjects = 0;
+    for (size_t i = 0; i < walker.mArchives.size(); ++i)
+    {
+        maxObjects = std::max(walker.mArchives[i].instances.size(), maxObjects);
+    }
+
+    numObjects = std::min(32, (int)maxObjects);
+    if(numObjects > 0)
+    {
+        std::vector<WorkUnit> exportInstances(numObjects);
+        int lastEnd = 0;
+        int workSize = maxObjects / numObjects;
+        int workRem = 0;
+        if ((int)maxObjects > numObjects)
+            workRem = maxObjects % numObjects;
+
+        std::vector<void *> instanceThreads;
+    
+        for (int i = 0; i < numObjects; ++i)
+        {
+            exportInstances[i].archive = i;  // ignored
+            exportInstances[i].start = lastEnd;
+            exportInstances[i].walker = &walker;
+            lastEnd += workSize;
+            if (i < workRem)
+                lastEnd++;
+            exportInstances[i].end = lastEnd;
+
+            instanceThreads.push_back(AiThreadCreate(exportInstancesWrap, (void *)&(exportInstances[i]),  AI_PRIORITY_LOW));
+        }
+
+        for (int i = 0; i < numObjects; ++i)
+        {
+            AiThreadWait(instanceThreads[i]);
+        }
+
+        for (int i = 0; i < numObjects; ++i)
+        {
+            AiThreadClose(instanceThreads[i]);
+        }
+        instanceThreads.clear();
+        exportInstances.clear();
+
+    }
+
+
+    for (size_t i = 0; i < walker.mArchives.size(); ++i)
+    {
+        walker.mArchives[i].instances.clear();
+        walker.mArchives[i].toExport.clear();
     }
 
     return 1;

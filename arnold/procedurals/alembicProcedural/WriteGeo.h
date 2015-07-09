@@ -45,8 +45,15 @@ using namespace Alembic::AbcGeom;
 //-*****************************************************************************
 
 
-void ProcessPolyMesh( IPolyMesh &polymesh, ProcArgs &args,
+std::string GetPolyMeshHash(IPolyMesh &polymesh, ProcArgs &args);
+
+void ProcessPolyMesh( IPolyMesh &polymesh, ProcArgs &args);
+
+void ProcessPolyMeshInstance( IPolyMesh &polymesh, ProcArgs &args,
         MatrixSampleMap * xformSamples);
+
+/*void ProcessPolyMesh( IPolyMesh &polymesh, ProcArgs &args,
+        MatrixSampleMap * xformSamples);*/
 
 void ProcessSubD( ISubD &subd, ProcArgs &args,
         MatrixSampleMap * xformSamples);

@@ -134,20 +134,6 @@ void ProcessIndexedBuiltinParam(
 
 }
 
-//-*****************************************************************************
-
-namespace
-{
-    // Arnold scene build is single-threaded so we don't have to lock around
-    // access to this for now.
-	NodeCache* g_meshCache = new NodeCache();
-
-    //typedef std::map<std::string, AtNode *> NodeCache;
-    //NodeCache g_meshCache;
-
-    boost::mutex gGlobalLock;
-    #define GLOBAL_LOCK	   boost::mutex::scoped_lock writeLock( gGlobalLock );
-}
 
 
 
@@ -336,6 +322,9 @@ std::string getHash(
 
 
 //-*************************************************************************
+
+
+
 // doNormals
 // This function does nothing for subdv, but write normals for non-subdvided meshes. Called in writeMesh.
 template<typename primT> 
@@ -407,7 +396,17 @@ AtNode* writeMesh(
     )
 
 {
-    //GLOBAL_LOCK;
+    //WriteLock w_lock(myLock);
+    // Set the meshNode.
+    AtNode* meshNode = AiNode( "polymesh" );
+    if (!meshNode)
+    {
+        AiMsgError("Failed to make polymesh node for %s",
+                prim.getFullName().c_str());
+        return NULL;
+    }
+
+
     typename primT::schema_type  &ps = prim.getSchema();
     TimeSamplingPtr ts = ps.getTimeSampling();
 
@@ -563,19 +562,7 @@ AtNode* writeMesh(
                 2);
     }
 
-
-    // Set the meshNode.
-    AtNode* meshNode = AiNode( "polymesh" );
-
-
-    if (!meshNode)
-    {
-        AiMsgError("Failed to make polymesh node for %s",
-                prim.getFullName().c_str());
-        return NULL;
-    }
-
-    AiNodeSetStr( meshNode, "name", (name + ":src").c_str() );
+    AiNodeSetStr( meshNode, "name", cacheId.c_str() );
     AiNodeSetByte( meshNode, "visibility", 0 );
     AiNodeSetBool(meshNode, "smoothing", true);
 
@@ -819,6 +806,12 @@ AtNode* writeMesh(
 
     args.createdNodes.push_back(meshNode);
     g_meshCache->addNode(cacheId, meshNode);
+    /*w_lock.lock();
+    std::vector<std::string>::iterator it  = std::find (g_exportNodeList.begin(), g_exportNodeList.end(), cacheId);
+    if (it != g_exportNodeList.end())
+        g_exportNodeList.erase(it);
+   w_lock.unlock();*/
+
     return meshNode;
 
 }
@@ -1040,8 +1033,25 @@ void createMeshLight(
 
 //-*************************************************************************
 
-void ProcessPolyMesh( IPolyMesh &polymesh, ProcArgs &args,
-        MatrixSampleMap * xformSamples)
+std::string GetPolyMeshHash(IPolyMesh &polymesh, ProcArgs &args)
+{
+
+    if ( !polymesh.valid() )
+        return "";
+
+    std::string originalName = polymesh.getFullName();
+    std::string name = args.nameprefix + originalName;
+
+
+    SampleTimeSet sampleTimes;
+    getSampleTimes(polymesh, args, sampleTimes);
+
+    return getHash(name, originalName, polymesh, args, sampleTimes);
+
+}
+
+void ProcessPolyMesh( IPolyMesh &polymesh, ProcArgs &args/*,
+        MatrixSampleMap * xformSamples*/)
 {
 
     if ( !polymesh.valid() )
@@ -1057,11 +1067,13 @@ void ProcessPolyMesh( IPolyMesh &polymesh, ProcArgs &args,
     std::string cacheId = getHash(name, originalName, polymesh, args, sampleTimes);
     AtNode* meshNode = g_meshCache->getCachedNode(cacheId);
 
-    if(meshNode == NULL)
-    { // We don't have a cache, so we much create this mesh.
-        meshNode = writeMesh(name, originalName, cacheId, polymesh, args, sampleTimes);
-    }
+    //AtNode* meshNode = getCachedNode(cacheId);
 
+    //if(meshNode == NULL)
+    { // We don't have a cache, so we much create this mesh.
+        writeMesh(name, originalName, cacheId, polymesh, args, sampleTimes);
+    }
+    /*
     AtNode *instanceNode = NULL;
     // we can create the instance, with correct transform, attributes & shaders.
     if(meshNode != NULL)
@@ -1069,7 +1081,35 @@ void ProcessPolyMesh( IPolyMesh &polymesh, ProcArgs &args,
 
     // Handling meshLights.
     if(isMeshLight(originalName, polymesh, args))
-        createMeshLight(name, originalName, polymesh, args, xformSamples, instanceNode);
+        createMeshLight(name, originalName, polymesh, args, xformSamples, instanceNode);*/
+}
+
+void ProcessPolyMeshInstance ( IPolyMesh &polymesh, ProcArgs &args,
+        MatrixSampleMap * xformSamples)
+{
+
+    if ( !polymesh.valid() )
+        return;
+
+    std::string originalName = polymesh.getFullName();
+    std::string name = args.nameprefix + originalName;
+
+
+    SampleTimeSet sampleTimes;
+
+    getSampleTimes(polymesh, args, sampleTimes);
+    std::string cacheId = getHash(name, originalName, polymesh, args, sampleTimes);
+    
+    AtNode* meshNode = AiNodeLookUpByName(cacheId.c_str());
+
+    AtNode *instanceNode = NULL;
+    // we can create the instance, with correct transform, attributes & shaders.
+    if(meshNode != NULL)
+        instanceNode = createInstance(name, originalName, polymesh, args, xformSamples, meshNode);
+    /*
+    // Handling meshLights.
+    if(isMeshLight(originalName, polymesh, args))
+        createMeshLight(name, originalName, polymesh, args, xformSamples, instanceNode);*/
 }
 
 //-*************************************************************************
@@ -1081,7 +1121,7 @@ void ProcessSubD( ISubD &subd, ProcArgs &args,
     if ( !subd.valid() )
         return;
 
-    std::string originalName = subd.getFullName();
+   /*std::string originalName = subd.getFullName();
     std::string name = args.nameprefix + originalName;
 
     SampleTimeSet sampleTimes;
@@ -1101,7 +1141,7 @@ void ProcessSubD( ISubD &subd, ProcArgs &args,
 
     // we can create the instance, with correct transform, attributes & shaders.
     if(meshNode != NULL)
-        createInstance(name, originalName, subd, args, xformSamples, meshNode);
+        createInstance(name, originalName, subd, args, xformSamples, meshNode);*/
 
 }
 
