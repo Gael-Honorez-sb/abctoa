@@ -47,9 +47,9 @@ using namespace Alembic::AbcGeom;
 
 std::string GetPolyMeshHash(IPolyMesh &polymesh, ProcArgs &args);
 
-void ProcessPolyMesh( IPolyMesh &polymesh, ProcArgs &args);
+void ProcessPolyMesh( IPolyMesh &polymesh, int obj, ProcArgs &args);
 
-void ProcessPolyMeshInstance( IPolyMesh &polymesh, ProcArgs &args,
+void ProcessPolyMeshInstance( IPolyMesh &polymesh, int obj, ProcArgs &args,
         MatrixSampleMap * xformSamples);
 
 /*void ProcessPolyMesh( IPolyMesh &polymesh, ProcArgs &args,

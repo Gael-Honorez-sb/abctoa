@@ -96,7 +96,8 @@ struct ProcArgs
 
     AtNode * proceduralNode;
 
-    std::vector<struct AtNode *> createdNodes;
+    std::vector<struct AtNode *> createdMeshes;
+	std::vector<struct AtNode *> createdInstances;
 
     bool linkShader;
     bool linkDisplacement;
