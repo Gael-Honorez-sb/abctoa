@@ -130,7 +130,7 @@ void ArchiveWalker::exportInstances(WorkUnit & data)
                 getXform(parent, xformSamples);
 
                 IPolyMesh polymesh( object, Alembic::Abc::kWrapExisting );
-                ProcessPolyMeshInstance( polymesh, *args, xformSamples);
+                ProcessPolyMeshInstance( polymesh,j, *args, xformSamples);
             }
         }
     }
@@ -156,7 +156,7 @@ void ArchiveWalker::exportObjects(WorkUnit & data)
                 //getXform(parent, xformSamples);
 
                 IPolyMesh polymesh( object, Alembic::Abc::kWrapExisting );
-                ProcessPolyMesh( polymesh, *args);//, xformSamples);
+                ProcessPolyMesh( polymesh, j, *args);//, xformSamples);
             }
         }
     }

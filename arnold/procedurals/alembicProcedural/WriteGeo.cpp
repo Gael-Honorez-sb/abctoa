@@ -49,7 +49,7 @@
 #include "json/value.h"
 
 #include <boost/regex.hpp>
-#include <boost/thread.hpp>
+
 
 //-*****************************************************************************
 
@@ -61,6 +61,10 @@
 
 //-*****************************************************************************
 
+namespace
+{
+	NodeCache* g_meshCache = new NodeCache();
+}
 
 template <typename geomParamT>
 void ProcessIndexedBuiltinParam(
@@ -562,7 +566,7 @@ AtNode* writeMesh(
                 2);
     }
 
-    AiNodeSetStr( meshNode, "name", cacheId.c_str() );
+    AiNodeSetStr( meshNode, "name", name.c_str() );
     AiNodeSetByte( meshNode, "visibility", 0 );
     AiNodeSetBool(meshNode, "smoothing", true);
 
@@ -804,7 +808,7 @@ AtNode* writeMesh(
 
     }
 
-    args.createdNodes.push_back(meshNode);
+    //args.createdNodes.push_back(meshNode);
     g_meshCache->addNode(cacheId, meshNode);
     /*w_lock.lock();
     std::vector<std::string>::iterator it  = std::find (g_exportNodeList.begin(), g_exportNodeList.end(), cacheId);
@@ -889,7 +893,7 @@ AtNode* createInstance(
                     {
                         // We can't have a NULL.
                         shaderForFaceSet = AiNode("utility");
-                        args.createdNodes.push_back(shaderForFaceSet);
+//                        args.createdNodes.push_back(shaderForFaceSet);
                         AiNodeSetStr(shaderForFaceSet, "name", faceSetNameForShading.c_str());
                     }
                         AiArraySetPtr(shadersArray, i, shaderForFaceSet);
@@ -901,7 +905,7 @@ AtNode* createInstance(
             ApplyShaders(originalName, instanceNode, tags, args);
     }
 
-    args.createdNodes.push_back(instanceNode);
+    //args.createdNodes.push_back(instanceNode);
     return instanceNode;
 
 }
@@ -1026,7 +1030,7 @@ void createMeshLight(
     // adding attributes on procedural
     AddArbitraryProceduralParams(args.proceduralNode, meshLightNode);
 
-    args.createdNodes.push_back(meshLightNode);
+    //args.createdNodes.push_back(meshLightNode);
 
 }
 
@@ -1050,7 +1054,7 @@ std::string GetPolyMeshHash(IPolyMesh &polymesh, ProcArgs &args)
 
 }
 
-void ProcessPolyMesh( IPolyMesh &polymesh, ProcArgs &args/*,
+void ProcessPolyMesh( IPolyMesh &polymesh, int obj, ProcArgs &args/*,
         MatrixSampleMap * xformSamples*/)
 {
 
@@ -1065,14 +1069,13 @@ void ProcessPolyMesh( IPolyMesh &polymesh, ProcArgs &args/*,
 
     getSampleTimes(polymesh, args, sampleTimes);
     std::string cacheId = getHash(name, originalName, polymesh, args, sampleTimes);
-    AtNode* meshNode = g_meshCache->getCachedNode(cacheId);
+    //AtNode* meshNode = g_meshCache->getCachedNode(cacheId);
 
-    //AtNode* meshNode = getCachedNode(cacheId);
+    AtNode* meshNode = writeMesh(name, originalName, cacheId, polymesh, args, sampleTimes);
 
-    //if(meshNode == NULL)
-    { // We don't have a cache, so we much create this mesh.
-        writeMesh(name, originalName, cacheId, polymesh, args, sampleTimes);
-    }
+
+
+	args.createdMeshes[obj] = meshNode;
     /*
     AtNode *instanceNode = NULL;
     // we can create the instance, with correct transform, attributes & shaders.
@@ -1084,7 +1087,7 @@ void ProcessPolyMesh( IPolyMesh &polymesh, ProcArgs &args/*,
         createMeshLight(name, originalName, polymesh, args, xformSamples, instanceNode);*/
 }
 
-void ProcessPolyMeshInstance ( IPolyMesh &polymesh, ProcArgs &args,
+void ProcessPolyMeshInstance ( IPolyMesh &polymesh, int obj, ProcArgs &args,
         MatrixSampleMap * xformSamples)
 {
 
@@ -1100,12 +1103,14 @@ void ProcessPolyMeshInstance ( IPolyMesh &polymesh, ProcArgs &args,
     getSampleTimes(polymesh, args, sampleTimes);
     std::string cacheId = getHash(name, originalName, polymesh, args, sampleTimes);
     
-    AtNode* meshNode = AiNodeLookUpByName(cacheId.c_str());
+	AtNode* meshNode = g_meshCache->getCachedNode(cacheId);
 
     AtNode *instanceNode = NULL;
     // we can create the instance, with correct transform, attributes & shaders.
     if(meshNode != NULL)
         instanceNode = createInstance(name, originalName, polymesh, args, xformSamples, meshNode);
+
+	args.createdInstances[obj] = instanceNode;
     /*
     // Handling meshLights.
     if(isMeshLight(originalName, polymesh, args))

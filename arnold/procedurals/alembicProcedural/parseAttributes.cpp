@@ -303,7 +303,7 @@ AtNode* createNetwork(IObject object, std::string prefix, ProcArgs & args)
             AiNodeSetStr (aShader, "name", name.c_str());
             aShaders[abcnode.getName()] = aShader;
 
-            args.createdNodes.push_back(aShader);
+//            args.createdNodes.push_back(aShader);
 
             // We set the default attributes
             ICompoundProperty parameters = abcnode.getParameters();

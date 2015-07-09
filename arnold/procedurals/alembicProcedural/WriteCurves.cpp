@@ -312,7 +312,7 @@ AtNode * ProcessCurvesBase(
         
     instanceNode = AiNode( "ginstance" );
     AiNodeSetStr( instanceNode, "name", name.c_str() );
-    args.createdNodes.push_back(instanceNode);
+    //args.createdNodes.push_back(instanceNode);
         
     AiNodeSetBool( instanceNode, "inherit_xform", false );
 
@@ -593,7 +593,7 @@ AtNode * ProcessCurvesBase(
       return NULL;
     }
 
-    args.createdNodes.push_back(curvesNode);
+   // args.createdNodes.push_back(curvesNode);
 
     // the basis of the curve (bezier,catmull-rom etc)
     if ( basis != NULL )

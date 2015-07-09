@@ -4,6 +4,7 @@
 #include <ai.h>
 #include <string>
 #include <map>
+#include <boost/thread.hpp>
 /* 
 This class is handling the caching of Arnold node
 */
@@ -20,6 +21,7 @@ public:
 
 private:
 	std::map<std::string, std::string> ArnoldNodeCache;
+	boost::mutex lock;
 };
 
 

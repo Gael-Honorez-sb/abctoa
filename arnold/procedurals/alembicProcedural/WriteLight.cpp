@@ -417,5 +417,5 @@ void ProcessLight( ILight &light, ProcArgs &args,
     float exposure = AiNodeGetFlt(lightNode, "exposure");
     AiNodeSetFlt(lightNode, "exposure", ScaleLightExposure(exposure, args));
 
-    args.createdNodes.push_back(lightNode);
+    //args.createdNodes.push_back(lightNode);
 }

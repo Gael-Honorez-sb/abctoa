@@ -243,7 +243,7 @@ AtNode* writePoints(
         return NULL;
     }
 
-    args.createdNodes.push_back(pointsNode);
+//    args.createdNodes.push_back(pointsNode);
     
 
     float radiusPoint = 1.0f;
@@ -540,7 +540,7 @@ void createInstance(
     if (nodeHasParameter( instanceNode, "shader" ))
         ApplyShaders(originalName, instanceNode, tags, args);
 
-    args.createdNodes.push_back(instanceNode);
+//    args.createdNodes.push_back(instanceNode);
 
 }
 

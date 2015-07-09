@@ -105,186 +105,6 @@ void update(Json::Value& a, Json::Value& b) {
         }
     }
 }
-/*
-void WalkObject( IObject & parent, const ObjectHeader &i_ohead, ProcArgs &args,
-             PathList::const_iterator I, PathList::const_iterator E,
-                    MatrixSampleMap * xformSamples)
-{
-    //Accumulate transformation samples and pass along as an argument
-    //to WalkObject
-    IObject nextParentObject = parent.getChild(i_ohead.getName());
-    std::auto_ptr<MatrixSampleMap> concatenatedXformSamples;
-
-    // Check for instances
-    const ObjectHeader& ohead = parent.isChildInstance(i_ohead.getName()) ? nextParentObject.getHeader() : i_ohead;
-
-    if ( IXform::matches( ohead ) )
-    {
-        IXform xform( parent, ohead.getName() );
-        IXformSchema &xs = xform.getSchema();
-
-        IObject child = IObject( parent, ohead.getName() );
-
-        // also check visibility flags
-
-        if (isVisible(child, xs, &args) == false)
-        {}
-        else if ( args.excludeXform )
-        {
-            nextParentObject = child;
-        }
-        else
-        {
-            if ( xs.getNumOps() > 0 )
-            {
-                TimeSamplingPtr ts = xs.getTimeSampling();
-                size_t numSamples = xs.getNumSamples();
-
-                SampleTimeSet sampleTimes;
-                GetRelevantSampleTimes( args, ts, numSamples, sampleTimes,
-                        xformSamples);
-                MatrixSampleMap localXformSamples;
-
-                MatrixSampleMap * localXformSamplesToFill = 0;
-
-                concatenatedXformSamples.reset(new MatrixSampleMap);
-
-                if ( !xformSamples )
-                {
-                    // If we don't have parent xform samples, we can fill
-                    // in the map directly.
-                    localXformSamplesToFill = concatenatedXformSamples.get();
-                }
-                else
-                {
-                    //otherwise we need to fill in a temporary map
-                    localXformSamplesToFill = &localXformSamples;
-                }
-
-
-                for (SampleTimeSet::iterator I = sampleTimes.begin();
-                        I != sampleTimes.end(); ++I)
-                {
-                    XformSample sample = xform.getSchema().getValue(
-                            Abc::ISampleSelector(*I));
-                    (*localXformSamplesToFill)[(*I)] = sample.getMatrix();
-                }
-                if ( xformSamples )
-                {
-                    ConcatenateXformSamples(args,
-                            *xformSamples,
-                            localXformSamples,
-                            *concatenatedXformSamples.get());
-                }
-
-
-                xformSamples = concatenatedXformSamples.get();
-            }
-
-            nextParentObject = xform;
-        }
-    }
-    else if ( ISubD::matches( ohead ) )
-    {
-        ISubD subd( parent, ohead.getName() );
-        ProcessSubD( subd, args, xformSamples );
-
-        nextParentObject = subd;
-
-    }
-    else if ( IPolyMesh::matches( ohead ) )
-    {
-        IPolyMesh polymesh( parent, ohead.getName() );
-        
-        if(isVisibleForArnold(parent, &args)) // check if the object is invisible for arnold. It is there to avoid skipping the whole hierarchy.
-            ProcessPolyMesh( polymesh, args, xformSamples);
-
-        nextParentObject = polymesh; 
-    }
-    else if ( INuPatch::matches( ohead ) )
-    {
-        INuPatch patch( parent, ohead.getName() );
-        // TODO ProcessNuPatch( patch, args );
-
-        nextParentObject = patch;
-    }
-    else if ( IPoints::matches( ohead ) )
-    {
-        IPoints points( parent, ohead.getName() );
-
-        if(isVisibleForArnold(parent, &args))
-            ProcessPoint( points, args, xformSamples );
-
-        nextParentObject = points;
-    }
-    else if ( ICurves::matches( ohead ) )
-    {
-        ICurves curves( parent, ohead.getName() );
-
-        /*if(isVisibleForArnold(parent, &args))
-            ProcessCurves( curves, args, xformSamples );*/
-
-        nextParentObject = curves;
-    }
-    else if ( ICamera::matches( ohead ) )
-    {
-        ICamera camera( parent, ohead.getName() );
-
-        nextParentObject = camera;
-    }
-    else if ( ILight::matches( ohead ) )
-    {
-        ILight light( parent, ohead.getName() );
-        
-        if(isVisibleForArnold(parent, &args)) // check if the object is invisible for arnold. It is there to avoid skipping the whole hierarchy.
-            ProcessLight( light, args, xformSamples);
-
-        nextParentObject = light;
-    }
-    else if ( IFaceSet::matches( ohead ) )
-    {
-        //don't complain about discovering a faceset upon traversal
-    }
-    else
-    {
-
-        AiMsgError("could not determine type of %s", ohead.getName().c_str());
-        AiMsgError("%s has MetaData: %s", ohead.getName().c_str(), ohead.getMetaData().serialize().c_str());
-        if ( IXform::matches( ohead ) )
-            AiMsgError("but we are matching");
-//        nextParentObject = parent.getChild(ohead.getName());
-    }
-
-    if ( nextParentObject.valid() )
-    {
-        //std::cerr << nextParentObject.getFullName() << std::endl;
-
-        if ( I == E )
-        {
-            for ( size_t i = 0; i < nextParentObject.getNumChildren() ; ++i )
-            {
-                
-                WalkObject( nextParentObject,
-                            nextParentObject.getChildHeader( i ),
-                            args, I, E, xformSamples);
-            }
-        }
-        else
-        {
-            const ObjectHeader *nextChildHeader =
-                nextParentObject.getChildHeader( *I );
-            
-            if ( nextChildHeader != NULL )
-            {
-                WalkObject( nextParentObject, *nextChildHeader, args, I+1, E,
-                    xformSamples);
-            }
-        }
-    }
-
-    
-}
-*/
 
 //-*************************************************************************
 
@@ -652,6 +472,10 @@ int ProcInit( struct AtNode *node, void **user_ptr )
         root = (*I).second;
 
     else*/
+
+	Alembic::AbcCoreFactory::IFactory factory;
+	factory.setOgawaNumStreams(32);
+
     {
         Alembic::AbcCoreFactory::IFactory factory;
         factory.setOgawaNumStreams(32);
@@ -675,42 +499,6 @@ int ProcInit( struct AtNode *node, void **user_ptr )
     traverseArchives.end = 1;
     traverseArchives.walker = &walker;
     walker.walkArchives(traverseArchives);
-    /*int numTraverse = std::min(1, (int)walker.mArchives.size());
-    std::vector<WorkUnit> traverseArchives(numTraverse);
-    int lastEnd = 0;
-    if(numTraverse == 0)
-        return 1;
-    int workSize = walker.mArchives.size() / numTraverse;
-    int workRem = 0;
-    if ((int)walker.mArchives.size() > numTraverse)
-        workRem = walker.mArchives.size() % numTraverse;
-
-    std::vector<void *> t;
-    for (int i = 0; i < numTraverse; ++i)
-    {
-        traverseArchives[i].archive = i;
-        traverseArchives[i].start = lastEnd;
-        traverseArchives[i].walker = &walker;
-        lastEnd += workSize;
-        if (i < workRem)
-	        lastEnd++;
-        traverseArchives[i].end = lastEnd;
-
-        t.push_back(AiThreadCreate(walkArchivesWrap, (void *)&(traverseArchives[i]),  AI_PRIORITY_LOW));
-
-
-    }
-    
-    for (int i = 0; i < numTraverse; ++i)
-    {
-        AiThreadWait(t[i]);
-    }
-
-    for (int i = 0; i < numTraverse; ++i)
-    {
-        AiThreadClose(t[i]);
-    }
-    */
 
     // Now that we traversed the files, we can export to arnold.
     size_t maxObjects = 0;
@@ -718,6 +506,7 @@ int ProcInit( struct AtNode *node, void **user_ptr )
     {
         maxObjects = std::max(walker.mArchives[i].toExport.size(), maxObjects);
     }
+	args->createdMeshes.resize(maxObjects);
 
     int numObjects = std::min(32, (int)maxObjects);
     if(numObjects > 0)
@@ -763,7 +552,9 @@ int ProcInit( struct AtNode *node, void **user_ptr )
     for (size_t i = 0; i < walker.mArchives.size(); ++i)
     {
         maxObjects = std::max(walker.mArchives[i].instances.size(), maxObjects);
+		
     }
+	args->createdInstances.resize(maxObjects);
 
     numObjects = std::min(32, (int)maxObjects);
     if(numObjects > 0)
@@ -827,7 +618,7 @@ int ProcCleanup( void *user_ptr )
 int ProcNumNodes( void *user_ptr )
 {
     ProcArgs * args = reinterpret_cast<ProcArgs*>( user_ptr );
-    return (int) args->createdNodes.size();
+    return (int) args->createdInstances.size() + args->createdMeshes.size();
 
 }
 
@@ -837,11 +628,13 @@ struct AtNode* ProcGetNode(void *user_ptr, int i)
 {
 
     ProcArgs * args = reinterpret_cast<ProcArgs*>( user_ptr );
-
-    if ( i >= 0 && i < (int) args->createdNodes.size() )
+	
+    if ( i >= 0 && i < (int) args->createdMeshes.size()  )
     {
-        return args->createdNodes[i];
+        return args->createdMeshes[i];
     }
+	else
+		return args->createdInstances[i-args->createdMeshes.size()];
 
     return NULL;
 }
