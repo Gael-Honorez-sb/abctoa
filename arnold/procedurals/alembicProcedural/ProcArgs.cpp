@@ -60,6 +60,10 @@ ProcArgs::ProcArgs( const char * paramStr )
  , useUvArchive(false)
  , useAbcShaders(false)
 {
+
+	// Init the NodeCollector
+	createdNodes = new NodeCollector();
+
     // Grab the shutter a camera attached to AiUniverse if present
 
    AtNode* camera = AiUniverseGetCamera();

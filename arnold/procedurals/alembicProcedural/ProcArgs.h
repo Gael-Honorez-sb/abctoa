@@ -44,6 +44,7 @@
 
 #include <Alembic/AbcGeom/All.h>
 
+#include "NodeCache.h"
 #include "json/json.h"
 
 //-*****************************************************************************
@@ -96,7 +97,7 @@ struct ProcArgs
 
     AtNode * proceduralNode;
 
-    std::vector<struct AtNode *> createdNodes;
+    NodeCollector * createdNodes;
 
     bool linkShader;
     bool linkDisplacement;
