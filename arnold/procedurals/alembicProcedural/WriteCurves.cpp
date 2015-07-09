@@ -154,8 +154,7 @@ namespace
 {
     // Arnold scene build is single-threaded so we don't have to lock around
     // access to this for now.
-    typedef std::map<std::string, AtNode *> NodeCache;
-    NodeCache g_meshCache;
+    NodeCache* g_curvesCache = new NodeCache();
 }
 
 
@@ -312,7 +311,7 @@ AtNode * ProcessCurvesBase(
         
     instanceNode = AiNode( "ginstance" );
     AiNodeSetStr( instanceNode, "name", name.c_str() );
-    args.createdNodes.push_back(instanceNode);
+    args.createdNodes->addNode(instanceNode);
         
     AiNodeSetBool( instanceNode, "inherit_xform", false );
 
@@ -332,7 +331,7 @@ AtNode * ProcessCurvesBase(
 
     AddArbitraryGeomParams( arbGeomParams, frameSelector, instanceNode );
 
-    NodeCache::iterator I = g_meshCache.find(cacheId);
+    //NodeCache::iterator I = g_meshCache.find(cacheId);
 
     if (args.linkAttributes)
     {
@@ -379,11 +378,11 @@ AtNode * ProcessCurvesBase(
         }
     } // end shader assignment
         
-    if ( I != g_meshCache.end() ) 
+    /*if ( I != g_meshCache.end() ) 
     {
         AiNodeSetPtr(instanceNode, "node", (*I).second );
         return NULL;
-    }
+    }*/
 
     
     size_t numSampleTimes = sampleTimes.size();
@@ -593,7 +592,7 @@ AtNode * ProcessCurvesBase(
       return NULL;
     }
 
-    args.createdNodes.push_back(curvesNode);
+    args.createdNodes->addNode(curvesNode);
 
     // the basis of the curve (bezier,catmull-rom etc)
     if ( basis != NULL )
@@ -771,7 +770,7 @@ AtNode * ProcessCurvesBase(
       AiNodeSetByte( curvesNode, "visibility", 0 ); // had original node that is being referenced
 
       AiNodeSetPtr(instanceNode, "node", curvesNode );
-      g_meshCache[cacheId] = curvesNode;
+      //g_meshCache[cacheId] = curvesNode;
       return curvesNode;
 
     }

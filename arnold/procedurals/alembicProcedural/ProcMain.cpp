@@ -80,14 +80,8 @@ boost::atomic<bool> schemaInitialized(false);
 boost::mutex gGlobalLock;
 #define GLOBAL_LOCK	   boost::mutex::scoped_lock writeLock( gGlobalLock );
 
-typedef std::map<std::string, IObject> FileCache;
-FileCache g_fileCache;
-
 typedef std::vector<std::string> LoadedAss;
 LoadedAss g_loadedAss;
-
-typedef std::map<std::string, IObject> LoadedAbcShaders;
-LoadedAbcShaders g_abcShaders;
 
 
 // Recursively copy the values of b into a.
@@ -367,33 +361,22 @@ int ProcInit( struct AtNode *node, void **user_ptr )
     {
         const char* abcfile = AiNodeGetStr(node, "abcShaders");
 
-        writeLock.lock();
-        FileCache::iterator I = g_abcShaders.find(abcfile);
-        if (I != g_abcShaders.end())
+        Alembic::AbcCoreFactory::IFactory factory;
+        IArchive archive = factory.getArchive(abcfile);
+        if (!archive.valid())
         {
-            args->useAbcShaders = true;
-            args->materialsObject = (*I).second;
+            AiMsgWarning ( "Cannot read file %s", abcfile);
         }
-
         else
         {
-            Alembic::AbcCoreFactory::IFactory factory;
-            IArchive archive = factory.getArchive(abcfile);
-            if (!archive.valid())
-            {
-                AiMsgWarning ( "Cannot read file %s", abcfile);
-            }
-            else
-            {
-                AiMsgDebug ( "reading file %s", abcfile);
-                Abc::IObject materialsObject(archive.getTop(), "materials");
-                g_abcShaders[args->filename] = materialsObject;
-                args->useAbcShaders = true;
-                args->materialsObject = materialsObject;
-                args->abcShaderFile = abcfile;
-            }
+            AiMsgDebug ( "reading file %s", abcfile);
+            Abc::IObject materialsObject(archive.getTop(), "materials");
+            args->useAbcShaders = true;
+            args->materialsObject = materialsObject;
+            args->abcShaderFile = abcfile;
         }
-        writeLock.unlock();
+
+
     }
 
     // check if we have a UV archive attribute
@@ -642,29 +625,20 @@ int ProcInit( struct AtNode *node, void **user_ptr )
     
     IObject root;
 
-    writeLock.lock();
-    FileCache::iterator I = g_fileCache.find(args->filename);
-    if (I != g_fileCache.end())
-        root = (*I).second;
 
+    Alembic::AbcCoreFactory::IFactory factory;
+    IArchive archive = factory.getArchive(args->filename);
+    if (!archive.valid())
+    {
+        AiMsgError ( "Cannot read file %s", args->filename.c_str());
+    }
     else
     {
-        Alembic::AbcCoreFactory::IFactory factory;
-        IArchive archive = factory.getArchive(args->filename);
-        if (!archive.valid())
-        {
-            AiMsgError ( "Cannot read file %s", args->filename.c_str());
-        }
-        else
-        {
-            AiMsgDebug ( "reading file %s", args->filename.c_str());
-            g_fileCache[args->filename] = archive.getTop();
-            root = archive.getTop();
-        }
-
+        AiMsgDebug ( "reading file %s", args->filename.c_str());
+        root = archive.getTop();
     }
-    
-    //writeLock.unlock();
+
+
 
     PathList path;
     TokenizePath( args->objectpath, path );
@@ -719,7 +693,7 @@ int ProcCleanup( void *user_ptr )
 int ProcNumNodes( void *user_ptr )
 {
     ProcArgs * args = reinterpret_cast<ProcArgs*>( user_ptr );
-    return (int) args->createdNodes.size();
+    return (int) args->createdNodes->getNumNodes();
 
 }
 
@@ -729,13 +703,8 @@ struct AtNode* ProcGetNode(void *user_ptr, int i)
 {
 
     ProcArgs * args = reinterpret_cast<ProcArgs*>( user_ptr );
+	return args->createdNodes->getNode(i);
 
-    if ( i >= 0 && i < (int) args->createdNodes.size() )
-    {
-        return args->createdNodes[i];
-    }
-
-    return NULL;
 }
 
 } //end of anonymous namespace

@@ -61,6 +61,19 @@
 
 //-*****************************************************************************
 
+namespace
+{
+    // Arnold scene build is single-threaded so we don't have to lock around
+    // access to this for now.
+	NodeCache* g_meshCache = new NodeCache();
+
+     boost::mutex gGlobalLock;
+     #define GLOBAL_LOCK	   boost::mutex::scoped_lock writeLock( gGlobalLock );
+}
+
+
+//-*****************************************************************************
+
 
 template <typename geomParamT>
 void ProcessIndexedBuiltinParam(
@@ -133,23 +146,6 @@ void ProcessIndexedBuiltinParam(
 
 
 }
-
-//-*****************************************************************************
-
-namespace
-{
-    // Arnold scene build is single-threaded so we don't have to lock around
-    // access to this for now.
-	NodeCache* g_meshCache = new NodeCache();
-
-    //typedef std::map<std::string, AtNode *> NodeCache;
-    //NodeCache g_meshCache;
-
-    boost::mutex gGlobalLock;
-    #define GLOBAL_LOCK	   boost::mutex::scoped_lock writeLock( gGlobalLock );
-}
-
-
 
 //-*************************************************************************
 // This is templated to handle shared behavior of IPolyMesh and ISubD
@@ -407,7 +403,7 @@ AtNode* writeMesh(
     )
 
 {
-    //GLOBAL_LOCK;
+    GLOBAL_LOCK;
     typename primT::schema_type  &ps = prim.getSchema();
     TimeSamplingPtr ts = ps.getTimeSampling();
 
@@ -817,7 +813,7 @@ AtNode* writeMesh(
 
     }
 
-    args.createdNodes.push_back(meshNode);
+	args.createdNodes->addNode(meshNode);
     g_meshCache->addNode(cacheId, meshNode);
     return meshNode;
 
@@ -896,7 +892,7 @@ AtNode* createInstance(
                     {
                         // We can't have a NULL.
                         shaderForFaceSet = AiNode("utility");
-                        args.createdNodes.push_back(shaderForFaceSet);
+                        args.createdNodes->addNode(shaderForFaceSet);
                         AiNodeSetStr(shaderForFaceSet, "name", faceSetNameForShading.c_str());
                     }
                         AiArraySetPtr(shadersArray, i, shaderForFaceSet);
@@ -908,7 +904,7 @@ AtNode* createInstance(
             ApplyShaders(originalName, instanceNode, tags, args);
     }
 
-    args.createdNodes.push_back(instanceNode);
+    args.createdNodes->addNode(instanceNode);
     return instanceNode;
 
 }
@@ -1033,7 +1029,7 @@ void createMeshLight(
     // adding attributes on procedural
     AddArbitraryProceduralParams(args.proceduralNode, meshLightNode);
 
-    args.createdNodes.push_back(meshLightNode);
+    args.createdNodes->addNode(meshLightNode);
 
 }
 
