@@ -183,12 +183,6 @@ void AddArbitraryGeomParam( ICompoundProperty & parent,
     }
     AiParamIteratorDestroy(iter);
 
-    if(!paramExists)
-        if ( !AiNodeDeclare( primNode, cleanAttributeName.c_str(), declStr.c_str() ) )
-        {
-            //TODO, AiWarning
-            return;
-        }
 
     if ( param.getScope() == kConstantScope ||
             param.getScope() == kUnknownScope)
@@ -199,6 +193,16 @@ void AddArbitraryGeomParam( ICompoundProperty & parent,
 
         typename T::prop_type::sample_ptr_type valueSample =
                 param.getExpandedValue( sampleSelector ).getVals();
+
+		if(valueSample->size() == 0)
+			return;
+
+	    if(!paramExists)
+			if ( !AiNodeDeclare( primNode, cleanAttributeName.c_str(), declStr.c_str() ) )
+			{
+				//TODO, AiWarning
+				return;
+			}
 
         switch ( arnoldAPIType )
         {
@@ -312,6 +316,13 @@ void AddArbitraryGeomParam( ICompoundProperty & parent,
                 typename T::prop_type::sample_ptr_type valueSample =
                         param.getIndexedValue( sampleSelector ).getVals();
 
+				if(!paramExists)
+					if ( !AiNodeDeclare( primNode, cleanAttributeName.c_str(), declStr.c_str() ) )
+					{
+						//TODO, AiWarning
+						return;
+					}
+
                 AiNodeSetArray( primNode, CleanAttributeName(param.getName()).c_str(),
                     AiArrayConvert( valueSample->size(), 1, arnoldAPIType,
                             (void *) valueSample->get() ) );
@@ -348,6 +359,12 @@ void AddArbitraryGeomParam( ICompoundProperty & parent,
             typename T::prop_type::sample_ptr_type valueSample =
                     param.getExpandedValue( sampleSelector ).getVals();
 
+			if(!paramExists)
+				if ( !AiNodeDeclare( primNode, cleanAttributeName.c_str(), declStr.c_str() ) )
+				{
+					//TODO, AiWarning
+					return;
+				}
 
             AiNodeSetArray( primNode, CleanAttributeName(param.getName()).c_str(),
                     AiArrayConvert( valueSample->size(), 1, arnoldAPIType,
