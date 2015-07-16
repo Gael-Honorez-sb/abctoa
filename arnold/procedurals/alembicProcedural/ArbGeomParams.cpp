@@ -74,6 +74,12 @@ std::string GetArnoldTypeString( GeometryScope scope, int arnoldAPIType, AtNode 
         buffer << "indexed";
         break;
     case kConstantScope:
+		if(AiNodeIs(primNode, "points"))
+		{
+			buffer << "uniform";
+			break;
+		}
+		
     default:
         buffer << "constant";
     }
@@ -133,6 +139,7 @@ void AddArbitraryGeomParam( ICompoundProperty & parent,
                             AtNode * primNode,
                             int arnoldAPIType)
 {
+
     T param( parent, propHeader.getName() );
 
     if ( !param.valid() )
@@ -183,9 +190,31 @@ void AddArbitraryGeomParam( ICompoundProperty & parent,
     }
     AiParamIteratorDestroy(iter);
 
+	if ( AiNodeIs(primNode, "points"))
+	{
+        typename T::prop_type::sample_ptr_type valueSample =
+                param.getExpandedValue( sampleSelector ).getVals();
 
-    if ( param.getScope() == kConstantScope ||
-            param.getScope() == kUnknownScope)
+		if(valueSample->size() == 0)
+			return;
+
+	    if(!paramExists)
+			if ( !AiNodeDeclare( primNode, cleanAttributeName.c_str(), declStr.c_str() ) )
+			{
+				//TODO, AiWarning
+				return;
+			}
+
+            AiNodeSetArray( primNode, CleanAttributeName(param.getName()).c_str(),
+                    AiArrayConvert( valueSample->size(), 1, arnoldAPIType,
+                            (void *) valueSample->get() ) );
+
+	}
+
+    else if ( (param.getScope() == kConstantScope ||
+            param.getScope() == kUnknownScope) 
+
+			)
     {
 
         //Set scalars directly based on arnoldAPIType since we're
