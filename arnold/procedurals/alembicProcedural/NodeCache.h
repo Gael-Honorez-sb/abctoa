@@ -46,13 +46,19 @@ private:
 };
 
 
+struct CachedNodeFile
+{
+	AtNode *node;
+	AtArray *matrix;
+};
+
 class FileCache
 {
 public:
 	FileCache();
 	~FileCache();
 
-	NodeCollector* getCachedFile(std::string cacheId);
+	std::vector<CachedNodeFile> getCachedFile(std::string cacheId);
 	void addCache(std::string cacheId, NodeCollector* createdNodes);
 
 	const size_t hash( std::string const& s );
@@ -64,7 +70,7 @@ public:
 						);
 
 private:
-	std::map<std::string, NodeCollector*> ArnoldFileCache;
+	std::map<std::string, std::vector<CachedNodeFile>> ArnoldFileCache;
 	boost::mutex lock;
 };
 

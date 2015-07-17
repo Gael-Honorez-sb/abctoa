@@ -60,7 +60,7 @@ NodeCollector::~NodeCollector()
 void NodeCollector::addNode(AtNode* node)
 {
 	boost::mutex::scoped_lock writeLock( lock );
-	AiMsgInfo("Adding node %s and type %s", AiNodeGetName(node), AiNodeEntryGetName(AiNodeGetNodeEntry (node)));
+	//AiMsgInfo("Adding node %s and type %s", AiNodeGetName(node), AiNodeEntryGetName(AiNodeGetNodeEntry (node)));
 	ArnoldNodeCollector.push_back(node);
 	writeLock.unlock();
 
@@ -95,7 +95,6 @@ FileCache::FileCache()
 
 FileCache::~FileCache()
 {
-	AiMsgInfo("Clear cache");
 	ArnoldFileCache.clear();
 }
 
@@ -104,11 +103,11 @@ FileCache::~FileCache()
 // This function return the the mesh node if already in the cache.
 // Otherwise, return NULL.
 //-*************************************************************************
-NodeCollector* FileCache::getCachedFile(std::string cacheId)
+std::vector<CachedNodeFile> FileCache::getCachedFile(std::string cacheId)
 {
-	NodeCollector* createdNodes = NULL;
+	std::vector<CachedNodeFile> createdNodes;
 	boost::mutex::scoped_lock readLock( lock );
-    std::map<std::string, NodeCollector*>::iterator I = ArnoldFileCache.find(cacheId);
+    std::map<std::string, std::vector<CachedNodeFile>>::iterator I = ArnoldFileCache.find(cacheId);
     if (I != ArnoldFileCache.end())
 		createdNodes = I->second;
 
@@ -166,24 +165,39 @@ std::string FileCache::getHash(std::string fileName,
 
 }
 
-
 //-*************************************************************************
 // addNode
 // This function adds a node in the cache.
 //-*************************************************************************
 void FileCache::addCache(std::string cacheId, NodeCollector* createdNodes)
 {
-	NodeCollector* newCreatedNodes = new NodeCollector();
 	boost::mutex::scoped_lock writeLock( lock );
 
 	for(int i = 0; i <  createdNodes->getNumNodes(); i++)
 	{
-		AiMsgInfo("ADDCACHE Getting obj %i %s and type %s", i, AiNodeGetName(createdNodes->getNode(i)), AiNodeEntryGetName(AiNodeGetNodeEntry (createdNodes->getNode(i))));
-		if(AiNodeIs(createdNodes->getNode(i), "ginstance"))
-			newCreatedNodes->addNode(createdNodes->getNode(i));
+		
+		AtNode* node = createdNodes->getNode(i);
+		if(AiNodeIs(node, "polymesh"))
+		{
+			if(AiNodeGetByte(node, "visibility") != 0)
+			{
+				CachedNodeFile cachedNode;
+				cachedNode.node = node;
+				cachedNode.matrix = AiNodeGetArray(node, "matrix");
+
+				//AiMsgInfo("ADDCACHE Getting obj %i %s and type %s", i, AiNodeGetName(createdNodes->getNode(i)), AiNodeEntryGetName(AiNodeGetNodeEntry (createdNodes->getNode(i))));
+				//newCreatedNodes->addNode(createdNodes->getNode(i));
+				ArnoldFileCache[cacheId].push_back(cachedNode);
+
+				//AtMatrix m;
+				//AiNodeGetMatrix(createdNodes->getNode(i), "matrix", m);
+				//printMatrix2(m);
+			}
+
+		}
 	}
 
-	ArnoldFileCache[cacheId] = newCreatedNodes;
+	//ArnoldFileCache[cacheId] = newCreatedNodes;
 	writeLock.unlock();
 
 }
