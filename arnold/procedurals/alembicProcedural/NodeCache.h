@@ -6,9 +6,11 @@
 #include <map>
 #include <vector>
 #include <boost/thread.hpp>
+
 /* 
 This class is handling the caching of Arnold node
 */
+
 
 class NodeCache
 {
@@ -43,5 +45,27 @@ private:
 	boost::mutex lock;
 };
 
+
+class FileCache
+{
+public:
+	FileCache();
+	~FileCache();
+
+	NodeCollector* getCachedFile(std::string cacheId);
+	void addCache(std::string cacheId, NodeCollector* createdNodes);
+
+	const size_t hash( std::string const& s );
+
+	std::string getHash(std::string fileName,     
+						std::map<std::string, AtNode*> shaders,
+						std::map<std::string, AtNode*> displacements,
+						std::vector<std::string> attributes
+						);
+
+private:
+	std::map<std::string, NodeCollector*> ArnoldFileCache;
+	boost::mutex lock;
+};
 
 #endif
