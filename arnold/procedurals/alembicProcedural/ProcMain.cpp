@@ -625,30 +625,37 @@ int ProcInit( struct AtNode *node, void **user_ptr )
 
 	std::string fileCacheId = g_fileCache->getHash(args->filename, args->shaders, args->displacements, args->attributes);
 	
-	NodeCollector *createdNodes = g_fileCache->getCachedFile(fileCacheId);
+	std::vector<CachedNodeFile> createdNodes = g_fileCache->getCachedFile(fileCacheId);
 	
-	if (createdNodes != NULL)
+	if (createdNodes.empty() == false)
 	{
-		AiMsgInfo("Found cache of size %i", createdNodes->getNumNodes());
-		for(int i = 0; i <  createdNodes->getNumNodes(); i++)
+		//AiMsgInfo("Found cache of size %i", createdNodes.size());
+		for(int i = 0; i <  createdNodes.size(); i++)
 		{
 			//AiMsgInfo("Instancing obj %i", i);
+			CachedNodeFile cachedNode = createdNodes[i];
+			AtNode *obj = cachedNode.node;
 			
-			AtNode *obj = createdNodes->getNode(i);
-			
-			AiMsgInfo("Getting obj %i %s and type %s", i, AiNodeGetName(obj), AiNodeEntryGetName(AiNodeGetNodeEntry (obj)));
+			//AiMsgInfo("Getting obj %i %s and type %s", i, AiNodeGetName(obj), AiNodeEntryGetName(AiNodeGetNodeEntry (obj)));
 
-			;
+			AtNode *instance = AiNode("ginstance");
+			AiNodeSetBool(instance, "inherit_xform", false);
+			AiNodeSetPtr(instance, "node", obj);
+			AiNodeSetArray(instance, "matrix", AiArrayCopy(cachedNode.matrix));
+			std::string newName = args->nameprefix + "/" + std::string(AiNodeGetName(obj));
+			AiNodeSetStr(instance, "name", newName.c_str());
+
+			args->createdNodes->addNode(instance);
 
 			//if(AiNodeIs(obj, "ginstance"))
 			{
-				AiMsgInfo("Instancing obj %i %s", i, AiNodeGetName(obj));
+				/*AiMsgInfo("Instancing obj %i %s", i, AiNodeGetName(obj));
 				AtNode *clone = AiNodeClone(obj);
 				//AiNodeSetBool(clone, "inherit_xform", false);
 				std::string newName = args->nameprefix + "/" + std::string(AiNodeGetName(obj));
 				AiNodeSetStr(clone, "name", newName.c_str());
 				//AiNodeSetPtr(instance, "node", obj); 
-				args->createdNodes->addNode(clone);
+				args->createdNodes->addNode(clone);*/
 			}
 
 
@@ -719,7 +726,17 @@ int ProcInit( struct AtNode *node, void **user_ptr )
 
 int ProcCleanup( void *user_ptr )
 {
-    delete reinterpret_cast<ProcArgs*>( user_ptr );
+    //delete reinterpret_cast<ProcArgs*>( user_ptr );
+	ProcArgs * args = reinterpret_cast<ProcArgs*>( user_ptr );
+
+	std::string fileCacheId = g_fileCache->getHash(args->filename, args->shaders, args->displacements, args->attributes);
+	std::vector<CachedNodeFile> createdNodes = g_fileCache->getCachedFile(fileCacheId);
+	
+	if(createdNodes.empty())
+		g_fileCache->addCache(fileCacheId, args->createdNodes);
+
+
+	delete args;
     return 1;
 }
 
@@ -728,7 +745,7 @@ int ProcCleanup( void *user_ptr )
 int ProcNumNodes( void *user_ptr )
 {
     ProcArgs * args = reinterpret_cast<ProcArgs*>( user_ptr );
-	AiMsgInfo("got %i nodes", args->createdNodes->getNumNodes());
+	//AiMsgInfo("got %i nodes", args->createdNodes->getNumNodes());
     return (int) args->createdNodes->getNumNodes();
 
 }
@@ -741,20 +758,7 @@ struct AtNode* ProcGetNode(void *user_ptr, int i)
     ProcArgs * args = reinterpret_cast<ProcArgs*>( user_ptr );
 
 	// Seems that doing that in the nodeCleaning return the wrong type of node !?
-	if(i == args->createdNodes->getNumNodes()-1)
-	{
-		for(int i = 0; i <  args->createdNodes->getNumNodes(); i++)
-			AiMsgInfo("ProcCleanup Getting obj %i %s and type %s", i, AiNodeGetName(args->createdNodes->getNode(i)), AiNodeEntryGetName(AiNodeGetNodeEntry (args->createdNodes->getNode(i))));
-
-		std::string fileCacheId = g_fileCache->getHash(args->filename, args->shaders, args->displacements, args->attributes);
-		NodeCollector *createdNodes = g_fileCache->getCachedFile(fileCacheId);
-	
-		if(createdNodes == NULL)
-			g_fileCache->addCache(fileCacheId, args->createdNodes);
-
-	}
-
-	AiMsgInfo("PROCGETNODE Getting obj %i %s and type %s", i, AiNodeGetName(args->createdNodes->getNode(i)), AiNodeEntryGetName(AiNodeGetNodeEntry (args->createdNodes->getNode(i))));
+	//AiMsgInfo("PROCGETNODE Getting obj %i %s and type %s", i, AiNodeGetName(args->createdNodes->getNode(i)), AiNodeEntryGetName(AiNodeGetNodeEntry (args->createdNodes->getNode(i))));
 	return args->createdNodes->getNode(i);
 
 }
