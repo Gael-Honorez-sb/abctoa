@@ -637,25 +637,96 @@ int ProcInit( struct AtNode *node, void **user_ptr )
 			AtNode *obj = cachedNode.node;
 			
 			//AiMsgInfo("Getting obj %i %s and type %s", i, AiNodeGetName(obj), AiNodeEntryGetName(AiNodeGetNodeEntry (obj)));
-
-			AtNode *instance = AiNode("ginstance");
-			AiNodeSetBool(instance, "inherit_xform", false);
-			AiNodeSetPtr(instance, "node", obj);
-			AiNodeSetArray(instance, "matrix", AiArrayCopy(cachedNode.matrix));
-			std::string newName = args->nameprefix + "/" + std::string(AiNodeGetName(obj));
-			AiNodeSetStr(instance, "name", newName.c_str());
-
-			args->createdNodes->addNode(instance);
-
-			//if(AiNodeIs(obj, "ginstance"))
+			if(AiNodeEntryGetType(AiNodeGetNodeEntry(obj)) == AI_NODE_SHAPE)
 			{
-				/*AiMsgInfo("Instancing obj %i %s", i, AiNodeGetName(obj));
-				AtNode *clone = AiNodeClone(obj);
-				//AiNodeSetBool(clone, "inherit_xform", false);
+				AtNode *instance = AiNode("ginstance");
+				AiNodeSetBool(instance, "inherit_xform", false);
+				AiNodeSetPtr(instance, "node", obj);
+				AiNodeSetArray(instance, "matrix", AiArrayCopy(cachedNode.matrix));
 				std::string newName = args->nameprefix + "/" + std::string(AiNodeGetName(obj));
-				AiNodeSetStr(clone, "name", newName.c_str());
-				//AiNodeSetPtr(instance, "node", obj); 
-				args->createdNodes->addNode(clone);*/
+				AiNodeSetStr(instance, "name", newName.c_str());
+				args->createdNodes->addNode(instance);
+			}
+			else if (AiNodeEntryGetType(AiNodeGetNodeEntry(obj)) == AI_NODE_LIGHT)
+			{
+				// AiNodeClone seems to crash arnold when releasing ressources. So we clone the node ourself.
+				const AtNodeEntry* nentry = AiNodeGetNodeEntry(obj);
+				AtNode* light = AiNode(AiNodeEntryGetName(nentry));
+
+				for (int i = 0; i < AiNodeEntryGetNumParams (nentry); i++)
+				{
+					const AtParamEntry* pentry = AiNodeEntryGetParameter (nentry, i);
+					switch(AiParamGetType (pentry))
+					{
+						case AI_TYPE_BYTE:
+							AiNodeSetByte(light, AiParamGetName(pentry), AiNodeGetByte(obj, AiParamGetName(pentry)));
+							break;
+						case AI_TYPE_INT:
+						case AI_TYPE_ENUM:
+							AiNodeSetInt(light, AiParamGetName(pentry), AiNodeGetInt(obj, AiParamGetName(pentry)));
+							break;
+						case AI_TYPE_BOOLEAN:
+							AiNodeSetBool(light, AiParamGetName(pentry), AiNodeGetBool(obj, AiParamGetName(pentry)));
+							break;
+						case AI_TYPE_FLOAT:
+							AiNodeSetFlt(light, AiParamGetName(pentry), AiNodeGetFlt(obj, AiParamGetName(pentry)));
+							break;
+						case AI_TYPE_RGB:
+							{
+								AtRGB col = AiNodeGetRGB(obj, AiParamGetName(pentry));
+								AiNodeSetRGB(light, AiParamGetName(pentry), col.r, col.g, col.b);
+								break;
+							}
+						case AI_TYPE_RGBA:
+							{
+								AtRGBA colRGBA = AiNodeGetRGBA(obj, AiParamGetName(pentry));
+								AiNodeSetRGBA(light, AiParamGetName(pentry), colRGBA.r, colRGBA.g, colRGBA.b, colRGBA.a);
+								break;
+							}
+						case AI_TYPE_VECTOR:
+							{
+								AtVector vec = AiNodeGetVec(obj, AiParamGetName(pentry));
+								AiNodeSetVec(light, AiParamGetName(pentry), vec.x, vec.y, vec.z);
+								break;
+							}
+						case AI_TYPE_POINT:
+							{
+								AtPoint pnt = AiNodeGetPnt(obj, AiParamGetName(pentry));
+								AiNodeSetPnt(light, AiParamGetName(pentry), pnt.x, pnt.y, pnt.z);
+								break;
+							}
+						case AI_TYPE_POINT2:
+							{
+								AtPoint2 pnt2 = AiNodeGetPnt2(obj, AiParamGetName(pentry));
+								AiNodeSetPnt2(light, AiParamGetName(pentry), pnt2.x, pnt2.y);
+								break;
+							}
+						case AI_TYPE_STRING:
+							AiNodeSetStr(light, AiParamGetName(pentry), AiNodeGetStr(obj, AiParamGetName(pentry)));
+							break;
+						case AI_TYPE_POINTER:
+						case AI_TYPE_NODE:
+							AiNodeSetPtr(light, AiParamGetName(pentry), AiNodeGetPtr(obj, AiParamGetName(pentry)));
+							break;
+						case AI_TYPE_ARRAY:
+							{
+								if(strcmp(AiParamGetName(pentry), "matrix") != 0)
+									AiNodeSetArray(light, AiParamGetName(pentry), AiArrayCopy(AiNodeGetArray(obj, AiParamGetName(pentry))));
+								break;
+							}
+						default:
+							break;
+
+
+
+					}
+
+				}
+
+				AiNodeSetArray(light, "matrix", AiArrayCopy(cachedNode.matrix));
+				std::string newName = args->nameprefix + "/" + std::string(AiNodeGetName(obj));
+				AiNodeSetStr(light, "name", newName.c_str());
+				args->createdNodes->addNode(light);
 			}
 
 
@@ -663,7 +734,7 @@ int ProcInit( struct AtNode *node, void **user_ptr )
 		return 1;
 	}
 
-	AiMsgInfo("fileCacheId : %s", fileCacheId.c_str());
+	//AiMsgInfo("fileCacheId : %s", fileCacheId.c_str());
 
     IObject root;
 

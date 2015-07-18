@@ -177,7 +177,8 @@ void FileCache::addCache(std::string cacheId, NodeCollector* createdNodes)
 	{
 		
 		AtNode* node = createdNodes->getNode(i);
-		if(AiNodeIs(node, "polymesh"))
+
+		if(AiNodeEntryGetType(AiNodeGetNodeEntry(node)) == AI_NODE_SHAPE)
 		{
 			if(AiNodeGetByte(node, "visibility") != 0)
 			{
@@ -188,12 +189,15 @@ void FileCache::addCache(std::string cacheId, NodeCollector* createdNodes)
 				//AiMsgInfo("ADDCACHE Getting obj %i %s and type %s", i, AiNodeGetName(createdNodes->getNode(i)), AiNodeEntryGetName(AiNodeGetNodeEntry (createdNodes->getNode(i))));
 				//newCreatedNodes->addNode(createdNodes->getNode(i));
 				ArnoldFileCache[cacheId].push_back(cachedNode);
-
-				//AtMatrix m;
-				//AiNodeGetMatrix(createdNodes->getNode(i), "matrix", m);
-				//printMatrix2(m);
 			}
 
+		}
+		else if (AiNodeEntryGetType(AiNodeGetNodeEntry(node)) == AI_NODE_LIGHT)
+		{
+			CachedNodeFile cachedNode;
+			cachedNode.node = node;
+			cachedNode.matrix = AiNodeGetArray(node, "matrix");
+			ArnoldFileCache[cacheId].push_back(cachedNode);
 		}
 	}
 
