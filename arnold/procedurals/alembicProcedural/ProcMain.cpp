@@ -702,7 +702,8 @@ int ProcInit( struct AtNode *node, void **user_ptr )
 								break;
 							}
 						case AI_TYPE_STRING:
-							AiNodeSetStr(light, AiParamGetName(pentry), AiNodeGetStr(obj, AiParamGetName(pentry)));
+							if(strcmp(AiParamGetName(pentry), "name") != 0)
+								AiNodeSetStr(light, AiParamGetName(pentry), AiNodeGetStr(obj, AiParamGetName(pentry)));
 							break;
 						case AI_TYPE_POINTER:
 						case AI_TYPE_NODE:
