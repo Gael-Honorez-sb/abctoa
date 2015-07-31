@@ -282,7 +282,7 @@ void IObjectDrw::setTime( chrono_t iTime )
 //-*****************************************************************************
 Box3d IObjectDrw::getBounds()
 {
-	if (m_bounds[m_currentFrame].isEmpty())
+	if (m_bounds[m_currentTime].isEmpty())
     {
         for ( DrawablePtrVec::iterator iter = m_children.begin();
               iter != m_children.end(); ++iter )
@@ -290,12 +290,12 @@ Box3d IObjectDrw::getBounds()
             DrawablePtr dptr = (*iter);
             if ( dptr )
             {
-                m_bounds[m_currentFrame].extendBy( dptr->getBounds() );
+                m_bounds[m_currentTime].extendBy( dptr->getBounds() );
             }
         }
     }
 
-    return m_bounds[m_currentFrame];
+    return m_bounds[m_currentTime];
 }
 
 

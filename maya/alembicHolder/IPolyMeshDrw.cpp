@@ -183,7 +183,10 @@ void IPolyMeshDrw::setTime( chrono_t iSeconds )
 Box3d IPolyMeshDrw::getBounds()
 {
     if(m_bounds[m_currentTime].isEmpty())
+	{
+		m_ss =  ISampleSelector(m_currentTime, ISampleSelector::kNearIndex );
         m_bounds[m_currentTime] = m_boundsProp.getValue( m_ss );
+	}
 
     return m_bounds[m_currentTime];
 }

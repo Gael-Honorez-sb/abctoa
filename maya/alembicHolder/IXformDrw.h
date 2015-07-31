@@ -58,6 +58,7 @@ public:
 
     virtual void setTime( chrono_t iSeconds );
 
+	virtual Box3d getBounds();
     virtual void draw( const DrawContext & iCtx );
 
     virtual int getNumTriangles();
