@@ -47,6 +47,7 @@
 #include "WriteLight.h"
 #include "json/json.h"
 #include "parseAttributes.h"
+#include "NodeCache.h"
 
 #include <Alembic/AbcGeom/All.h>
 #include <Alembic/AbcCoreHDF5/All.h>
@@ -68,6 +69,7 @@
 
 #include <iostream>
 #include <fstream>
+
 
 namespace
 {
@@ -279,26 +281,43 @@ void WalkObject( IObject & parent, const ObjectHeader &i_ohead, ProcArgs &args,
 
 }
 
-//-*************************************************************************
 
-int ProcInit( struct AtNode *node, void **user_ptr )
+bool ProcInitPlugin(void **plugin_user_ptr)
 {
 #ifdef WIN32
     // DIRTY FIX 
     // magic static* used in the Alembic Schemas are not threadSafe in Visual Studio, so we need to initialized them first.
-
-    if(!schemaInitialized)
-    {
         IPolyMesh::getSchemaTitle();
         IPoints::getSchemaTitle();
         ICurves::getSchemaTitle();
         INuPatch::getSchemaTitle();
         IXform::getSchemaTitle();
         ISubD::getSchemaTitle();
-        schemaInitialized = true;
-    }
 #endif
 
+		NodeCache* g_nodeCache = new NodeCache();
+
+		*plugin_user_ptr = g_nodeCache;
+
+		return true;
+}
+
+
+bool ProcCleanupPlugin(void *plugin_user_ptr)
+{
+	NodeCache* g_nodeCache = reinterpret_cast<NodeCache*>( plugin_user_ptr );
+	
+	
+	delete g_nodeCache;
+	return true;
+
+}
+
+
+//-*************************************************************************
+
+int ProcInit( struct AtNode *node, void **user_ptr )
+{
     boost::mutex::scoped_lock writeLock( gGlobalLock );
     writeLock.unlock();
 
@@ -718,10 +737,12 @@ extern "C"
 AI_EXPORT_LIB int ProcLoader(AtProcVtable *vtable)
 // vtable passed in by proc_loader macro define
 {
-   vtable->Init     = ProcInit;
-   vtable->Cleanup  = ProcCleanup;
-   vtable->NumNodes = ProcNumNodes;
-   vtable->GetNode  = ProcGetNode;
+   vtable->Init			 = ProcInit;
+   vtable->Cleanup		 = ProcCleanup;
+   vtable->NumNodes		 = ProcNumNodes;
+   vtable->GetNode		 = ProcGetNode;
+   vtable->InitPlugin	 = ProcInitPlugin;
+   vtable->CleanupPlugin = ProcCleanupPlugin;
    strcpy(vtable->version, AI_VERSION);
    return 1;
 }
