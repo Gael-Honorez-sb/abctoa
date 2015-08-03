@@ -79,6 +79,8 @@ using namespace Alembic::AbcGeom;
 boost::atomic<bool> schemaInitialized(false);
 #endif
 
+FileCache* g_fileCache = new FileCache();
+
 boost::mutex gGlobalLock;
 #define GLOBAL_LOCK	   boost::mutex::scoped_lock writeLock( gGlobalLock );
 
@@ -640,8 +642,120 @@ int ProcInit( struct AtNode *node, void **user_ptr )
         return 1;
     }
 
+	std::string fileCacheId = g_fileCache->getHash(args->filename, args->shaders, args->displacements, args->attributes);
+	
+	std::vector<CachedNodeFile> createdNodes = g_fileCache->getCachedFile(fileCacheId);
+	
+	if (createdNodes.empty() == false)
+	{
+		//AiMsgInfo("Found cache of size %i", createdNodes.size());
+		for(int i = 0; i <  createdNodes.size(); i++)
+		{
+			//AiMsgInfo("Instancing obj %i", i);
+			CachedNodeFile cachedNode = createdNodes[i];
+			AtNode *obj = cachedNode.node;
+			
+			//AiMsgInfo("Getting obj %i %s and type %s", i, AiNodeGetName(obj), AiNodeEntryGetName(AiNodeGetNodeEntry (obj)));
+			if(AiNodeEntryGetType(AiNodeGetNodeEntry(obj)) == AI_NODE_SHAPE)
+			{
+				AtNode *instance = AiNode("ginstance");
+				AiNodeSetBool(instance, "inherit_xform", false);
+				AiNodeSetPtr(instance, "node", obj);
+				AiNodeSetArray(instance, "matrix", AiArrayCopy(cachedNode.matrix));
+				std::string newName = args->nameprefix + "/" + std::string(AiNodeGetName(obj));
+				AiNodeSetStr(instance, "name", newName.c_str());
+				args->createdNodes->addNode(instance);
+			}
+			else if (AiNodeEntryGetType(AiNodeGetNodeEntry(obj)) == AI_NODE_LIGHT)
+			{
+				// AiNodeClone seems to crash arnold when releasing ressources. So we clone the node ourself.
+				const AtNodeEntry* nentry = AiNodeGetNodeEntry(obj);
+				AtNode* light = AiNode(AiNodeEntryGetName(nentry));
 
-    
+				for (int i = 0; i < AiNodeEntryGetNumParams (nentry); i++)
+				{
+					const AtParamEntry* pentry = AiNodeEntryGetParameter (nentry, i);
+					switch(AiParamGetType (pentry))
+					{
+						case AI_TYPE_BYTE:
+							AiNodeSetByte(light, AiParamGetName(pentry), AiNodeGetByte(obj, AiParamGetName(pentry)));
+							break;
+						case AI_TYPE_INT:
+						case AI_TYPE_ENUM:
+							AiNodeSetInt(light, AiParamGetName(pentry), AiNodeGetInt(obj, AiParamGetName(pentry)));
+							break;
+						case AI_TYPE_BOOLEAN:
+							AiNodeSetBool(light, AiParamGetName(pentry), AiNodeGetBool(obj, AiParamGetName(pentry)));
+							break;
+						case AI_TYPE_FLOAT:
+							AiNodeSetFlt(light, AiParamGetName(pentry), AiNodeGetFlt(obj, AiParamGetName(pentry)));
+							break;
+						case AI_TYPE_RGB:
+							{
+								AtRGB col = AiNodeGetRGB(obj, AiParamGetName(pentry));
+								AiNodeSetRGB(light, AiParamGetName(pentry), col.r, col.g, col.b);
+								break;
+							}
+						case AI_TYPE_RGBA:
+							{
+								AtRGBA colRGBA = AiNodeGetRGBA(obj, AiParamGetName(pentry));
+								AiNodeSetRGBA(light, AiParamGetName(pentry), colRGBA.r, colRGBA.g, colRGBA.b, colRGBA.a);
+								break;
+							}
+						case AI_TYPE_VECTOR:
+							{
+								AtVector vec = AiNodeGetVec(obj, AiParamGetName(pentry));
+								AiNodeSetVec(light, AiParamGetName(pentry), vec.x, vec.y, vec.z);
+								break;
+							}
+						case AI_TYPE_POINT:
+							{
+								AtPoint pnt = AiNodeGetPnt(obj, AiParamGetName(pentry));
+								AiNodeSetPnt(light, AiParamGetName(pentry), pnt.x, pnt.y, pnt.z);
+								break;
+							}
+						case AI_TYPE_POINT2:
+							{
+								AtPoint2 pnt2 = AiNodeGetPnt2(obj, AiParamGetName(pentry));
+								AiNodeSetPnt2(light, AiParamGetName(pentry), pnt2.x, pnt2.y);
+								break;
+							}
+						case AI_TYPE_STRING:
+							if(strcmp(AiParamGetName(pentry), "name") != 0)
+								AiNodeSetStr(light, AiParamGetName(pentry), AiNodeGetStr(obj, AiParamGetName(pentry)));
+							break;
+						case AI_TYPE_POINTER:
+						case AI_TYPE_NODE:
+							AiNodeSetPtr(light, AiParamGetName(pentry), AiNodeGetPtr(obj, AiParamGetName(pentry)));
+							break;
+						case AI_TYPE_ARRAY:
+							{
+								if(strcmp(AiParamGetName(pentry), "matrix") != 0)
+									AiNodeSetArray(light, AiParamGetName(pentry), AiArrayCopy(AiNodeGetArray(obj, AiParamGetName(pentry))));
+								break;
+							}
+						default:
+							break;
+
+
+
+					}
+
+				}
+
+				AiNodeSetArray(light, "matrix", AiArrayCopy(cachedNode.matrix));
+				std::string newName = args->nameprefix + "/" + std::string(AiNodeGetName(obj));
+				AiNodeSetStr(light, "name", newName.c_str());
+				args->createdNodes->addNode(light);
+			}
+
+
+		}
+		return 1;
+	}
+
+	//AiMsgInfo("fileCacheId : %s", fileCacheId.c_str());
+
     IObject root;
 
 
@@ -703,7 +817,17 @@ int ProcInit( struct AtNode *node, void **user_ptr )
 
 int ProcCleanup( void *user_ptr )
 {
-    delete reinterpret_cast<ProcArgs*>( user_ptr );
+    //delete reinterpret_cast<ProcArgs*>( user_ptr );
+	ProcArgs * args = reinterpret_cast<ProcArgs*>( user_ptr );
+
+	std::string fileCacheId = g_fileCache->getHash(args->filename, args->shaders, args->displacements, args->attributes);
+	std::vector<CachedNodeFile> createdNodes = g_fileCache->getCachedFile(fileCacheId);
+	
+	if(createdNodes.empty())
+		g_fileCache->addCache(fileCacheId, args->createdNodes);
+
+
+	delete args;
     return 1;
 }
 
@@ -712,6 +836,7 @@ int ProcCleanup( void *user_ptr )
 int ProcNumNodes( void *user_ptr )
 {
     ProcArgs * args = reinterpret_cast<ProcArgs*>( user_ptr );
+	//AiMsgInfo("got %i nodes", args->createdNodes->getNumNodes());
     return (int) args->createdNodes->getNumNodes();
 
 }
@@ -722,6 +847,9 @@ struct AtNode* ProcGetNode(void *user_ptr, int i)
 {
 
     ProcArgs * args = reinterpret_cast<ProcArgs*>( user_ptr );
+
+	// Seems that doing that in the nodeCleaning return the wrong type of node !?
+	//AiMsgInfo("PROCGETNODE Getting obj %i %s and type %s", i, AiNodeGetName(args->createdNodes->getNode(i)), AiNodeEntryGetName(AiNodeGetNodeEntry (args->createdNodes->getNode(i))));
 	return args->createdNodes->getNode(i);
 
 }
