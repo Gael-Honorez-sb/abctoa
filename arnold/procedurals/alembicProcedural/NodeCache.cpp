@@ -96,6 +96,7 @@ FileCache::FileCache()
 
 FileCache::~FileCache()
 {
+	AiMsgInfo("\t[Alembic Procedural] Removing %i files from the file cache", ArnoldFileCache.size());
 	ArnoldFileCache.clear();
 }
 

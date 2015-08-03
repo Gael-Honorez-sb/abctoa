@@ -75,18 +75,8 @@ namespace
 {
 using namespace Alembic::AbcGeom;
 
-#ifdef WIN32
-boost::atomic<bool> schemaInitialized(false);
-#endif
-
-FileCache* g_fileCache = new FileCache();
-
 boost::mutex gGlobalLock;
 #define GLOBAL_LOCK	   boost::mutex::scoped_lock writeLock( gGlobalLock );
-
-typedef std::vector<std::string> LoadedAss;
-LoadedAss g_loadedAss;
-
 
 // Recursively copy the values of b into a.
 void update(Json::Value& a, Json::Value& b) {
@@ -283,6 +273,11 @@ void WalkObject( IObject & parent, const ObjectHeader &i_ohead, ProcArgs &args,
 
 }
 
+struct caches
+{
+	FileCache* g_fileCache;
+	NodeCache* g_nodeCache;
+};
 
 bool ProcInitPlugin(void **plugin_user_ptr)
 {
@@ -296,16 +291,21 @@ bool ProcInitPlugin(void **plugin_user_ptr)
         IXform::getSchemaTitle();
         ISubD::getSchemaTitle();
 #endif
+		caches *g_caches = new caches();
 
-		NodeCache* g_nodeCache = new NodeCache();
-		*plugin_user_ptr = g_nodeCache;
+		g_caches->g_fileCache = new FileCache();
+		g_caches->g_nodeCache = new NodeCache();
+		*plugin_user_ptr = g_caches;
 		return true;
 }
 
 
 bool ProcCleanupPlugin(void *plugin_user_ptr)
 {
-	delete reinterpret_cast<NodeCache*>( plugin_user_ptr );
+	caches *g_caches = reinterpret_cast<caches*>( plugin_user_ptr );
+	delete g_caches->g_fileCache;
+	delete g_caches->g_nodeCache;
+	delete g_caches;
 	return true;
 
 }
@@ -353,27 +353,10 @@ int ProcInit( struct AtNode *node, void **user_ptr )
 
     ProcArgs * args = new ProcArgs( AiNodeGetStr( node, "data" ) );
     args->proceduralNode = node;
+	caches *g_cache = reinterpret_cast<caches*>( AiProceduralGetPluginData(node) );
 
-	args->nodeCache = reinterpret_cast<NodeCache*>( AiProceduralGetPluginData(node) );
+	args->nodeCache = g_cache->g_nodeCache;
 
-    if (AiNodeLookUpUserParameter(node, "assShaders") !=NULL )
-    {
-        const char* assfile = AiNodeGetStr(node, "assShaders");
-        if(*assfile != 0)
-        {
-            writeLock.lock();
-            // if we don't find the ass file, we can load it. This avoid multiple load of the same file.
-            if(std::find(g_loadedAss.begin(), g_loadedAss.end(), std::string(assfile)) == g_loadedAss.end())
-            {
-                
-                if(AiASSLoad(assfile, AI_NODE_SHADER) == 0)
-                    g_loadedAss.push_back(std::string(assfile));
-                
-            }
-            writeLock.unlock();
-
-        }
-    }
 
     if (AiNodeLookUpUserParameter(node, "abcShaders") !=NULL )
     {
@@ -639,9 +622,9 @@ int ProcInit( struct AtNode *node, void **user_ptr )
         return 1;
     }
 
-	std::string fileCacheId = g_fileCache->getHash(args->filename, args->shaders, args->displacements, args->attributes);
+	std::string fileCacheId = g_cache->g_fileCache->getHash(args->filename, args->shaders, args->displacements, args->attributes);
 	
-	std::vector<CachedNodeFile> createdNodes = g_fileCache->getCachedFile(fileCacheId);
+	std::vector<CachedNodeFile> createdNodes = g_cache->g_fileCache->getCachedFile(fileCacheId);
 	
 	if (createdNodes.empty() == false)
 	{
@@ -817,13 +800,15 @@ int ProcCleanup( void *user_ptr )
     //delete reinterpret_cast<ProcArgs*>( user_ptr );
 	ProcArgs * args = reinterpret_cast<ProcArgs*>( user_ptr );
 
-	std::string fileCacheId = g_fileCache->getHash(args->filename, args->shaders, args->displacements, args->attributes);
-	std::vector<CachedNodeFile> createdNodes = g_fileCache->getCachedFile(fileCacheId);
+	caches *g_cache = reinterpret_cast<caches*>( AiProceduralGetPluginData(args->proceduralNode) );
+
+	std::string fileCacheId = g_cache->g_fileCache->getHash(args->filename, args->shaders, args->displacements, args->attributes);
+	std::vector<CachedNodeFile> createdNodes = g_cache->g_fileCache->getCachedFile(fileCacheId);
 	
 	if(createdNodes.empty())
-		g_fileCache->addCache(fileCacheId, args->createdNodes);
+		g_cache->g_fileCache->addCache(fileCacheId, args->createdNodes);
 
-
+	delete args->createdNodes;
 	delete args;
     return 1;
 }

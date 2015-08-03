@@ -66,13 +66,6 @@
 
 namespace
 {
-    // Arnold scene build is single-threaded so we don't have to lock around
-    // access to this for now.
-	//NodeCache* g_pointsCache = new NodeCache();
-
-    //typedef std::map<std::string, AtNode *> NodeCache;
-    //NodeCache g_meshCache;
-
     boost::mutex gGlobalLock;
     #define GLOBAL_LOCK	   boost::mutex::scoped_lock writeLock( gGlobalLock );
 }
