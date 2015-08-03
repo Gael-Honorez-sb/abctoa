@@ -68,7 +68,7 @@ namespace
 {
     // Arnold scene build is single-threaded so we don't have to lock around
     // access to this for now.
-	NodeCache* g_pointsCache = new NodeCache();
+	//NodeCache* g_pointsCache = new NodeCache();
 
     //typedef std::map<std::string, AtNode *> NodeCache;
     //NodeCache g_meshCache;
@@ -477,7 +477,7 @@ AtNode* writePoints(
     ICompoundProperty arbPointsParams = ps.getArbGeomParams();
     AddArbitraryGeomParams( arbGeomParams, frameSelector, pointsNode );
 
-    g_pointsCache->addNode(cacheId, pointsNode);
+	args.nodeCache->addNode(cacheId, pointsNode);
     return pointsNode;
 
 
@@ -559,7 +559,7 @@ void ProcessPoint( IPoints &points, ProcArgs &args,
     getSampleTimes(points, args, sampleTimes);
 
     std::string cacheId = getHash(name, originalName, points, args, sampleTimes);
-    AtNode* pointsNode = g_pointsCache->getCachedNode(cacheId);
+    AtNode* pointsNode = args.nodeCache->getCachedNode(cacheId);
 
     if(pointsNode == NULL)
     { // We don't have a cache, so we much create this points object.

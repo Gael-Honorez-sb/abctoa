@@ -65,7 +65,7 @@ namespace
 {
     // Arnold scene build is single-threaded so we don't have to lock around
     // access to this for now.
-	NodeCache* g_meshCache = new NodeCache();
+	/*NodeCache* g_meshCache = new NodeCache();*/
 
      boost::mutex gGlobalLock;
      #define GLOBAL_LOCK	   boost::mutex::scoped_lock writeLock( gGlobalLock );
@@ -814,7 +814,7 @@ AtNode* writeMesh(
     }
 
 	args.createdNodes->addNode(meshNode);
-    g_meshCache->addNode(cacheId, meshNode);
+    args.nodeCache->addNode(cacheId, meshNode);
     return meshNode;
 
 }
@@ -1051,7 +1051,7 @@ void ProcessPolyMesh( IPolyMesh &polymesh, ProcArgs &args,
 
     getSampleTimes(polymesh, args, sampleTimes);
     std::string cacheId = getHash(name, originalName, polymesh, args, sampleTimes);
-    AtNode* meshNode = g_meshCache->getCachedNode(cacheId);
+	AtNode* meshNode = args.nodeCache->getCachedNode(cacheId);
 
     if(meshNode == NULL)
     { // We don't have a cache, so we much create this mesh.
@@ -1085,7 +1085,7 @@ void ProcessSubD( ISubD &subd, ProcArgs &args,
     getSampleTimes( subd, args, sampleTimes);
     std::string cacheId = getHash(name, originalName, subd, args, sampleTimes);
 
-    AtNode* meshNode = g_meshCache->getCachedNode(cacheId);
+	AtNode* meshNode = args.nodeCache->getCachedNode(cacheId);
 
     if(meshNode == NULL) // We don't have a cache, so we much create this mesh.
     {

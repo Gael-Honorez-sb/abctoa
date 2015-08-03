@@ -8,6 +8,7 @@ NodeCache::NodeCache()
 
 NodeCache::~NodeCache()
 {
+	AiMsgInfo("\t[Alembic Procedural] Removing %i nodes from the cache", ArnoldNodeCache.size());
 	ArnoldNodeCache.clear();
 }
 
