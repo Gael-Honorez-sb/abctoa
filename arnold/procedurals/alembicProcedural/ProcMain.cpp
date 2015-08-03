@@ -298,19 +298,14 @@ bool ProcInitPlugin(void **plugin_user_ptr)
 #endif
 
 		NodeCache* g_nodeCache = new NodeCache();
-
 		*plugin_user_ptr = g_nodeCache;
-
 		return true;
 }
 
 
 bool ProcCleanupPlugin(void *plugin_user_ptr)
 {
-	NodeCache* g_nodeCache = reinterpret_cast<NodeCache*>( plugin_user_ptr );
-	
-	
-	delete g_nodeCache;
+	delete reinterpret_cast<NodeCache*>( plugin_user_ptr );
 	return true;
 
 }
@@ -358,6 +353,8 @@ int ProcInit( struct AtNode *node, void **user_ptr )
 
     ProcArgs * args = new ProcArgs( AiNodeGetStr( node, "data" ) );
     args->proceduralNode = node;
+
+	args->nodeCache = reinterpret_cast<NodeCache*>( AiProceduralGetPluginData(node) );
 
     if (AiNodeLookUpUserParameter(node, "assShaders") !=NULL )
     {

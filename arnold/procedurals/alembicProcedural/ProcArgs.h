@@ -98,6 +98,7 @@ struct ProcArgs
     AtNode * proceduralNode;
 
     NodeCollector * createdNodes;
+	NodeCache * nodeCache;
 
     bool linkShader;
     bool linkDisplacement;
