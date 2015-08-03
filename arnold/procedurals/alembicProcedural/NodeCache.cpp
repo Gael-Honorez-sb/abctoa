@@ -1,5 +1,6 @@
 #include "NodeCache.h"
 
+
 NodeCache::NodeCache()
 {
 	
@@ -48,6 +49,7 @@ NodeCollector::NodeCollector()
 
 NodeCollector::~NodeCollector()
 {
+	AiMsgInfo("Deleting node collector");
 	ArnoldNodeCollector.clear();
 }
 
@@ -58,6 +60,7 @@ NodeCollector::~NodeCollector()
 void NodeCollector::addNode(AtNode* node)
 {
 	boost::mutex::scoped_lock writeLock( lock );
+	//AiMsgInfo("Adding node %s and type %s", AiNodeGetName(node), AiNodeEntryGetName(AiNodeGetNodeEntry (node)));
 	ArnoldNodeCollector.push_back(node);
 	writeLock.unlock();
 
@@ -80,4 +83,125 @@ AtNode* NodeCollector::getNode(int num)
 		node = ArnoldNodeCollector[num];
 	readLock.unlock();
 	return node;
+}
+
+
+
+
+FileCache::FileCache()
+{
+	
+}
+
+FileCache::~FileCache()
+{
+	ArnoldFileCache.clear();
+}
+
+//-*************************************************************************
+// getCachedNode
+// This function return the the mesh node if already in the cache.
+// Otherwise, return NULL.
+//-*************************************************************************
+std::vector<CachedNodeFile> FileCache::getCachedFile(std::string cacheId)
+{
+	std::vector<CachedNodeFile> createdNodes;
+	boost::mutex::scoped_lock readLock( lock );
+    std::map<std::string, std::vector<CachedNodeFile>>::iterator I = ArnoldFileCache.find(cacheId);
+    if (I != ArnoldFileCache.end())
+		createdNodes = I->second;
+
+	readLock.unlock();
+    return createdNodes;
+}
+
+const size_t FileCache::hash( std::string const& s )
+{
+    size_t result = 2166136261U ;
+    std::string::const_iterator end = s.end() ;
+    for ( std::string::const_iterator iter = s.begin() ;
+            iter != end ;
+            ++ iter )
+    {
+        result = 127 * result
+                + static_cast< unsigned char >( *iter ) ;
+    }
+    return result ;
+ }
+
+std::string FileCache::getHash(std::string fileName,     
+							   std::map<std::string, AtNode*> shaders,
+							   std::map<std::string, AtNode*> displacements,
+							   std::vector<std::string> attributes
+							   )
+{
+
+	std::ostringstream shaderBuff;
+	for(std::map<std::string, AtNode*>::iterator it = shaders.begin(); it != shaders.end(); ++it) 
+	{
+		shaderBuff << it->first;
+	}
+
+	std::ostringstream displaceBuff;
+	for(std::map<std::string, AtNode*>::iterator it = displacements.begin(); it != displacements.end(); ++it) 
+	{
+		displaceBuff << it->first;
+	}
+
+	std::ostringstream attributesBuff;
+	for(std::vector<std::string>::iterator it = attributes.begin(); it != attributes.end(); ++it) 
+	{
+		attributesBuff << *it;
+	}
+
+	std::ostringstream buffer;
+	std::string cacheId;
+
+	
+    buffer << hash(fileName) << "@" << hash(shaderBuff.str()) << "@" << hash(displaceBuff.str()) << "@" << hash(attributesBuff.str());
+
+    cacheId = buffer.str();
+	return cacheId;
+
+}
+
+//-*************************************************************************
+// addNode
+// This function adds a node in the cache.
+//-*************************************************************************
+void FileCache::addCache(std::string cacheId, NodeCollector* createdNodes)
+{
+	boost::mutex::scoped_lock writeLock( lock );
+
+	for(int i = 0; i <  createdNodes->getNumNodes(); i++)
+	{
+		
+		AtNode* node = createdNodes->getNode(i);
+
+		if(AiNodeEntryGetType(AiNodeGetNodeEntry(node)) == AI_NODE_SHAPE)
+		{
+			if(AiNodeGetByte(node, "visibility") != 0)
+			{
+				CachedNodeFile cachedNode;
+				cachedNode.node = node;
+				cachedNode.matrix = AiNodeGetArray(node, "matrix");
+
+				//AiMsgInfo("ADDCACHE Getting obj %i %s and type %s", i, AiNodeGetName(createdNodes->getNode(i)), AiNodeEntryGetName(AiNodeGetNodeEntry (createdNodes->getNode(i))));
+				//newCreatedNodes->addNode(createdNodes->getNode(i));
+				ArnoldFileCache[cacheId].push_back(cachedNode);
+			}
+
+		}
+		else if (AiNodeEntryGetType(AiNodeGetNodeEntry(node)) == AI_NODE_LIGHT)
+		{
+			CachedNodeFile cachedNode;
+			cachedNode.node = node;
+			cachedNode.matrix = AiNodeGetArray(node, "matrix");
+			ArnoldFileCache[cacheId].push_back(cachedNode);
+		}
+	}
+
+	//ArnoldFileCache[cacheId] = newCreatedNodes;
+	writeLock.unlock();
+
 }
