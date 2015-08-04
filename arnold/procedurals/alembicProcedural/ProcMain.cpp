@@ -281,6 +281,7 @@ struct caches
 {
 	FileCache* g_fileCache;
 	NodeCache* g_nodeCache;
+	AtCritSec mycs;
 };
 
 bool ProcInitPlugin(void **plugin_user_ptr)
@@ -295,10 +296,14 @@ bool ProcInitPlugin(void **plugin_user_ptr)
         IXform::getSchemaTitle();
         ISubD::getSchemaTitle();
 #endif
-		caches *g_caches = new caches();
 
-		g_caches->g_fileCache = new FileCache();
-		g_caches->g_nodeCache = new NodeCache();
+		
+
+		caches *g_caches = new caches();
+		AiCritSecInit(&g_caches->mycs);
+
+		g_caches->g_fileCache = new FileCache(g_caches->mycs);
+		g_caches->g_nodeCache = new NodeCache(g_caches->mycs);
 		*plugin_user_ptr = g_caches;
 		
 		AtNodeIterator *iter = AiUniverseGetNodeIterator (AI_NODE_SHAPE);
@@ -325,6 +330,7 @@ bool ProcInitPlugin(void **plugin_user_ptr)
 bool ProcCleanupPlugin(void *plugin_user_ptr)
 {
 	caches *g_caches = reinterpret_cast<caches*>( plugin_user_ptr );
+	AiCritSecClose(&g_caches->mycs);
 	delete g_caches->g_fileCache;
 	delete g_caches->g_nodeCache;
 	delete g_caches;
@@ -431,12 +437,14 @@ int ProcInit( struct AtNode *node, void **user_ptr )
 	ProcArgs * args = new ProcArgs( AiNodeGetStr( node, "data" ) );
 	*user_ptr = args;
 
-    args->proceduralNode = node;
+    
 
 
 	caches *g_cache = reinterpret_cast<caches*>( AiProceduralGetPluginData(node) );
+	
+	args->proceduralNode = node;
 	args->nodeCache = g_cache->g_nodeCache;
-
+	args->lock = g_cache->mycs;
 
     if (AiNodeLookUpUserParameter(node, "abcShaders") !=NULL )
     {

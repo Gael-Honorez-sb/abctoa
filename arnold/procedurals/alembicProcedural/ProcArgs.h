@@ -100,6 +100,8 @@ struct ProcArgs
     NodeCollector * createdNodes;
 	NodeCache * nodeCache;
 
+	AtCritSec lock;
+
     bool linkShader;
     bool linkDisplacement;
     bool linkAttributes;

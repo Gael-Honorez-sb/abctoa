@@ -67,8 +67,8 @@ namespace
     // access to this for now.
 	/*NodeCache* g_meshCache = new NodeCache();*/
 
-     boost::mutex gGlobalLock;
-     #define GLOBAL_LOCK	   boost::mutex::scoped_lock writeLock( gGlobalLock );
+     //boost::mutex gGlobalLock;
+    // #define GLOBAL_LOCK	   boost::mutex::scoped_lock writeLock( gGlobalLock );
 }
 
 
@@ -403,7 +403,8 @@ AtNode* writeMesh(
     )
 
 {
-    GLOBAL_LOCK;
+
+	AiMsgDebug("Writing %s", originalName.c_str());
     typename primT::schema_type  &ps = prim.getSchema();
     TimeSamplingPtr ts = ps.getTimeSampling();
 
@@ -1051,13 +1052,14 @@ void ProcessPolyMesh( IPolyMesh &polymesh, ProcArgs &args,
 
     getSampleTimes(polymesh, args, sampleTimes);
     std::string cacheId = getHash(name, originalName, polymesh, args, sampleTimes);
+	AiCritSecEnter(&args.lock);
 	AtNode* meshNode = args.nodeCache->getCachedNode(cacheId);
 
     if(meshNode == NULL)
     { // We don't have a cache, so we much create this mesh.
         meshNode = writeMesh(name, originalName, cacheId, polymesh, args, sampleTimes);
     }
-
+	AiCritSecLeave(&args.lock);
     AtNode *instanceNode = NULL;
     // we can create the instance, with correct transform, attributes & shaders.
     if(meshNode != NULL)
@@ -1089,6 +1091,7 @@ void ProcessSubD( ISubD &subd, ProcArgs &args,
 
     if(meshNode == NULL) // We don't have a cache, so we much create this mesh.
     {
+		
         meshNode = writeMesh(name, originalName, cacheId, subd, args, sampleTimes);
         //force suddiv
         if(meshNode)
