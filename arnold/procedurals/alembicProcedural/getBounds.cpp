@@ -124,8 +124,6 @@ void getBounds( IObject iObj, chrono_t seconds, Box3d & g_bounds )
 void getBoundingBox(IObject iObj, chrono_t seconds, Box3d & g_bounds )
 {
 
-    std::string path = iObj.getFullName();
-
     const MetaData &md = iObj.getMetaData();
 
     if ( ICurves::matches( md ) ||

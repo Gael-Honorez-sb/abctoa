@@ -202,7 +202,7 @@ std::string getHash(
 
   //get tags
     std::vector<std::string> tags;
-    getAllTags(prim, tags, &args);
+    getAllTags(ps.getObject(), tags, &args);
 
     // displacement stuff. If the node has displacement, the resulting geom is probably different than the one in the cache.
     AtNode* appliedDisplacement = NULL;
@@ -577,7 +577,7 @@ AtNode* writeMesh(
 
     //get tags
     std::vector<std::string> tags;
-    getAllTags(prim, tags, &args);
+    getAllTags(ps.getObject(), tags, &args);
 
     if(args.linkAttributes)
     {
@@ -865,7 +865,7 @@ AtNode* createInstance(
 
     //get tags
     std::vector<std::string> tags;
-    getAllTags(prim, tags, &args);
+    getAllTags(ps.getObject(), tags, &args);
 
     // Arnold Attribute from json
     if(args.linkAttributes)
@@ -931,7 +931,7 @@ bool isMeshLight(
 
   //get tags
     std::vector<std::string> tags;
-    getAllTags(prim, tags, &args);
+    getAllTags(ps.getObject(), tags, &args);
 
     if(args.linkAttributes)
     {
@@ -1012,7 +1012,7 @@ void createMeshLight(
 
     //get tags
     std::vector<std::string> tags;
-    getAllTags(prim, tags, &args);
+    getAllTags(ps.getObject(), tags, &args);
 
     // Arnold Attribute from json
     if(args.linkAttributes)

@@ -522,7 +522,7 @@ void createInstance(
 
     //get tags
     std::vector<std::string> tags;
-    getAllTags(prim, tags, &args);
+	getAllTags(prim, tags, &args);
 
     // Arnold Attribute from json
     if(args.linkAttributes)

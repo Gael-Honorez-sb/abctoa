@@ -245,7 +245,7 @@ void ProcessLight( ILight &light, ProcArgs &args,
     SampleTimeSet sampleTimes;
 
     ILightSchema ps = light.getSchema();
-
+	
     TimeSamplingPtr ts = ps.getTimeSampling();
     sampleTimes.insert( ts->getFloorIndex(args.frame / args.fps, ps.getNumSamples()).second );
 
@@ -258,7 +258,8 @@ void ProcessLight( ILight &light, ProcArgs &args,
 
     //get tags
     std::vector<std::string> tags;
-    getAllTags(light, tags, &args);
+	
+    getAllTags(ps.getObject(), tags, &args);
 
     // Checking if the light must be exported.
     const PropertyHeader * lightIntensityHeader = arbGeomParams.getPropertyHeader("intensity");

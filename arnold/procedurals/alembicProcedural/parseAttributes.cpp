@@ -7,6 +7,8 @@
 #include <boost/regex.hpp>
 #include <boost/lexical_cast.hpp>
 
+
+
 boost::mutex gGlobalLock;
 #define GLOBAL_LOCK	   boost::mutex::scoped_lock writeLock( gGlobalLock );
 
@@ -19,44 +21,48 @@ namespace
 
 void getTags(IObject iObj, std::vector<std::string> & tags, ProcArgs* args)
 {
-    const MetaData &md = iObj.getMetaData();
+    //const MetaData &md = iObj.getMetaData();
+	const ObjectHeader ohead = iObj.getHeader();
+	if(!iObj.valid())
+		return;
 
     ICompoundProperty arbGeomParams;
 
-    if ( IXformSchema::matches(md))
+    if ( IXform::matches( ohead ) )
     {
         IXform xform( iObj, kWrapExisting );
         IXformSchema ms = xform.getSchema();
         arbGeomParams = ms.getArbGeomParams();
     }
-    else if ( IPolyMeshSchema::matches( md ))
+    else if ( IPolyMesh::matches( ohead ))
     {
         IPolyMesh mesh( iObj, kWrapExisting );
         IPolyMeshSchema ms = mesh.getSchema();
         arbGeomParams = ms.getArbGeomParams();
     }
-    else if ( ISubD::matches( md ))
+    else if ( ISubD::matches( ohead ))
     {
         ISubD mesh( iObj, kWrapExisting );
         ISubDSchema ms = mesh.getSchema();
         arbGeomParams = ms.getArbGeomParams();
     }
 
-    else if ( IPoints::matches( md ) )
+    else if ( IPoints::matches( ohead ) )
     {
         IPoints points( iObj, kWrapExisting );
         IPointsSchema ms = points.getSchema();
         arbGeomParams = ms.getArbGeomParams();
 
     }
-    else if ( ICurves::matches( md ) )
+    else if ( ICurves::matches( ohead ) )
     {
         ICurves curves( iObj, kWrapExisting );
         ICurvesSchema ms = curves.getSchema();
         arbGeomParams = ms.getArbGeomParams();
     }
-    else if ( ILight::matches( md ) )
+    else if ( ILight::matches( ohead ) )
     {
+		std::cout << "Obj name : "<< ohead.getFullName() << " " << std::cout << iObj.getFullName() << std::endl;
         ILight lights( iObj, kWrapExisting );
         ILightSchema ms = lights.getSchema();
         arbGeomParams = ms.getArbGeomParams();
@@ -96,11 +102,12 @@ void getTags(IObject iObj, std::vector<std::string> & tags, ProcArgs* args)
 
 void getAllTags(IObject iObj, std::vector<std::string> & tags, ProcArgs* args)
 {
-    while ( iObj )
-    {
-        getTags(iObj, tags, args);
-        iObj = iObj.getParent();
-    }
+	
+	getTags(iObj, tags, args);
+	Alembic::Abc::IObject parent = iObj.getParent();
+	if (parent.valid() && Alembic::AbcGeom::IXform::matches(parent.getMetaData())) // our parent is an xform no matter what.
+		getAllTags( parent, tags, args);
+
 }
 
 
