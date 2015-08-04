@@ -863,17 +863,22 @@ int ProcCleanup( void *user_ptr )
 {
     //delete reinterpret_cast<ProcArgs*>( user_ptr );
 	ProcArgs * args = reinterpret_cast<ProcArgs*>( user_ptr );
+	if(args != NULL)
+	{
+		if(args->createdNodes->getNumNodes() > 0)
+		{
+			caches *g_cache = reinterpret_cast<caches*>( AiProceduralGetPluginData(args->proceduralNode) );
 
-	caches *g_cache = reinterpret_cast<caches*>( AiProceduralGetPluginData(args->proceduralNode) );
-
-	std::string fileCacheId = g_cache->g_fileCache->getHash(args->filename, args->shaders, args->displacements, args->attributes);
-	std::vector<CachedNodeFile> createdNodes = g_cache->g_fileCache->getCachedFile(fileCacheId);
+			std::string fileCacheId = g_cache->g_fileCache->getHash(args->filename, args->shaders, args->displacements, args->attributes);
+			std::vector<CachedNodeFile> createdNodes = g_cache->g_fileCache->getCachedFile(fileCacheId);
 	
-	if(createdNodes.empty())
-		g_cache->g_fileCache->addCache(fileCacheId, args->createdNodes);
+			if(createdNodes.empty())
+				g_cache->g_fileCache->addCache(fileCacheId, args->createdNodes);
+		}
 
-	delete args->createdNodes;
-	delete args;
+		delete args->createdNodes;
+		delete args;
+	}
     return 1;
 }
 
