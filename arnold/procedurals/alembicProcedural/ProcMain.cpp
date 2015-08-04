@@ -39,6 +39,7 @@
 #include <vector>
 
 #include "ProcArgs.h"
+#include "getBounds.h"
 #include "PathUtil.h"
 #include "SampleUtil.h"
 #include "WriteGeo.h"
@@ -75,8 +76,6 @@ namespace
 {
 using namespace Alembic::AbcGeom;
 
-boost::mutex gGlobalLock;
-#define GLOBAL_LOCK	   boost::mutex::scoped_lock writeLock( gGlobalLock );
 
 // Recursively copy the values of b into a.
 void update(Json::Value& a, Json::Value& b) {
@@ -93,12 +92,14 @@ void update(Json::Value& a, Json::Value& b) {
     }
 }
 
+
+
+
+
 void WalkObject( IObject & parent, const ObjectHeader &i_ohead, ProcArgs &args,
              PathList::const_iterator I, PathList::const_iterator E,
                     MatrixSampleMap * xformSamples)
 {
-    //Accumulate transformation samples and pass along as an argument
-    //to WalkObject
     IObject nextParentObject = parent.getChild(i_ohead.getName());
     std::auto_ptr<MatrixSampleMap> concatenatedXformSamples;
 
@@ -311,13 +312,70 @@ bool ProcCleanupPlugin(void *plugin_user_ptr)
 }
 
 
+bool ProcInitBounds (AtNode *node, AtBBox *bounds, void **user_ptr)
+{
+
+
+    ProcArgs * args = new ProcArgs( AiNodeGetStr( node, "data" ) );
+
+    #if (AI_VERSION_ARCH_NUM == 3 && AI_VERSION_MAJOR_NUM < 3) || AI_VERSION_ARCH_NUM < 3
+        #error Arnold version 3.3+ required for AlembicArnoldProcedural
+    #endif
+
+        if (!AiCheckAPIVersion(AI_VERSION_ARCH, AI_VERSION_MAJOR, AI_VERSION_MINOR))
+        {
+            std::cout << "AlembicArnoldProcedural compiled with arnold-"
+                      << AI_VERSION
+                      << " but is running with incompatible arnold-"
+                      << AiGetVersion(NULL, NULL, NULL, NULL) << std::endl;
+            return 1;
+        }
+
+    if ( args->filename.empty() )
+    {
+        args->usage();
+        return 1;
+    }
+
+
+    IObject root;
+    Alembic::AbcCoreFactory::IFactory factory;
+    IArchive archive = factory.getArchive(args->filename);
+    if (!archive.valid())
+    {
+        AiMsgError ( "Cannot read file %s", args->filename.c_str());
+    }
+    else
+    {
+        AiMsgDebug ( "reading file %s", args->filename.c_str());
+        root = archive.getTop();
+    }
+
+	Box3d bbox;
+	bbox.makeEmpty();
+
+	chrono_t frameTime = args->frame / args->fps;
+    chrono_t shutterOpenTime = ( args->frame + args->shutterOpen ) / args->fps;
+    chrono_t shutterCloseTime = ( args->frame + args->shutterClose ) / args->fps;
+
+	getBoundingBox(root, shutterOpenTime, bbox);
+	if(shutterOpenTime != shutterCloseTime)
+		getBoundingBox(root, shutterCloseTime, bbox);
+
+	bounds->min = AiPoint(bbox.min.x, bbox.min.y, bbox.min.z);
+	bounds->max = AiPoint(bbox.max.x, bbox.max.y, bbox.max.z);
+
+	AiMsgDebug("bounds->min %f %f %f", bounds->min.x, bounds->min.y, bounds->min.z);
+	AiMsgDebug("bounds->max %f %f %f", bounds->max.x, bounds->max.y, bounds->max.z);
+
+
+	return true;
+}
+
 //-*************************************************************************
 
 int ProcInit( struct AtNode *node, void **user_ptr )
 {
-    boost::mutex::scoped_lock writeLock( gGlobalLock );
-    writeLock.unlock();
-
     bool skipJson = false;
     bool skipShaders = false;
     bool skipAttributes = false;
@@ -336,8 +394,6 @@ int ProcInit( struct AtNode *node, void **user_ptr )
     }
 
 
-
-
     if (AiNodeLookUpUserParameter(node, "skipJsonFile") != NULL )
         skipJson = AiNodeGetBool(node, "skipJsonFile");
     if (AiNodeLookUpUserParameter(node, "skipShaders") != NULL )
@@ -351,10 +407,13 @@ int ProcInit( struct AtNode *node, void **user_ptr )
     if (AiNodeLookUpUserParameter(node, "skipLayers") != NULL )
         skipLayers = AiNodeGetBool(node, "skipLayers");
 
-    ProcArgs * args = new ProcArgs( AiNodeGetStr( node, "data" ) );
-    args->proceduralNode = node;
-	caches *g_cache = reinterpret_cast<caches*>( AiProceduralGetPluginData(node) );
+	ProcArgs * args = new ProcArgs( AiNodeGetStr( node, "data" ) );
+	*user_ptr = args;
 
+    args->proceduralNode = node;
+
+
+	caches *g_cache = reinterpret_cast<caches*>( AiProceduralGetPluginData(node) );
 	args->nodeCache = g_cache->g_nodeCache;
 
 
@@ -600,30 +659,8 @@ int ProcInit( struct AtNode *node, void **user_ptr )
         std::sort(args->attributes.begin(), args->attributes.end());
     }
 
-
-    *user_ptr = args;
-
-    #if (AI_VERSION_ARCH_NUM == 3 && AI_VERSION_MAJOR_NUM < 3) || AI_VERSION_ARCH_NUM < 3
-        #error Arnold version 3.3+ required for AlembicArnoldProcedural
-    #endif
-
-        if (!AiCheckAPIVersion(AI_VERSION_ARCH, AI_VERSION_MAJOR, AI_VERSION_MINOR))
-        {
-            std::cout << "AlembicArnoldProcedural compiled with arnold-"
-                      << AI_VERSION
-                      << " but is running with incompatible arnold-"
-                      << AiGetVersion(NULL, NULL, NULL, NULL) << std::endl;
-            return 1;
-        }
-
-    if ( args->filename.empty() )
-    {
-        args->usage();
-        return 1;
-    }
-
 	std::string fileCacheId = g_cache->g_fileCache->getHash(args->filename, args->shaders, args->displacements, args->attributes);
-	
+
 	std::vector<CachedNodeFile> createdNodes = g_cache->g_fileCache->getCachedFile(fileCacheId);
 	
 	if (createdNodes.empty() == false)
@@ -734,11 +771,7 @@ int ProcInit( struct AtNode *node, void **user_ptr )
 		return 1;
 	}
 
-	//AiMsgInfo("fileCacheId : %s", fileCacheId.c_str());
-
     IObject root;
-
-
     Alembic::AbcCoreFactory::IFactory factory;
     IArchive archive = factory.getArchive(args->filename);
     if (!archive.valid())
@@ -853,6 +886,7 @@ AI_EXPORT_LIB int ProcLoader(AtProcVtable *vtable)
    vtable->GetNode		 = ProcGetNode;
    vtable->InitPlugin	 = ProcInitPlugin;
    vtable->CleanupPlugin = ProcCleanupPlugin;
+   vtable->InitBounds	 = ProcInitBounds;
    strcpy(vtable->version, AI_VERSION);
    return 1;
 }
