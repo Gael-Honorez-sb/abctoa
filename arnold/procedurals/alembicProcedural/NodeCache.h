@@ -20,7 +20,7 @@ This class is handling the caching of Arnold node
 class NodeCache
 {
 public:
-	NodeCache();
+	NodeCache(AtCritSec mycs);
 	~NodeCache();
 
 	AtNode* getCachedNode(std::string cacheId);
@@ -29,7 +29,8 @@ public:
 
 private:
 	std::map<std::string, std::string> ArnoldNodeCache;
-	boost::mutex lock;
+	//boost::mutex lock;
+	AtCritSec lock;
 };
 
 
@@ -60,7 +61,7 @@ struct CachedNodeFile
 class FileCache
 {
 public:
-	FileCache();
+	FileCache(AtCritSec mycs);
 	~FileCache();
 
 	std::vector<CachedNodeFile> getCachedFile(std::string cacheId);
@@ -85,7 +86,8 @@ private:
 	std::map<std::string, std::vector<CachedNodeFile>> ArnoldFileCache;
 	std::map< std::string, IArchive > AlembicFileReader;
 	std::vector<std::string> openedFiles;
-	boost::mutex lock;
+	//boost::mutex lock;
+	AtCritSec lock;
 };
 
 #endif
