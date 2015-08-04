@@ -76,6 +76,9 @@ namespace
 {
 using namespace Alembic::AbcGeom;
 
+     boost::mutex gGlobalLock;
+     #define GLOBAL_LOCK	   boost::mutex::scoped_lock writeLock( gGlobalLock );
+
 
 // Recursively copy the values of b into a.
 void update(Json::Value& a, Json::Value& b) {
@@ -297,6 +300,24 @@ bool ProcInitPlugin(void **plugin_user_ptr)
 		g_caches->g_fileCache = new FileCache();
 		g_caches->g_nodeCache = new NodeCache();
 		*plugin_user_ptr = g_caches;
+		
+		AtNodeIterator *iter = AiUniverseGetNodeIterator (AI_NODE_SHAPE);
+		while (!AiNodeIteratorFinished(iter))
+		{
+           AtNode *shape = AiNodeIteratorGetNext(iter);
+
+           if(AiNodeIs(shape, "procedural"))
+           {
+			   
+			   if (AiProceduralGetPluginData (shape) == *plugin_user_ptr)
+			   {
+				   ProcArgs  args =  ProcArgs( AiNodeGetStr( shape, "data" ) );
+				   g_caches->g_fileCache->addReader(args.filename);
+			   }
+		   }
+       }
+
+       AiNodeIteratorDestroy(iter);		
 		return true;
 }
 
@@ -659,6 +680,14 @@ int ProcInit( struct AtNode *node, void **user_ptr )
         std::sort(args->attributes.begin(), args->attributes.end());
     }
 
+	// Don't read the same file several times
+	/*while(g_cache->g_fileCache->isFileOpened(args->filename))
+	{
+		AiMsgDebug("Waiting");
+		continue;
+	}*/
+
+
 	std::string fileCacheId = g_cache->g_fileCache->getHash(args->filename, args->shaders, args->displacements, args->attributes);
 
 	std::vector<CachedNodeFile> createdNodes = g_cache->g_fileCache->getCachedFile(fileCacheId);
@@ -771,25 +800,26 @@ int ProcInit( struct AtNode *node, void **user_ptr )
 		return 1;
 	}
 
-    IObject root;
+	IArchive archive = g_cache->g_fileCache->getReader(args->filename);
+	/*
     Alembic::AbcCoreFactory::IFactory factory;
+	factory.setOgawaNumStreams(8);
     IArchive archive = factory.getArchive(args->filename);
-    if (!archive.valid())
+    */
+	if (!archive.valid())
     {
         AiMsgError ( "Cannot read file %s", args->filename.c_str());
     }
     else
     {
         AiMsgDebug ( "reading file %s", args->filename.c_str());
-        root = archive.getTop();
     }
 
-
-
+	IObject root = archive.getTop();
     PathList path;
     TokenizePath( args->objectpath, path );
 
-    try
+    //try
     {
         if ( path.empty() ) //walk the entire scene
         {
@@ -814,7 +844,7 @@ int ProcInit( struct AtNode *node, void **user_ptr )
             }
         }
     }
-    catch ( const std::exception &e )
+    /*catch ( const std::exception &e )
     {
         AiMsgError("exception thrown during ProcInit: %s", e.what());
     }
@@ -822,7 +852,8 @@ int ProcInit( struct AtNode *node, void **user_ptr )
     {
         AiMsgError("exception thrown");
     }
-
+	*/
+	//g_cache->g_fileCache->removeFromOpenedFiles(args->filename);
     return 1;
 }
 

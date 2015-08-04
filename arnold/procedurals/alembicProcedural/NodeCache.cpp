@@ -207,3 +207,71 @@ void FileCache::addCache(std::string cacheId, NodeCollector* createdNodes)
 	writeLock.unlock();
 
 }
+
+void FileCache::addToOpenedFiles(std::string filename)
+{
+	boost::mutex::scoped_lock writeLock( lock );
+	
+	if(std::find(openedFiles.begin(), openedFiles.end(), filename) == openedFiles.end())
+		openedFiles.push_back(filename);
+
+	writeLock.unlock();
+}
+
+
+void FileCache::addReader(std::string filename)
+{
+	boost::mutex::scoped_lock writeLock( lock );
+	Alembic::AbcCoreFactory::IFactory factory;
+	factory.setOgawaNumStreams(8);
+    IArchive archive = factory.getArchive(filename);
+    if (!archive.valid())
+    {
+        AiMsgError ( "Cannot read file %s", filename.c_str());
+    }
+    else
+    {
+        AiMsgDebug ( "reading file %s", filename.c_str());
+    }	
+
+	AlembicFileReader[filename] = archive;
+
+	writeLock.unlock();
+}
+
+IArchive FileCache::getReader(std::string filename)
+{
+
+	//addToOpenedFiles(filename);
+	IArchive root;
+	boost::mutex::scoped_lock writeLock( lock );
+	root = AlembicFileReader[filename];
+	
+	writeLock.unlock();
+	return root;
+
+}
+
+void FileCache::removeFromOpenedFiles(std::string filename)
+{
+	boost::mutex::scoped_lock writeLock( lock );
+	std::vector<std::string>::iterator it = std::find(openedFiles.begin(), openedFiles.end(), filename);
+	if(it != openedFiles.end())
+		openedFiles.erase(it);
+
+	writeLock.unlock();
+}
+
+bool FileCache::isFileOpened(std::string filename)
+{
+	boost::mutex::scoped_lock readLock( lock );
+	std::vector<std::string>::iterator it = std::find(openedFiles.begin(), openedFiles.end(), filename);
+	readLock.unlock();
+
+	if(it != openedFiles.end())
+		return true;
+
+	else
+		return false;
+	
+}

@@ -62,7 +62,6 @@ void getTags(IObject iObj, std::vector<std::string> & tags, ProcArgs* args)
     }
     else if ( ILight::matches( ohead ) )
     {
-		std::cout << "Obj name : "<< ohead.getFullName() << " " << std::cout << iObj.getFullName() << std::endl;
         ILight lights( iObj, kWrapExisting );
         ILightSchema ms = lights.getSchema();
         arbGeomParams = ms.getArbGeomParams();
