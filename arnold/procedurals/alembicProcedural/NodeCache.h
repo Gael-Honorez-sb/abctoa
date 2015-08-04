@@ -7,6 +7,11 @@
 #include <vector>
 #include <boost/thread.hpp>
 
+#include <Alembic/AbcGeom/All.h>
+#include <Alembic/AbcCoreFactory/All.h>
+
+using namespace Alembic::AbcGeom;
+
 /* 
 This class is handling the caching of Arnold node
 */
@@ -69,8 +74,17 @@ public:
 						std::vector<std::string> attributes
 						);
 
+	void addToOpenedFiles(std::string filename);
+	void removeFromOpenedFiles(std::string filename);
+	bool isFileOpened(std::string filename);
+
+	void addReader(std::string filename);
+	IArchive getReader(std::string filename);
+
 private:
 	std::map<std::string, std::vector<CachedNodeFile>> ArnoldFileCache;
+	std::map< std::string, IArchive > AlembicFileReader;
+	std::vector<std::string> openedFiles;
 	boost::mutex lock;
 };
 
