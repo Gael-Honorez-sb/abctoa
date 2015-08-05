@@ -296,7 +296,7 @@ bool ProcInitPlugin(void **plugin_user_ptr)
 		
 
 		caches *g_caches = new caches();
-		AiCritSecInit(&g_caches->mycs);
+		AiCritSecInitRecursive(&g_caches->mycs);
 
 		g_caches->g_fileCache = new FileCache(g_caches->mycs);
 		g_caches->g_nodeCache = new NodeCache(g_caches->mycs);
@@ -867,6 +867,7 @@ int ProcInit( struct AtNode *node, void **user_ptr )
 
 int ProcCleanup( void *user_ptr )
 {
+	AiMsgDebug("ProcCleanup");
     //delete reinterpret_cast<ProcArgs*>( user_ptr );
 	ProcArgs * args = reinterpret_cast<ProcArgs*>( user_ptr );
 	if(args != NULL)
@@ -886,6 +887,7 @@ int ProcCleanup( void *user_ptr )
 		delete args->createdNodes;
 		delete args;
 	}
+	AiMsgDebug("ProcCleanup done");
     return 1;
 }
 
@@ -893,6 +895,7 @@ int ProcCleanup( void *user_ptr )
 
 int ProcNumNodes( void *user_ptr )
 {
+
     ProcArgs * args = reinterpret_cast<ProcArgs*>( user_ptr );
 	//AiMsgInfo("got %i nodes", args->createdNodes->getNumNodes());
     return (int) args->createdNodes->getNumNodes();
@@ -905,9 +908,6 @@ struct AtNode* ProcGetNode(void *user_ptr, int i)
 {
 
     ProcArgs * args = reinterpret_cast<ProcArgs*>( user_ptr );
-
-	// Seems that doing that in the nodeCleaning return the wrong type of node !?
-	//AiMsgInfo("PROCGETNODE Getting obj %i %s and type %s", i, AiNodeGetName(args->createdNodes->getNode(i)), AiNodeEntryGetName(AiNodeGetNodeEntry (args->createdNodes->getNode(i))));
 	return args->createdNodes->getNode(i);
 
 }
