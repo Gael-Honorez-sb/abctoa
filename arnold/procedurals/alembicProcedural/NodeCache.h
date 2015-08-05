@@ -75,17 +75,9 @@ public:
 						std::vector<std::string> attributes
 						);
 
-	void addToOpenedFiles(std::string filename);
-	void removeFromOpenedFiles(std::string filename);
-	bool isFileOpened(std::string filename);
-
-	void addReader(std::string filename);
-	IArchive getReader(std::string filename);
 
 private:
 	std::map< std::string, std::vector< CachedNodeFile > > ArnoldFileCache;
-	std::map< std::string, IArchive > AlembicFileReader;
-	std::vector<std::string> openedFiles;
 	//boost::mutex lock;
 	AtCritSec lock;
 };
