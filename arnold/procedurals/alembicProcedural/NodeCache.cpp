@@ -121,7 +121,7 @@ std::vector<CachedNodeFile> FileCache::getCachedFile(std::string cacheId)
 	std::vector<CachedNodeFile> createdNodes;
 	//boost::mutex::scoped_lock readLock( lock );
 	AiCritSecEnter(&lock);
-    std::map<std::string, std::vector<CachedNodeFile>>::iterator I = ArnoldFileCache.find(cacheId);
+    std::map< std::string, std::vector< CachedNodeFile > >::iterator I = ArnoldFileCache.find(cacheId);
     if (I != ArnoldFileCache.end())
 		createdNodes = I->second;
 

@@ -44,7 +44,6 @@
 #include "SampleUtil.h"
 #include "WriteGeo.h"
 #include "WritePoint.h"
-#include "WriteCurves.h"
 #include "WriteLight.h"
 #include "json/json.h"
 #include "parseAttributes.h"
