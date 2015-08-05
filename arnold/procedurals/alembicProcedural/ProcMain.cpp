@@ -76,9 +76,6 @@ namespace
 {
 using namespace Alembic::AbcGeom;
 
-     boost::mutex gGlobalLock;
-     #define GLOBAL_LOCK	   boost::mutex::scoped_lock writeLock( gGlobalLock );
-
 
 // Recursively copy the values of b into a.
 void update(Json::Value& a, Json::Value& b) {

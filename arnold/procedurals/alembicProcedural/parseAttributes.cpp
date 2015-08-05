@@ -3,15 +3,8 @@
 #include "abcshaderutils.h"
 
 #include <pystring.h>
-#include <boost/thread.hpp>
 #include <boost/regex.hpp>
 #include <boost/lexical_cast.hpp>
-
-
-
-boost::mutex gGlobalLock;
-#define GLOBAL_LOCK	   boost::mutex::scoped_lock writeLock( gGlobalLock );
-
 
 namespace
 {
@@ -444,7 +437,7 @@ AtNode* createNetwork(IObject object, std::string prefix, ProcArgs & args)
 void ParseShaders(Json::Value jroot, std::string ns, std::string nameprefix, ProcArgs* args, AtByte type)
 {
     // We have to lock here as we need to be sure that another thread is not checking the root while we are creating it here.
-    GLOBAL_LOCK;
+    AiCritSecEnter(&args->lock);
     for( Json::ValueIterator itr = jroot.begin() ; itr != jroot.end() ; itr++ )
     {
         
@@ -510,5 +503,7 @@ void ParseShaders(Json::Value jroot, std::string ns, std::string nameprefix, Pro
             AiMsgWarning("[ABC] Can't find shader %s", shaderName.c_str());
         }
     }
+
+	AiCritSecLeave(&args->lock);
 
 }

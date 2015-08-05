@@ -62,16 +62,6 @@
 #endif
 
 
-//-*****************************************************************************
-
-namespace
-{
-    boost::mutex gGlobalLock;
-    #define GLOBAL_LOCK	   boost::mutex::scoped_lock writeLock( gGlobalLock );
-}
-
-
-
 //-*************************************************************************
 // getSampleTimes
 // This function fill the sampleTimes timeSet array.
