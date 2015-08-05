@@ -301,24 +301,6 @@ bool ProcInitPlugin(void **plugin_user_ptr)
 		g_caches->g_fileCache = new FileCache(g_caches->mycs);
 		g_caches->g_nodeCache = new NodeCache(g_caches->mycs);
 		*plugin_user_ptr = g_caches;
-		
-		AtNodeIterator *iter = AiUniverseGetNodeIterator (AI_NODE_SHAPE);
-		while (!AiNodeIteratorFinished(iter))
-		{
-           AtNode *shape = AiNodeIteratorGetNext(iter);
-
-           if(AiNodeIs(shape, "procedural"))
-           {
-			   
-			   if (AiProceduralGetPluginData (shape) == *plugin_user_ptr)
-			   {
-				   ProcArgs  args =  ProcArgs( AiNodeGetStr( shape, "data" ) );
-				   g_caches->g_fileCache->addReader(args.filename);
-			   }
-		   }
-       }
-
-       AiNodeIteratorDestroy(iter);		
 		return true;
 }
 
@@ -806,15 +788,16 @@ int ProcInit( struct AtNode *node, void **user_ptr )
 		return 1;
 	}
 
-	IArchive archive = g_cache->g_fileCache->getReader(args->filename);
-	/*
+	//IArchive archive = g_cache->g_fileCache->getReader(args->filename);
+	
     Alembic::AbcCoreFactory::IFactory factory;
 	factory.setOgawaNumStreams(8);
     IArchive archive = factory.getArchive(args->filename);
-    */
+    
 	if (!archive.valid())
     {
         AiMsgError ( "Cannot read file %s", args->filename.c_str());
+		return 0;
     }
     else
     {
@@ -884,6 +867,10 @@ int ProcCleanup( void *user_ptr )
 				g_cache->g_fileCache->addCache(fileCacheId, args->createdNodes);
 		}
 
+		args->shaders.clear();
+		args->displacements.clear();
+		args->attributes.clear();
+
 		delete args->createdNodes;
 		delete args;
 	}
@@ -897,17 +884,18 @@ int ProcNumNodes( void *user_ptr )
 {
 
     ProcArgs * args = reinterpret_cast<ProcArgs*>( user_ptr );
-	//AiMsgInfo("got %i nodes", args->createdNodes->getNumNodes());
+	AiMsgDebug("got %i nodes", args->createdNodes->getNumNodes());
     return (int) args->createdNodes->getNumNodes();
 
 }
 
 //-*************************************************************************
 
-struct AtNode* ProcGetNode(void *user_ptr, int i)
+AtNode* ProcGetNode(void *user_ptr, int i)
 {
-
+	//AiMsgDebug("Should return node %i", i);
     ProcArgs * args = reinterpret_cast<ProcArgs*>( user_ptr );
+	//AiMsgDebug("Returning node %s", AiNodeGetName(args->createdNodes->getNode(i)));
 	return args->createdNodes->getNode(i);
 
 }

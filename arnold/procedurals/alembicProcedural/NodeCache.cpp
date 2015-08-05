@@ -41,7 +41,6 @@ void NodeCache::addNode(std::string cacheId, AtNode* node)
 {
 	//boost::mutex::scoped_lock writeLock( lock );
 	AiCritSecEnter(&lock);
-	AiMsgDebug("Adding node %s (%s) and type %s", AiNodeGetName(node), cacheId.c_str(), AiNodeEntryGetName(AiNodeGetNodeEntry (node)));
 	ArnoldNodeCache[cacheId] = std::string(AiNodeGetName(node));
 	//writeLock.unlock();
 	AiCritSecLeave(&lock);
@@ -68,7 +67,7 @@ NodeCollector::~NodeCollector()
 void NodeCollector::addNode(AtNode* node)
 {
 	AiCritSecEnter(&lock);
-	//AiMsgDebug("Adding node %s and type %s", AiNodeGetName(node), AiNodeEntryGetName(AiNodeGetNodeEntry (node)));
+	AiMsgDebug("Adding node %s and type %s", AiNodeGetName(node), AiNodeEntryGetName(AiNodeGetNodeEntry (node)));
 	ArnoldNodeCollector.push_back(node);
 	AiCritSecLeave(&lock);
 
@@ -87,9 +86,11 @@ AtNode* NodeCollector::getNode(int num)
 {
 	AtNode* node = NULL;
 	AiCritSecEnter(&lock);
-	if (num <= ArnoldNodeCollector.size())
+	if (num < ArnoldNodeCollector.size())
 		node = ArnoldNodeCollector[num];
 	AiCritSecLeave(&lock);
+	if(node==  NULL)
+		AiMsgError("Returning null node!");
 	return node;
 }
 
@@ -105,8 +106,6 @@ FileCache::FileCache(AtCritSec mycs)
 FileCache::~FileCache()
 {
 	AiMsgInfo("\t[Alembic Procedural] Removing %i files from the file cache", ArnoldFileCache.size());
-	AlembicFileReader.clear();
-	openedFiles.clear();
 	ArnoldFileCache.clear();
 
 }
@@ -223,79 +222,3 @@ void FileCache::addCache(std::string cacheId, NodeCollector* createdNodes)
 
 }
 
-void FileCache::addToOpenedFiles(std::string filename)
-{
-	//boost::mutex::scoped_lock writeLock( lock );
-	AiCritSecEnter(&lock);
-	if(std::find(openedFiles.begin(), openedFiles.end(), filename) == openedFiles.end())
-		openedFiles.push_back(filename);
-
-	AiCritSecLeave(&lock);
-	//writeLock.unlock();
-}
-
-
-void FileCache::addReader(std::string filename)
-{
-	//boost::mutex::scoped_lock writeLock( lock );
-	AiCritSecEnter(&lock);
-	Alembic::AbcCoreFactory::IFactory factory;
-	factory.setOgawaNumStreams(8);
-    IArchive archive = factory.getArchive(filename);
-    if (!archive.valid())
-    {
-        AiMsgError ( "Cannot read file %s", filename.c_str());
-    }
-    else
-    {
-        AiMsgDebug ( "reading file %s", filename.c_str());
-    }	
-
-	AlembicFileReader[filename] = archive;
-
-	//writeLock.unlock();
-	AiCritSecLeave(&lock);
-}
-
-IArchive FileCache::getReader(std::string filename)
-{
-
-	//addToOpenedFiles(filename);
-	IArchive root;
-	//boost::mutex::scoped_lock writeLock( lock );
-	AiCritSecEnter(&lock);
-	root = AlembicFileReader[filename];
-	
-	//writeLock.unlock();
-	AiCritSecLeave(&lock);
-	return root;
-
-}
-
-void FileCache::removeFromOpenedFiles(std::string filename)
-{
-	//boost::mutex::scoped_lock writeLock( lock );
-	AiCritSecEnter(&lock);
-	std::vector<std::string>::iterator it = std::find(openedFiles.begin(), openedFiles.end(), filename);
-	if(it != openedFiles.end())
-		openedFiles.erase(it);
-
-	//writeLock.unlock();
-	AiCritSecLeave(&lock);
-}
-
-bool FileCache::isFileOpened(std::string filename)
-{
-	//boost::mutex::scoped_lock readLock( lock );
-	AiCritSecEnter(&lock);
-	std::vector<std::string>::iterator it = std::find(openedFiles.begin(), openedFiles.end(), filename);
-	//readLock.unlock();
-	AiCritSecLeave(&lock);
-
-	if(it != openedFiles.end())
-		return true;
-
-	else
-		return false;
-	
-}
