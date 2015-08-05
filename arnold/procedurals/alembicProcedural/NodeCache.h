@@ -37,7 +37,7 @@ private:
 class NodeCollector
 {
 public:
-	NodeCollector();
+	NodeCollector(AtCritSec mycs);
 	~NodeCollector();
 
 	void addNode(AtNode* node);
@@ -48,7 +48,7 @@ public:
 
 private:
 	std::vector<AtNode*> ArnoldNodeCollector;
-	boost::mutex lock;
+	AtCritSec lock;
 };
 
 

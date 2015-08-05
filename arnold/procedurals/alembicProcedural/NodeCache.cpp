@@ -50,16 +50,15 @@ void NodeCache::addNode(std::string cacheId, AtNode* node)
 
 
 // The node collector is a thread-safe class that accumlate AtNode created in the procedural.
-NodeCollector::NodeCollector()
+NodeCollector::NodeCollector(AtCritSec mycs)
 {
-	lock.initialize();
+	lock = mycs;
 }
 
 NodeCollector::~NodeCollector()
 {
 	AiMsgInfo("Deleting node collector (%i collected nodes)", ArnoldNodeCollector.size());
 	ArnoldNodeCollector.clear();
-	lock.destroy();
 }
 
 //-*************************************************************************
@@ -68,29 +67,29 @@ NodeCollector::~NodeCollector()
 //-*************************************************************************
 void NodeCollector::addNode(AtNode* node)
 {
-	boost::mutex::scoped_lock writeLock( lock );
+	AiCritSecEnter(&lock);
 	//AiMsgDebug("Adding node %s and type %s", AiNodeGetName(node), AiNodeEntryGetName(AiNodeGetNodeEntry (node)));
 	ArnoldNodeCollector.push_back(node);
-	writeLock.unlock();
+	AiCritSecLeave(&lock);
 
 }
 
 size_t NodeCollector::getNumNodes()
 {
 	size_t size;
-	boost::mutex::scoped_lock readLock( lock );
+	AiCritSecEnter(&lock);
 	size = ArnoldNodeCollector.size();
-	readLock.unlock();
+	AiCritSecLeave(&lock);
 	return size;
 }
 
 AtNode* NodeCollector::getNode(int num)
 {
 	AtNode* node = NULL;
-	boost::mutex::scoped_lock readLock( lock );
+	AiCritSecEnter(&lock);
 	if (num <= ArnoldNodeCollector.size())
 		node = ArnoldNodeCollector[num];
-	readLock.unlock();
+	AiCritSecLeave(&lock);
 	return node;
 }
 

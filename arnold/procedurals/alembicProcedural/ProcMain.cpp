@@ -445,6 +445,7 @@ int ProcInit( struct AtNode *node, void **user_ptr )
 	args->proceduralNode = node;
 	args->nodeCache = g_cache->g_nodeCache;
 	args->lock = g_cache->mycs;
+	args->createdNodes = new NodeCollector(args->lock);
 
     if (AiNodeLookUpUserParameter(node, "abcShaders") !=NULL )
     {
@@ -700,7 +701,8 @@ int ProcInit( struct AtNode *node, void **user_ptr )
 
 	std::vector<CachedNodeFile> createdNodes = g_cache->g_fileCache->getCachedFile(fileCacheId);
 	
-	if (createdNodes.empty() == false)
+	//if (createdNodes.empty() == false)
+	if ( false)
 	{
 		//AiMsgInfo("Found cache of size %i", createdNodes.size());
 		for(int i = 0; i <  createdNodes.size(); i++)
@@ -873,6 +875,7 @@ int ProcCleanup( void *user_ptr )
 	ProcArgs * args = reinterpret_cast<ProcArgs*>( user_ptr );
 	if(args != NULL)
 	{
+
 		if(args->createdNodes->getNumNodes() > 0)
 		{
 			caches *g_cache = reinterpret_cast<caches*>( AiProceduralGetPluginData(args->proceduralNode) );
