@@ -83,7 +83,7 @@ public:
 	IArchive getReader(std::string filename);
 
 private:
-	std::map<std::string, std::vector<CachedNodeFile>> ArnoldFileCache;
+	std::map< std::string, std::vector< CachedNodeFile > > ArnoldFileCache;
 	std::map< std::string, IArchive > AlembicFileReader;
 	std::vector<std::string> openedFiles;
 	//boost::mutex lock;
