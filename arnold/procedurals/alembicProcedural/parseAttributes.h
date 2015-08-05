@@ -5,7 +5,6 @@
 #include <map>
 #include "json/json.h"
 #include <vector>
-#include "concurrent_vector.h"
 #include <boost/tokenizer.hpp>
 #include <boost/algorithm/string.hpp>
 #include "ProcArgs.h"
