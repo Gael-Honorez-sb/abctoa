@@ -20,7 +20,6 @@ License along with this library.*/
 #include "scene/MayaScene.h" // This one is really needed to initiate the shader translation.
 #include "translators/NodeTranslator.h"
 #include <Alembic/Abc/All.h>
-#include <Alembic/AbcCoreHDF5/All.h>
 #include <Alembic/AbcCoreOgawa/All.h>
 #include <Alembic/AbcMaterial/OMaterial.h>
 

@@ -32,7 +32,6 @@ License along with this library.*/
 
 
 #include <Alembic/Abc/All.h>
-#include <Alembic/AbcCoreHDF5/All.h>
 #include <Alembic/AbcMaterial/OMaterial.h>
 #include "ai.h"
 #include "session/ArnoldSession.h"
