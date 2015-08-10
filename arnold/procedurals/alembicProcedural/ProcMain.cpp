@@ -50,10 +50,8 @@
 #include "NodeCache.h"
 
 #include <Alembic/AbcGeom/All.h>
-#include <Alembic/AbcCoreHDF5/All.h>
 
 #include <Alembic/AbcCoreFactory/IFactory.h>
-#include <Alembic/AbcCoreHDF5/ReadWrite.h>
 #include <Alembic/AbcCoreOgawa/ReadWrite.h>
 #include <Alembic/AbcGeom/Visibility.h>
 

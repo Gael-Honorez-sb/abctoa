@@ -63,7 +63,7 @@ endif()
 find_package(Alembic REQUIRED)
 
 # Find HDF5
-find_package(AlembicHDF5 REQUIRED)
+find_package(AlembicHDF5)
 
 find_package(SZIP)
 
