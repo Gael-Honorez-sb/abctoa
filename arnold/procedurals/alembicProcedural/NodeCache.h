@@ -5,7 +5,6 @@
 #include <string>
 #include <map>
 #include <vector>
-#include <boost/thread.hpp>
 
 #include <Alembic/AbcGeom/All.h>
 #include <Alembic/AbcCoreFactory/All.h>

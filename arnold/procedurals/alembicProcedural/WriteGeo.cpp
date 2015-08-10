@@ -49,7 +49,6 @@
 #include "json/value.h"
 
 #include <boost/regex.hpp>
-#include <boost/thread.hpp>
 
 //-*****************************************************************************
 

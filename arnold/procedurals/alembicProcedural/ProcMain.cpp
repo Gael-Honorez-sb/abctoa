@@ -59,12 +59,6 @@
 
 #include <boost/tokenizer.hpp>
 #include <boost/algorithm/string.hpp>
-#include <boost/thread.hpp>
-
-#ifdef WIN32
-#include <boost/atomic/atomic.hpp>
-#endif
-
 
 
 #include <iostream>
@@ -870,11 +864,12 @@ int ProcCleanup( void *user_ptr )
 		args->shaders.clear();
 		args->displacements.clear();
 		args->attributes.clear();
-
+		AiCritSecLeave(&args->lock);
 		delete args->createdNodes;
 		delete args;
 	}
 	AiMsgDebug("ProcCleanup done");
+	
     return 1;
 }
 
@@ -893,9 +888,11 @@ int ProcNumNodes( void *user_ptr )
 
 AtNode* ProcGetNode(void *user_ptr, int i)
 {
+	
 	//AiMsgDebug("Should return node %i", i);
     ProcArgs * args = reinterpret_cast<ProcArgs*>( user_ptr );
-	//AiMsgDebug("Returning node %s", AiNodeGetName(args->createdNodes->getNode(i)));
+	
+//AiMsgDebug("Returning node %s", AiNodeGetName(args->createdNodes->getNode(i)));
 	return args->createdNodes->getNode(i);
 
 }
