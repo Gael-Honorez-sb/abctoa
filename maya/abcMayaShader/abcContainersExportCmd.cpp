@@ -47,7 +47,7 @@ MStatus abcContainersExportCmd::doIt( const MArgList &args)
   MString filename("");
   argData.getFlagArgument( "-f", 0, filename);
 
-  Abc::OArchive archive(Alembic::AbcCoreHDF5::WriteArchive(), filename.asChar() );
+  Abc::OArchive archive(Alembic::AbcCoreOgawa::WriteArchive(), filename.asChar() );
   Abc::OObject root(archive, Abc::kTop);
   Abc::OObject materials(root, "materials");
 
