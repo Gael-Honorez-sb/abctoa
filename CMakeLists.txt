@@ -47,7 +47,7 @@ find_package(Maya REQUIRED)
 
 # Find Boost
 SET(Boost_USE_STATIC_LIBS 1)
-find_package(Boost REQUIRED COMPONENTS regex thread date_time system chrono atomic)
+find_package(Boost REQUIRED COMPONENTS regex system)
 
 # Find ILMBASE
 find_package(IlmBase REQUIRED)

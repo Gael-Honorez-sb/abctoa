@@ -45,8 +45,6 @@
 std::string CleanAttributeName(std::string str)
 {
    boost::replace_first(str, "mtoa_constant_", "");
-
-   //boost::trim_left_if(str,boost::is_any_of("mtoa_"));
    return str;
 }
 
