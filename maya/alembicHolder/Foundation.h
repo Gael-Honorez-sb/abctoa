@@ -38,7 +38,6 @@
 #define _AlembicHolder_Foundation_h_
 
 #include <Alembic/AbcGeom/All.h>
-#include <Alembic/AbcCoreHDF5/All.h>
 //#include <Alembic/GLUtil/All.h>
 #include <Alembic/Util/All.h>
 
