@@ -308,6 +308,8 @@ class ShaderManager(QMainWindow, UI_ABCHierarchy.Ui_NAM):
         nodeFn = MFnDependencyNode ( mobject )
         if nodeFn.hasUniqueName():
             nodeName = nodeFn.name()
+            if not cmds.objExists(nodeName):
+                return
             if cmds.getClassification(cmds.nodeType(nodeName), satisfies="shader"):
 
                 if cmds.nodeType(nodeName) == "displacementShader":
