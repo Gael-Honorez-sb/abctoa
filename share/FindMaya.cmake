@@ -45,6 +45,45 @@
 # - OS-specific defines
 # - Post-commnad for correcting Qt library linking on osx
 # - Windows link flags for exporting initializePlugin/uninitializePlugin
+
+
+macro(MAYA_SET_TRANSLATOR_PROPERTIES target)
+   
+    set(_maya_DEFINES REQUIRE_IOSTREAM _BOOL)
+
+    if(APPLE)
+        set(_maya_DEFINES "${_maya_DEFINES}" _DARWIN MAC_PLUGIN OSMac_ OSMac_MachO)
+
+        if(QT_LIBRARIES)
+            set(_changes "")
+            foreach(_lib ${QT_LIBRARIES})
+                if("${_lib}" MATCHES ".*framework.*")
+                    get_filename_component(_shortname ${_lib} NAME)
+                    string(REPLACE ".framework" "" _shortname ${_shortname})
+                    # FIXME: QT_LIBRARIES does not provide the entire path to the lib.
+                    # it provides /usr/local/qt/4.7.2/lib/QtGui.framework
+                    # but we need /usr/local/qt/4.7.2/lib/QtGui.framework/Versions/4/QtGui
+                    # below is a hack, likely to break on other configurations
+                    set(_changes ${_changes} "-change" "${_lib}/Versions/4/${_shortname}" "@executable_path/${_shortname}")
+                endif()
+            endforeach()
+
+            add_custom_command(TARGET ${target}
+                POST_BUILD
+                COMMAND install_name_tool ${_changes} $<TARGET_FILE:${target}>)
+        endif()
+
+    elseif(WIN32)
+        set(_maya_DEFINES "${_maya_DEFINES}" _AFXDLL _MBCS NT_PLUGIN)
+    else()
+        set(_maya_DEFINES "${_maya_DEFINES}" LINUX LINUX_64)
+    endif()
+	
+	target_compile_definitions(${target} PUBLIC ${_maya_DEFINES})
+	target_include_directories(${target} PUBLIC ${MAYA_INCLUDE_DIRS})
+	
+endmacro(MAYA_SET_TRANSLATOR_PROPERTIES)
+
 macro(MAYA_SET_PLUGIN_PROPERTIES target)
     set_target_properties(${target} PROPERTIES
         SUFFIX ${MAYA_PLUGIN_SUFFIX})
@@ -53,9 +92,6 @@ macro(MAYA_SET_PLUGIN_PROPERTIES target)
 
     if(APPLE)
         set(_maya_DEFINES "${_maya_DEFINES}" _DARWIN MAC_PLUGIN OSMac_ OSMac_MachO)
-        set_target_properties(${target} PROPERTIES
-            PREFIX ""
-            COMPILE_DEFINITIONS "${_maya_DEFINES}")
 
         if(QT_LIBRARIES)
             set(_changes "")
@@ -79,14 +115,14 @@ macro(MAYA_SET_PLUGIN_PROPERTIES target)
     elseif(WIN32)
         set(_maya_DEFINES "${_maya_DEFINES}" _AFXDLL _MBCS NT_PLUGIN)
         set_target_properties( ${target} PROPERTIES
-            LINK_FLAGS "/export:initializePlugin /export:uninitializePlugin"
-            COMPILE_DEFINITIONS "${_maya_DEFINES}")
+            LINK_FLAGS "/export:initializePlugin /export:uninitializePlugin")
     else()
         set(_maya_DEFINES "${_maya_DEFINES}" LINUX LINUX_64)
-        set_target_properties( ${target} PROPERTIES
-            PREFIX ""
-            COMPILE_DEFINITIONS "${_maya_DEFINES}")
     endif()
+	
+	target_compile_definitions(${target} PUBLIC ${_maya_DEFINES})
+	target_include_directories(${target} PUBLIC ${MAYA_INCLUDE_DIRS})
+	
 endmacro(MAYA_SET_PLUGIN_PROPERTIES)
 
 

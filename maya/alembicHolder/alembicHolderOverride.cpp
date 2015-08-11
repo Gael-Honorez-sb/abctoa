@@ -126,9 +126,7 @@ bool AlembicHolderOverride::disableInternalBoundingBoxDraw() const
 MUserData* AlembicHolderOverride::prepareForDraw(
     const MDagPath& objPath,
     const MDagPath& cameraPath,
-    #ifndef _MAYA_VERSION_2013
     const MHWRender::MFrameContext& frameContext,
-    #endif
     MUserData* oldData
     )
 {

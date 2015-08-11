@@ -46,6 +46,33 @@
 
 message("-- Searching Alembic libraries.......")
 
+macro(ALEMBIC_SET_PROPERTIES target)
+	
+	if(ALEMBIC_SHARED_LIBS)
+		set(_alembic_DEFINES  "${_maya_DEFINES}" ALEMBIC_DLL)
+	endif()
+
+	if(ALEMBIC_LIB_USES_BOOST)
+		target_link_libraries(${target} ${ALEMBIC_LIBRARY})
+	endif()
+
+		if(ALEMBIC_LIB_USES_TR1)
+		set(_alembic_DEFINES  "${_maya_DEFINES}" ALEMBIC_LIB_USES_TR1)
+	endif()
+	
+	target_include_directories(${target} PUBLIC ${ALEMBIC_INCLUDE_DIR} ${ILMBASE_INCLUDE_DIRECTORY})
+	target_link_libraries(${target} ${ALEMBIC_LIBRARY} ${ALEMBIC_ILMBASE_HALF_LIB} ${ALEMBIC_ILMBASE_IEXMATH_LIB} ${ALEMBIC_ILMBASE_IEX_LIB} ${ALEMBIC_ILMBASE_ILMTHREAD_LIB} ${ALEMBIC_ILMBASE_IMATH_LIB})
+	
+	if(USE_HDF5)
+		target_link_libraries(${target} ${ALEMBIC_HDF5_LIBS} ${ZLIB_LIBRARIES} ${SZIP_LIBRARIES})
+	endif()
+	
+	target_compile_definitions(${target} PUBLIC ${_alembic_DEFINES})
+
+		
+endmacro(ALEMBIC_SET_PROPERTIES)
+
+
 set(LIBRARY_PATHS 
 	/usr/lib
 	/usr/local/lib

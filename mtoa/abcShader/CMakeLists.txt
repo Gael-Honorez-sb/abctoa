@@ -1,13 +1,15 @@
 set(MTOATRANSLATOR abcShader)
 
 file(GLOB SRC "*.cpp" "*h")
-add_definitions(${MAYA_DEFINITIONS})
+
 include_directories(${Boost_INCLUDE_DIR})
-include_directories(${MAYA_INCLUDE_DIRS})
 include_directories(${MTOA_INCLUDE_DIRS})
 
 add_library(${MTOATRANSLATOR} SHARED ${SRC})
-target_link_libraries(${MTOATRANSLATOR} ${MTOA_LIBS} Foundation OpenMaya OpenMayaRender OpenMayaUI OpenMayaAnim OpenMayaFX ai)
+
+MAYA_SET_TRANSLATOR_PROPERTIES(${MTOATRANSLATOR})
+
+target_link_libraries(${MTOATRANSLATOR} ${MTOA_LIBS} ${MAYA_LIBRARIES} ai)
 set_target_properties(${MTOATRANSLATOR} PROPERTIES PREFIX "")
 
 if (${CMAKE_SYSTEM_NAME} MATCHES "Windows")
