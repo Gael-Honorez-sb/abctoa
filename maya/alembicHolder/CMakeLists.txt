@@ -22,7 +22,7 @@ endif()
 
 if (${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
 	set(new_link_flags "-framework OpenGL -framework AGL")
-	get_target_property(existing_link_flags ${_target} LINK_FLAGS)
+	get_target_property(existing_link_flags ${MAYAPLUGIN} LINK_FLAGS)
 	if(existing_link_flags)
 		set(new_link_flags "${existing_link_flags} ${new_link_flags}")
 	endif()
