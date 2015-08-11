@@ -22,20 +22,59 @@ OPTION(USE_ILMBASE_STATIC_LIBS "Build with static ilmBase libs" ON)
 OPTION(USE_STATIC_HDF5 "Build with static HDF5 libs" OFF)
 OPTION(ALEMBIC_SHARED_LIBS "Build shared libraries" ON)
 
+
+INCLUDE(CheckCXXCompilerFlag)
+CHECK_CXX_COMPILER_FLAG("-std=c++11" COMPILER_SUPPORTS_CXX11)
+CHECK_CXX_COMPILER_FLAG("-std=c++0x" COMPILER_SUPPORTS_CXX0X)
+IF (COMPILER_SUPPORTS_CXX11)
+	SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
+ELSEIF (COMPILER_SUPPORTS_CXX0X)
+	SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++0x")
+ENDIF()
+
+
 # Compiler flags
-if (${CMAKE_SYSTEM_NAME} MATCHES "Windows")
+if (${WINDOWS})
     # Disable some of the bullshit warnings MSVC wants to barf
     add_definitions( "-W3 -MP -D_CRT_SECURE_NO_WARNINGS -wd4005 -wd4996 -wd4305 -wd4244 -nologo" )
 	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /MP")
-endif()
-
-IF( "${CMAKE_SYSTEM_NAME}" MATCHES "Linux" )
-	add_definitions(-D_LINUX)
-	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O3 -fvisibility=hidden -fPIC")
-endif()
+ELSEIF (${DARWIN})
+    set(CMAKE_CXX_FLAGS "-stdlib=libc++")
+ENDIF()
 
 
-# check if we have a local cmake include file and include it if we do
+IF (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+    SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fvisibility=hidden -fPIC")
+ENDIF()
+
+# Set some debug vs opt flags
+IF ("${CMAKE_BUILD_TYPE}" MATCHES "Debug")
+    ADD_DEFINITIONS(-DDEBUG=1 -UNDEBUG)
+    IF (NOT WINDOWS)
+        ADD_DEFINITIONS(-Wall -Werror -Wextra -Wno-unused-parameter)
+    ENDIF()
+ELSEIF ("${CMAKE_BUILD_TYPE}" MATCHES "Release")
+    ADD_DEFINITIONS(-DNDEBUG=1 -UDEBUG)
+    IF (NOT WINDOWS)
+        ADD_DEFINITIONS(-O3)
+    ENDIF()
+ENDIF()
+
+IF (NOT ${WINDOWS})
+    SET(EXTERNAL_MATH_LIBS "-lm")
+ELSE()
+    SET(EXTERNAL_MATH_LIBS "")
+ENDIF()
+
+IF (${WINDOWS})
+    ADD_DEFINITIONS(-DPLATFORM_WINDOWS -DPLATFORM=WINDOWS)
+ELSEIF (${DARWIN})
+    ADD_DEFINITIONS(-DPLATFORM_DARWIN -DPLATFORM=DARWIN)
+ELSE()
+    ADD_DEFINITIONS(-DPLATFORM_LINUX -DPLATFORM=LINUX)
+ENDIF()
+
+eck if we have a local cmake include file and include it if we do
 # this is useful for setting our arnold location as an alternative to
 # environment variables
 if(EXISTS ${CMAKE_SOURCE_DIR}/local.cmake)
