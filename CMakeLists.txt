@@ -20,10 +20,6 @@ OPTION(USE_HDF5 "Include HDF5 stuff" OFF)
 OPTION(USE_STATIC_BOOST "Build with static Boost libs" ON)
 OPTION(USE_ILMBASE_STATIC_LIBS "Build with static ilmBase libs" ON)
 OPTION(USE_STATIC_HDF5 "Build with static HDF5 libs" OFF)
-OPTION(ALEMBIC_LIB_USES_BOOST
-    "Main Alembic library uses boost for things like shared_ptr" OFF)
-OPTION(ALEMBIC_LIB_USES_TR1
-    "Main Alembic library uses std::tr1 for things like shared_ptr" OFF)
 OPTION(ALEMBIC_SHARED_LIBS "Build shared libraries" ON)
 
 # Compiler flags
