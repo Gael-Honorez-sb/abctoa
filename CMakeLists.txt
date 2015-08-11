@@ -113,9 +113,6 @@ find_package(Arnold REQUIRED)
 
 find_package(Mtoa REQUIRED)
 
-include_directories(${ARNOLD_INCLUDE_DIRS})
-link_directories(${ARNOLD_LIBRARY_DIR})
-
 # Find maya
 find_package(Maya REQUIRED)
 

@@ -11,9 +11,9 @@ include_directories(${Boost_INCLUDE_DIR})
 
 include_directories(${MTOA_INCLUDE_DIR})
 include_directories(${PYSTRING_INCLUDE_DIR})
+include_directories(${ARNOLD_INCLUDE_DIR})
 
-
-target_link_libraries(${MAYAPLUGIN} ${PYSTRING_LIBRARIES} ${MTOA_LIBRARY} ${Boost_REGEX_LIBRARY} ${Boost_SYSTEM_LIBRARY} ${Boost_CHRONO_LIBRARY} ${Boost_DATE_TIME_LIBRARY} ${Boost_THREAD_LIBRARY} ${MAYA_LIBRARIES} ai)
+target_link_libraries(${MAYAPLUGIN} ${PYSTRING_LIBRARIES} ${MTOA_LIBRARY} ${Boost_REGEX_LIBRARY} ${Boost_SYSTEM_LIBRARY} ${Boost_CHRONO_LIBRARY} ${Boost_DATE_TIME_LIBRARY} ${Boost_THREAD_LIBRARY} ${MAYA_LIBRARIES} ${ARNOLD_LIBRARY})
 
 
 
