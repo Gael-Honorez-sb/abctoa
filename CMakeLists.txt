@@ -47,7 +47,7 @@ OPTION(USE_STATIC_HDF5 "Build with static HDF5 libs" OFF)
 OPTION(ALEMBIC_SHARED_LIBS "Build shared libraries" ON)
 
 
-IF (${LINUX} AND ${DARWIN})
+IF (LINUX OR DARWIN)
 	INCLUDE(CheckCXXCompilerFlag)
 	CHECK_CXX_COMPILER_FLAG("-std=c++11" COMPILER_SUPPORTS_CXX11)
 	CHECK_CXX_COMPILER_FLAG("-std=c++0x" COMPILER_SUPPORTS_CXX0X)
@@ -60,12 +60,12 @@ ENDIF()
 
 
 # Compiler flags
-if (${WINDOWS})
+if (WINDOWS)
     # Disable some of the bullshit warnings MSVC wants to barf
     add_definitions( "-W3 -MP -D_CRT_SECURE_NO_WARNINGS -wd4005 -wd4996 -wd4305 -wd4244 -nologo" )
 	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /MP")
-ELSEIF (${DARWIN})
-    set(CMAKE_CXX_FLAGS "-stdlib=libc++")
+ELSEIF (DARWIN)
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -stdlib=libc++")
 ENDIF()
 
 
@@ -86,15 +86,15 @@ ELSEIF ("${CMAKE_BUILD_TYPE}" MATCHES "Release")
     ENDIF()
 ENDIF()
 
-IF (NOT ${WINDOWS})
+IF (NOT WINDOWS)
     SET(EXTERNAL_MATH_LIBS "-lm")
 ELSE()
     SET(EXTERNAL_MATH_LIBS "")
 ENDIF()
 
-IF (${WINDOWS})
+IF (WINDOWS)
     ADD_DEFINITIONS(-DPLATFORM_WINDOWS -DPLATFORM=WINDOWS)
-ELSEIF (${DARWIN})
+ELSEIF (DARWIN)
     ADD_DEFINITIONS(-DPLATFORM_DARWIN -DPLATFORM=DARWIN)
 ELSE()
     ADD_DEFINITIONS(-DPLATFORM_LINUX -DPLATFORM=LINUX)
@@ -110,6 +110,9 @@ endif()
 
 # Find Arnold SDK
 find_package(Arnold REQUIRED)
+
+find_package(Mtoa REQUIRED)
+
 include_directories(${ARNOLD_INCLUDE_DIRS})
 link_directories(${ARNOLD_LIBRARY_DIR})
 

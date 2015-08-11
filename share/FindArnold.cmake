@@ -49,24 +49,3 @@ ELSE ( ARNOLD_BASE_DIR )
 	MESSAGE ( WARNING "Arnold not found!")
 ENDIF ( ARNOLD_BASE_DIR )
 
-FIND_PATH ( MTOA_BASE_DIR include/extension/Extension.h
-  ENV MTOA
-  )
-
-IF ( MTOA_BASE_DIR )
-	MESSAGE(STATUS "Found MTOA: ${MTOA_BASE_DIR}")
-  	SET ( MTOA_LIBS mtoa_api )
-  	SET ( MTOA_INCLUDE_DIRS ${MTOA_BASE_DIR}/include
-    	CACHE STRING "MTOA include directories")
-    IF ( WIN32 )
-  	SET ( MTOA_LIBRARY_DIRS ${MTOA_BASE_DIR}/lib
-    	CACHE STRING "MTOA library directories")
-    ELSE ( WIN32 )
-  	SET ( MTOA_LIBRARY_DIRS ${MTOA_BASE_DIR}/bin
-    	CACHE STRING "MTOA library directories")
-    ENDIF ( WIN32 )
-  	SET ( MTOA_FOUND TRUE )
-  	LINK_DIRECTORIES( ${MTOA_LIBRARY_DIRS} )
-ELSE ( MTOA_BASE_DIR )
-	MESSAGE ( WARNING "MTOA not found!")
-ENDIF ( MTOA_BASE_DIR )

@@ -43,56 +43,6 @@
 //-*****************************************************************************
 namespace AlembicHolder {
 
-
-
-//-*****************************************************************************
-void setMaterials( float o, bool negMatrix = false )
-{
-   static MGLFunctionTable *gGLFT = NULL;
-   if (gGLFT == NULL)
-      gGLFT = MHardwareRenderer::theRenderer()->glFunctionTable();
-
-    if ( negMatrix )
-    {
-        MGLfloat mat_front_diffuse[] = { 0.1 * o, 0.1 * o, 0.9 * o, o };
-        MGLfloat mat_back_diffuse[] = { 0.9 * o, 0.1 * o, 0.9 * o, o };
-
-        MGLfloat mat_specular[] = { 1.0, 1.0, 1.0, 1.0 };
-        MGLfloat mat_shininess[] = { 100.0 };
-//        GLfloat light_position[] = { 20.0, 20.0, 20.0, 0.0 };
-
-        gGLFT->glClearColor( 0.0, 0.0, 0.0, 0.0 );
-        gGLFT->glMaterialfv( MGL_FRONT, MGL_DIFFUSE, mat_front_diffuse );
-        gGLFT->glMaterialfv( MGL_FRONT, MGL_SPECULAR, mat_specular );
-        gGLFT->glMaterialfv( MGL_FRONT, MGL_SHININESS, mat_shininess );
-
-        gGLFT->glMaterialfv( MGL_BACK, MGL_DIFFUSE, mat_back_diffuse );
-        gGLFT->glMaterialfv( MGL_BACK, MGL_SPECULAR, mat_specular );
-        gGLFT->glMaterialfv( MGL_BACK, MGL_SHININESS, mat_shininess );
-    }
-    else
-    {
-
-        MGLfloat mat_specular[] = { 1.0, 1.0, 1.0, 1.0 };
-        MGLfloat mat_shininess[] = { 100.0 };
-//        GLfloat light_position[] = { 20.0, 20.0, 20.0, 0.0 };
-        MGLfloat mat_front_emission[] = {0.0, 0.0, 0.0, 0.0 };
-        MGLfloat mat_back_emission[] = {o, 0.0, 0.0, o };
-
-        gGLFT->glClearColor( 0.0, 0.0, 0.0, 0.0 );
-        gGLFT->glMaterialfv( MGL_FRONT, MGL_EMISSION, mat_front_emission );
-        gGLFT->glMaterialfv( MGL_FRONT, MGL_SPECULAR, mat_specular );
-        gGLFT->glMaterialfv( MGL_FRONT, MGL_SHININESS, mat_shininess );
-
-        gGLFT->glMaterialfv( MGL_BACK, MGL_EMISSION, mat_back_emission );
-        gGLFT->glMaterialfv( MGL_BACK, MGL_SPECULAR, mat_specular );
-        gGLFT->glMaterialfv( MGL_BACK, MGL_SHININESS, mat_shininess );
-
-        gGLFT->glColorMaterial(MGL_FRONT_AND_BACK, MGL_DIFFUSE);
-        gGLFT->glEnable(MGL_COLOR_MATERIAL);
-    }
-}
-
 //-*****************************************************************************
 // SCENE CLASS
 //-*****************************************************************************
