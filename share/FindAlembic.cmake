@@ -60,11 +60,6 @@ find_library(ALEMBIC_LIBRARY
 	NAMES Alembic
 	PATHS ${LIBRARY_PATHS})
 
-
-set ( ALEMBIC_LIBRARY
-	${ALEMBIC_MAIN_LIBRARY}
-	)
-
 get_filename_component( ALEMBIC_LIBRARY_DIR ${ALEMBIC_LIBRARY} PATH )
 
 # Find Alembic include dir

@@ -2,7 +2,6 @@ set(MAYAPLUGIN alembicHolder)
 
 file(GLOB SRC "*.cpp" "*h" "cmds/*.cpp" "cmds/*.h")
 
-
 add_definitions(${MAYA_DEFINITIONS})
 include_directories(${Boost_INCLUDE_DIR})
 include_directories(${ALEMBIC_INCLUDE_DIR})

@@ -16,6 +16,11 @@ set(CMAKE_SKIP_RPATH TRUE)
 # Fix to stop crash on OSX < 10.9
 set(CMAKE_OSX_DEPLOYMENT_TARGET 10.8)
 
+OPTION(USE_HDF5 "Include HDF5 stuff" OFF)
+OPTION(USE_STATIC_BOOST "Build with static Boost libs" ON)
+OPTION(USE_STATIC_HDF5 "Build with static HDF5 libs" OFF)
+
+
 # Compiler flags
 if (${CMAKE_SYSTEM_NAME} MATCHES "Windows")
     # Disable some of the bullshit warnings MSVC wants to barf
@@ -46,14 +51,14 @@ link_directories(${ARNOLD_LIBRARY_DIR})
 find_package(Maya REQUIRED)
 
 # Find Boost
-SET(Boost_USE_STATIC_LIBS 1)
+SET(Boost_USE_STATIC_LIBS ${USE_STATIC_BOOST})
 find_package(Boost REQUIRED COMPONENTS regex system)
 
 # Find ILMBASE
 find_package(IlmBase REQUIRED)
 
 if (${CMAKE_SYSTEM_NAME} MATCHES "Windows")
-	if(NOT ILMBASE_USE_STATIC_LIBS)
+	if(NOT USE_ILMBASE_STATIC_LIBS)
 		add_definitions( "-DOPENEXR_DLL -DHALF_EXPORTS")
 	endif()
 endif()
@@ -63,7 +68,9 @@ endif()
 find_package(Alembic REQUIRED)
 
 # Find HDF5
-find_package(AlembicHDF5)
+if(USE_HDF5)
+	find_package(AlembicHDF5)
+endif()
 
 find_package(SZIP)
 
@@ -133,28 +140,6 @@ INSTALL(FILES README INSTALL DESTINATION ${INSTALL_DIR})
 # add scripts & icons
 INSTALL(DIRECTORY icons DESTINATION ${INSTALL_DIR})
 INSTALL(DIRECTORY maya/scripts DESTINATION ${INSTALL_DIR})
-
-if (${CMAKE_SYSTEM_NAME} MATCHES "Windows")
-	if(${MAYA_VERSION} EQUAL "2013")
-		MESSAGE(STATUS "Pyside Windows for Maya 2013")
-		INSTALL(DIRECTORY contrib/pyside113_py26_qt471maya2013_win64/lib DESTINATION ${PYSIDE_INSTALL_DIR})
-		INSTALL(DIRECTORY contrib/pyside113_py26_qt471maya2013_win64/python DESTINATION ${PYSIDE_INSTALL_DIR})
-	endif()
-endif()
-
-if (${CMAKE_SYSTEM_NAME} MATCHES "Linux")
-		MESSAGE(STATUS "Pyside Linux for Maya")
-		INSTALL(DIRECTORY contrib/pyside112_py26_qt471_linux/lib DESTINATION ${PYSIDE_INSTALL_DIR})
-		INSTALL(DIRECTORY contrib/pyside112_py26_qt471_linux/python DESTINATION ${PYSIDE_INSTALL_DIR})
-endif()
-
-if (${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
-		MESSAGE(STATUS "Pyside Linux for MacOS")
-		INSTALL(DIRECTORY contrib/pyside112_py26_qt471_mac/lib DESTINATION ${PYSIDE_INSTALL_DIR})
-		INSTALL(DIRECTORY contrib/pyside112_py26_qt471_mac/python DESTINATION ${PYSIDE_INSTALL_DIR})
-
-endif()
-
 INSTALL(DIRECTORY maya/samples DESTINATION ${INSTALL_DIR})
 
 
@@ -165,17 +150,10 @@ configure_file (
   "${CMAKE_SOURCE_DIR}/maya/alembicHolder/version.h"
   )
 
-if(${MAYA_VERSION} EQUAL "2013")
-  configure_file (
-  "${CMAKE_SOURCE_DIR}/abcToA.mod.2013.in"
-  "${PROJECT_SOURCE_DIR}/abcToA.mod"
-  )
-else()
-  configure_file (
-  "${CMAKE_SOURCE_DIR}/abcToA.mod.in"
-  "${PROJECT_SOURCE_DIR}/abcToA.mod"
-  )
-endif()
+configure_file (
+"${CMAKE_SOURCE_DIR}/abcToA.mod.in"
+"${PROJECT_SOURCE_DIR}/abcToA.mod"
+)
 
 configure_file(
     "${PROJECT_SOURCE_DIR}/INSTALL.in"
