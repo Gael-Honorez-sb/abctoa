@@ -1,7 +1,3 @@
-FIND_PATH ( MTOA_BASE_DIR include/extension/Extension.h
-  ENV MTOA
-  )
-
 set(MTOA_BASE_DIR
 "${MTOA_BASE_DIR}"
 CACHE
