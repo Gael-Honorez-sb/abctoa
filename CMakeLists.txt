@@ -12,9 +12,33 @@ set(ABCTOA_VERSION "${ABCTOA_MAJOR_VERSION}.${ABCTOA_MINOR_VERSION}.${ABCTOA_PAT
 set(CMAKE_BUILD_TYPE RELEASE)
 set(CMAKE_VERBOSE_MAKEFILE FALSE)
 set(CMAKE_SKIP_RPATH TRUE)
+CMAKE_POLICY(SET CMP0012 OLD)
 
 # Fix to stop crash on OSX < 10.9
 set(CMAKE_OSX_DEPLOYMENT_TARGET 10.8)
+
+#variable helpers
+# Cmake system specific flags
+SET(WINDOWS FALSE)
+IF ("${CMAKE_SYSTEM_NAME}" MATCHES "Windows")
+    SET(WINDOWS TRUE)
+ENDIF()
+
+SET(DARWIN FALSE)
+IF ("${CMAKE_SYSTEM_NAME}" MATCHES "Darwin")
+    SET(DARWIN TRUE)
+    # suppress rpath warning
+    IF (POLICY CMP0042)
+        CMAKE_POLICY(SET CMP0042 OLD)
+    ENDIF()
+ENDIF()
+
+
+
+SET(LINUX FALSE)
+IF ("${CMAKE_SYSTEM_NAME}" MATCHES "Linux")
+    SET(LINUX TRUE)
+ENDIF()
 
 OPTION(USE_HDF5 "Include HDF5 stuff" OFF)
 OPTION(USE_STATIC_BOOST "Build with static Boost libs" ON)
@@ -23,13 +47,15 @@ OPTION(USE_STATIC_HDF5 "Build with static HDF5 libs" OFF)
 OPTION(ALEMBIC_SHARED_LIBS "Build shared libraries" ON)
 
 
-INCLUDE(CheckCXXCompilerFlag)
-CHECK_CXX_COMPILER_FLAG("-std=c++11" COMPILER_SUPPORTS_CXX11)
-CHECK_CXX_COMPILER_FLAG("-std=c++0x" COMPILER_SUPPORTS_CXX0X)
-IF (COMPILER_SUPPORTS_CXX11)
-	SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
-ELSEIF (COMPILER_SUPPORTS_CXX0X)
-	SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++0x")
+IF (${LINUX} AND ${DARWIN})
+	INCLUDE(CheckCXXCompilerFlag)
+	CHECK_CXX_COMPILER_FLAG("-std=c++11" COMPILER_SUPPORTS_CXX11)
+	CHECK_CXX_COMPILER_FLAG("-std=c++0x" COMPILER_SUPPORTS_CXX0X)
+	IF (COMPILER_SUPPORTS_CXX11)
+		SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
+	ELSEIF (COMPILER_SUPPORTS_CXX0X)
+		SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++0x")
+	ENDIF()
 ENDIF()
 
 
@@ -74,7 +100,7 @@ ELSE()
     ADD_DEFINITIONS(-DPLATFORM_LINUX -DPLATFORM=LINUX)
 ENDIF()
 
-eck if we have a local cmake include file and include it if we do
+# check if we have a local cmake include file and include it if we do
 # this is useful for setting our arnold location as an alternative to
 # environment variables
 if(EXISTS ${CMAKE_SOURCE_DIR}/local.cmake)
