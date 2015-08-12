@@ -862,7 +862,6 @@ int ProcCleanup( void *user_ptr )
 		args->shaders.clear();
 		args->displacements.clear();
 		args->attributes.clear();
-		AiCritSecLeave(&args->lock);
 		delete args->createdNodes;
 		delete args;
 	}
