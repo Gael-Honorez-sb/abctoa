@@ -5,8 +5,8 @@ set(CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/share)
 project(abcToA)
 
 set(ABCTOA_MAJOR_VERSION 0)
-set(ABCTOA_MINOR_VERSION 9)
-set(ABCTOA_PATCH_VERSION 3)
+set(ABCTOA_MINOR_VERSION 10)
+set(ABCTOA_PATCH_VERSION 0)
 set(ABCTOA_VERSION "${ABCTOA_MAJOR_VERSION}.${ABCTOA_MINOR_VERSION}.${ABCTOA_PATCH_VERSION}")
 
 set(CMAKE_BUILD_TYPE RELEASE)
@@ -118,7 +118,7 @@ find_package(Maya REQUIRED)
 
 # Find Boost
 SET(Boost_USE_STATIC_LIBS ${USE_STATIC_BOOST})
-find_package(Boost REQUIRED COMPONENTS regex system)
+find_package(Boost REQUIRED COMPONENTS regex system program_options filesystem)
 
 # Find ILMBASE
 find_package(IlmBase REQUIRED)
@@ -188,6 +188,7 @@ message("Samples will be installed to: \n\t${INSTALL_DIR}/samples")
 set(SUBDIRECTORIES 
         arnold/procedurals/alembicProcedural
 		arnold/shaders/abcShader
+		arnold/utility/assShadersToAbc
 		maya/alembicHolder
 		maya/abcMayaShader
 		mtoa/ABCViewer
