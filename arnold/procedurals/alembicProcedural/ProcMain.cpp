@@ -671,8 +671,7 @@ int ProcInit( struct AtNode *node, void **user_ptr )
 
 	std::vector<CachedNodeFile> createdNodes = g_cache->g_fileCache->getCachedFile(fileCacheId);
 	
-	//if (createdNodes.empty() == false)
-	if ( false)
+	if (!createdNodes.empty())
 	{
 		//AiMsgInfo("Found cache of size %i", createdNodes.size());
 		for(int i = 0; i <  createdNodes.size(); i++)
