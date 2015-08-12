@@ -58,9 +58,6 @@ IPolyMeshDrw::IPolyMeshDrw( IPolyMesh &iPmesh, std::vector<std::string> path )
         m_polyMesh.getSchema().get( m_samp );
     }
 
-    
-      
-
     m_boundsProp = m_polyMesh.getSchema().getSelfBoundsProperty();
 
     // The object has already set up the min time and max time of
@@ -124,8 +121,11 @@ void IPolyMeshDrw::setTime( chrono_t iSeconds )
 
     // Use nearest for now.
     Alembic::AbcGeom::IPolyMeshSchema schema = m_polyMesh.getSchema();
-
-    m_alpha = getWeightAndIndex(iSeconds, schema.getTimeSampling(), schema.getNumSamples(), m_index, m_ceilIndex);
+	
+	if(m_polyMesh.getSchema().getTopologyVariance() == Alembic::AbcGeom::kHeterogenousTopology)
+		m_alpha = 0.0f;	
+	else
+		m_alpha = getWeightAndIndex(iSeconds, schema.getTimeSampling(), schema.getNumSamples(), m_index, m_ceilIndex);
 
     m_ss =  ISampleSelector(iSeconds, ISampleSelector::kNearIndex );
 
@@ -194,15 +194,15 @@ Box3d IPolyMeshDrw::getBounds()
 
 void IPolyMeshDrw::updateData()
 {
-    P3fArraySamplePtr points = m_polyMesh.getSchema().getPositionsProperty().getValue(Alembic::Abc::ISampleSelector(m_index)); 
+    
     Alembic::Abc::P3fArraySamplePtr ceilPoints; 
-    // Get the stuff.
-    if (m_alpha != 0.0 &&  m_polyMesh.getSchema().getTopologyVariance() != Alembic::AbcGeom::kHeterogenousTopology) 
+
+    if (m_alpha != 0.0) 
     {
-        ceilPoints = m_polyMesh.getSchema().getPositionsProperty().getValue(
-                Alembic::Abc::ISampleSelector(m_ceilIndex) ); 
+			ceilPoints = m_polyMesh.getSchema().getPositionsProperty().getValue( Alembic::Abc::ISampleSelector(m_ceilIndex) ); 
     }
 
+	P3fArraySamplePtr points = m_samp.getPositions();
     Int32ArraySamplePtr indices = m_samp.getFaceIndices();
     Int32ArraySamplePtr counts = m_samp.getFaceCounts();
 
