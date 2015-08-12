@@ -537,7 +537,10 @@ class ShaderManager(QMainWindow, UI_ABCHierarchy.Ui_NAM):
 
 
     def setCurrentLayer(self):
-        curLayer = cmds.editRenderLayerGlobals(query=1, currentRenderLayer=1)
+        try:
+            curLayer = cmds.editRenderLayerGlobals(query=1, currentRenderLayer=1)
+        except:
+            return
         curLayeridx = self.renderLayer.findText(curLayer)
         if curLayeridx != -1:
             self.renderLayer.setCurrentIndex(curLayeridx)
