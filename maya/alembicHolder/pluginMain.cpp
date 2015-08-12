@@ -126,8 +126,9 @@ MStatus initializePlugin( MObject obj )
 
 
 
-        status = MGlobal::executePythonCommand(MString("import alembicHolder.cmds.registerAlembicHolder;alembicHolder.cmds.registerAlembicHolder.registerAlembicHolder()"), true, false);
-        if (!status) {
+        status = MGlobal::executePythonCommandOnIdle(MString("import alembicHolder.cmds.registerAlembicHolder;alembicHolder.cmds.registerAlembicHolder.registerAlembicHolder()"), false);
+        if (!status) 
+		{
             status.perror("registerMenu");
             return status;
         }
@@ -191,7 +192,7 @@ MStatus uninitializePlugin( MObject obj)
         }
 
 
-        status = MGlobal::executePythonCommand(MString("import alembicHolder.cmds.unregisterAlembicHolder;alembicHolder.cmds.unregisterAlembicHolder.unregisterAlembicHolder()"), true, false);
+        status = MGlobal::executePythonCommandOnIdle(MString("import alembicHolder.cmds.unregisterAlembicHolder;alembicHolder.cmds.unregisterAlembicHolder.unregisterAlembicHolder()"), false);
         if (!status) {
             status.perror("unregisterMenu");
             return status;
