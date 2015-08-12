@@ -4,8 +4,8 @@ set(CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/share)
 
 project(abcToA)
 
-set(ABCTOA_MAJOR_VERSION 0)
-set(ABCTOA_MINOR_VERSION 10)
+set(ABCTOA_MAJOR_VERSION 1)
+set(ABCTOA_MINOR_VERSION 0)
 set(ABCTOA_PATCH_VERSION 0)
 set(ABCTOA_VERSION "${ABCTOA_MAJOR_VERSION}.${ABCTOA_MINOR_VERSION}.${ABCTOA_PATCH_VERSION}")
 
@@ -190,10 +190,10 @@ set(SUBDIRECTORIES
 		arnold/shaders/abcShader
 		arnold/utility/assShadersToAbc
 		maya/alembicHolder
-		maya/abcMayaShader
 		mtoa/ABCViewer
 		mtoa/abcShader
 )
+
 
 include_directories(common)
 
@@ -201,6 +201,11 @@ include_directories(common)
 foreach(SUBDIR ${SUBDIRECTORIES})
     add_subdirectory(${SUBDIR})
 endforeach()
+
+# abcMayaShader won't compile on darwin for the moment.
+IF(NOT DARWIN)
+	add_subdirectory(maya/abcMayaShader)
+ENDIF()
 
 # add top-level files
 INSTALL(FILES README INSTALL DESTINATION ${INSTALL_DIR})
