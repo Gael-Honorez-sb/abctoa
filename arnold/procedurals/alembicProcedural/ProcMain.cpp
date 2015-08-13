@@ -691,7 +691,7 @@ int ProcInit( struct AtNode *node, void **user_ptr )
 	}*/
 
 
-	std::string fileCacheId = g_cache->g_fileCache->getHash(args->filename, args->shaders, args->displacements, args->attributes);
+	std::string fileCacheId = g_cache->g_fileCache->getHash(args->filename, args->shaders, args->displacements, args->attributes, args->frame);
 
 	std::vector<CachedNodeFile> createdNodes = g_cache->g_fileCache->getCachedFile(fileCacheId);
 	
@@ -875,7 +875,7 @@ int ProcCleanup( void *user_ptr )
 		{
 			caches *g_cache = reinterpret_cast<caches*>( AiProceduralGetPluginData(args->proceduralNode) );
 
-			std::string fileCacheId = g_cache->g_fileCache->getHash(args->filename, args->shaders, args->displacements, args->attributes);
+			std::string fileCacheId = g_cache->g_fileCache->getHash(args->filename, args->shaders, args->displacements, args->attributes, args->frame);
 			std::vector<CachedNodeFile> createdNodes = g_cache->g_fileCache->getCachedFile(fileCacheId);
 	
 			if(createdNodes.empty())

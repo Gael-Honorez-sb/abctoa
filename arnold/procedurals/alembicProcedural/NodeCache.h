@@ -71,7 +71,8 @@ public:
 	std::string getHash(std::string fileName,     
 						std::map<std::string, AtNode*> shaders,
 						std::map<std::string, AtNode*> displacements,
-						std::vector<std::string> attributes
+						std::vector<std::string> attributes,
+						double frame
 						);
 
 
