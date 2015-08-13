@@ -342,6 +342,8 @@ bool ProcInitBounds (AtNode *node, AtBBox *bounds, void **user_ptr)
     IObject root;
     Alembic::AbcCoreFactory::IFactory factory;
     IArchive archive = factory.getArchive(args->filename);
+
+	
     if (!archive.valid())
     {
         AiMsgError ( "Cannot read file %s", args->filename.c_str());
@@ -354,20 +356,38 @@ bool ProcInitBounds (AtNode *node, AtBBox *bounds, void **user_ptr)
 
 	Box3d bbox;
 	bbox.makeEmpty();
-
 	chrono_t frameTime = args->frame / args->fps;
     chrono_t shutterOpenTime = ( args->frame + args->shutterOpen ) / args->fps;
     chrono_t shutterCloseTime = ( args->frame + args->shutterClose ) / args->fps;
 
-	getBoundingBox(root, shutterOpenTime, bbox);
-	if(shutterOpenTime != shutterCloseTime)
-		getBoundingBox(root, shutterCloseTime, bbox);
+	 if ( root.getProperties().getPropertyHeader( ".childBnds" ) != NULL )
+	 {
+		 IBox3dProperty childbnds = Alembic::Abc::IBox3dProperty( archive.getTop().getProperties(),
+                                   ".childBnds", ErrorHandler::kQuietNoopPolicy);
+		
+
+		 ISampleSelector m_ss =  ISampleSelector(shutterOpenTime, ISampleSelector::kNearIndex );
+		 Box3d bboxRoot = childbnds.getValue(m_ss);
+		 bbox.extendBy(bboxRoot);
+		 if(shutterOpenTime != shutterCloseTime)
+		 {
+			  m_ss =  ISampleSelector(shutterOpenTime, ISampleSelector::kNearIndex );
+			  bboxRoot = childbnds.getValue(m_ss);
+			  bbox.extendBy(bboxRoot);
+		 }
+	 }
+	 else
+	 {
+		getBoundingBox(root, shutterOpenTime, bbox);
+		if(shutterOpenTime != shutterCloseTime)
+			getBoundingBox(root, shutterCloseTime, bbox);
+	 }
 
 	bounds->min = AiPoint(bbox.min.x, bbox.min.y, bbox.min.z);
 	bounds->max = AiPoint(bbox.max.x, bbox.max.y, bbox.max.z);
 
-	AiMsgDebug("bounds->min %f %f %f", bounds->min.x, bounds->min.y, bounds->min.z);
-	AiMsgDebug("bounds->max %f %f %f", bounds->max.x, bounds->max.y, bounds->max.z);
+	AiMsgInfo("bounds->min %f %f %f", bounds->min.x, bounds->min.y, bounds->min.z);
+	AiMsgInfo("bounds->max %f %f %f", bounds->max.x, bounds->max.y, bounds->max.z);
 
 
 	return true;
