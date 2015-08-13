@@ -683,15 +683,7 @@ int ProcInit( struct AtNode *node, void **user_ptr )
         std::sort(args->attributes.begin(), args->attributes.end());
     }
 
-	// Don't read the same file several times
-	/*while(g_cache->g_fileCache->isFileOpened(args->filename))
-	{
-		AiMsgDebug("Waiting");
-		continue;
-	}*/
-
-
-	std::string fileCacheId = g_cache->g_fileCache->getHash(args->filename, args->shaders, args->displacements, args->attributes, args->frame);
+	std::string fileCacheId = g_cache->g_fileCache->getHash(args->filename, args->shaders, args->displacements, args->attributesRoot, args->frame);
 
 	std::vector<CachedNodeFile> createdNodes = g_cache->g_fileCache->getCachedFile(fileCacheId);
 	
@@ -713,19 +705,39 @@ int ProcInit( struct AtNode *node, void **user_ptr )
 				AiNodeSetArray(instance, "matrix", AiArrayCopy(cachedNode.matrix));
 				std::string newName = args->nameprefix + "/" + std::string(AiNodeGetName(obj));
 				AiNodeSetStr(instance, "name", newName.c_str());
+				
+				// Now copy original properties
+				AiNodeSetByte(instance, "visibility", AiNodeGetByte(obj, "visibility"));
+				AiNodeSetByte(instance, "sidedness", AiNodeGetByte(obj, "sidedness"));
+				AiNodeSetBool(instance, "receive_shadows", AiNodeGetBool(obj, "receive_shadows"));
+				AiNodeSetBool(instance, "self_shadows", AiNodeGetBool(obj, "self_shadows"));
+				AiNodeSetBool(instance, "invert_normals", AiNodeGetBool(obj, "invert_normals"));
+				AiNodeSetBool(instance, "opaque", AiNodeGetBool(obj, "opaque"));
+				AiNodeSetBool(instance, "matte", AiNodeGetBool(obj, "matte"));
+				AiNodeSetBool(instance, "use_light_group", AiNodeGetBool(obj, "use_light_group"));
+
+				AiNodeSetArray(instance, "light_group", AiArrayCopy(AiNodeGetArray(obj, "light_group")));
+				AiNodeSetArray(instance, "shadow_group", AiArrayCopy(AiNodeGetArray(obj, "shadow_group")));
+				AiNodeSetArray(instance, "transform_time_samples", AiArrayCopy(AiNodeGetArray(obj, "transform_time_samples")));
+				AiNodeSetArray(instance, "deform_time_samples", AiArrayCopy(AiNodeGetArray(obj, "deform_time_samples")));
+				AiNodeSetArray(instance, "light_group", AiArrayCopy(AiNodeGetArray(obj, "light_group")));
+
 				args->createdNodes->addNode(instance);
 			}
 			else if (AiNodeEntryGetType(AiNodeGetNodeEntry(obj)) == AI_NODE_LIGHT)
 			{
 				// AiNodeClone seems to crash arnold when releasing ressources. So we clone the node ourself.
+
 				const AtNodeEntry* nentry = AiNodeGetNodeEntry(obj);
 				AtNode* light = AiNode(AiNodeEntryGetName(nentry));
 
 				for (int i = 0; i < AiNodeEntryGetNumParams (nentry); i++)
 				{
 					const AtParamEntry* pentry = AiNodeEntryGetParameter (nentry, i);
+
 					switch(AiParamGetType (pentry))
 					{
+						
 						case AI_TYPE_BYTE:
 							AiNodeSetByte(light, AiParamGetName(pentry), AiNodeGetByte(obj, AiParamGetName(pentry)));
 							break;
@@ -791,7 +803,7 @@ int ProcInit( struct AtNode *node, void **user_ptr )
 					}
 
 				}
-
+				
 				AiNodeSetArray(light, "matrix", AiArrayCopy(cachedNode.matrix));
 				std::string newName = args->nameprefix + "/" + std::string(AiNodeGetName(obj));
 				AiNodeSetStr(light, "name", newName.c_str());
@@ -803,8 +815,6 @@ int ProcInit( struct AtNode *node, void **user_ptr )
 		return 1;
 	}
 
-	//IArchive archive = g_cache->g_fileCache->getReader(args->filename);
-	
     Alembic::AbcCoreFactory::IFactory factory;
 	factory.setOgawaNumStreams(8);
     IArchive archive = factory.getArchive(args->filename);
@@ -875,7 +885,7 @@ int ProcCleanup( void *user_ptr )
 		{
 			caches *g_cache = reinterpret_cast<caches*>( AiProceduralGetPluginData(args->proceduralNode) );
 
-			std::string fileCacheId = g_cache->g_fileCache->getHash(args->filename, args->shaders, args->displacements, args->attributes, args->frame);
+			std::string fileCacheId = g_cache->g_fileCache->getHash(args->filename, args->shaders, args->displacements, args->attributesRoot, args->frame);
 			std::vector<CachedNodeFile> createdNodes = g_cache->g_fileCache->getCachedFile(fileCacheId);
 	
 			if(createdNodes.empty())

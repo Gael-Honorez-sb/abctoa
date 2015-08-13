@@ -9,6 +9,9 @@
 #include <Alembic/AbcGeom/All.h>
 #include <Alembic/AbcCoreFactory/All.h>
 
+#include "json/value.h"
+
+
 using namespace Alembic::AbcGeom;
 
 /* 
@@ -71,7 +74,7 @@ public:
 	std::string getHash(std::string fileName,     
 						std::map<std::string, AtNode*> shaders,
 						std::map<std::string, AtNode*> displacements,
-						std::vector<std::string> attributes,
+						Json::Value attributesRoot,
 						double frame
 						);
 
