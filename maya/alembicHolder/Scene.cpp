@@ -64,7 +64,7 @@ Scene::Scene( const std::string &abcFileName, const std::string &objectPath )
 
 	if (!m_archive.valid())
     {
-        std::cout << "Can't open file : " << abcFileName << std::endl;
+        std::cout << "[nozAlembicHolder] ERROR : Can't open file : " << abcFileName << std::endl;
 		return ;
     }
 
