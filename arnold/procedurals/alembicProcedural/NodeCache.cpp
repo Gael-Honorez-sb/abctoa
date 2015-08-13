@@ -146,7 +146,7 @@ const size_t FileCache::hash( std::string const& s )
 std::string FileCache::getHash(std::string fileName,     
 							   std::map<std::string, AtNode*> shaders,
 							   std::map<std::string, AtNode*> displacements,
-							   std::vector<std::string> attributes,
+							   Json::Value attributesRoot,
 							   double frame
 							   )
 {
@@ -163,17 +163,10 @@ std::string FileCache::getHash(std::string fileName,
 		displaceBuff << it->first;
 	}
 
-	std::ostringstream attributesBuff;
-	for(std::vector<std::string>::iterator it = attributes.begin(); it != attributes.end(); ++it) 
-	{
-		attributesBuff << *it;
-	}
-
 	std::ostringstream buffer;
 	std::string cacheId;
-
 	
-    buffer << hash(fileName) << "@" << frame << "@" << hash(shaderBuff.str()) << "@" << hash(displaceBuff.str()) << "@" << hash(attributesBuff.str());
+    buffer << hash(fileName) << "@" << frame << "@" << hash(shaderBuff.str()) << "@" << hash(displaceBuff.str()) << "@" << hash(attributesRoot.toStyledString());
 
     cacheId = buffer.str();
 	return cacheId;
