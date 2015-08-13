@@ -59,9 +59,17 @@ Scene::Scene( const std::string &abcFileName, const std::string &objectPath )
 
 
     Alembic::AbcCoreFactory::IFactory factory;
-    //factory.(32setOgawaNumStreams);
+	factory.setOgawaNumStreams(16);
     m_archive = factory.getArchive(abcFileName );
+
+	if (!m_archive.valid())
+    {
+        std::cout << "Can't open file : " << abcFileName << std::endl;
+		return ;
+    }
+
     m_topObject = IObject( m_archive, kTop );
+
 
     m_selectionPath = "";
 
