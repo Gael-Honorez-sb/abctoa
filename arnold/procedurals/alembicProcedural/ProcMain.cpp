@@ -311,7 +311,11 @@ bool ProcCleanupPlugin(void *plugin_user_ptr)
 
 bool ProcInitBounds (AtNode *node, AtBBox *bounds, void **user_ptr)
 {
-
+	// if we already have BBox, we skip this part.
+	if(	bounds->min.x != 0.0 || bounds->min.y != 0.0 || bounds->min.z != 0.0 ||
+		bounds->max.x != 0.0 || bounds->max.y != 0.0 || bounds->max.z != 0.0
+	)
+		return true;
 
     ProcArgs * args = new ProcArgs( AiNodeGetStr( node, "data" ) );
 
