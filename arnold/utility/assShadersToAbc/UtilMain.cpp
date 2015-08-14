@@ -1,5 +1,3 @@
-
-
 #include <ai.h>
 
 #include <iostream>
@@ -100,21 +98,32 @@ int main(int argc, char *argv[] )
 
 	// Get all shaders root.
 
-	AtNodeIterator *iter = AiUniverseGetNodeIterator(AI_NODE_SHAPE);
+	AtNodeIterator *iter = AiUniverseGetNodeIterator(AI_NODE_SHADER);
 	std::set<AtNode*> rootShaders;
 
+	// First, we iterate all nodes, everything is potentially a root node.
+	while (!AiNodeIteratorFinished(iter))
+		rootShaders.insert(AiNodeIteratorGetNext(iter));
+	AiNodeIteratorDestroy(iter);
+
+	// Then we iterate again. If a has another node as input parameter, it's not a root.
+	iter = AiUniverseGetNodeIterator(AI_NODE_SHADER);
 	while (!AiNodeIteratorFinished(iter))
 	{
-		AtNode *shape = AiNodeIteratorGetNext(iter);
-		AtArray *shaders = AiNodeGetArray(shape, "shader");
+		AtNode *shader = AiNodeIteratorGetNext(iter);
 
-		for (int i = 0; i < shaders->nelements; i++)
+		AtNodeSet* connectedNodes = new AtNodeSet;
+
+		getAllArnoldNodes(shader, connectedNodes);
+
+		std::set<AtNode*>::const_iterator sit (connectedNodes->begin()), send(connectedNodes->end());
+		for(;sit!=send;++sit)
 		{
-			AtNode *shader = (AtNode*) AiArrayGetPtr(shaders, i);
-			if (shader != NULL)
-				rootShaders.insert(shader);
+			std::set<AtNode*>::iterator toErase = rootShaders.find (*sit);
+			if(toErase !=  rootShaders.end())
+				rootShaders.erase(toErase);	
 		}
-	}
+	}	
 	AiNodeIteratorDestroy(iter);
 
 

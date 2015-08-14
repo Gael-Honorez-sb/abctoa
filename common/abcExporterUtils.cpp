@@ -296,7 +296,7 @@ void processArrayParam(AtNode* sit, const char *paramName, AtArray* paramArray, 
 {
     //first, test if the entry is linked
     //Build the paramname...
-
+	AiMsgTab (+2);
     int typeArray = paramArray->type;
 
     if(typeArray == AI_TYPE_NODE || typeArray == AI_TYPE_POINTER)
@@ -311,8 +311,8 @@ void processArrayParam(AtNode* sit, const char *paramName, AtArray* paramArray, 
 
                 std::string paramNameArray = std::string(paramName) + "[" +std::to_string(i) +"]";
 
-                AiMsgInfo("%s.%s is linked", nodeName.c_str(), paramName);
-                AiMsgInfo("Exporting link from %s.%s to %s.%s", nodeNameLinked.c_str(), paramNameArray.c_str(), nodeName.c_str(), paramName);
+                //AiMsgInfo("%s.%s is linked", nodeName.c_str(), paramName);
+                //AiMsgInfo("Exporting link from %s.%s to %s.%s", nodeNameLinked.c_str(), paramNameArray.c_str(), nodeName.c_str(), paramName);
                 matObj.getSchema().setNetworkNodeConnection(nodeName.c_str(), paramNameArray.c_str(), nodeNameLinked.c_str(), "");
 
             }
@@ -325,6 +325,7 @@ void processArrayParam(AtNode* sit, const char *paramName, AtArray* paramArray, 
         if (!AiNodeGetLink(sit, paramNameArray.c_str()) == NULL)
             processLinkedParam(sit, typeArray, outputType, matObj, nodeName, paramNameArray, containerName);
     }
+	AiMsgTab (-2);
 }
 
 
@@ -337,7 +338,7 @@ void processLinkedParam(AtNode* sit, int inputType, int outputType,  Mat::OMater
 
         if(AiNodeGetLink(sit, paramName.c_str()))
         {
-            AiMsgInfo("%s.%s is linked", nodeName.c_str(), paramName.c_str());
+            //AiMsgInfo("%s.%s is linked", nodeName.c_str(), paramName.c_str());
             exportLink(sit, matObj, nodeName, paramName, containerName);
         }
         else
@@ -408,7 +409,7 @@ void exportLink(AtNode* sit, Mat::OMaterial matObj, std::string nodeName, std::s
         }
 
     }
-    AiMsgInfo("Exporting link from %s.%s to %s.%s", nodeNameLinked.c_str(), outPlug.c_str(), nodeName.c_str(), paramName);
+    //AiMsgInfo("Exporting link from %s.%s to %s.%s", nodeNameLinked.c_str(), outPlug.c_str(), nodeName.c_str(), paramName);
     matObj.getSchema().setNetworkNodeConnection(nodeName.c_str(), paramName, nodeNameLinked.c_str(), outPlug);
 
     AiMsgTab (-2);
