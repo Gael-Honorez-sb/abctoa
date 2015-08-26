@@ -34,56 +34,94 @@
 //
 //-*****************************************************************************
 
-#ifndef _AlembicHolder_IPointsDrw_h_
-#define _AlembicHolder_IPointsDrw_h_
+#ifndef _AlembicHolder_PointDrwHelper_h_
+#define _AlembicHolder_PointDrwHelper_h_
 
 #include "Foundation.h"
-#include "IObjectDrw.h"
-#include "PointDrwHelper.h"
+#include "DrawContext.h"
 #include "RenderModules.h"
+#include "boost/noncopyable.hpp"
+
 
 namespace AlembicHolder {
 
+
 //-*****************************************************************************
-//! Draw a poly mesh!
-class IPointsDrw : public IObjectDrw
+//! \brief Both the SubD and PolyMesh classes draw in the same way, so we
+//! create this helper class to do the common work.
+
+
+
+class PointDrwHelper
 {
 public:
-    IPointsDrw( IPoints &iPpoints, std::vector<std::string> path );
+    // Default constructor
+    PointDrwHelper();
 
-    virtual ~IPointsDrw();
+    // Destructor
+    ~PointDrwHelper();
 
-    virtual bool valid();
+    // This is a "full update" of all parameters.
+    // If N is empty, normals will be computed.
+    void update( P3fArraySamplePtr iP,
+                 Abc::Box3d iBounds = Abc::Box3d(), 
+                 double alpha = 0.0 );
 
-    virtual void setTime( chrono_t iSeconds );
-    virtual Box3d getBounds();
-    virtual void updateData();
+    // Update just positions and possibly normals
+    /*void update( P3fArraySamplePtr iP,
+                 P3fArraySamplePtr iPCeil,
+                 N3fArraySamplePtr iN,
+                 Abc::Box3d iBounds = Abc::Box3d(), 
+                 double alpha = 0.0 );*/
 
-    virtual void draw( const DrawContext & iCtx );
+
+    // This returns constancy.
+    bool isConstant() const { return m_isConstant; }
+    void setConstant( bool isConstant = true ) { m_isConstant = isConstant; }
+
+    // This returns validity.
+    bool valid() const { return m_valid; }
+
+    // Return the bounds.
+    Box3d getBounds() const { return m_bounds; }
+
+    // And, finally, this draws.
+    void draw( const DrawContext & iCtx) const;
+
+    // This is a weird thing. Just makes the helper invalid
+    // by nulling everything out. For internal use.
+    void makeInvalid();
+
+    void setName(std::string name) { m_name = name; }
 
 protected:
-    IPoints m_points;
+    void computeBounds();
 
-    IPointsSchema::Sample m_samp;
+  /*  typedef Imath::Vec3<unsigned int> Tri;
+    typedef std::vector<Tri> TriArray;*/
 
-    //P3fArraySamplePtr m_positions;
+    P3fArraySamplePtr m_pointsP;
+/*    N3fArraySamplePtr m_meshN;
+    Int32ArraySamplePtr m_meshIndices;
+    Int32ArraySamplePtr m_meshCounts;*/
 
-    //BufferObject buffer;
+    BufferObject buffer;
 
-   /* MGLuint mVertexBuffer, mNormalBuffer, mIndexBuffer, mColorBuffer;
+    MGLuint mVertexBuffer, mIndexBuffer;
     MGLenum mPrimType;
-    MGLsizei mPrimNum;*/
+    MGLsizei mPrimNum;
 
-	double m_alpha;
+    //std::vector<C4f> m_colors;
 
-	std::map<chrono_t, PointDrwHelper> m_drwHelpers;
+    bool m_valid;
+    bool m_isConstant;
+    Box3d m_bounds;
 
-	Alembic::AbcCoreAbstract::index_t m_index, m_ceilIndex;
-
-    bool m_needtoupdate;
-
+    std::string m_name;
 
 };
+
+
 
 } // End namespace AlembicHolder
 

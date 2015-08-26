@@ -189,9 +189,9 @@ bool abcMayaShader::rebuildShadersList()
 
     MPlug zPlug (thisMObject(), aShaders);
 
-    unsigned int numShaders = materialsObject.getNumChildren();
+    size_t numShaders = materialsObject.getNumChildren();
 
-    for (unsigned int i = 0; i < numShaders; i++)
+    for (size_t i = 0; i < numShaders; i++)
     {
         MString shaderName(materialsObject.getChildHeader(i).getName().c_str());
         zPlug.selectAncestorLogicalIndex(i,aShaders);
