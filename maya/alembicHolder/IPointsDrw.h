@@ -39,7 +39,7 @@
 
 #include "Foundation.h"
 #include "IObjectDrw.h"
-#include "MeshDrwHelper.h"
+#include "PointDrwHelper.h"
 #include "RenderModules.h"
 
 namespace AlembicHolder {
@@ -49,7 +49,7 @@ namespace AlembicHolder {
 class IPointsDrw : public IObjectDrw
 {
 public:
-    IPointsDrw( IPoints &iPmesh, std::vector<std::string> path );
+    IPointsDrw( IPoints &iPpoints, std::vector<std::string> path );
 
     virtual ~IPointsDrw();
 
@@ -66,13 +66,19 @@ protected:
 
     IPointsSchema::Sample m_samp;
 
-    P3fArraySamplePtr m_positions;
+    //P3fArraySamplePtr m_positions;
 
-    BufferObject buffer;
+    //BufferObject buffer;
 
-    MGLuint mVertexBuffer, mNormalBuffer, mIndexBuffer, mColorBuffer;
+   /* MGLuint mVertexBuffer, mNormalBuffer, mIndexBuffer, mColorBuffer;
     MGLenum mPrimType;
-    MGLsizei mPrimNum;
+    MGLsizei mPrimNum;*/
+
+	double m_alpha;
+
+	std::map<chrono_t, PointDrwHelper> m_drwHelpers;
+
+	Alembic::AbcCoreAbstract::index_t m_index, m_ceilIndex;
 
     bool m_needtoupdate;
 

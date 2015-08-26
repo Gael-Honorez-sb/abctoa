@@ -37,20 +37,26 @@
 #include "IPointsDrw.h"
 #include "RenderModules.h"
 #include "PathUtil.h"
+#include "samplingUtils.h"
 
 namespace AlembicHolder {
 
     static MGLFunctionTable *gGLFT = NULL;
 
 //-*****************************************************************************
-IPointsDrw::IPointsDrw( IPoints &iPmesh, std::vector<std::string> path )
-  : IObjectDrw( iPmesh, false, path )
-  , m_points( iPmesh )
+IPointsDrw::IPointsDrw( IPoints &iPpoints, std::vector<std::string> path )
+  : IObjectDrw( iPpoints, false, path )
+  , m_points( iPpoints )
 {
     // Get out if problems.
     if ( !m_points.valid() )
     {
         return;
+    }
+
+	if ( m_points.getSchema().getNumSamples() > 0 )
+    {
+        m_points.getSchema().get( m_samp );
     }
 
     m_boundsProp = m_points.getSchema().getSelfBoundsProperty();
@@ -67,6 +73,8 @@ IPointsDrw::IPointsDrw( IPoints &iPmesh, std::vector<std::string> path )
             m_maxTime = std::max( m_maxTime, maxTime );
         }
     }
+
+	m_currentFrame = MAnimControl::currentTime().value();
 }
 
 //-*****************************************************************************
@@ -84,30 +92,62 @@ bool IPointsDrw::valid()
 //-*****************************************************************************
 void IPointsDrw::setTime( chrono_t iSeconds )
 {
+
 	// The frame is different. We should clear all the data.
 	if(m_currentFrame != MAnimControl::currentTime().value())
 	{
+		for (std::map<double, PointDrwHelper>::iterator iter = m_drwHelpers.begin(); iter != m_drwHelpers.end(); ++iter) 
+			iter->second.makeInvalid();
+
 		for (std::map<double, Box3d>::iterator iter = m_bounds.begin(); iter != m_bounds.end(); ++iter) 
 			iter->second.makeEmpty();
+
+		m_drwHelpers.clear();
 		m_bounds.clear();
 
 		m_currentFrame = MAnimControl::currentTime().value();
 	}
+
+	if(m_drwHelpers.count(iSeconds) == 1)
+	{
+		if (iSeconds != m_currentTime)
+			IObjectDrw::setTime( iSeconds );
+		return;
+	}
+
+
+
+    // Use nearest for now.
+	Alembic::AbcGeom::IPointsSchema schema = m_points.getSchema();
 	
+
+	m_alpha = 0.0;//getWeightAndIndex(iSeconds, schema.getTimeSampling(), schema.getNumSamples(), m_index, m_ceilIndex);
+
+    m_ss =  ISampleSelector(iSeconds, ISampleSelector::kNearIndex );
+
+    if ( IsAncestorInvisible(m_points,m_ss) ) {
+        m_visible = false;
+        return;
+    }
+    else
+        m_visible = true;
     if (iSeconds != m_currentTime) {
-
-        buffer.clear();
-
         IObjectDrw::setTime( iSeconds );
         if ( !valid() )
         {
+			m_drwHelpers[iSeconds].makeInvalid();
             return;
         }
-        // Use nearest for now.
-        m_ss =  ISampleSelector(iSeconds, ISampleSelector::kNearIndex );
+        //IPolyMeshSchema::Sample psamp;
+        if ( m_points.getSchema().isConstant() )
+        {
+			m_drwHelpers[iSeconds].setConstant( m_points.getSchema().isConstant() );
+        }
+        else if ( m_points.getSchema().getNumSamples() > 0 )
+        {
+            m_points.getSchema().get( m_samp, m_ss );           
+        }
 
-        m_points.getSchema().get( m_samp, m_ss );
-        // Update bounds from positions
         m_bounds[iSeconds].makeEmpty();
         m_needtoupdate = true;
     }
@@ -115,35 +155,30 @@ void IPointsDrw::setTime( chrono_t iSeconds )
 
 void IPointsDrw::updateData()
 {
-    m_positions = m_samp.getPositions();
-    if ( m_positions )
+	
+Alembic::Abc::P3fArraySamplePtr ceilPoints; 
+
+
+	P3fArraySamplePtr points = m_samp.getPositions();
+    // update the points
+    m_drwHelpers[m_currentTime].update( points, getBounds(), m_alpha );
+
+    if ( !m_drwHelpers[m_currentTime].valid() )
     {
-        size_t numPoints = m_positions->size();
-
-        std::vector<MGLfloat> v;
-        std::vector<MGLuint> vidx;
-
-        for ( size_t p = 0; p < numPoints; ++p )
-        {
-            const V3f &P = (*m_positions)[p];
-            v.push_back(P.x);
-            v.push_back(P.y);
-            v.push_back(P.z);
-            vidx.push_back(p);
-        }
-
-        buffer.genVertexBuffer(v);
-        buffer.genIndexBuffer(vidx, MGL_POINTS);
+        m_points.reset();
+        return;
     }
-
     m_needtoupdate = false;
+
 }
 
 Box3d IPointsDrw::getBounds()
 {
     if(m_bounds[m_currentTime].isEmpty())
+	{
+		m_ss =  ISampleSelector(m_currentTime, ISampleSelector::kNearIndex );
         m_bounds[m_currentTime] = m_boundsProp.getValue( m_ss );
-
+	}
     return m_bounds[m_currentTime];
 
 }
@@ -167,16 +202,11 @@ void IPointsDrw::draw( const DrawContext &iCtx )
     if (m_needtoupdate)
         updateData();
 
-    if ( !m_positions || m_positions->size() == 0 )
-    {
-        IObjectDrw::draw( iCtx );
-        return;
-    }
     gGLFT->glPushAttrib( MGL_ENABLE_BIT );
     gGLFT->glDisable( MGL_LIGHTING );
-    buffer.render();
-    IObjectDrw::draw( iCtx );
+	m_drwHelpers[m_currentTime].draw( iCtx );
     gGLFT->glPopAttrib( );
+	IObjectDrw::draw( iCtx );
 }
 
 } // End namespace AlembicHolder
