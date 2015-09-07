@@ -66,14 +66,6 @@ protected:
 
     IPointsSchema::Sample m_samp;
 
-    //P3fArraySamplePtr m_positions;
-
-    //BufferObject buffer;
-
-   /* MGLuint mVertexBuffer, mNormalBuffer, mIndexBuffer, mColorBuffer;
-    MGLenum mPrimType;
-    MGLsizei mPrimNum;*/
-
 	double m_alpha;
 
 	std::map<chrono_t, PointDrwHelper> m_drwHelpers;
