@@ -49,6 +49,8 @@
 #include "parseAttributes.h"
 #include "NodeCache.h"
 
+#include "ReadInstancer.h"
+
 #include <Alembic/AbcGeom/All.h>
 
 #include <Alembic/AbcCoreFactory/IFactory.h>
@@ -311,13 +313,31 @@ bool ProcCleanupPlugin(void *plugin_user_ptr)
 
 bool ProcInitBounds (AtNode *node, AtBBox *bounds, void **user_ptr)
 {
-	// if we already have BBox, we skip this part.
-	if(	bounds->min.x != 0.0 || bounds->min.y != 0.0 || bounds->min.z != 0.0 ||
-		bounds->max.x != 0.0 || bounds->max.y != 0.0 || bounds->max.z != 0.0
-	)
-		return true;
+    // check if we have a instancer archive attribute
+    if (AiNodeLookUpUserParameter(node, "instancerArchive") !=NULL )
+    {
+		std::string fileName(AiNodeGetStr(node, "instancerArchive"));
+		if(fileName.empty())
+		{
+			// if we already have BBox, we skip this part.
+			if(	bounds->min.x != 0.0 || bounds->min.y != 0.0 || bounds->min.z != 0.0 ||
+				bounds->max.x != 0.0 || bounds->max.y != 0.0 || bounds->max.z != 0.0
+			)
+				return true;
+		}
+    }
+
 
     ProcArgs * args = new ProcArgs( AiNodeGetStr( node, "data" ) );
+	std::string resultFile = args->filename;
+    if (AiNodeLookUpUserParameter(node, "instancerArchive") !=NULL )
+    {
+		std::string fileName(AiNodeGetStr(node, "instancerArchive"));
+		if(!fileName.empty())
+		{
+			resultFile = fileName;
+		}
+	}
 
     #if (AI_VERSION_ARCH_NUM == 3 && AI_VERSION_MAJOR_NUM < 3) || AI_VERSION_ARCH_NUM < 3
         #error Arnold version 3.3+ required for AlembicArnoldProcedural
@@ -332,7 +352,7 @@ bool ProcInitBounds (AtNode *node, AtBBox *bounds, void **user_ptr)
             return 1;
         }
 
-    if ( args->filename.empty() )
+    if (resultFile.empty() )
     {
         args->usage();
         return 1;
@@ -341,16 +361,16 @@ bool ProcInitBounds (AtNode *node, AtBBox *bounds, void **user_ptr)
 
     IObject root;
     Alembic::AbcCoreFactory::IFactory factory;
-    IArchive archive = factory.getArchive(args->filename);
+    IArchive archive = factory.getArchive(resultFile);
 
 	
     if (!archive.valid())
     {
-        AiMsgError ( "Cannot read file %s", args->filename.c_str());
+        AiMsgError ( "Cannot read file %s", resultFile.c_str());
     }
     else
     {
-        AiMsgDebug ( "reading file %s", args->filename.c_str());
+        AiMsgDebug ( "reading file %s", resultFile.c_str());
         root = archive.getTop();
     }
 
@@ -386,8 +406,8 @@ bool ProcInitBounds (AtNode *node, AtBBox *bounds, void **user_ptr)
 	bounds->min = AiPoint(bbox.min.x, bbox.min.y, bbox.min.z);
 	bounds->max = AiPoint(bbox.max.x, bbox.max.y, bbox.max.z);
 
-	AiMsgInfo("bounds->min %f %f %f", bounds->min.x, bounds->min.y, bounds->min.z);
-	AiMsgInfo("bounds->max %f %f %f", bounds->max.x, bounds->max.y, bounds->max.z);
+	AiMsgDebug("bounds->min %f %f %f", bounds->min.x, bounds->min.y, bounds->min.z);
+	AiMsgDebug("bounds->max %f %f %f", bounds->max.x, bounds->max.y, bounds->max.z);
 
 
 	return true;
@@ -397,6 +417,7 @@ bool ProcInitBounds (AtNode *node, AtBBox *bounds, void **user_ptr)
 
 int ProcInit( struct AtNode *node, void **user_ptr )
 {
+
     bool skipJson = false;
     bool skipShaders = false;
     bool skipAttributes = false;
@@ -481,7 +502,6 @@ int ProcInit( struct AtNode *node, void **user_ptr )
             args->uvsRoot = archive.getTop();
         }
     }
-
 
     Json::Value jrootShaders;
     Json::Value jrootattributes;
@@ -683,20 +703,58 @@ int ProcInit( struct AtNode *node, void **user_ptr )
         std::sort(args->attributes.begin(), args->attributes.end());
     }
 
+
+    // check if we have a instancer archive attribute
+    if (AiNodeLookUpUserParameter(node, "instancerArchive") !=NULL )
+    {
+		std::string fileName(AiNodeGetStr(node, "instancerArchive"));
+		if(!fileName.empty())
+		{
+			// if so, we try to load the archive.
+			IArchive archive;
+			Alembic::AbcCoreFactory::IFactory factory;
+			archive = factory.getArchive(AiNodeGetStr(node, "instancerArchive"));
+			if (!archive.valid())
+			{
+				AiMsgWarning ( "Cannot read file %s", AiNodeGetStr(node, "instancerArchive"));
+			}
+			else
+			{
+				AiMsgInfo( "Using Instancer archive %s", AiNodeGetStr(node, "instancerArchive"));
+
+				IObject root = archive.getTop();
+				PathList path;
+
+				if ( path.empty() ) //walk the entire scene
+				{
+					for ( size_t i = 0; i < root.getNumChildren(); ++i )
+					{
+						std::vector<std::string> tags;
+						WalkObjectForInstancer( root, root.getChildHeader(i), *args,
+									path.end(), path.end(), 0 );
+					}
+				}
+            
+				return 1;
+			}
+		}
+    }
+
+
 	std::string fileCacheId = g_cache->g_fileCache->getHash(args->filename, args->shaders, args->displacements, args->attributesRoot, args->frame);
 
 	std::vector<CachedNodeFile> createdNodes = g_cache->g_fileCache->getCachedFile(fileCacheId);
 	
 	if (!createdNodes.empty())
 	{
-		//AiMsgInfo("Found cache of size %i", createdNodes.size());
+		AiMsgDebug("Found cache of size %i", createdNodes.size());
 		for(int i = 0; i <  createdNodes.size(); i++)
 		{
-			//AiMsgInfo("Instancing obj %i", i);
+			AiMsgDebug("Instancing obj %i", i);
 			CachedNodeFile cachedNode = createdNodes[i];
 			AtNode *obj = cachedNode.node;
 			
-			//AiMsgInfo("Getting obj %i %s and type %s", i, AiNodeGetName(obj), AiNodeEntryGetName(AiNodeGetNodeEntry (obj)));
+			AiMsgDebug("Getting obj %i %s and type %s", i, AiNodeGetName(obj), AiNodeEntryGetName(AiNodeGetNodeEntry (obj)));
 			if(AiNodeEntryGetType(AiNodeGetNodeEntry(obj)) == AI_NODE_SHAPE)
 			{
 				AtNode *instance = AiNode("ginstance");
@@ -919,10 +977,10 @@ int ProcNumNodes( void *user_ptr )
 AtNode* ProcGetNode(void *user_ptr, int i)
 {
 	
-	//AiMsgDebug("Should return node %i", i);
+	AiMsgDebug("Should return node %i", i);
     ProcArgs * args = reinterpret_cast<ProcArgs*>( user_ptr );
 	
-//AiMsgDebug("Returning node %s", AiNodeGetName(args->createdNodes->getNode(i)));
+	AiMsgDebug("Returning node %s", AiNodeGetName(args->createdNodes->getNode(i)));
 	return args->createdNodes->getNode(i);
 
 }

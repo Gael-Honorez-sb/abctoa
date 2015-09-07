@@ -214,6 +214,7 @@ void ApplyShaders(std::string name, AtNode* node, std::vector<std::string> tags,
 
     if(appliedShader != NULL)
     {
+	
         std::string newName = std::string(AiNodeGetName(appliedShader)) + std::string("_") + name;
         //AiNodeSetStr(appliedShader, "name", newName.c_str());
 

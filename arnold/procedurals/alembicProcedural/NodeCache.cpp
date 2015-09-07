@@ -9,7 +9,7 @@ NodeCache::NodeCache(AtCritSec mycs)
 
 NodeCache::~NodeCache()
 {
-	AiMsgInfo("\t[Alembic Procedural] Removing %i nodes from the cache", ArnoldNodeCache.size());
+	AiMsgDebug("\t[Alembic Procedural] Removing %i nodes from the cache", ArnoldNodeCache.size());
 	ArnoldNodeCache.clear();
 
 }
@@ -56,7 +56,7 @@ NodeCollector::NodeCollector(AtCritSec mycs)
 
 NodeCollector::~NodeCollector()
 {
-	AiMsgInfo("Deleting node collector (%i collected nodes)", ArnoldNodeCollector.size());
+	AiMsgDebug("Deleting node collector (%i collected nodes)", ArnoldNodeCollector.size());
 	ArnoldNodeCollector.clear();
 }
 
@@ -105,7 +105,7 @@ FileCache::FileCache(AtCritSec mycs)
 
 FileCache::~FileCache()
 {
-	AiMsgInfo("\t[Alembic Procedural] Removing %i files from the file cache", ArnoldFileCache.size());
+	AiMsgDebug("\t[Alembic Procedural] Removing %i files from the file cache", ArnoldFileCache.size());
 	ArnoldFileCache.clear();
 
 }
