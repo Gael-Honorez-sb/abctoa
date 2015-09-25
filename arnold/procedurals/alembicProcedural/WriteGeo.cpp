@@ -315,7 +315,6 @@ std::string getHash(
     {
         ISampleSelector sampleSelector( *I );
         ps.getPositionsProperty().getKey(sampleKey, sampleSelector);
-
         buffer << GetRelativeSampleTime( args, (*I) ) << ":";
         sampleKey.digest.print(buffer);
         buffer << ":";
@@ -404,13 +403,17 @@ AtNode* writeMesh(
 {
 
 	AiMsgDebug("Writing %s", originalName.c_str());
+
     typename primT::schema_type  &ps = prim.getSchema();
     TimeSamplingPtr ts = ps.getTimeSampling();
-
 
     SampleTimeSet singleSampleTimes;
     singleSampleTimes.insert( ts->getFloorIndex(args.frame / args.fps, ps.getNumSamples()).second );
     ISampleSelector frameSelector( *singleSampleTimes.begin() );
+
+    //get tags
+    std::vector<std::string> tags;
+    getAllTags(ps.getObject(), tags, &args);
 
     // Getting all the data relative to the mesh.
     std::vector<unsigned int> vidxs;
@@ -473,6 +476,33 @@ AtNode* writeMesh(
         if(numSampleTimes == 1 && (args.shutterOpen != args.shutterClose) && (ps.getVelocitiesProperty().valid()) && isFirstSample )
         {
             float scaleVelocity = 1.0f/args.fps;
+
+
+			// Attribute overrides..
+			if(args.linkAttributes)
+			{
+				for(std::vector<std::string>::iterator it=args.attributes.begin(); it!=args.attributes.end(); ++it)
+				{
+					if(name.find(*it) != string::npos || std::find(tags.begin(), tags.end(), *it) != tags.end() || matchPattern(name,*it))
+					{
+						const Json::Value overrides = args.attributesRoot[*it];
+						if(overrides.size() > 0)
+						{
+							for( Json::ValueIterator itr = overrides.begin() ; itr != overrides.end() ; itr++ )
+							{
+								std::string attribute = itr.key().asString();
+
+								if(attribute == "velocity_multiplier")
+								{
+									Json::Value val = args.attributesRoot[*it][itr.key().asString()];
+									scaleVelocity *= val.asDouble();
+								}
+							}
+						}
+					}
+				}
+			}
+
             if (AiNodeLookUpUserParameter(args.proceduralNode, "scaleVelocity") !=NULL )
                 scaleVelocity *= AiNodeGetFlt(args.proceduralNode, "scaleVelocity");
 
@@ -574,10 +604,6 @@ AtNode* writeMesh(
     AiNodeSetStr( meshNode, "name", (name + ":src").c_str() );
     AiNodeSetByte( meshNode, "visibility", 0 );
     AiNodeSetBool(meshNode, "smoothing", true);
-
-    //get tags
-    std::vector<std::string> tags;
-    getAllTags(ps.getObject(), tags, &args);
 
     if(args.linkAttributes)
     {
@@ -790,14 +816,18 @@ AtNode* writeMesh(
         {
             if ( ps.hasFaceSet( faceSetNames[i] ) )
             {
+				
                 IFaceSet faceSet = ps.getFaceSet( faceSetNames[i] );
                 IFaceSetSchema::Sample faceSetSample = faceSet.getSchema().getValue( frameSelector );
 
                 const int* faceArray((int *)faceSetSample.getFaces()->getData()); 
+				AiMsgDebug("Faceset %s on %s with %i faces",  faceSetNames[i].c_str(), originalName.c_str(),  faceSetSample.getFaces()->size());
                 for( int f = 0; f < (int) faceSetSample.getFaces()->size(); f++)
                 {
                     if(faceArray[f] <= nsides.size() )
                         faceSetArray[faceArray[f]] = (AtByte) i;
+					else
+						AiMsgWarning("Face set is higher than nsides side");
                 }
             }
         }
@@ -886,6 +916,7 @@ AtNode* createInstance(
             {
                 if ( ps.hasFaceSet( faceSetNames[i] ) )
                 {
+					AiMsgDebug("Faceset %s on %s",  faceSetNames[i].c_str(), originalName.c_str());
                     std::string faceSetNameForShading = originalName + "/" + faceSetNames[i];
                     AtNode* shaderForFaceSet  = getShader(faceSetNameForShading, tags, args);
                     if(shaderForFaceSet == NULL)
