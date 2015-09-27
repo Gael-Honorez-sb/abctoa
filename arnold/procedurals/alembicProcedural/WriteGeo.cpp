@@ -315,10 +315,23 @@ std::string getHash(
     {
         ISampleSelector sampleSelector( *I );
         ps.getPositionsProperty().getKey(sampleKey, sampleSelector);
+
+				
+
         buffer << GetRelativeSampleTime( args, (*I) ) << ":";
         sampleKey.digest.print(buffer);
         buffer << ":";
     }
+
+
+	if ( ps.getUVsParam ().valid() ) 
+	{ 
+		AbcA::ArraySampleKey uvSampleKey;
+		ps.getUVsParam ().getValueProperty ().getKey(uvSampleKey, frameSelector);
+		uvSampleKey.digest.print(buffer);
+		buffer << ":";
+	
+	}
 
     buffer << "@" << hash(hashAttributes);
 
