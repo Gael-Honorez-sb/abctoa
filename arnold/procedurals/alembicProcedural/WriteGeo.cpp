@@ -68,9 +68,6 @@ namespace
 
      //boost::mutex gGlobalLock;
     // #define GLOBAL_LOCK     boost::mutex::scoped_lock writeLock( gGlobalLock );
-    // this won't work anyhow, because procedurals are loaded
-    // several times into the memory, so global variables are not shared
-    // use semaphores instead?
 }
 
 
@@ -79,7 +76,7 @@ namespace
 
 template <typename geomParamT>
 void ProcessIndexedBuiltinParam(
-        geomParamT param,
+        const geomParamT& param,
         const SampleTimeSet & sampleTimes,
         std::vector<float> & values,
         std::vector<unsigned int> & idxs,
@@ -183,11 +180,11 @@ void getSampleTimes(
 // This function return the hash of the mesh, with attributes & displacement applied to it.
 template <typename primT>
 std::string getHash(
-    std::string name,
-    std::string originalName,
+    const std::string& name,
+    const std::string& originalName,
     primT & prim,
     ProcArgs & args,
-    SampleTimeSet sampleTimes
+    const SampleTimeSet& sampleTimes
     )
 {
     typename primT::schema_type  &ps = prim.getSchema();
@@ -441,12 +438,12 @@ inline void doNormals<IPolyMesh>(IPolyMesh& prim, AtNode *meshNode, const Sample
 // This function create & return a mesh node with displace & attributes related to it.
 template <typename primT>
 AtNode* writeMesh(  
-    std::string name,
-    std::string originalName,
-    std::string cacheId,
+    const std::string& name,
+    const std::string& originalName,
+    const std::string& cacheId,
     primT & prim,
     ProcArgs & args,
-    SampleTimeSet sampleTimes
+    const SampleTimeSet& sampleTimes
     )
 
 {
@@ -902,8 +899,8 @@ AtNode* writeMesh(
 // This function create & return a instance node with shaders & attributes applied.
 template <typename primT>
 AtNode* createInstance(
-    std::string name,
-    std::string originalName,
+    const std::string& name,
+    const std::string& originalName,
     primT & prim,
     ProcArgs & args,
     MatrixSampleMap * xformSamples,
@@ -993,7 +990,7 @@ AtNode* createInstance(
 // Check if we want a meshlight
 template <typename primT>
 bool isMeshLight(
-    std::string originalName,
+    const std::string& originalName,
     primT & prim,
     ProcArgs & args
     )
@@ -1065,8 +1062,8 @@ bool isMeshLight(
 // This function create a meshlight.
 template <typename primT>
 void createMeshLight(
-    std::string name,
-    std::string originalName,
+    const std::string& name,
+    const std::string& originalName,
     primT & prim,
     ProcArgs & args,
     MatrixSampleMap * xformSamples,

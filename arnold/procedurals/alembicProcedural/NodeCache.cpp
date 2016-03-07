@@ -115,7 +115,7 @@ FileCache::~FileCache()
 // This function return the the mesh node if already in the cache.
 // Otherwise, return NULL.
 //-*************************************************************************
-std::vector<CachedNodeFile> FileCache::getCachedFile(std::string cacheId)
+std::vector<CachedNodeFile> FileCache::getCachedFile(const std::string& cacheId)
 {
 	std::vector<CachedNodeFile> createdNodes;
 	//boost::mutex::scoped_lock readLock( lock );
@@ -143,22 +143,22 @@ const size_t FileCache::hash( std::string const& s )
     return result ;
  }
 
-std::string FileCache::getHash(std::string fileName,     
-							   std::map<std::string, AtNode*> shaders,
-							   std::map<std::string, AtNode*> displacements,
-							   Json::Value attributesRoot,
+std::string FileCache::getHash(const std::string& fileName,     
+							   const std::map<std::string, AtNode*>& shaders,
+							   const std::map<std::string, AtNode*>& displacements,
+							   const Json::Value& attributesRoot,
 							   double frame
 							   )
 {
 
 	std::ostringstream shaderBuff;
-	for(std::map<std::string, AtNode*>::iterator it = shaders.begin(); it != shaders.end(); ++it) 
+	for (std::map<std::string, AtNode*>::const_iterator it = shaders.begin(); it != shaders.end(); ++it) 
 	{
 		shaderBuff << it->first;
 	}
 
 	std::ostringstream displaceBuff;
-	for(std::map<std::string, AtNode*>::iterator it = displacements.begin(); it != displacements.end(); ++it) 
+	for (std::map<std::string, AtNode*>::const_iterator it = displacements.begin(); it != displacements.end(); ++it) 
 	{
 		displaceBuff << it->first;
 	}
@@ -168,8 +168,7 @@ std::string FileCache::getHash(std::string fileName,
 	
     buffer << hash(fileName) << "@" << frame << "@" << hash(shaderBuff.str()) << "@" << hash(displaceBuff.str()) << "@" << hash(attributesRoot.toStyledString());
 
-    cacheId = buffer.str();
-	return cacheId;
+	return buffer.str();
 
 }
 
@@ -177,7 +176,7 @@ std::string FileCache::getHash(std::string fileName,
 // addNode
 // This function adds a node in the cache.
 //-*************************************************************************
-void FileCache::addCache(std::string cacheId, NodeCollector* createdNodes)
+void FileCache::addCache(const std::string& cacheId, NodeCollector* createdNodes)
 {
 	//boost::mutex::scoped_lock writeLock( lock );
 	AiCritSecEnter(&lock);

@@ -44,7 +44,7 @@
 
 
 
-void ApplyOverrides(std::string name, AtNode* node, std::vector<std::string> tags, ProcArgs & args)
+void ApplyOverrides(const std::string& name, AtNode* node, const std::vector<std::string>& tags, ProcArgs & args)
 {
     bool foundInPath = false;
     int pathSize = 0;
@@ -162,7 +162,7 @@ void ApplyOverrides(std::string name, AtNode* node, std::vector<std::string> tag
     }
 }
 
-AtNode* getShader(std::string name, std::vector<std::string> tags, ProcArgs & args)
+AtNode* getShader(const std::string& name, const std::vector<std::string>& tags, ProcArgs & args)
 {
     bool foundInPath = false;
     int pathSize = 0;
@@ -207,7 +207,7 @@ AtNode* getShader(std::string name, std::vector<std::string> tags, ProcArgs & ar
     return appliedShader;
 }
 
-void ApplyShaders(std::string name, AtNode* node, std::vector<std::string> tags, ProcArgs & args)
+void ApplyShaders(const std::string& name, AtNode* node, const std::vector<std::string>& tags, ProcArgs & args)
 {
     bool foundInPath = false;
     AtNode* appliedShader = getShader(name, tags, args);

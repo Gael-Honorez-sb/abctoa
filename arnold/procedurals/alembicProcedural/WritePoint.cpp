@@ -80,11 +80,11 @@ void getSampleTimes(
 // getHash
 // This function return the hash of the points, with attributes applied to it.
 std::string getHash(
-    std::string name,
-    std::string originalName,
+    const std::string& name,
+    const std::string& originalName,
     IPoints & prim,
     ProcArgs & args,
-    SampleTimeSet sampleTimes
+    const SampleTimeSet& sampleTimes
     )
 {
     Alembic::AbcGeom::IPointsSchema  &ps = prim.getSchema();
@@ -183,12 +183,12 @@ std::string getHash(
 }
 
 AtNode* writePoints(  
-    std::string name,
-    std::string originalName,
-    std::string cacheId,
+    const std::string& name,
+    const std::string& originalName,
+    const std::string& cacheId,
     IPoints & prim,
     ProcArgs & args,
-    SampleTimeSet sampleTimes
+    const SampleTimeSet& sampleTimes
     )
 
 {
@@ -469,8 +469,8 @@ AtNode* writePoints(
 // createInstance
 // This function create & return a instance node with shaders & attributes applied.
 void createInstance(
-    std::string name,
-    std::string originalName,
+    const std::string& name,
+    const std::string& originalName,
     IPoints & prim,
     ProcArgs & args,
     MatrixSampleMap * xformSamples,
