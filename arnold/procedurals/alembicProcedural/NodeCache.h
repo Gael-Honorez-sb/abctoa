@@ -18,6 +18,13 @@ using namespace Alembic::AbcGeom;
 This class is handling the caching of Arnold node
 */
 
+class AtScopedLock{
+public:
+	AtScopedLock(AtCritSec cs) : m_critSec(cs) { AiCritSecEnter(&m_critSec); }
+	~AtScopedLock()	{ AiCritSecLeave(&m_critSec); }
+private:
+	AtCritSec m_critSec;
+};
 
 class NodeCache
 {
@@ -31,7 +38,6 @@ public:
 
 private:
 	std::map<std::string, std::string> ArnoldNodeCache;
-	//boost::mutex lock;
 	AtCritSec lock;
 };
 
@@ -81,7 +87,6 @@ public:
 
 private:
 	std::map<std::string, std::vector<CachedNodeFile>* > ArnoldFileCache;
-	//boost::mutex lock;
 	AtCritSec lock;
 };
 
