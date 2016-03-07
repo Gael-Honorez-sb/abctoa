@@ -42,8 +42,8 @@
 
 //-*****************************************************************************
 
-void ApplyOverrides(std::string name, AtNode* node, std::vector<std::string> tags, ProcArgs & args);
-AtNode* getShader(std::string name, std::vector<std::string> tags, ProcArgs & args);
-void ApplyShaders(std::string name, AtNode* node, std::vector<std::string> tags, ProcArgs & args);
+void ApplyOverrides(const std::string& name, AtNode* node, const std::vector<std::string>& tags, ProcArgs & args);
+AtNode* getShader(const std::string& name, const std::vector<std::string>& tags, ProcArgs & args);
+void ApplyShaders(const std::string& name, AtNode* node, const std::vector<std::string>& tags, ProcArgs & args);
 
 #endif
