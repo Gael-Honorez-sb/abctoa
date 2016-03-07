@@ -269,9 +269,9 @@ void WalkObject( IObject & parent, const ObjectHeader &i_ohead, ProcArgs &args,
 
 struct caches
 {
-	FileCache* g_fileCache;
-	NodeCache* g_nodeCache;
-	AtCritSec mycs;
+    FileCache* g_fileCache;
+    NodeCache* g_nodeCache;
+    AtCritSec mycs;
 };
 
 bool ProcInitPlugin(void **plugin_user_ptr)
@@ -287,26 +287,26 @@ bool ProcInitPlugin(void **plugin_user_ptr)
         ISubD::getSchemaTitle();
 #endif
 
-		
+        
 
-		caches *g_caches = new caches();
-		AiCritSecInitRecursive(&g_caches->mycs);
+        caches *g_caches = new caches();
+        AiCritSecInitRecursive(&g_caches->mycs);
 
-		g_caches->g_fileCache = new FileCache(g_caches->mycs);
-		g_caches->g_nodeCache = new NodeCache(g_caches->mycs);
-		*plugin_user_ptr = g_caches;
-		return true;
+        g_caches->g_fileCache = new FileCache(g_caches->mycs);
+        g_caches->g_nodeCache = new NodeCache(g_caches->mycs);
+        *plugin_user_ptr = g_caches;
+        return true;
 }
 
 
 bool ProcCleanupPlugin(void *plugin_user_ptr)
 {
-	caches *g_caches = reinterpret_cast<caches*>( plugin_user_ptr );
-	AiCritSecClose(&g_caches->mycs);
-	delete g_caches->g_fileCache;
-	delete g_caches->g_nodeCache;
-	delete g_caches;
-	return true;
+    caches *g_caches = reinterpret_cast<caches*>( plugin_user_ptr );
+    AiCritSecClose(&g_caches->mycs);
+    delete g_caches->g_fileCache;
+    delete g_caches->g_nodeCache;
+    delete g_caches;
+    return true;
 
 }
 
@@ -316,28 +316,28 @@ bool ProcInitBounds (AtNode *node, AtBBox *bounds, void **user_ptr)
     // check if we have a instancer archive attribute
     if (AiNodeLookUpUserParameter(node, "instancerArchive") !=NULL )
     {
-		std::string fileName(AiNodeGetStr(node, "instancerArchive"));
-		if(fileName.empty())
-		{
-			// if we already have BBox, we skip this part.
-			if(	bounds->min.x != 0.0 || bounds->min.y != 0.0 || bounds->min.z != 0.0 ||
-				bounds->max.x != 0.0 || bounds->max.y != 0.0 || bounds->max.z != 0.0
-			)
-				return true;
-		}
+        std::string fileName(AiNodeGetStr(node, "instancerArchive"));
+        if(fileName.empty())
+        {
+            // if we already have BBox, we skip this part.
+            if( bounds->min.x != 0.0 || bounds->min.y != 0.0 || bounds->min.z != 0.0 ||
+                bounds->max.x != 0.0 || bounds->max.y != 0.0 || bounds->max.z != 0.0
+            )
+                return true;
+        }
     }
 
 
     ProcArgs * args = new ProcArgs( AiNodeGetStr( node, "data" ) );
-	std::string resultFile = args->filename;
+    std::string resultFile = args->filename;
     if (AiNodeLookUpUserParameter(node, "instancerArchive") !=NULL )
     {
-		std::string fileName(AiNodeGetStr(node, "instancerArchive"));
-		if(!fileName.empty())
-		{
-			resultFile = fileName;
-		}
-	}
+        std::string fileName(AiNodeGetStr(node, "instancerArchive"));
+        if(!fileName.empty())
+        {
+            resultFile = fileName;
+        }
+    }
 
     #if (AI_VERSION_ARCH_NUM == 3 && AI_VERSION_MAJOR_NUM < 3) || AI_VERSION_ARCH_NUM < 3
         #error Arnold version 3.3+ required for AlembicArnoldProcedural
@@ -363,7 +363,7 @@ bool ProcInitBounds (AtNode *node, AtBBox *bounds, void **user_ptr)
     Alembic::AbcCoreFactory::IFactory factory;
     IArchive archive = factory.getArchive(resultFile);
 
-	
+    
     if (!archive.valid())
     {
         AiMsgError ( "Cannot read file %s", resultFile.c_str());
@@ -374,43 +374,43 @@ bool ProcInitBounds (AtNode *node, AtBBox *bounds, void **user_ptr)
         root = archive.getTop();
     }
 
-	Box3d bbox;
-	bbox.makeEmpty();
-	chrono_t frameTime = args->frame / args->fps;
+    Box3d bbox;
+    bbox.makeEmpty();
+    chrono_t frameTime = args->frame / args->fps;
     chrono_t shutterOpenTime = ( args->frame + args->shutterOpen ) / args->fps;
     chrono_t shutterCloseTime = ( args->frame + args->shutterClose ) / args->fps;
 
-	 if ( root.getProperties().getPropertyHeader( ".childBnds" ) != NULL )
-	 {
-		 IBox3dProperty childbnds = Alembic::Abc::IBox3dProperty( archive.getTop().getProperties(),
+     if ( root.getProperties().getPropertyHeader( ".childBnds" ) != NULL )
+     {
+         IBox3dProperty childbnds = Alembic::Abc::IBox3dProperty( archive.getTop().getProperties(),
                                    ".childBnds", ErrorHandler::kQuietNoopPolicy);
-		
+        
 
-		 ISampleSelector m_ss =  ISampleSelector(shutterOpenTime, ISampleSelector::kNearIndex );
-		 Box3d bboxRoot = childbnds.getValue(m_ss);
-		 bbox.extendBy(bboxRoot);
-		 if(shutterOpenTime != shutterCloseTime)
-		 {
-			  m_ss =  ISampleSelector(shutterOpenTime, ISampleSelector::kNearIndex );
-			  bboxRoot = childbnds.getValue(m_ss);
-			  bbox.extendBy(bboxRoot);
-		 }
-	 }
-	 else
-	 {
-		getBoundingBox(root, shutterOpenTime, bbox);
-		if(shutterOpenTime != shutterCloseTime)
-			getBoundingBox(root, shutterCloseTime, bbox);
-	 }
+         ISampleSelector m_ss =  ISampleSelector(shutterOpenTime, ISampleSelector::kNearIndex );
+         Box3d bboxRoot = childbnds.getValue(m_ss);
+         bbox.extendBy(bboxRoot);
+         if(shutterOpenTime != shutterCloseTime)
+         {
+              m_ss =  ISampleSelector(shutterOpenTime, ISampleSelector::kNearIndex );
+              bboxRoot = childbnds.getValue(m_ss);
+              bbox.extendBy(bboxRoot);
+         }
+     }
+     else
+     {
+        getBoundingBox(root, shutterOpenTime, bbox);
+        if(shutterOpenTime != shutterCloseTime)
+            getBoundingBox(root, shutterCloseTime, bbox);
+     }
 
-	bounds->min = AiPoint(bbox.min.x, bbox.min.y, bbox.min.z);
-	bounds->max = AiPoint(bbox.max.x, bbox.max.y, bbox.max.z);
+    bounds->min = AiPoint(bbox.min.x, bbox.min.y, bbox.min.z);
+    bounds->max = AiPoint(bbox.max.x, bbox.max.y, bbox.max.z);
 
-	AiMsgDebug("bounds->min %f %f %f", bounds->min.x, bounds->min.y, bounds->min.z);
-	AiMsgDebug("bounds->max %f %f %f", bounds->max.x, bounds->max.y, bounds->max.z);
+    AiMsgDebug("bounds->min %f %f %f", bounds->min.x, bounds->min.y, bounds->min.z);
+    AiMsgDebug("bounds->max %f %f %f", bounds->max.x, bounds->max.y, bounds->max.z);
 
 
-	return true;
+    return true;
 }
 
 //-*************************************************************************
@@ -449,18 +449,18 @@ int ProcInit( struct AtNode *node, void **user_ptr )
     if (AiNodeLookUpUserParameter(node, "skipLayers") != NULL )
         skipLayers = AiNodeGetBool(node, "skipLayers");
 
-	ProcArgs * args = new ProcArgs( AiNodeGetStr( node, "data" ) );
-	*user_ptr = args;
+    ProcArgs * args = new ProcArgs( AiNodeGetStr( node, "data" ) );
+    *user_ptr = args;
 
     
 
 
-	caches *g_cache = reinterpret_cast<caches*>( AiProceduralGetPluginData(node) );
-	
-	args->proceduralNode = node;
-	args->nodeCache = g_cache->g_nodeCache;
-	args->lock = g_cache->mycs;
-	args->createdNodes = new NodeCollector(args->lock);
+    caches *g_cache = reinterpret_cast<caches*>( AiProceduralGetPluginData(node) );
+    
+    args->proceduralNode = node;
+    args->nodeCache = g_cache->g_nodeCache;
+    args->lock = g_cache->mycs;
+    args->createdNodes = new NodeCollector(args->lock);
 
     if (AiNodeLookUpUserParameter(node, "abcShaders") !=NULL )
     {
@@ -707,187 +707,187 @@ int ProcInit( struct AtNode *node, void **user_ptr )
     // check if we have a instancer archive attribute
     if (AiNodeLookUpUserParameter(node, "instancerArchive") !=NULL )
     {
-		std::string fileName(AiNodeGetStr(node, "instancerArchive"));
-		if(!fileName.empty())
-		{
-			// if so, we try to load the archive.
-			IArchive archive;
-			Alembic::AbcCoreFactory::IFactory factory;
-			archive = factory.getArchive(AiNodeGetStr(node, "instancerArchive"));
-			if (!archive.valid())
-			{
-				AiMsgWarning ( "Cannot read file %s", AiNodeGetStr(node, "instancerArchive"));
-			}
-			else
-			{
-				AiMsgInfo( "Using Instancer archive %s", AiNodeGetStr(node, "instancerArchive"));
+        std::string fileName(AiNodeGetStr(node, "instancerArchive"));
+        if(!fileName.empty())
+        {
+            // if so, we try to load the archive.
+            IArchive archive;
+            Alembic::AbcCoreFactory::IFactory factory;
+            archive = factory.getArchive(AiNodeGetStr(node, "instancerArchive"));
+            if (!archive.valid())
+            {
+                AiMsgWarning ( "Cannot read file %s", AiNodeGetStr(node, "instancerArchive"));
+            }
+            else
+            {
+                AiMsgInfo( "Using Instancer archive %s", AiNodeGetStr(node, "instancerArchive"));
 
-				IObject root = archive.getTop();
-				PathList path;
+                IObject root = archive.getTop();
+                PathList path;
 
-				if ( path.empty() ) //walk the entire scene
-				{
-					for ( size_t i = 0; i < root.getNumChildren(); ++i )
-					{
-						std::vector<std::string> tags;
-						WalkObjectForInstancer( root, root.getChildHeader(i), *args,
-									path.end(), path.end(), 0 );
-					}
-				}
+                if ( path.empty() ) //walk the entire scene
+                {
+                    for ( size_t i = 0; i < root.getNumChildren(); ++i )
+                    {
+                        std::vector<std::string> tags;
+                        WalkObjectForInstancer( root, root.getChildHeader(i), *args,
+                                    path.end(), path.end(), 0 );
+                    }
+                }
             
-				return 1;
-			}
-		}
+                return 1;
+            }
+        }
     }
 
 
-	std::string fileCacheId = g_cache->g_fileCache->getHash(args->filename, args->shaders, args->displacements, args->attributesRoot, args->frame);
+    std::string fileCacheId = g_cache->g_fileCache->getHash(args->filename, args->shaders, args->displacements, args->attributesRoot, args->frame);
 
-	std::vector<CachedNodeFile> createdNodes = g_cache->g_fileCache->getCachedFile(fileCacheId);
-	
-	if (!createdNodes.empty())
-	{
-		AiMsgDebug("Found cache of size %i", createdNodes.size());
-		for(int i = 0; i <  createdNodes.size(); i++)
-		{
-			AiMsgDebug("Instancing obj %i", i);
-			CachedNodeFile cachedNode = createdNodes[i];
-			AtNode *obj = cachedNode.node;
-			
-			AiMsgDebug("Getting obj %i %s and type %s", i, AiNodeGetName(obj), AiNodeEntryGetName(AiNodeGetNodeEntry (obj)));
-			if(AiNodeEntryGetType(AiNodeGetNodeEntry(obj)) == AI_NODE_SHAPE)
-			{
-				AtNode *instance = AiNode("ginstance");
-				AiNodeSetBool(instance, "inherit_xform", false);
-				AiNodeSetPtr(instance, "node", obj);
-				AiNodeSetArray(instance, "matrix", AiArrayCopy(cachedNode.matrix));
-				std::string newName = args->nameprefix + "/" + std::string(AiNodeGetName(obj));
-				AiNodeSetStr(instance, "name", newName.c_str());
-				
-				// Now copy original properties
-				AiNodeSetByte(instance, "visibility", AiNodeGetByte(obj, "visibility"));
-				AiNodeSetByte(instance, "sidedness", AiNodeGetByte(obj, "sidedness"));
-				AiNodeSetBool(instance, "receive_shadows", AiNodeGetBool(obj, "receive_shadows"));
-				AiNodeSetBool(instance, "self_shadows", AiNodeGetBool(obj, "self_shadows"));
-				AiNodeSetBool(instance, "invert_normals", AiNodeGetBool(obj, "invert_normals"));
-				AiNodeSetBool(instance, "opaque", AiNodeGetBool(obj, "opaque"));
-				AiNodeSetBool(instance, "matte", AiNodeGetBool(obj, "matte"));
-				AiNodeSetBool(instance, "use_light_group", AiNodeGetBool(obj, "use_light_group"));
+    const std::vector<CachedNodeFile>& createdNodes = g_cache->g_fileCache->getCachedFile(fileCacheId);
+    
+    if (!createdNodes.empty())
+    {
+        AiMsgDebug("Found cache of size %i", createdNodes.size());
+        for(int i = 0; i <  createdNodes.size(); i++)
+        {
+            AiMsgDebug("Instancing obj %i", i);
+            CachedNodeFile cachedNode = createdNodes[i];
+            AtNode *obj = cachedNode.node;
+            
+            AiMsgDebug("Getting obj %i %s and type %s", i, AiNodeGetName(obj), AiNodeEntryGetName(AiNodeGetNodeEntry (obj)));
+            if(AiNodeEntryGetType(AiNodeGetNodeEntry(obj)) == AI_NODE_SHAPE)
+            {
+                AtNode *instance = AiNode("ginstance");
+                AiNodeSetBool(instance, "inherit_xform", false);
+                AiNodeSetPtr(instance, "node", obj);
+                AiNodeSetArray(instance, "matrix", AiArrayCopy(cachedNode.matrix));
+                std::string newName = args->nameprefix + "/" + std::string(AiNodeGetName(obj));
+                AiNodeSetStr(instance, "name", newName.c_str());
+                
+                // Now copy original properties
+                AiNodeSetByte(instance, "visibility", AiNodeGetByte(obj, "visibility"));
+                AiNodeSetByte(instance, "sidedness", AiNodeGetByte(obj, "sidedness"));
+                AiNodeSetBool(instance, "receive_shadows", AiNodeGetBool(obj, "receive_shadows"));
+                AiNodeSetBool(instance, "self_shadows", AiNodeGetBool(obj, "self_shadows"));
+                AiNodeSetBool(instance, "invert_normals", AiNodeGetBool(obj, "invert_normals"));
+                AiNodeSetBool(instance, "opaque", AiNodeGetBool(obj, "opaque"));
+                AiNodeSetBool(instance, "matte", AiNodeGetBool(obj, "matte"));
+                AiNodeSetBool(instance, "use_light_group", AiNodeGetBool(obj, "use_light_group"));
 
-				AiNodeSetArray(instance, "light_group", AiArrayCopy(AiNodeGetArray(obj, "light_group")));
-				AiNodeSetArray(instance, "shadow_group", AiArrayCopy(AiNodeGetArray(obj, "shadow_group")));
-				AiNodeSetArray(instance, "transform_time_samples", AiArrayCopy(AiNodeGetArray(obj, "transform_time_samples")));
-				AiNodeSetArray(instance, "deform_time_samples", AiArrayCopy(AiNodeGetArray(obj, "deform_time_samples")));
-				AiNodeSetArray(instance, "light_group", AiArrayCopy(AiNodeGetArray(obj, "light_group")));
+                AiNodeSetArray(instance, "light_group", AiArrayCopy(AiNodeGetArray(obj, "light_group")));
+                AiNodeSetArray(instance, "shadow_group", AiArrayCopy(AiNodeGetArray(obj, "shadow_group")));
+                AiNodeSetArray(instance, "transform_time_samples", AiArrayCopy(AiNodeGetArray(obj, "transform_time_samples")));
+                AiNodeSetArray(instance, "deform_time_samples", AiArrayCopy(AiNodeGetArray(obj, "deform_time_samples")));
+                AiNodeSetArray(instance, "light_group", AiArrayCopy(AiNodeGetArray(obj, "light_group")));
 
-				args->createdNodes->addNode(instance);
-			}
-			else if (AiNodeEntryGetType(AiNodeGetNodeEntry(obj)) == AI_NODE_LIGHT)
-			{
-				// AiNodeClone seems to crash arnold when releasing ressources. So we clone the node ourself.
+                args->createdNodes->addNode(instance);
+            }
+            else if (AiNodeEntryGetType(AiNodeGetNodeEntry(obj)) == AI_NODE_LIGHT)
+            {
+                // AiNodeClone seems to crash arnold when releasing ressources. So we clone the node ourself.
 
-				const AtNodeEntry* nentry = AiNodeGetNodeEntry(obj);
-				AtNode* light = AiNode(AiNodeEntryGetName(nentry));
+                const AtNodeEntry* nentry = AiNodeGetNodeEntry(obj);
+                AtNode* light = AiNode(AiNodeEntryGetName(nentry));
 
-				for (int i = 0; i < AiNodeEntryGetNumParams (nentry); i++)
-				{
-					const AtParamEntry* pentry = AiNodeEntryGetParameter (nentry, i);
+                for (int i = 0; i < AiNodeEntryGetNumParams (nentry); i++)
+                {
+                    const AtParamEntry* pentry = AiNodeEntryGetParameter (nentry, i);
 
-					switch(AiParamGetType (pentry))
-					{
-						
-						case AI_TYPE_BYTE:
-							AiNodeSetByte(light, AiParamGetName(pentry), AiNodeGetByte(obj, AiParamGetName(pentry)));
-							break;
-						case AI_TYPE_INT:
-						case AI_TYPE_ENUM:
-							AiNodeSetInt(light, AiParamGetName(pentry), AiNodeGetInt(obj, AiParamGetName(pentry)));
-							break;
-						case AI_TYPE_BOOLEAN:
-							AiNodeSetBool(light, AiParamGetName(pentry), AiNodeGetBool(obj, AiParamGetName(pentry)));
-							break;
-						case AI_TYPE_FLOAT:
-							AiNodeSetFlt(light, AiParamGetName(pentry), AiNodeGetFlt(obj, AiParamGetName(pentry)));
-							break;
-						case AI_TYPE_RGB:
-							{
-								AtRGB col = AiNodeGetRGB(obj, AiParamGetName(pentry));
-								AiNodeSetRGB(light, AiParamGetName(pentry), col.r, col.g, col.b);
-								break;
-							}
-						case AI_TYPE_RGBA:
-							{
-								AtRGBA colRGBA = AiNodeGetRGBA(obj, AiParamGetName(pentry));
-								AiNodeSetRGBA(light, AiParamGetName(pentry), colRGBA.r, colRGBA.g, colRGBA.b, colRGBA.a);
-								break;
-							}
-						case AI_TYPE_VECTOR:
-							{
-								AtVector vec = AiNodeGetVec(obj, AiParamGetName(pentry));
-								AiNodeSetVec(light, AiParamGetName(pentry), vec.x, vec.y, vec.z);
-								break;
-							}
-						case AI_TYPE_POINT:
-							{
-								AtPoint pnt = AiNodeGetPnt(obj, AiParamGetName(pentry));
-								AiNodeSetPnt(light, AiParamGetName(pentry), pnt.x, pnt.y, pnt.z);
-								break;
-							}
-						case AI_TYPE_POINT2:
-							{
-								AtPoint2 pnt2 = AiNodeGetPnt2(obj, AiParamGetName(pentry));
-								AiNodeSetPnt2(light, AiParamGetName(pentry), pnt2.x, pnt2.y);
-								break;
-							}
-						case AI_TYPE_STRING:
-							if(strcmp(AiParamGetName(pentry), "name") != 0)
-								AiNodeSetStr(light, AiParamGetName(pentry), AiNodeGetStr(obj, AiParamGetName(pentry)));
-							break;
-						case AI_TYPE_POINTER:
-						case AI_TYPE_NODE:
-							AiNodeSetPtr(light, AiParamGetName(pentry), AiNodeGetPtr(obj, AiParamGetName(pentry)));
-							break;
-						case AI_TYPE_ARRAY:
-							{
-								if(strcmp(AiParamGetName(pentry), "matrix") != 0)
-									AiNodeSetArray(light, AiParamGetName(pentry), AiArrayCopy(AiNodeGetArray(obj, AiParamGetName(pentry))));
-								break;
-							}
-						default:
-							break;
-
-
-
-					}
-
-				}
-				
-				AiNodeSetArray(light, "matrix", AiArrayCopy(cachedNode.matrix));
-				std::string newName = args->nameprefix + "/" + std::string(AiNodeGetName(obj));
-				AiNodeSetStr(light, "name", newName.c_str());
-				args->createdNodes->addNode(light);
-			}
+                    switch(AiParamGetType (pentry))
+                    {
+                        
+                        case AI_TYPE_BYTE:
+                            AiNodeSetByte(light, AiParamGetName(pentry), AiNodeGetByte(obj, AiParamGetName(pentry)));
+                            break;
+                        case AI_TYPE_INT:
+                        case AI_TYPE_ENUM:
+                            AiNodeSetInt(light, AiParamGetName(pentry), AiNodeGetInt(obj, AiParamGetName(pentry)));
+                            break;
+                        case AI_TYPE_BOOLEAN:
+                            AiNodeSetBool(light, AiParamGetName(pentry), AiNodeGetBool(obj, AiParamGetName(pentry)));
+                            break;
+                        case AI_TYPE_FLOAT:
+                            AiNodeSetFlt(light, AiParamGetName(pentry), AiNodeGetFlt(obj, AiParamGetName(pentry)));
+                            break;
+                        case AI_TYPE_RGB:
+                            {
+                                AtRGB col = AiNodeGetRGB(obj, AiParamGetName(pentry));
+                                AiNodeSetRGB(light, AiParamGetName(pentry), col.r, col.g, col.b);
+                                break;
+                            }
+                        case AI_TYPE_RGBA:
+                            {
+                                AtRGBA colRGBA = AiNodeGetRGBA(obj, AiParamGetName(pentry));
+                                AiNodeSetRGBA(light, AiParamGetName(pentry), colRGBA.r, colRGBA.g, colRGBA.b, colRGBA.a);
+                                break;
+                            }
+                        case AI_TYPE_VECTOR:
+                            {
+                                AtVector vec = AiNodeGetVec(obj, AiParamGetName(pentry));
+                                AiNodeSetVec(light, AiParamGetName(pentry), vec.x, vec.y, vec.z);
+                                break;
+                            }
+                        case AI_TYPE_POINT:
+                            {
+                                AtPoint pnt = AiNodeGetPnt(obj, AiParamGetName(pentry));
+                                AiNodeSetPnt(light, AiParamGetName(pentry), pnt.x, pnt.y, pnt.z);
+                                break;
+                            }
+                        case AI_TYPE_POINT2:
+                            {
+                                AtPoint2 pnt2 = AiNodeGetPnt2(obj, AiParamGetName(pentry));
+                                AiNodeSetPnt2(light, AiParamGetName(pentry), pnt2.x, pnt2.y);
+                                break;
+                            }
+                        case AI_TYPE_STRING:
+                            if(strcmp(AiParamGetName(pentry), "name") != 0)
+                                AiNodeSetStr(light, AiParamGetName(pentry), AiNodeGetStr(obj, AiParamGetName(pentry)));
+                            break;
+                        case AI_TYPE_POINTER:
+                        case AI_TYPE_NODE:
+                            AiNodeSetPtr(light, AiParamGetName(pentry), AiNodeGetPtr(obj, AiParamGetName(pentry)));
+                            break;
+                        case AI_TYPE_ARRAY:
+                            {
+                                if(strcmp(AiParamGetName(pentry), "matrix") != 0)
+                                    AiNodeSetArray(light, AiParamGetName(pentry), AiArrayCopy(AiNodeGetArray(obj, AiParamGetName(pentry))));
+                                break;
+                            }
+                        default:
+                            break;
 
 
-		}
-		return 1;
-	}
+
+                    }
+
+                }
+                
+                AiNodeSetArray(light, "matrix", AiArrayCopy(cachedNode.matrix));
+                std::string newName = args->nameprefix + "/" + std::string(AiNodeGetName(obj));
+                AiNodeSetStr(light, "name", newName.c_str());
+                args->createdNodes->addNode(light);
+            }
+
+
+        }
+        return 1;
+    }
 
     Alembic::AbcCoreFactory::IFactory factory;
-	factory.setOgawaNumStreams(8);
+    factory.setOgawaNumStreams(8);
     IArchive archive = factory.getArchive(args->filename);
     
-	if (!archive.valid())
+    if (!archive.valid())
     {
         AiMsgError ( "Cannot read file %s", args->filename.c_str());
-		return 0;
+        return 0;
     }
     else
     {
         AiMsgDebug ( "reading file %s", args->filename.c_str());
     }
 
-	IObject root = archive.getTop();
+    IObject root = archive.getTop();
     PathList path;
     TokenizePath( args->objectpath, path );
 
@@ -924,8 +924,8 @@ int ProcInit( struct AtNode *node, void **user_ptr )
     {
         AiMsgError("exception thrown");
     }
-	*/
-	//g_cache->g_fileCache->removeFromOpenedFiles(args->filename);
+    */
+    //g_cache->g_fileCache->removeFromOpenedFiles(args->filename);
     return 1;
 }
 
@@ -933,31 +933,28 @@ int ProcInit( struct AtNode *node, void **user_ptr )
 
 int ProcCleanup( void *user_ptr )
 {
-	AiMsgDebug("ProcCleanup");
+    AiMsgDebug("ProcCleanup");
     //delete reinterpret_cast<ProcArgs*>( user_ptr );
-	ProcArgs * args = reinterpret_cast<ProcArgs*>( user_ptr );
-	if(args != NULL)
-	{
+    ProcArgs * args = reinterpret_cast<ProcArgs*>( user_ptr );
+    if(args != NULL)
+    {
 
-		if(args->createdNodes->getNumNodes() > 0)
-		{
-			caches *g_cache = reinterpret_cast<caches*>( AiProceduralGetPluginData(args->proceduralNode) );
+        if(args->createdNodes->getNumNodes() > 0)
+        {
+            caches *g_cache = reinterpret_cast<caches*>( AiProceduralGetPluginData(args->proceduralNode) );
 
-			std::string fileCacheId = g_cache->g_fileCache->getHash(args->filename, args->shaders, args->displacements, args->attributesRoot, args->frame);
-			std::vector<CachedNodeFile> createdNodes = g_cache->g_fileCache->getCachedFile(fileCacheId);
-	
-			if(createdNodes.empty())
-				g_cache->g_fileCache->addCache(fileCacheId, args->createdNodes);
-		}
+            std::string fileCacheId = g_cache->g_fileCache->getHash(args->filename, args->shaders, args->displacements, args->attributesRoot, args->frame);
+            g_cache->g_fileCache->addCache(fileCacheId, args->createdNodes);
+        }
 
-		args->shaders.clear();
-		args->displacements.clear();
-		args->attributes.clear();
-		delete args->createdNodes;
-		delete args;
-	}
-	AiMsgDebug("ProcCleanup done");
-	
+        args->shaders.clear();
+        args->displacements.clear();
+        args->attributes.clear();
+        delete args->createdNodes;
+        delete args;
+    }
+    AiMsgDebug("ProcCleanup done");
+    
     return 1;
 }
 
@@ -967,7 +964,7 @@ int ProcNumNodes( void *user_ptr )
 {
 
     ProcArgs * args = reinterpret_cast<ProcArgs*>( user_ptr );
-	AiMsgDebug("got %i nodes", args->createdNodes->getNumNodes());
+    AiMsgDebug("got %i nodes", args->createdNodes->getNumNodes());
     return (int) args->createdNodes->getNumNodes();
 
 }
@@ -976,12 +973,12 @@ int ProcNumNodes( void *user_ptr )
 
 AtNode* ProcGetNode(void *user_ptr, int i)
 {
-	
-	AiMsgDebug("Should return node %i", i);
+    
+    AiMsgDebug("Should return node %i", i);
     ProcArgs * args = reinterpret_cast<ProcArgs*>( user_ptr );
-	
-	AiMsgDebug("Returning node %s", AiNodeGetName(args->createdNodes->getNode(i)));
-	return args->createdNodes->getNode(i);
+    
+    AiMsgDebug("Returning node %s", AiNodeGetName(args->createdNodes->getNode(i)));
+    return args->createdNodes->getNode(i);
 
 }
 
@@ -996,13 +993,13 @@ extern "C"
 AI_EXPORT_LIB int ProcLoader(AtProcVtable *vtable)
 // vtable passed in by proc_loader macro define
 {
-   vtable->Init			 = ProcInit;
-   vtable->Cleanup		 = ProcCleanup;
-   vtable->NumNodes		 = ProcNumNodes;
-   vtable->GetNode		 = ProcGetNode;
-   vtable->InitPlugin	 = ProcInitPlugin;
+   vtable->Init          = ProcInit;
+   vtable->Cleanup       = ProcCleanup;
+   vtable->NumNodes      = ProcNumNodes;
+   vtable->GetNode       = ProcGetNode;
+   vtable->InitPlugin    = ProcInitPlugin;
    vtable->CleanupPlugin = ProcCleanupPlugin;
-   vtable->InitBounds	 = ProcInitBounds;
+   vtable->InitBounds    = ProcInitBounds;
    strcpy(vtable->version, AI_VERSION);
    return 1;
 }
