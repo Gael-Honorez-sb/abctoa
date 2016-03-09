@@ -28,13 +28,11 @@ AtNode* NodeCache::getCachedNode(const std::string& cacheId)
 {
 	AiMsgDebug("Searching for %s", cacheId.c_str());
 	AtNode* node = NULL;
-	//boost::mutex::scoped_lock readLock( lock );
 	AiCritSecEnter(&lock);
-	std::map<std::string, std::string>::iterator I = ArnoldNodeCache.find(cacheId);
+	std::map<std::string, std::string>::const_iterator I = ArnoldNodeCache.find(cacheId);
 	if (I != ArnoldNodeCache.end())
 		node = AiNodeLookUpByName(I->second.c_str());
 	AiCritSecLeave(&lock);
-	//readLock.unlock();
 	return node;
 }
 
@@ -44,10 +42,8 @@ AtNode* NodeCache::getCachedNode(const std::string& cacheId)
 //-*************************************************************************
 void NodeCache::addNode(const std::string& cacheId, AtNode* node)
 {
-	//boost::mutex::scoped_lock writeLock( lock );
 	AiCritSecEnter(&lock);
 	ArnoldNodeCache[cacheId] = std::string(AiNodeGetName(node));
-	//writeLock.unlock();
 	AiCritSecLeave(&lock);
 
 }
