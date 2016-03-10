@@ -113,6 +113,7 @@ struct ProcArgs
 
     std::map<std::string, AtNode*> shaders;
     std::map<std::string, AtNode*> displacements;
+	std::map<std::string, std::string> pathRemapping;
     std::vector<std::string> attributes;
     Json::Value attributesRoot;
 

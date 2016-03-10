@@ -316,16 +316,13 @@ AtNode* createNetwork(IObject object, std::string prefix, ProcArgs & args)
                         continue;
 
                     if (header.isArray())
-                        setArrayParameter(parameters, header, aShader);
+                        setArrayParameter(parameters, header, aShader, args.pathRemapping);
 
                     else
-                        setParameter(parameters, header, aShader);
+                        setParameter(parameters, header, aShader, args.pathRemapping);
                 }
-
             }
-
         }
-
     }
 
     // once every node is created, we can set the connections...

@@ -1,7 +1,7 @@
 #include "abcshaderutils.h"
 
 
-void setUserParameter(AtNode* source, std::string interfaceName, Alembic::AbcCoreAbstract::PropertyHeader header, AtNode* node)
+void setUserParameter(AtNode* source, std::string interfaceName, Alembic::AbcCoreAbstract::PropertyHeader header, AtNode* node, std::map<std::string, std::string> remapping)
 {
     if (Abc::IFloatProperty::matches(header))
     {
@@ -26,7 +26,12 @@ void setUserParameter(AtNode* source, std::string interfaceName, Alembic::AbcCor
     else if (Abc::IStringProperty::matches(header))
     {
         // string type
-        AiNodeSetStr(node, header.getName().c_str(), AiNodeGetStr(source, interfaceName.c_str()));
+		std::string value = AiNodeGetStr(source, interfaceName.c_str());
+		value = pystring::replace(value, "\\", "/");
+		for (std::map<std::string,std::string>::iterator it=remapping.begin(); it!=remapping.end(); ++it)
+			value = pystring::replace(value, it->first, it->second);
+
+		AiNodeSetStr(node, header.getName().c_str(), value.c_str());
     }
     else if (Abc::IP3fProperty::matches(header))
     {
@@ -49,7 +54,7 @@ void setUserParameter(AtNode* source, std::string interfaceName, Alembic::AbcCor
     }
 }
 
-void setArrayParameter(Alembic::Abc::ICompoundProperty props, Alembic::AbcCoreAbstract::PropertyHeader header, AtNode* node)
+void setArrayParameter(Alembic::Abc::ICompoundProperty props, Alembic::AbcCoreAbstract::PropertyHeader header, AtNode* node, std::map<std::string, std::string> remapping)
 {
 
     AtArray *arrayValues;
@@ -135,7 +140,12 @@ void setArrayParameter(Alembic::Abc::ICompoundProperty props, Alembic::AbcCoreAb
                 arrayValues = AiArrayAllocate(samp->size(), numSamples, AI_TYPE_STRING);
                 for( int i = 0; i < samp->size(); ++i )
                 {
-                    AiArraySetStr(arrayValues, i, (*samp)[i].c_str());
+					std::string value = (*samp)[i];
+					value = pystring::replace(value, "\\", "/");
+					for (std::map<std::string,std::string>::iterator it=remapping.begin(); it!=remapping.end(); ++it)
+						value = pystring::replace(value, it->first, it->second);
+   		
+                    AiArraySetStr(arrayValues, i, value.c_str());
                 }
 
                 AiNodeSetArray(node, header.getName().c_str(), arrayValues);
@@ -272,7 +282,7 @@ void setArrayParameter(Alembic::Abc::ICompoundProperty props, Alembic::AbcCoreAb
 
 }
 
-void setParameter(Alembic::Abc::ICompoundProperty props, Alembic::AbcCoreAbstract::PropertyHeader header, AtNode* node)
+void setParameter(Alembic::Abc::ICompoundProperty props, Alembic::AbcCoreAbstract::PropertyHeader header, AtNode* node, std::map<std::string, std::string> remapping)
 {
     const AtParamEntry* pentry = AiNodeEntryLookUpParameter (AiNodeGetNodeEntry(node), header.getName().c_str());
     if(pentry == NULL)
@@ -336,8 +346,14 @@ void setParameter(Alembic::Abc::ICompoundProperty props, Alembic::AbcCoreAbstrac
         Abc::IStringProperty prop(props, header.getName());
         if (prop.valid() && (strcmp(prop.getValue().c_str(),pdefaultvalue->STR) != 0))
         {
-            AiNodeSetStr(node, header.getName().c_str(), prop.getValue().c_str());
-            AiMsgDebug("Setting string parameter %s.%s with value %s", AiNodeGetName(node), header.getName().c_str(), prop.getValue().c_str());
+            
+			std::string value = prop.getValue();
+			value = pystring::replace(value, "\\", "/");
+			for (std::map<std::string,std::string>::iterator it=remapping.begin(); it!=remapping.end(); ++it)
+				value = pystring::replace(value, it->first, it->second);
+    		
+			AiNodeSetStr(node, header.getName().c_str(), value.c_str());
+            AiMsgDebug("Setting string parameter %s.%s with value %s", AiNodeGetName(node), header.getName().c_str(), value.c_str());
         }
     }
 
