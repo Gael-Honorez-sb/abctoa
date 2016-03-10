@@ -4,12 +4,17 @@
 #include <ai.h>
 #include <Alembic/Abc/All.h>
 #include <Alembic/AbcMaterial/IMaterial.h>
+#include <pystring.h>
 
 namespace Abc =  Alembic::Abc;
 namespace Mat = Alembic::AbcMaterial;
 
-void setUserParameter(AtNode* source, std::string interfaceName, Alembic::AbcCoreAbstract::PropertyHeader header, AtNode* node);
-void setArrayParameter(Alembic::Abc::ICompoundProperty props, Alembic::AbcCoreAbstract::PropertyHeader header, AtNode* node);
-void setParameter(Alembic::Abc::ICompoundProperty props, Alembic::AbcCoreAbstract::PropertyHeader header, AtNode* node);
+namespace {
+	std::map<std::string, std::string> emptyRemap;
+}
+
+void setUserParameter(AtNode* source, std::string interfaceName, Alembic::AbcCoreAbstract::PropertyHeader header, AtNode* node, std::map<std::string, std::string> remapping = emptyRemap);
+void setArrayParameter(Alembic::Abc::ICompoundProperty props, Alembic::AbcCoreAbstract::PropertyHeader header, AtNode* node, std::map<std::string, std::string> remapping = emptyRemap);
+void setParameter(Alembic::Abc::ICompoundProperty props, Alembic::AbcCoreAbstract::PropertyHeader header, AtNode* node, std::map<std::string, std::string> remapping = emptyRemap);
 
 #endif
