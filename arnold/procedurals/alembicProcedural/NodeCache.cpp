@@ -112,7 +112,7 @@ FileCache::~FileCache()
 //-*************************************************************************
 const std::vector<CachedNodeFile>& FileCache::getCachedFile(const std::string& cacheId)
 {
-	AtScopedLock sc(&lock);
+	AtScopedLock sc(lock);
 	std::map<std::string, std::vector<CachedNodeFile>* >::const_iterator I = ArnoldFileCache.find(cacheId);
 	if (I != ArnoldFileCache.end())
 		return *I->second;
@@ -169,7 +169,7 @@ std::string FileCache::getHash(const std::string& fileName,
 //-*************************************************************************
 void FileCache::addCache(const std::string& cacheId, NodeCollector* createdNodes)
 {
-	AtScopedLock sc(&lock);
+	AtScopedLock sc(lock);
 	if (ArnoldFileCache.find(cacheId) == ArnoldFileCache.end())
 	{
 		std::vector<CachedNodeFile>* nodeCache = new std::vector<CachedNodeFile>();
