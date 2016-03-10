@@ -27,7 +27,7 @@ NodeCache::~NodeCache()
 AtNode* NodeCache::getCachedNode(const std::string& cacheId)
 {
 	AiMsgDebug("Searching for %s", cacheId.c_str());
-	AtScopedLock sc(&lock);
+	AtScopedLock sc(lock);
 	std::map<std::string, std::string>::const_iterator I = ArnoldNodeCache.find(cacheId);
 	if (I != ArnoldNodeCache.end())
 		return AiNodeLookUpByName(I->second.c_str());
@@ -41,7 +41,7 @@ AtNode* NodeCache::getCachedNode(const std::string& cacheId)
 //-*************************************************************************
 void NodeCache::addNode(const std::string& cacheId, AtNode* node)
 {
-	AtScopedLock sc(&lock);
+	AtScopedLock sc(lock);
 	ArnoldNodeCache[cacheId] = std::string(AiNodeGetName(node));
 }
 
@@ -64,20 +64,20 @@ NodeCollector::~NodeCollector()
 //-*************************************************************************
 void NodeCollector::addNode(AtNode* node)
 {
-	AtScopedLock sc(&lock);
+	AtScopedLock sc(lock);
 	AiMsgDebug("Adding node %s and type %s", AiNodeGetName(node), AiNodeEntryGetName(AiNodeGetNodeEntry (node)));
 	ArnoldNodeCollector.push_back(node);
 }
 
 size_t NodeCollector::getNumNodes()
 {
-	AtScopedLock sc(&lock);
+	AtScopedLock sc(lock);
 	return ArnoldNodeCollector.size();
 }
 
 AtNode* NodeCollector::getNode(int num)
 {
-	AtScopedLock sc(&lock);
+	AtScopedLock sc(lock);
 	if (num < ArnoldNodeCollector.size())
 		return ArnoldNodeCollector[num];
 	else
