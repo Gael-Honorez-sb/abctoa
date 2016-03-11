@@ -370,7 +370,7 @@ void exportLink(AtNode* sit, Mat::OMaterial matObj, std::string nodeName, std::s
 {
     AiMsgTab (+2);
     int comp;
-    AiMsgDebug("Checking link %s.%s", nodeName.c_str(), paramName);
+    AiMsgDebug("Checking link %s.%s", nodeName.c_str(), paramName.c_str());
 
     AtNode* linked = AiNodeGetLink(sit, paramName.c_str(), &comp);
     int outputType = AiNodeEntryGetOutputType(AiNodeGetNodeEntry(linked));
