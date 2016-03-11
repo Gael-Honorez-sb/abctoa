@@ -1,4 +1,5 @@
 #include "ReadInstancer.h"
+#include "../../../common/to_string_patch.h"
 
 namespace
 {
@@ -134,7 +135,7 @@ void WalkObjectForInstancer( IObject & parent, const ObjectHeader &i_ohead, Proc
 
 			AtNode* instance = AiNode("procedural");
 			std::string newName(AiNodeGetName(proc));
-			newName = newName + "_" + std::to_string(pId);
+			newName = newName + "_" + to_string(pId);
 			AiNodeSetStr(instance, "name", newName.c_str());
 			AiNodeSetStr(instance, "dso", AiNodeGetStr(proc, "dso"));
 			std::string dataField(AiNodeGetStr(proc, "data"));

@@ -12,6 +12,7 @@ You should have received a copy of the GNU Lesser General Public
 License along with this library.*/
 
 #include "abcExporterUtils.h"
+#include "to_string_patch.h"
 
 namespace // <anonymous>
 {
@@ -75,7 +76,7 @@ void getAllArnoldNodes(AtNode* node, AtNodeSet* nodes)
                     for(unsigned int i=0; i < paramArray->nelements; i++)
                     {
 
-                        std::string paramNameArray = std::string(paramName) + "[" + std::to_string(i) +"]";
+                        std::string paramNameArray = std::string(paramName) + "[" + to_string(i) +"]";
 						if (AiNodeIsLinked(node, paramNameArray.c_str()))
                         {
                             //AiMsgDebug("%s has a link", paramNameArray.c_str());
@@ -309,7 +310,7 @@ void processArrayParam(AtNode* sit, const char *paramName, AtArray* paramArray, 
             {
                 std::string nodeNameLinked = containerName + ":" + std::string(AiNodeGetName(linkedNode));
 
-                std::string paramNameArray = std::string(paramName) + "[" +std::to_string(i) +"]";
+                std::string paramNameArray = std::string(paramName) + "[" + to_string(i) +"]";
 
                 //AiMsgInfo("%s.%s is linked", nodeName.c_str(), paramName);
                 //AiMsgInfo("Exporting link from %s.%s to %s.%s", nodeNameLinked.c_str(), paramNameArray.c_str(), nodeName.c_str(), paramName);
@@ -321,7 +322,7 @@ void processArrayParam(AtNode* sit, const char *paramName, AtArray* paramArray, 
     }
     else
     {
-        std::string paramNameArray = std::string(paramName) + "[" + std::to_string(index) +"]";
+        std::string paramNameArray = std::string(paramName) + "[" + to_string(index) +"]";
         if (!AiNodeGetLink(sit, paramNameArray.c_str()) == NULL)
             processLinkedParam(sit, typeArray, outputType, matObj, nodeName, paramNameArray, containerName);
     }
@@ -370,7 +371,7 @@ void exportLink(AtNode* sit, Mat::OMaterial matObj, std::string nodeName, std::s
 {
     AiMsgTab (+2);
     int comp;
-    AiMsgDebug("Checking link %s.%s", nodeName.c_str(), paramName);
+    AiMsgDebug("Checking link %s.%s", nodeName.c_str(), paramName.c_str());
 
     AtNode* linked = AiNodeGetLink(sit, paramName.c_str(), &comp);
     int outputType = AiNodeEntryGetOutputType(AiNodeGetNodeEntry(linked));
