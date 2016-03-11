@@ -25,8 +25,8 @@ public:
 	NodeCache(AtCritSec mycs);
 	~NodeCache();
 
-	AtNode* getCachedNode(std::string cacheId);
-	void addNode(std::string cacheId, AtNode* node);
+	AtNode* getCachedNode(const std::string& cacheId);
+	void addNode(const std::string& cacheId, AtNode* node);
 
 
 private:
@@ -66,21 +66,21 @@ public:
 	FileCache(AtCritSec mycs);
 	~FileCache();
 
-	std::vector<CachedNodeFile> getCachedFile(std::string cacheId);
-	void addCache(std::string cacheId, NodeCollector* createdNodes);
+	const std::vector<CachedNodeFile>& getCachedFile(const std::string& cacheId);
+	void addCache(const std::string& cacheId, NodeCollector* createdNodes);
 
-	const size_t hash( std::string const& s );
+	const size_t hash(std::string const& s);
 
-	std::string getHash(std::string fileName,     
-						std::map<std::string, AtNode*> shaders,
-						std::map<std::string, AtNode*> displacements,
-						Json::Value attributesRoot,
+	std::string getHash(const std::string& fileName,     
+						const std::map<std::string, AtNode*>& shaders,
+						const std::map<std::string, AtNode*>& displacements,
+						const Json::Value& attributesRoot,
 						double frame
 						);
 
 
 private:
-	std::map< std::string, std::vector< CachedNodeFile > > ArnoldFileCache;
+	std::map<std::string, std::vector<CachedNodeFile>* > ArnoldFileCache;
 	//boost::mutex lock;
 	AtCritSec lock;
 };

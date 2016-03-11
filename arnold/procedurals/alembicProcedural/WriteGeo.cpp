@@ -64,10 +64,10 @@ namespace
 {
     // Arnold scene build is single-threaded so we don't have to lock around
     // access to this for now.
-	/*NodeCache* g_meshCache = new NodeCache();*/
+    /*NodeCache* g_meshCache = new NodeCache();*/
 
      //boost::mutex gGlobalLock;
-    // #define GLOBAL_LOCK	   boost::mutex::scoped_lock writeLock( gGlobalLock );
+    // #define GLOBAL_LOCK     boost::mutex::scoped_lock writeLock( gGlobalLock );
 }
 
 
@@ -76,7 +76,7 @@ namespace
 
 template <typename geomParamT>
 void ProcessIndexedBuiltinParam(
-        geomParamT param,
+        const geomParamT& param,
         const SampleTimeSet & sampleTimes,
         std::vector<float> & values,
         std::vector<unsigned int> & idxs,
@@ -180,11 +180,11 @@ void getSampleTimes(
 // This function return the hash of the mesh, with attributes & displacement applied to it.
 template <typename primT>
 std::string getHash(
-    std::string name,
-    std::string originalName,
+    const std::string& name,
+    const std::string& originalName,
     primT & prim,
     ProcArgs & args,
-    SampleTimeSet sampleTimes
+    const SampleTimeSet& sampleTimes
     )
 {
     typename primT::schema_type  &ps = prim.getSchema();
@@ -316,7 +316,7 @@ std::string getHash(
         ISampleSelector sampleSelector( *I );
         ps.getPositionsProperty().getKey(sampleKey, sampleSelector);
 
-				
+                
 
         buffer << GetRelativeSampleTime( args, (*I) ) << ":";
         sampleKey.digest.print(buffer);
@@ -324,14 +324,14 @@ std::string getHash(
     }
 
 
-	if ( ps.getUVsParam ().valid() ) 
-	{ 
-		AbcA::ArraySampleKey uvSampleKey;
-		ps.getUVsParam ().getValueProperty ().getKey(uvSampleKey, frameSelector);
-		uvSampleKey.digest.print(buffer);
-		buffer << ":";
-	
-	}
+    if ( ps.getUVsParam ().valid() ) 
+    { 
+        AbcA::ArraySampleKey uvSampleKey;
+        ps.getUVsParam ().getValueProperty ().getKey(uvSampleKey, frameSelector);
+        uvSampleKey.digest.print(buffer);
+        buffer << ":";
+    
+    }
 
     buffer << "@" << hash(hashAttributes);
 
@@ -345,15 +345,17 @@ std::string getHash(
 //-*************************************************************************
 // doNormals
 // This function does nothing for subdv, but write normals for non-subdvided meshes. Called in writeMesh.
+// we also have to pass the number of vertex times in case we use motion vectors, as arnold needs the same amount of keys for
+// the normals like the vertices
 template<typename primT> 
-inline void doNormals( primT& prim, AtNode *meshNode, SampleTimeSet sampleTimes, std::vector<unsigned int> vidxs)
+inline void doNormals( primT& prim, AtNode *meshNode, const SampleTimeSet& sampleTimes, size_t numVertexSamples, const std::vector<unsigned int>& vidxs)
 {
 }
 
 template<> 
-inline void doNormals<IPolyMesh>(IPolyMesh& prim, AtNode *meshNode, SampleTimeSet sampleTimes, std::vector<unsigned int> vidxs)
+inline void doNormals<IPolyMesh>(IPolyMesh& prim, AtNode *meshNode, const SampleTimeSet& sampleTimes, size_t numVertexSamples, const std::vector<unsigned int>& vidxs)
 {
-    if(AiNodeGetInt(meshNode, "subdiv_type") == 0) // if the mesh has subdiv, we don't need normals as they are recomputed by arnold!
+    if (AiNodeGetInt(meshNode, "subdiv_type") == 0 && sampleTimes.size() > 0) // if the mesh has subdiv, we don't need normals as they are recomputed by arnold!
     {
         std::vector<float> nlist;
         std::vector<unsigned int> nidxs;
@@ -365,13 +367,44 @@ inline void doNormals<IPolyMesh>(IPolyMesh& prim, AtNode *meshNode, SampleTimeSe
                 nidxs,
                 3);
 
-        if ( !nlist.empty() )
-        {
-            AiNodeSetArray(meshNode, "nlist",
-                AiArrayConvert( nlist.size() / sampleTimes.size(),
-                        sampleTimes.size(), AI_TYPE_FLOAT, (void*)(&(nlist[0]))));
+        const size_t numSampleTimes = sampleTimes.size();
 
-            if ( !nidxs.empty() )
+        const size_t numNormals = nlist.size() / (numSampleTimes * 3);
+
+        if (numNormals > 0)
+        {            
+            if (numSampleTimes < numVertexSamples)
+            {
+                AtArray* narr = AiArrayAllocate(numNormals, numVertexSamples, AI_TYPE_VECTOR);
+                const size_t numValidNormals = numNormals * numSampleTimes;
+                for (size_t i = 0; i < numValidNormals; ++i)
+                {
+                    const size_t id = i * 3;
+                    AtVector v = {nlist[id], nlist[id + 1], nlist[id + 2]};
+                    AiArraySetVec(narr, i, v);
+                }
+
+                const size_t validNormalSource = (numSampleTimes - 1) * 3 * numNormals;
+                const size_t sampleDiff = numVertexSamples - numSampleTimes;
+                for (size_t i = 0; i < sampleDiff; ++i)
+                {
+                    const size_t normalTarget = numValidNormals + i * numNormals;
+                    for (size_t j = 0; j < numNormals; ++j)
+                    {
+                        const size_t id = validNormalSource + j * 3;
+                        AtVector v = {nlist[id], nlist[id + 1], nlist[id + 2]};
+                        AiArraySetVec(narr, normalTarget + j, v);
+                    }
+                }
+                AiNodeSetArray(meshNode, "nlist", narr);
+            }
+            else
+                AiNodeSetArray(meshNode, "nlist",
+                               AiArrayConvert(numNormals,
+                                              numVertexSamples, AI_TYPE_VECTOR, &nlist[0]));
+               
+
+            if (!nidxs.empty())
             {
                // we must invert the idxs
                //unsigned int facePointIndex = 0;
@@ -388,13 +421,13 @@ inline void doNormals<IPolyMesh>(IPolyMesh& prim, AtNode *meshNode, SampleTimeSe
                   }
                   base += curNum;
                }
-                AiNodeSetArray(meshNode, "nidxs", AiArrayConvert(nvidxReversed.size(), 1, AI_TYPE_UINT, (void*)&nvidxReversed[0]));
+                AiNodeSetArray(meshNode, "nidxs", AiArrayConvert(nvidxReversed.size(), 1, AI_TYPE_UINT, &nvidxReversed[0]));
             }
             else
             {
                 AiNodeSetArray(meshNode, "nidxs",
                         AiArrayConvert(vidxs.size(), 1, AI_TYPE_UINT,
-                                &(vidxs[0])));
+                                &vidxs[0]));
             }
         }
     }
@@ -405,17 +438,17 @@ inline void doNormals<IPolyMesh>(IPolyMesh& prim, AtNode *meshNode, SampleTimeSe
 // This function create & return a mesh node with displace & attributes related to it.
 template <typename primT>
 AtNode* writeMesh(  
-    std::string name,
-    std::string originalName,
-    std::string cacheId,
+    const std::string& name,
+    const std::string& originalName,
+    const std::string& cacheId,
     primT & prim,
     ProcArgs & args,
-    SampleTimeSet sampleTimes
+    const SampleTimeSet& sampleTimes
     )
 
 {
 
-	AiMsgDebug("Writing %s", originalName.c_str());
+    AiMsgDebug("Writing %s", originalName.c_str());
 
     typename primT::schema_type  &ps = prim.getSchema();
     TimeSamplingPtr ts = ps.getTimeSampling();
@@ -491,30 +524,30 @@ AtNode* writeMesh(
             float scaleVelocity = 1.0f/args.fps;
 
 
-			// Attribute overrides..
-			if(args.linkAttributes)
-			{
-				for(std::vector<std::string>::iterator it=args.attributes.begin(); it!=args.attributes.end(); ++it)
-				{
-					if(name.find(*it) != string::npos || std::find(tags.begin(), tags.end(), *it) != tags.end() || matchPattern(name,*it))
-					{
-						const Json::Value overrides = args.attributesRoot[*it];
-						if(overrides.size() > 0)
-						{
-							for( Json::ValueIterator itr = overrides.begin() ; itr != overrides.end() ; itr++ )
-							{
-								std::string attribute = itr.key().asString();
+            // Attribute overrides..
+            if(args.linkAttributes)
+            {
+                for(std::vector<std::string>::iterator it=args.attributes.begin(); it!=args.attributes.end(); ++it)
+                {
+                    if(name.find(*it) != string::npos || std::find(tags.begin(), tags.end(), *it) != tags.end() || matchPattern(name,*it))
+                    {
+                        const Json::Value overrides = args.attributesRoot[*it];
+                        if(overrides.size() > 0)
+                        {
+                            for( Json::ValueIterator itr = overrides.begin() ; itr != overrides.end() ; itr++ )
+                            {
+                                std::string attribute = itr.key().asString();
 
-								if(attribute == "velocity_multiplier")
-								{
-									Json::Value val = args.attributesRoot[*it][itr.key().asString()];
-									scaleVelocity *= val.asDouble();
-								}
-							}
-						}
-					}
-				}
-			}
+                                if(attribute == "velocity_multiplier")
+                                {
+                                    Json::Value val = args.attributesRoot[*it][itr.key().asString()];
+                                    scaleVelocity *= val.asDouble();
+                                }
+                            }
+                        }
+                    }
+                }
+            }
 
             if (AiNodeLookUpUserParameter(args.proceduralNode, "scaleVelocity") !=NULL )
                 scaleVelocity *= AiNodeGetFlt(args.proceduralNode, "scaleVelocity");
@@ -737,10 +770,9 @@ AtNode* writeMesh(
             AiArrayConvert(nsides.size(), 1, AI_TYPE_BYTE,
                     &(nsides[0])));
 
-
     AiNodeSetArray(meshNode, "vlist",
-            AiArrayConvert( vlist.size() / numSampleTimes,
-                    numSampleTimes, AI_TYPE_FLOAT, (void*)(&(vlist[0]))
+            AiArrayConvert( vlist.size() / (numSampleTimes * 3),
+                    numSampleTimes, AI_TYPE_POINT, &vlist[0]
                             ));
 
 
@@ -810,7 +842,7 @@ AtNode* writeMesh(
 
     
     // NORMALS   
-    doNormals(prim, meshNode, sampleTimes, vidxs);
+    doNormals(prim, meshNode, sampleTimes, numSampleTimes, vidxs);
 
     // facesets
     std::vector< std::string > faceSetNames;
@@ -829,18 +861,18 @@ AtNode* writeMesh(
         {
             if ( ps.hasFaceSet( faceSetNames[i] ) )
             {
-				
+                
                 IFaceSet faceSet = ps.getFaceSet( faceSetNames[i] );
                 IFaceSetSchema::Sample faceSetSample = faceSet.getSchema().getValue( frameSelector );
 
                 const int* faceArray((int *)faceSetSample.getFaces()->getData()); 
-				AiMsgDebug("Faceset %s on %s with %i faces",  faceSetNames[i].c_str(), originalName.c_str(),  faceSetSample.getFaces()->size());
+                AiMsgDebug("Faceset %s on %s with %i faces",  faceSetNames[i].c_str(), originalName.c_str(),  faceSetSample.getFaces()->size());
                 for( int f = 0; f < (int) faceSetSample.getFaces()->size(); f++)
                 {
                     if(faceArray[f] <= nsides.size() )
                         faceSetArray[faceArray[f]] = (AtByte) i;
-					else
-						AiMsgWarning("Face set is higher than nsides side");
+                    else
+                        AiMsgWarning("Face set is higher than nsides side");
                 }
             }
         }
@@ -856,7 +888,7 @@ AtNode* writeMesh(
 
     }
 
-	args.createdNodes->addNode(meshNode);
+    args.createdNodes->addNode(meshNode);
     args.nodeCache->addNode(cacheId, meshNode);
     return meshNode;
 
@@ -867,8 +899,8 @@ AtNode* writeMesh(
 // This function create & return a instance node with shaders & attributes applied.
 template <typename primT>
 AtNode* createInstance(
-    std::string name,
-    std::string originalName,
+    const std::string& name,
+    const std::string& originalName,
     primT & prim,
     ProcArgs & args,
     MatrixSampleMap * xformSamples,
@@ -929,7 +961,7 @@ AtNode* createInstance(
             {
                 if ( ps.hasFaceSet( faceSetNames[i] ) )
                 {
-					AiMsgDebug("Faceset %s on %s",  faceSetNames[i].c_str(), originalName.c_str());
+                    AiMsgDebug("Faceset %s on %s",  faceSetNames[i].c_str(), originalName.c_str());
                     std::string faceSetNameForShading = originalName + "/" + faceSetNames[i];
                     AtNode* shaderForFaceSet  = getShader(faceSetNameForShading, tags, args);
                     if(shaderForFaceSet == NULL)
@@ -958,7 +990,7 @@ AtNode* createInstance(
 // Check if we want a meshlight
 template <typename primT>
 bool isMeshLight(
-    std::string originalName,
+    const std::string& originalName,
     primT & prim,
     ProcArgs & args
     )
@@ -1030,8 +1062,8 @@ bool isMeshLight(
 // This function create a meshlight.
 template <typename primT>
 void createMeshLight(
-    std::string name,
-    std::string originalName,
+    const std::string& name,
+    const std::string& originalName,
     primT & prim,
     ProcArgs & args,
     MatrixSampleMap * xformSamples,
@@ -1095,14 +1127,14 @@ void ProcessPolyMesh( IPolyMesh &polymesh, ProcArgs &args,
 
     getSampleTimes(polymesh, args, sampleTimes);
     std::string cacheId = getHash(name, originalName, polymesh, args, sampleTimes);
-	AiCritSecEnter(&args.lock);
-	AtNode* meshNode = args.nodeCache->getCachedNode(cacheId);
+    AiCritSecEnter(&args.lock);
+    AtNode* meshNode = args.nodeCache->getCachedNode(cacheId);
 
     if(meshNode == NULL)
     { // We don't have a cache, so we much create this mesh.
         meshNode = writeMesh(name, originalName, cacheId, polymesh, args, sampleTimes);
     }
-	AiCritSecLeave(&args.lock);
+    AiCritSecLeave(&args.lock);
     AtNode *instanceNode = NULL;
     // we can create the instance, with correct transform, attributes & shaders.
     if(meshNode != NULL)
@@ -1130,11 +1162,11 @@ void ProcessSubD( ISubD &subd, ProcArgs &args,
     getSampleTimes( subd, args, sampleTimes);
     std::string cacheId = getHash(name, originalName, subd, args, sampleTimes);
 
-	AtNode* meshNode = args.nodeCache->getCachedNode(cacheId);
+    AtNode* meshNode = args.nodeCache->getCachedNode(cacheId);
 
     if(meshNode == NULL) // We don't have a cache, so we much create this mesh.
     {
-		
+        
         meshNode = writeMesh(name, originalName, cacheId, subd, args, sampleTimes);
         //force suddiv
         if(meshNode)

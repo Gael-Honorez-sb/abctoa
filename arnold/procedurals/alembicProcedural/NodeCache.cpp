@@ -1,6 +1,11 @@
 #include "NodeCache.h"
 
 
+namespace {
+	// to return a reference when the cache is not found
+	std::vector<CachedNodeFile> emptyCreatedNodes;
+}
+
 NodeCache::NodeCache(AtCritSec mycs)
 {
 	
@@ -19,30 +24,26 @@ NodeCache::~NodeCache()
 // This function return the the mesh node if already in the cache.
 // Otherwise, return NULL.
 //-*************************************************************************
-AtNode* NodeCache::getCachedNode(std::string cacheId)
+AtNode* NodeCache::getCachedNode(const std::string& cacheId)
 {
 	AiMsgDebug("Searching for %s", cacheId.c_str());
 	AtNode* node = NULL;
-	//boost::mutex::scoped_lock readLock( lock );
 	AiCritSecEnter(&lock);
-    std::map<std::string, std::string>::iterator I = ArnoldNodeCache.find(cacheId);
-    if (I != ArnoldNodeCache.end())
+	std::map<std::string, std::string>::const_iterator I = ArnoldNodeCache.find(cacheId);
+	if (I != ArnoldNodeCache.end())
 		node = AiNodeLookUpByName(I->second.c_str());
 	AiCritSecLeave(&lock);
-	//readLock.unlock();
-    return node;
+	return node;
 }
 
 //-*************************************************************************
 // addNode
 // This function adds a node in the cache.
 //-*************************************************************************
-void NodeCache::addNode(std::string cacheId, AtNode* node)
+void NodeCache::addNode(const std::string& cacheId, AtNode* node)
 {
-	//boost::mutex::scoped_lock writeLock( lock );
 	AiCritSecEnter(&lock);
 	ArnoldNodeCache[cacheId] = std::string(AiNodeGetName(node));
-	//writeLock.unlock();
 	AiCritSecLeave(&lock);
 
 }
@@ -106,8 +107,11 @@ FileCache::FileCache(AtCritSec mycs)
 FileCache::~FileCache()
 {
 	AiMsgDebug("\t[Alembic Procedural] Removing %i files from the file cache", ArnoldFileCache.size());
-	ArnoldFileCache.clear();
-
+	for (std::map<std::string, std::vector<CachedNodeFile>* >::iterator it = ArnoldFileCache.begin();
+		 it != ArnoldFileCache.end(); ++it)
+	{
+		delete it->second;
+	}
 }
 
 //-*************************************************************************
@@ -115,50 +119,48 @@ FileCache::~FileCache()
 // This function return the the mesh node if already in the cache.
 // Otherwise, return NULL.
 //-*************************************************************************
-std::vector<CachedNodeFile> FileCache::getCachedFile(std::string cacheId)
+const std::vector<CachedNodeFile>& FileCache::getCachedFile(const std::string& cacheId)
 {
-	std::vector<CachedNodeFile> createdNodes;
-	//boost::mutex::scoped_lock readLock( lock );
+	std::vector<CachedNodeFile>* createdNodes = 0;
 	AiCritSecEnter(&lock);
-    std::map< std::string, std::vector< CachedNodeFile > >::iterator I = ArnoldFileCache.find(cacheId);
-    if (I != ArnoldFileCache.end())
+	std::map<std::string, std::vector<CachedNodeFile>* >::const_iterator I = ArnoldFileCache.find(cacheId);
+	if (I != ArnoldFileCache.end())
 		createdNodes = I->second;
 
-	//readLock.unlock();
 	AiCritSecLeave(&lock);
-    return createdNodes;
+	return createdNodes == 0 ? emptyCreatedNodes : *createdNodes;
 }
 
-const size_t FileCache::hash( std::string const& s )
+const size_t FileCache::hash(std::string const& s)
 {
-    size_t result = 2166136261U ;
-    std::string::const_iterator end = s.end() ;
-    for ( std::string::const_iterator iter = s.begin() ;
-            iter != end ;
-            ++ iter )
-    {
-        result = 127 * result
-                + static_cast< unsigned char >( *iter ) ;
-    }
-    return result ;
+	size_t result = 2166136261U;
+	std::string::const_iterator end = s.end();
+	for ( std::string::const_iterator iter = s.begin();
+			iter != end ;
+			++ iter)
+	{
+		result = 127 * result
+				+ static_cast< unsigned char >(*iter);
+	}
+	return result;
  }
 
-std::string FileCache::getHash(std::string fileName,     
-							   std::map<std::string, AtNode*> shaders,
-							   std::map<std::string, AtNode*> displacements,
-							   Json::Value attributesRoot,
+std::string FileCache::getHash(const std::string& fileName,     
+							   const std::map<std::string, AtNode*>& shaders,
+							   const std::map<std::string, AtNode*>& displacements,
+							   const Json::Value& attributesRoot,
 							   double frame
 							   )
 {
 
 	std::ostringstream shaderBuff;
-	for(std::map<std::string, AtNode*>::iterator it = shaders.begin(); it != shaders.end(); ++it) 
+	for (std::map<std::string, AtNode*>::const_iterator it = shaders.begin(); it != shaders.end(); ++it) 
 	{
 		shaderBuff << it->first;
 	}
 
 	std::ostringstream displaceBuff;
-	for(std::map<std::string, AtNode*>::iterator it = displacements.begin(); it != displacements.end(); ++it) 
+	for (std::map<std::string, AtNode*>::const_iterator it = displacements.begin(); it != displacements.end(); ++it) 
 	{
 		displaceBuff << it->first;
 	}
@@ -166,10 +168,9 @@ std::string FileCache::getHash(std::string fileName,
 	std::ostringstream buffer;
 	std::string cacheId;
 	
-    buffer << hash(fileName) << "@" << frame << "@" << hash(shaderBuff.str()) << "@" << hash(displaceBuff.str()) << "@" << hash(attributesRoot.toStyledString());
+	buffer << hash(fileName) << "@" << frame << "@" << hash(shaderBuff.str()) << "@" << hash(displaceBuff.str()) << "@" << hash(attributesRoot.toStyledString());
 
-    cacheId = buffer.str();
-	return cacheId;
+	return buffer.str();
 
 }
 
@@ -177,42 +178,42 @@ std::string FileCache::getHash(std::string fileName,
 // addNode
 // This function adds a node in the cache.
 //-*************************************************************************
-void FileCache::addCache(std::string cacheId, NodeCollector* createdNodes)
+void FileCache::addCache(const std::string& cacheId, NodeCollector* createdNodes)
 {
-	//boost::mutex::scoped_lock writeLock( lock );
 	AiCritSecEnter(&lock);
 
-	for(int i = 0; i <  createdNodes->getNumNodes(); i++)
+	if (ArnoldFileCache.find(cacheId) == ArnoldFileCache.end())
 	{
-		
-		AtNode* node = createdNodes->getNode(i);
+		std::vector<CachedNodeFile>* nodeCache = new std::vector<CachedNodeFile>();
 
-		if(AiNodeEntryGetType(AiNodeGetNodeEntry(node)) == AI_NODE_SHAPE)
-		{
-			if(AiNodeGetByte(node, "visibility") != 0)
+		const size_t numCreatedNodes = createdNodes->getNumNodes();
+		if (numCreatedNodes > 0)
+			nodeCache->reserve(numCreatedNodes);
+
+		for(size_t i = 0; i < numCreatedNodes; ++i)
+		{			
+			AtNode* node = createdNodes->getNode(i);
+
+			if(AiNodeEntryGetType(AiNodeGetNodeEntry(node)) == AI_NODE_SHAPE)
+			{
+				if(AiNodeGetByte(node, "visibility") != 0)
+				{
+					CachedNodeFile cachedNode;
+					cachedNode.node = node;
+					cachedNode.matrix = AiNodeGetArray(node, "matrix");
+					nodeCache->push_back(cachedNode);
+				}
+			}
+			else if (AiNodeEntryGetType(AiNodeGetNodeEntry(node)) == AI_NODE_LIGHT)
 			{
 				CachedNodeFile cachedNode;
 				cachedNode.node = node;
 				cachedNode.matrix = AiNodeGetArray(node, "matrix");
-
-				//AiMsgInfo("ADDCACHE Getting obj %i %s and type %s", i, AiNodeGetName(createdNodes->getNode(i)), AiNodeEntryGetName(AiNodeGetNodeEntry (createdNodes->getNode(i))));
-				//newCreatedNodes->addNode(createdNodes->getNode(i));
-				ArnoldFileCache[cacheId].push_back(cachedNode);
+				nodeCache->push_back(cachedNode);
 			}
+		}
 
-		}
-		else if (AiNodeEntryGetType(AiNodeGetNodeEntry(node)) == AI_NODE_LIGHT)
-		{
-			CachedNodeFile cachedNode;
-			cachedNode.node = node;
-			cachedNode.matrix = AiNodeGetArray(node, "matrix");
-			ArnoldFileCache[cacheId].push_back(cachedNode);
-		}
+		ArnoldFileCache.insert(std::pair<std::string, std::vector<CachedNodeFile>* >(cacheId, nodeCache));
 	}
-
-	//ArnoldFileCache[cacheId] = newCreatedNodes;
-	//writeLock.unlock();
 	AiCritSecLeave(&lock);
-
 }
-

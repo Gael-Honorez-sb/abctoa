@@ -45,6 +45,6 @@ bool isPathContainsInOtherPath(const std::string &path, const std::string &jsonS
 void TokenizePath( const std::string &path, PathList &result );
 std::string replace_all(const std::string &str, const char *from, const char *to);
 static std::string translate(const char *pattern);
-bool matchPattern(std::string str, std::string pat);
+bool matchPattern(const std::string& str, const std::string& pat);
 
 #endif
