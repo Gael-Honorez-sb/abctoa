@@ -316,16 +316,13 @@ AtNode* createNetwork(IObject object, std::string prefix, ProcArgs & args)
                         continue;
 
                     if (header.isArray())
-                        setArrayParameter(parameters, header, aShader);
+                        setArrayParameter(parameters, header, aShader, args.pathRemapping);
 
                     else
-                        setParameter(parameters, header, aShader);
+                        setParameter(parameters, header, aShader, args.pathRemapping);
                 }
-
             }
-
         }
-
     }
 
     // once every node is created, we can set the connections...
@@ -437,7 +434,7 @@ AtNode* createNetwork(IObject object, std::string prefix, ProcArgs & args)
 void ParseShaders(Json::Value jroot, const std::string& ns, const std::string& nameprefix, ProcArgs* args, AtByte type)
 {
     // We have to lock here as we need to be sure that another thread is not checking the root while we are creating it here.
-    AiCritSecEnter(&args->lock);
+    AtScopedLock sc(args->lock);
     for( Json::ValueIterator itr = jroot.begin() ; itr != jroot.end() ; itr++ )
     {
         
@@ -503,7 +500,4 @@ void ParseShaders(Json::Value jroot, const std::string& ns, const std::string& n
             AiMsgWarning("[ABC] Can't find shader %s", shaderName.c_str());
         }
     }
-
-	AiCritSecLeave(&args->lock);
-
 }
