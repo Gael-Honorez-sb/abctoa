@@ -14,7 +14,7 @@ using namespace Alembic::AbcGeom;
 //-*****************************************************************************
 
 
-void ProcessCamera( ICamera &camera, ProcArgs &args,
+void ProcessCamera( ICamera &camera, const ProcArgs &args,
         MatrixSampleMap * xformSamples);
 
 #endif

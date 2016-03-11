@@ -6,7 +6,7 @@
 
 #include "json/json.h"
 
-void ProcessCamera( ICamera &camera, ProcArgs &args,
+void ProcessCamera( ICamera &camera, const ProcArgs &args,
         MatrixSampleMap * xformSamples)
 {
     if (!camera.valid())
