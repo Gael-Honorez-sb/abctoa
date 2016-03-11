@@ -8,7 +8,7 @@ include_directories(${PYSTRING_INCLUDE_DIR})
 include_directories(${ARNOLD_INCLUDE_DIR})
 
 add_executable(${UTIL} ${SRC})
-target_link_libraries(${UTIL} ${ARNOLD_LIBRARY}  ${Boost_PROGRAM_OPTIONS_LIBRARY} ${Boost_SYSTEM_LIBRARY} ${Boost_FILESYSTEM_LIBRARY})
+target_link_libraries(${UTIL} ${ARNOLD_LIBRARY}  ${Boost_PROGRAM_OPTIONS_LIBRARY} ${Boost_SYSTEM_LIBRARY} ${Boost_FILESYSTEM_LIBRARY} ${PYSTRING_LIBRARIES} ${JSONCPP_LIBRARIES})
 set_target_properties(${UTIL} PROPERTIES PREFIX "")
 
 ALEMBIC_SET_PROPERTIES(${UTIL})
