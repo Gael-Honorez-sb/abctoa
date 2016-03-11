@@ -27,13 +27,12 @@ NodeCache::~NodeCache()
 AtNode* NodeCache::getCachedNode(const std::string& cacheId)
 {
 	AiMsgDebug("Searching for %s", cacheId.c_str());
-	AtNode* node = NULL;
-	AiCritSecEnter(&lock);
+	AtScopedLock sc(lock);
 	std::map<std::string, std::string>::const_iterator I = ArnoldNodeCache.find(cacheId);
 	if (I != ArnoldNodeCache.end())
-		node = AiNodeLookUpByName(I->second.c_str());
-	AiCritSecLeave(&lock);
-	return node;
+		return AiNodeLookUpByName(I->second.c_str());
+	else
+		return 0;
 }
 
 //-*************************************************************************
@@ -42,10 +41,8 @@ AtNode* NodeCache::getCachedNode(const std::string& cacheId)
 //-*************************************************************************
 void NodeCache::addNode(const std::string& cacheId, AtNode* node)
 {
-	AiCritSecEnter(&lock);
+	AtScopedLock sc(lock);
 	ArnoldNodeCache[cacheId] = std::string(AiNodeGetName(node));
-	AiCritSecLeave(&lock);
-
 }
 
 
@@ -67,32 +64,27 @@ NodeCollector::~NodeCollector()
 //-*************************************************************************
 void NodeCollector::addNode(AtNode* node)
 {
-	AiCritSecEnter(&lock);
+	AtScopedLock sc(lock);
 	AiMsgDebug("Adding node %s and type %s", AiNodeGetName(node), AiNodeEntryGetName(AiNodeGetNodeEntry (node)));
 	ArnoldNodeCollector.push_back(node);
-	AiCritSecLeave(&lock);
-
 }
 
 size_t NodeCollector::getNumNodes()
 {
-	size_t size;
-	AiCritSecEnter(&lock);
-	size = ArnoldNodeCollector.size();
-	AiCritSecLeave(&lock);
-	return size;
+	AtScopedLock sc(lock);
+	return ArnoldNodeCollector.size();
 }
 
 AtNode* NodeCollector::getNode(int num)
 {
-	AtNode* node = NULL;
-	AiCritSecEnter(&lock);
+	AtScopedLock sc(lock);
 	if (num < ArnoldNodeCollector.size())
-		node = ArnoldNodeCollector[num];
-	AiCritSecLeave(&lock);
-	if(node==  NULL)
+		return ArnoldNodeCollector[num];
+	else
+	{
 		AiMsgError("Returning null node!");
-	return node;
+		return 0;
+	}
 }
 
 
@@ -100,8 +92,7 @@ AtNode* NodeCollector::getNode(int num)
 
 FileCache::FileCache(AtCritSec mycs)
 {
-	lock = mycs;
-	
+	lock = mycs;	
 }
 
 FileCache::~FileCache()
@@ -121,14 +112,12 @@ FileCache::~FileCache()
 //-*************************************************************************
 const std::vector<CachedNodeFile>& FileCache::getCachedFile(const std::string& cacheId)
 {
-	std::vector<CachedNodeFile>* createdNodes = 0;
-	AiCritSecEnter(&lock);
+	AtScopedLock sc(lock);
 	std::map<std::string, std::vector<CachedNodeFile>* >::const_iterator I = ArnoldFileCache.find(cacheId);
 	if (I != ArnoldFileCache.end())
-		createdNodes = I->second;
-
-	AiCritSecLeave(&lock);
-	return createdNodes == 0 ? emptyCreatedNodes : *createdNodes;
+		return *I->second;
+	else
+		return emptyCreatedNodes;
 }
 
 const size_t FileCache::hash(std::string const& s)
@@ -180,8 +169,7 @@ std::string FileCache::getHash(const std::string& fileName,
 //-*************************************************************************
 void FileCache::addCache(const std::string& cacheId, NodeCollector* createdNodes)
 {
-	AiCritSecEnter(&lock);
-
+	AtScopedLock sc(lock);
 	if (ArnoldFileCache.find(cacheId) == ArnoldFileCache.end())
 	{
 		std::vector<CachedNodeFile>* nodeCache = new std::vector<CachedNodeFile>();
@@ -215,5 +203,4 @@ void FileCache::addCache(const std::string& cacheId, NodeCollector* createdNodes
 
 		ArnoldFileCache.insert(std::pair<std::string, std::vector<CachedNodeFile>* >(cacheId, nodeCache));
 	}
-	AiCritSecLeave(&lock);
 }
