@@ -62,6 +62,7 @@ PROPERTY_ADD_LIST = {
 'polymesh'       : [
                     {'name' :'forceVisible', 'type': AI_TYPE_BOOLEAN, 'value' : False},
                     {'name' :'sss_setname', 'type': AI_TYPE_STRING, 'value' : ""},
+                    {'name' :'velocity_multiplier', 'type': AI_TYPE_FLOAT, 'value' : 1.0}
                   ],
 'points'         : [
                     {'name' :'forceVisible', 'type': AI_TYPE_BOOLEAN, 'value' : False}, 
