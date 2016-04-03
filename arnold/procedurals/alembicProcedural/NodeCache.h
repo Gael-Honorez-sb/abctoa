@@ -45,17 +45,19 @@ private:
 class NodeCollector
 {
 public:
-	NodeCollector(AtCritSec mycs);
+	NodeCollector(AtCritSec mycs, AtNode *proc);
 	~NodeCollector();
 
 	void addNode(AtNode* node);
 	size_t getNumNodes();
 	AtNode* getNode(int num);
+	AtNode* getProcedural() { return proc ;};
 	
 
 
 private:
 	std::vector<AtNode*> ArnoldNodeCollector;
+	AtNode *proc;
 	AtCritSec lock;
 };
 
@@ -87,6 +89,7 @@ public:
 
 private:
 	std::map<std::string, std::vector<CachedNodeFile>* > ArnoldFileCache;
+	std::map<std::string, AtNode* > ArnoldFileCacheProc; // This is used to check if the procedural creating the cache still exists. If not, chances are that the whole cache is not valid.
 	AtCritSec lock;
 };
 

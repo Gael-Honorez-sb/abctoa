@@ -476,7 +476,7 @@ int ProcInit( struct AtNode *node, void **user_ptr )
     args->proceduralNode = node;
     args->nodeCache = g_cache->g_nodeCache;
     args->lock = g_cache->mycs;
-    args->createdNodes = new NodeCollector(args->lock);
+    args->createdNodes = new NodeCollector(args->lock, node);
 
     if (AiNodeLookUpUserParameter(node, "abcShaders") !=NULL )
     {
