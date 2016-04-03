@@ -47,9 +47,10 @@ void NodeCache::addNode(const std::string& cacheId, AtNode* node)
 
 
 // The node collector is a thread-safe class that accumlate AtNode created in the procedural.
-NodeCollector::NodeCollector(AtCritSec mycs)
+NodeCollector::NodeCollector(AtCritSec mycs, AtNode *procedural)
 {
 	lock = mycs;
+	proc = procedural;
 }
 
 NodeCollector::~NodeCollector()
@@ -113,9 +114,26 @@ FileCache::~FileCache()
 const std::vector<CachedNodeFile>& FileCache::getCachedFile(const std::string& cacheId)
 {
 	AtScopedLock sc(lock);
+
+
 	std::map<std::string, std::vector<CachedNodeFile>* >::const_iterator I = ArnoldFileCache.find(cacheId);
 	if (I != ArnoldFileCache.end())
-		return *I->second;
+	{
+		std::map<std::string, AtNode* >::const_iterator J = ArnoldFileCacheProc.find(cacheId);
+		if(J != ArnoldFileCacheProc.end() && AiNodeLookUpByName(AiNodeGetName(J->second)) != NULL)
+			return *I->second;
+		else
+		{
+			// Invalid cache
+			delete I->second;
+			ArnoldFileCache.erase(I);
+			if(J != ArnoldFileCacheProc.end())
+				ArnoldFileCacheProc.erase(J);
+			return emptyCreatedNodes;
+		}
+
+
+	}
 	else
 		return emptyCreatedNodes;
 }
@@ -202,5 +220,6 @@ void FileCache::addCache(const std::string& cacheId, NodeCollector* createdNodes
 		}
 
 		ArnoldFileCache.insert(std::pair<std::string, std::vector<CachedNodeFile>* >(cacheId, nodeCache));
+		ArnoldFileCacheProc.insert(std::pair<std::string, AtNode* >(cacheId, createdNodes->getProcedural()));
 	}
 }
