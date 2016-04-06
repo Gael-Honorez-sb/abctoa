@@ -89,6 +89,8 @@ MStatus ABCHierarchy::doIt( const MArgList& args )
             typeObj = "Shape:";
         else if(IPoints::matches(iObj->getHeader()))
             typeObj = "Points:";
+        else if(ICurves::matches(iObj->getHeader()))
+            typeObj = "Curves:";
         else if(ILight::matches(iObj->getHeader()))
         {
             typeObj = "Light:";

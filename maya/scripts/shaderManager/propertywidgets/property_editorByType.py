@@ -70,6 +70,12 @@ PROPERTY_ADD_LIST = {
                     {'name' :'radius_multiplier', 'type': AI_TYPE_FLOAT, 'value' : 1.0},
                     {'name' :'velocity_multiplier', 'type': AI_TYPE_FLOAT, 'value' : 1.0}
                     ],
+'curves'         : [
+                    {'name' :'forceVisible', 'type': AI_TYPE_BOOLEAN, 'value' : False}, 
+                    {'name' :'radius_attribute', 'type': AI_TYPE_STRING, 'value' : "pscale"},
+                    {'name' :'radius_multiplier', 'type': AI_TYPE_FLOAT, 'value' : 1.0},
+                    {'name' :'velocity_multiplier', 'type': AI_TYPE_FLOAT, 'value' : 1.0}
+                    ],                    
 'mesh_light'    :  [
                     {'name' :'convert_to_mesh_light', 'type': AI_TYPE_BOOLEAN, 'value' : False}
                    ],               
@@ -109,6 +115,7 @@ PROPERTY_BLACK_LIST = {
 'options'        : ['outputs'],
 'polymesh'       : ['nidxs', 'nlist', 'nsides', 'shidxs', 'uvidxs', 'uvlist', 'vidxs', 'crease_idxs', 'vlist', 'autobump_visibility', 'sidedness', 'ray_bias'],
 'points'         : ['sidedness', 'ray_bias'],
+'curves'         : ['sidedness', 'ray_bias', 'basis'],
 'driver_display' : ['callback', 'callback_data'],
 'mesh_light'    :  []
 }
