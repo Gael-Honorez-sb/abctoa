@@ -39,6 +39,7 @@
 //#include "ISimpleXformDrw.h"
 #include "IXformDrw.h"
 #include "IPointsDrw.h"
+#include "ICurvesDrw.h"
 //#include "ISubDDrw.h"
 
 #include "json/json.h"
@@ -139,6 +140,14 @@ IObjectDrw::IObjectDrw( IObject &iObj, bool iResetIfNoChildren, std::vector<std:
                 if ( points )
                 {
                     dptr.reset( new IPointsDrw( points, path ) );
+                }
+            }
+            else if ( ICurves::matches( ohead ) )
+            {
+                ICurves curves( m_object, ohead.getName() );
+                if ( curves )
+                {
+                    dptr.reset( new ICurvesDrw( curves, path ) );
                 }
             }
             else if ( IXform::matches( ohead ) )
