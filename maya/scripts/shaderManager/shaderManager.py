@@ -718,6 +718,10 @@ class ShaderManager(QMainWindow, UI_ABCHierarchy.Ui_NAM):
             self.propertyType = "points"
             self.propertyEditor.resetTo(item.itemType.lower())
 
+        if item.icon == 9 and self.propertyType != "curves":
+            self.propertyType = "curves"
+            self.propertyEditor.resetTo(item.itemType.lower())
+
         elif item.icon == 8 and self.propertyType != item.itemType:
             self.propertyType = item.itemType
             if item.itemType == "PointLight":
