@@ -10,12 +10,19 @@ public:
    virtual void Update(AtNode* procedural);
    virtual void UpdateMotion(AtNode* procedural, unsigned int step);
    static void NodeInitializer(CAbTranslator context);
-   AtNode* CreateArnoldNodes();
+   virtual AtNode* CreateArnoldNodes();
    static void* creator()
    {
       return new CABCViewerTranslator();
    }
 protected:
+   CABCViewerTranslator()  :
+      CShapeTranslator()
+   {
+      // Just for debug info, translator creates whatever arnold nodes are required
+      // through the CreateArnoldNodes method
+      m_abstract.arnold = "procedural";
+   }
     void ProcessRenderFlagsCustom(AtNode* node);
    void ExportBoundingBox(AtNode* procedural);
    void ExportStandinsShaders(AtNode* procedural);

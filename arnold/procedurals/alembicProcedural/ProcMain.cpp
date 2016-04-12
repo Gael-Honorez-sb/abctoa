@@ -45,6 +45,7 @@
 #include "WriteGeo.h"
 #include "WritePoint.h"
 #include "WriteLight.h"
+#include "WriteCurves.h"
 #include "json/json.h"
 #include "parseAttributes.h"
 #include "NodeCache.h"
@@ -202,8 +203,8 @@ void WalkObject( IObject & parent, const ObjectHeader &i_ohead, ProcArgs &args,
     {
         ICurves curves( parent, ohead.getName() );
 
-        /*if(isVisibleForArnold(parent, &args))
-            ProcessCurves( curves, args, xformSamples );*/
+        if(isVisibleForArnold(parent, &args))
+            ProcessCurves( curves, args, xformSamples );
 
         nextParentObject = curves;
     }

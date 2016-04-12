@@ -50,7 +50,7 @@ std::string CleanAttributeName(std::string str)
 
 
 
-std::string GetArnoldTypeString( GeometryScope scope, int arnoldAPIType, AtNode *primNode)
+std::string GetArnoldTypeString( GeometryScope scope, int arnoldAPIType, AtNode *primNode, bool indexed)
 {
     std::ostringstream buffer;
     switch (scope)
@@ -69,7 +69,10 @@ std::string GetArnoldTypeString( GeometryScope scope, int arnoldAPIType, AtNode 
         buffer << "varying";
         break;
     case kFacevaryingScope:
-        buffer << "indexed";
+		if (indexed)
+			buffer << "indexed";
+		else
+			buffer << "varying";
         break;
     case kConstantScope:
 		if(AiNodeIs(primNode, "points"))
@@ -128,6 +131,113 @@ std::string GetArnoldTypeString( GeometryScope scope, int arnoldAPIType, AtNode 
     return buffer.str();
 }
 
+template <typename T>
+void SetArrayByArnoldType(AtArray* array, int idx, int arnoldAPIType, typename T::prop_type::sample_ptr_type valueSample, int idxSample)
+{
+	switch ( arnoldAPIType )
+	{
+		case AI_TYPE_INT:
+			AiArraySetInt( array, idx,
+					reinterpret_cast<const Alembic::Util::int32_t *>(
+							valueSample->get() )[idxSample] );
+
+			break;
+		case AI_TYPE_DOUBLE:
+			AiArraySetFlt( array, idx,
+					reinterpret_cast<const float64_t *>(
+							valueSample->get() )[idxSample] );
+			break;
+
+		case AI_TYPE_FLOAT:
+			AiArraySetFlt( array, idx,
+					reinterpret_cast<const float32_t *>(
+							valueSample->get() )[idxSample] );
+			break;
+		case AI_TYPE_STRING:
+
+			AiArraySetStr( array, idx,
+					reinterpret_cast<const std::string *>(
+							valueSample->get() )[idxSample].c_str() );
+
+			break;
+		case AI_TYPE_RGB:
+		{
+			const float32_t * data =
+					reinterpret_cast<const float32_t *>(
+							valueSample->get() );
+
+			AiArraySetRGB( array, idx,
+					AiColor(data[idxSample*3], data[idxSample*3+1], data[idxSample*3+2]) );
+
+			break;
+		}
+		case AI_TYPE_RGBA:
+		{
+			const float32_t * data =
+					reinterpret_cast<const float32_t *>(
+							valueSample->get() );
+			AiArraySetRGBA( array, idx,
+					AiRGBACreate(data[idxSample*3], data[idxSample*3+1], data[idxSample*3+2],  data[idxSample*3+3]));
+
+			break;
+		}
+		case AI_TYPE_POINT:
+		{
+			const float32_t * data =
+					reinterpret_cast<const float32_t *>(
+							valueSample->get() );
+
+			
+
+			AiArraySetPnt( array, idx,
+					 AiPoint(data[idxSample*3], data[idxSample*3+1], data[idxSample*3+2]));
+
+			break;
+		}
+		case AI_TYPE_VECTOR:
+		{
+			const float32_t * data =
+					reinterpret_cast<const float32_t *>(
+							valueSample->get() );
+
+			AiArraySetVec( array, idx,
+					AiVector(data[idxSample*3], data[idxSample*3+1], data[idxSample*3+2]) );
+
+			break;
+		}
+		case AI_TYPE_POINT2:
+		{
+			const float32_t * data =
+					reinterpret_cast<const float32_t *>(
+							valueSample->get() );
+
+			AiArraySetPnt2( array, idx,
+					AiPoint2(data[idxSample*3], data[idxSample*3+1]) );
+			break;
+		}
+		case AI_TYPE_MATRIX:
+		{
+			const float32_t * data =
+					reinterpret_cast<const float32_t *>(
+							valueSample->get() );
+
+			AtMatrix m;
+			for ( size_t i = 0; i < 16; ++i )
+			{
+				*((&m[0][0])+i) = data[idxSample*16+i];
+			}
+			AiArraySetMtx( array, idx, m);
+
+
+			break;
+		}
+		default:
+			// For now, only support the above types
+			break;
+	}
+
+}
+
 //-*****************************************************************************
 
 template <typename T>
@@ -147,7 +257,7 @@ void AddArbitraryGeomParam( ICompoundProperty & parent,
     }
 
     std::string declStr = GetArnoldTypeString( param.getScope(),
-            arnoldAPIType, primNode );
+            arnoldAPIType, primNode, param.isIndexed() );
 
 
 
@@ -380,6 +490,67 @@ void AddArbitraryGeomParam( ICompoundProperty & parent,
                }
                 AiNodeSetArray(primNode, CleanAttributeName(param.getName() + "idxs").c_str(), AiArrayConvert(nvidxReversed.size(), 1, AI_TYPE_UINT, (void*)&nvidxReversed[0]));
             }
+			else
+			{
+				// Not indexed, probably a curve ?
+				if(!AiNodeIs(primNode, "curves"))
+					return;
+
+                typename T::prop_type::sample_ptr_type valueSample =
+                        param.getIndexedValue( sampleSelector ).getVals();
+				
+				if(!paramExists)
+					if ( !AiNodeDeclare( primNode, cleanAttributeName.c_str(), declStr.c_str() ) )
+						return;
+
+				int basis = AiNodeGetInt(primNode, "basis");
+
+				if(basis != 3)
+				{
+					AtArray* curveNumPoints = AiNodeGetArray( primNode , "num_points"); 
+					AtArray* radius = AiNodeGetArray( primNode, "radius");
+					AtArray* finalValues = AiArrayAllocate( radius->nelements, 1, arnoldAPIType);
+
+					unsigned int c_verts = 0;
+					unsigned int w_start = 0; 
+					unsigned int w_end = 0;
+					int idxArray = 0;
+					for ( int curCurve = 0; curCurve < curveNumPoints->nelements; curCurve++)
+					{
+						c_verts = AiArrayGetUInt(curveNumPoints, curCurve);
+						unsigned int w_start = w_end;
+						w_end += c_verts;
+						if ( basis == 1 || basis == 2 )
+						{
+							for ( int r = w_start; r < w_end; r++ )
+							{
+								if ( r != w_start+1 && r != w_end-2 )
+								{
+									SetArrayByArnoldType<T>(finalValues, idxArray, arnoldAPIType, valueSample, r);
+									idxArray++;
+								}
+							}
+						}
+						else if ( basis == 0 /* for bezier */ )
+						{
+							//  skip the control points.
+							for ( int r = w_start; r < w_end; r+=3 )
+							{
+								SetArrayByArnoldType<T>(finalValues, idxArray, arnoldAPIType, valueSample, r);
+								idxArray++;
+							}
+						}
+					}
+					AiNodeSetArray( primNode, CleanAttributeName(param.getName()).c_str(), finalValues );
+				}
+				else
+				{
+					AiNodeSetArray( primNode, CleanAttributeName(param.getName()).c_str(),
+						AiArrayConvert( valueSample->size(), 1, arnoldAPIType,
+								(void *) valueSample->get() ) );
+				}
+
+			}
         }
         else
         {
@@ -420,7 +591,7 @@ void AddArbitraryStringGeomParam( ICompoundProperty & parent,
     }
 
     std::string declStr = GetArnoldTypeString( param.getScope(),
-            AI_TYPE_STRING, primNode );
+            AI_TYPE_STRING, primNode, param.isIndexed() );
     if ( declStr.empty() )
     {
         return;
@@ -680,7 +851,7 @@ void AddArbitraryProceduralParams(AtNode* proc, AtNode * primNode)
 
 
 
-        std::string declStr = GetArnoldTypeString( toAbcCategory, arnoldAPIType, primNode );
+        std::string declStr = GetArnoldTypeString( toAbcCategory, arnoldAPIType, primNode, false );
         if ( declStr.empty() )
         {
             continue;
