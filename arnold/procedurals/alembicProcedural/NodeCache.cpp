@@ -116,7 +116,7 @@ const std::vector<CachedNodeFile>& FileCache::getCachedFile(const std::string& c
 	AtScopedLock sc(lock);
 
 
-	std::map<std::string, std::vector<CachedNodeFile>* >::const_iterator I = ArnoldFileCache.find(cacheId);
+	std::map<std::string, std::vector<CachedNodeFile>* >::iterator I = ArnoldFileCache.find(cacheId);
 	if (I != ArnoldFileCache.end())
 	{
 		std::map<std::string, AtNode* >::const_iterator J = ArnoldFileCacheProc.find(cacheId);
