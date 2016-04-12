@@ -47,7 +47,7 @@ using namespace Alembic::AbcGeom;
 typedef std::set<Abc::chrono_t> SampleTimeSet;
 typedef std::map<Abc::chrono_t, M44d> MatrixSampleMap;
 
-const size_t hash( std::string const& s );
+const size_t computeHash( std::string const& s );
 
 //-*****************************************************************************
 void GetRelevantSampleTimes( ProcArgs &args, TimeSamplingPtr timeSampling,

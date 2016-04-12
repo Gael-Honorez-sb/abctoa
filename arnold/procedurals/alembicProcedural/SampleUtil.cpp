@@ -42,7 +42,7 @@
 #include <ImathEuler.h>
 
 // Hashing
-const size_t hash( std::string const& s )
+const size_t computeHash( std::string const& s )
 {
     size_t result = 2166136261U ;
     std::string::const_iterator end = s.end() ;

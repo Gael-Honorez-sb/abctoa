@@ -174,7 +174,7 @@ std::string getHash(
         buffer << ":";
     }
 
-    buffer << "@" << hash(hashAttributes);
+    buffer << "@" << computeHash(hashAttributes);
 
     cacheId = buffer.str();
 

@@ -333,7 +333,7 @@ std::string getHash(
     
     }
 
-    buffer << "@" << hash(hashAttributes);
+    buffer << "@" << computeHash(hashAttributes);
 
     cacheId = buffer.str();
 
