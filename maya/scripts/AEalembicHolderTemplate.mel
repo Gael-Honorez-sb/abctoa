@@ -1,0 +1,253 @@
+
+////////////////////////////////////////////////////////////////////////
+
+global proc int pioEmAEassignCacheFileCB( string $fileAttribute,
+                                        string $fileName,
+                                        string $fileType )
+{
+    string $components[];
+      tokenize $fileAttribute "." $components;
+      string $nodeName = $components[0];
+
+      setAttr $fileAttribute -type "string" $fileName;
+
+    // This will force an update to display the effects
+    // of the new cachefile.
+    //
+    currentTime `currentTime -q`;
+
+  string $currentDir = `workspace -q -dir`;
+  retainWorkingDirectory ($currentDir);
+
+  return true;
+}
+
+global proc pioEmAEcacheFileBrowser( string $cmd, string $cacheName )
+{
+    string  $workspace = `workspace -q -fn`;
+    setWorkingDirectory $workspace "caches" "abc";
+
+    fileBrowser ($cmd, "ABC Cache File", "", 0);
+} 
+
+global proc alembicABCPathNew(string $cacheName)
+{
+    setUITemplate -pst attributeEditorTemplate;
+        columnLayout -adj true;
+            rowLayout -nc 3 outpathLayout;
+                text -label "ABC Path" outpathText;
+                textField diskNameField;
+                    symbolButton -image "navButtonBrowse.png" browser;
+                setParent ..;
+
+        setParent ..;
+
+    setUITemplate -ppt;
+    setParent ..;
+
+    alembicABCPathReplace( $cacheName );
+
+}
+
+global proc alembicABCPathReplace(string $cacheName)
+{
+    string $fileName = `getAttr $cacheName`;
+    string    $buffer[];
+    tokenize($cacheName, ".", $buffer);
+    string    $nodeName = $buffer[0];
+
+    // Filename Attribute
+  connectControl diskNameField $cacheName;
+  string $command = "pioEmAEassignCacheFileCB " + " " + $cacheName;
+  button -e -c ("pioEmAEcacheFileBrowser \"" + $command + "\" " + $nodeName ) browser;
+}
+
+
+
+global proc AEalembicHolderTemplate(string $nodeName)
+{
+    editorTemplate -beginScrollLayout;
+    
+    editorTemplate -beginLayout "Cache File" -collapse false;
+        editorTemplate -callCustom "alembicABCPathNew" "alembicABCPathReplace" "cacheFileName";
+        editorTemplate -label "Geometry Path" -addControl "cacheGeomPath";
+        editorTemplate -label "Selection Path" -addControl "cacheSelectionPath";
+		editorTemplate -label "bounding Box Extended Mode" -addControl "boundingBoxExtendedMode";
+        editorTemplate -label "Time Offset" -addControl "timeOffset";
+		editorTemplate -label "load At Init" -addControl "loadAtInit";
+    editorTemplate -endLayout;
+
+    editorTemplate -bl "Render Stats" -cl 0;
+        editorTemplate -bn;
+        editorTemplate -ac "primaryVisibility";
+        editorTemplate -ac "aiSelfShadows";
+        editorTemplate -ac "castsShadows";
+        editorTemplate -ac "receiveShadows";
+        editorTemplate -ac "motionBlur";
+        editorTemplate -ac "aiVisibleInDiffuse";
+        editorTemplate -ac "aiVisibleInGlossy";
+        editorTemplate -ac "visibleInRefractions";
+        editorTemplate -ac "visibleInReflections";
+        editorTemplate -ac "aiOpaque";
+        editorTemplate -ac "aiMatte";
+        editorTemplate -ac "overrideGlobalShader";
+        editorTemplate -ac "aiTraceSets";
+        editorTemplate -ac "aiSssSetname";
+        editorTemplate -en;
+    editorTemplate -el;    
+
+    AEdependNodeTemplate $nodeName;
+
+    editorTemplate -suppress "blackBox";
+    editorTemplate -suppress "borderConnections";
+    editorTemplate -suppress "isHierarchicalConnection";
+    editorTemplate -suppress "publishedNodeInfo";
+    editorTemplate -suppress "publishedNodeInfo.publishedNode";
+    editorTemplate -suppress "publishedNodeInfo.isHierarchicalNode";
+    editorTemplate -suppress "publishedNodeInfo.publishedNodeType";
+    editorTemplate -suppress "rmbCommand";
+    editorTemplate -suppress "templateName";
+    editorTemplate -suppress "templatePath";
+    editorTemplate -suppress "viewName";
+    editorTemplate -suppress "iconName";
+    editorTemplate -suppress "viewMode";
+    editorTemplate -suppress "templateVersion";
+    editorTemplate -suppress "uiTreatment";
+    editorTemplate -suppress "customTreatment";
+    editorTemplate -suppress "creator";
+    editorTemplate -suppress "creationDate";
+    editorTemplate -suppress "containerType";
+    editorTemplate -suppress "center";
+    editorTemplate -suppress "boundingBoxCenterX";
+    editorTemplate -suppress "boundingBoxCenterY";
+    editorTemplate -suppress "boundingBoxCenterZ";
+    editorTemplate -suppress "matrix";
+    editorTemplate -suppress "inverseMatrix";
+    editorTemplate -suppress "worldMatrix";
+    editorTemplate -suppress "worldInverseMatrix";
+    editorTemplate -suppress "parentMatrix";
+    editorTemplate -suppress "parentInverseMatrix";
+    editorTemplate -suppress "visibility";
+    editorTemplate -suppress "intermediateObject";
+    editorTemplate -suppress "template";
+    editorTemplate -suppress "ghosting";
+    editorTemplate -suppress "instObjGroups";
+    editorTemplate -suppress "instObjGroups.objectGroups";
+    editorTemplate -suppress "instObjGroups.objectGroups.objectGrpCompList";
+    editorTemplate -suppress "instObjGroups.objectGroups.objectGroupId";
+    editorTemplate -suppress "instObjGroups.objectGroups.objectGrpColor";
+    editorTemplate -suppress "renderInfo";
+    editorTemplate -suppress "identification";
+    editorTemplate -suppress "layerRenderable";
+    editorTemplate -suppress "layerOverrideColor";
+    editorTemplate -suppress "renderLayerInfo";
+    editorTemplate -suppress "renderLayerInfo.renderLayerId";
+    editorTemplate -suppress "renderLayerInfo.renderLayerRenderable";
+    editorTemplate -suppress "renderLayerInfo.renderLayerColor";
+    editorTemplate -suppress "ghostingControl";
+    editorTemplate -suppress "ghostCustomSteps";
+    editorTemplate -suppress "ghostPreSteps";
+    editorTemplate -suppress "ghostPostSteps";
+    editorTemplate -suppress "ghostStepSize";
+    editorTemplate -suppress "ghostFrames";
+    editorTemplate -suppress "ghostColorPreA";
+    editorTemplate -suppress "ghostColorPre";
+    editorTemplate -suppress "ghostColorPreR";
+    editorTemplate -suppress "ghostColorPreG";
+    editorTemplate -suppress "ghostColorPreB";
+    editorTemplate -suppress "ghostColorPostA";
+    editorTemplate -suppress "ghostColorPost";
+    editorTemplate -suppress "ghostColorPostR";
+    editorTemplate -suppress "ghostColorPostG";
+    editorTemplate -suppress "ghostColorPostB";
+    editorTemplate -suppress "ghostRangeStart";
+    editorTemplate -suppress "ghostRangeEnd";
+    editorTemplate -suppress "ghostDriver";
+    editorTemplate -suppress "renderType";
+    editorTemplate -suppress "renderVolume";
+    editorTemplate -suppress "visibleFraction";
+    editorTemplate -suppress "motionBlur";
+    editorTemplate -suppress "maxVisibilitySamplesOverride";
+    editorTemplate -suppress "maxVisibilitySamples";
+    editorTemplate -suppress "geometryAntialiasingOverride";
+    editorTemplate -suppress "antialiasingLevel";
+    editorTemplate -suppress "shadingSamplesOverride";
+    editorTemplate -suppress "shadingSamples";
+    editorTemplate -suppress "maxShadingSamples";
+    editorTemplate -suppress "volumeSamplesOverride";
+    editorTemplate -suppress "volumeSamples";
+    editorTemplate -suppress "depthJitter";
+    editorTemplate -suppress "ignoreSelfShadowing";
+    editorTemplate -suppress "referenceObject";
+    editorTemplate -suppress "compInstObjGroups";
+    editorTemplate -suppress "compInstObjGroups.compObjectGroups";
+    editorTemplate -suppress "compInstObjGroups.compObjectGroups.compObjectGrpCompList";
+    editorTemplate -suppress "compInstObjGroups.compObjectGroups.compObjectGroupId";
+    editorTemplate -suppress "tweak";
+    editorTemplate -suppress "relativeTweak";
+    editorTemplate -suppress "controlPoints";
+    editorTemplate -suppress "controlPoints.xValue";
+    editorTemplate -suppress "controlPoints.yValue";
+    editorTemplate -suppress "controlPoints.zValue";
+    editorTemplate -suppress "weights";
+    editorTemplate -suppress "tweakLocation";
+    editorTemplate -suppress "blindDataNodes";
+    editorTemplate -suppress "uvPivot";
+    editorTemplate -suppress "uvPivotX";
+    editorTemplate -suppress "uvPivotY";
+    editorTemplate -suppress "uvSet";
+    editorTemplate -suppress "uvSet.uvSetName";
+    editorTemplate -suppress "uvSet.uvSetPoints";
+    editorTemplate -suppress "uvSet.uvSetPoints.uvSetPointsU";
+    editorTemplate -suppress "uvSet.uvSetPoints.uvSetPointsV";
+    editorTemplate -suppress "uvSet.uvSetTweakLocation";
+    editorTemplate -suppress "currentUVSet";
+    editorTemplate -suppress "displayImmediate";
+    editorTemplate -suppress "displayColors";
+    editorTemplate -suppress "displayColorChannel";
+    editorTemplate -suppress "currentColorSet";
+    editorTemplate -suppress "colorSet";
+    editorTemplate -suppress "colorSet.colorName";
+    editorTemplate -suppress "colorSet.clamped";
+    editorTemplate -suppress "colorSet.representation";
+    editorTemplate -suppress "colorSet.colorSetPoints";
+    editorTemplate -suppress "colorSet.colorSetPoints.colorSetPointsR";
+    editorTemplate -suppress "colorSet.colorSetPoints.colorSetPointsG";
+    editorTemplate -suppress "colorSet.colorSetPoints.colorSetPointsB";
+    editorTemplate -suppress "colorSet.colorSetPoints.colorSetPointsA";
+    editorTemplate -suppress "ignoreHwShader";
+    editorTemplate -suppress "doubleSided";
+    editorTemplate -suppress "opposite";
+    editorTemplate -suppress "smoothShading";
+    editorTemplate -suppress "boundingBoxScale";
+    editorTemplate -suppress "boundingBoxScaleX";
+    editorTemplate -suppress "boundingBoxScaleY";
+    editorTemplate -suppress "boundingBoxScaleZ";
+    editorTemplate -suppress "featureDisplacement";
+    editorTemplate -suppress "initialSampleRate";
+    editorTemplate -suppress "extraSampleRate";
+    editorTemplate -suppress "textureThreshold";
+    editorTemplate -suppress "normalThreshold";
+    editorTemplate -suppress "displayHWEnvironment";
+    editorTemplate -suppress "collisionOffsetVelocityIncrement";
+    editorTemplate -suppress "collisionOffsetVelocityIncrement.collisionOffsetVelocityIncrement_Position";
+    editorTemplate -suppress "collisionOffsetVelocityIncrement.collisionOffsetVelocityIncrement_FloatValue";
+    editorTemplate -suppress "collisionOffsetVelocityIncrement.collisionOffsetVelocityIncrement_Interp";
+    editorTemplate -suppress "collisionDepthVelocityIncrement";
+    editorTemplate -suppress "collisionDepthVelocityIncrement.collisionDepthVelocityIncrement_Position";
+    editorTemplate -suppress "collisionDepthVelocityIncrement.collisionDepthVelocityIncrement_FloatValue";
+    editorTemplate -suppress "collisionDepthVelocityIncrement.collisionDepthVelocityIncrement_Interp";
+    editorTemplate -suppress "collisionOffsetVelocityMultiplier";
+    editorTemplate -suppress "collisionOffsetVelocityMultiplier.collisionOffsetVelocityMultiplier_Position";
+    editorTemplate -suppress "collisionOffsetVelocityMultiplier.collisionOffsetVelocityMultiplier_FloatValue";
+    editorTemplate -suppress "collisionOffsetVelocityMultiplier.collisionOffsetVelocityMultiplier_Interp";
+    editorTemplate -suppress "collisionDepthVelocityMultiplier";
+    editorTemplate -suppress "collisionDepthVelocityMultiplier.collisionDepthVelocityMultiplier_Position";
+    editorTemplate -suppress "collisionDepthVelocityMultiplier.collisionDepthVelocityMultiplier_FloatValue";
+    editorTemplate -suppress "collisionDepthVelocityMultiplier.collisionDepthVelocityMultiplier_Interp";
+    editorTemplate -suppress "time";
+    editorTemplate -suppress "shaders";
+
+    editorTemplate -addExtraControls;
+    editorTemplate -endScrollLayout;
+}
