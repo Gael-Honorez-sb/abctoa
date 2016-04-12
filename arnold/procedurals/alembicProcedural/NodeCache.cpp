@@ -119,7 +119,7 @@ const std::vector<CachedNodeFile>& FileCache::getCachedFile(const std::string& c
 	std::map<std::string, std::vector<CachedNodeFile>* >::iterator I = ArnoldFileCache.find(cacheId);
 	if (I != ArnoldFileCache.end())
 	{
-		std::map<std::string, AtNode* >::const_iterator J = ArnoldFileCacheProc.find(cacheId);
+		std::map<std::string, AtNode* >::iterator J = ArnoldFileCacheProc.find(cacheId);
 		if(J != ArnoldFileCacheProc.end() && AiNodeLookUpByName(AiNodeGetName(J->second)) != NULL)
 			return *I->second;
 		else
