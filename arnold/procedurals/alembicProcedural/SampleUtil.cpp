@@ -314,13 +314,14 @@ void ConcatenateXformSamples( ProcArgs &args,
     for (MatrixSampleMap::const_iterator I = parentSamples.begin();
             I != parentSamples.end(); ++I)
     {
-        unionOfSampleTimes.insert((*I).first);
+		// Clamping to float as we don't need float64_t precision and remove an issue where some caches generate slightly different values for the same sample.
+        unionOfSampleTimes.insert((float)(*I).first);
     }
 
     for (MatrixSampleMap::const_iterator I = localSamples.begin();
             I != localSamples.end(); ++I)
     {
-        unionOfSampleTimes.insert((*I).first);
+        unionOfSampleTimes.insert((float)(*I).first).second;
     }
 
     for (SampleTimeSet::iterator I = unionOfSampleTimes.begin();
