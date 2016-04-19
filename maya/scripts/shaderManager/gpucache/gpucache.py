@@ -19,6 +19,11 @@ import maya.cmds as cmds
 
 import pymel.core as pm
 
+from imath import *
+from alembic.Abc import *
+from alembic.AbcGeom import *
+from alembic.AbcCoreAbstract import *
+from alembic.AbcCollection import *
 
 class gpucache(object):
     def __init__(self, shape, parent=None):
@@ -26,6 +31,7 @@ class gpucache(object):
         self.shape = shape
         self.cache = None
         self.ABCcache = ""
+        self.archive = None
         self.assignations = cacheAssignations(self)
 
         self.curPath = ""
@@ -36,6 +42,81 @@ class gpucache(object):
         ''' check if this cache is still valid'''
         return cmds.objExists(self.shape)
 
+
+    def getNamedObj(self, iObjTop, objectPath=""):
+        nextChildHeader = iObjTop.getHeader()
+        nextParentObject = iObjTop
+
+        for childName in objectPath.split("/"):
+            if childName == "":
+                continue
+            nextChildHeader = nextParentObject.getChildHeader(str(childName))
+            if not nextChildHeader:
+                break
+            else:
+                nextParentObject = IObject( nextParentObject, str(childName))
+
+        if ( nextChildHeader ):
+            iObjTop = nextParentObject
+            return iObjTop
+
+        return None
+
+    def getHierarchy(self, objectPath="/"):
+        results = []
+        if self.archive:
+
+            archiveTop = self.archive.getTop()
+            iObj = self.getNamedObj(archiveTop, objectPath)
+            if iObj == None:
+                return None
+
+            if iObj:
+
+                for i in range(iObj.getNumChildren()):
+                    oType = "Unknown"
+                    child = iObj.getChild(i)
+                    if IXform.matches(child.getHeader()):
+                        oType = "Transform"
+                    elif IPoints.matches(child.getHeader()):
+                        oType = "Points"
+                    elif IPolyMesh.matches(child.getHeader()):
+                        oType = "Shape"
+                    elif ICurves.matches(child.getHeader()):
+                        oType = "Curves"
+                    elif ILight.matches(child.getHeader()):
+                        oType = "Light"
+                        light = ILight(child.getParent(), child.getName())
+                        ps = light.getSchema()
+                        arbGeomParams = ps.getArbGeomParams()
+                        lightTypeHeader = arbGeomParams.getPropertyHeader("light_type")
+                        if IInt32GeomParam.matches( lightTypeHeader ):
+                            param = IInt32GeomParam( arbGeomParams,  "light_type")
+                            if param.valid():
+                                if ( param.getScope() == GeometryScope.kConstantScope or param.getScope() == GeometryScope.kUnknownScope):
+                                    valueSample = param.getExpandedValue().getVals()
+                                    lightType = valueSample[0]
+                                    if lightType == 0:
+                                        oType = "DistantLight"
+                                    elif lightType == 1:
+                                        oType = "PointLight"
+                                    elif lightType == 2:
+                                        oType = "SpotLight"                                                                                
+                                    elif lightType == 3:
+                                        oType = "QuadLight"
+                                    elif lightType == 4:
+                                        oType = "PhotometricLight"
+                                    elif lightType == 5:
+                                        oType = "DiskLight"
+                                    elif lightType == 6:
+                                        oType = "CylinderLight"                                                                                
+                    elif ICollections.matches(child.getHeader()):
+                        oType = "Collections"
+                    
+                    results.append(dict(type=oType, name=child.getName()))
+                    
+
+        return results
 
     def getAbcShader(self):
         return cmds.getAttr(self.shape + ".abcShaders")
@@ -87,8 +168,11 @@ class gpucache(object):
 
     def updateCache(self):
         if self.isValid():
-            self.ABCcache =  cmds.getAttr("%s.cacheFileName" % self.shape)
-            self.ABCcurPath = cmds.getAttr("%s.cacheGeomPath" % self.shape)
+            self.ABCcache =  str(cmds.getAttr("%s.cacheFileName" % self.shape))
+            self.ABCcurPath = str(cmds.getAttr("%s.cacheGeomPath" % self.shape))
+            if self.ABCcache:
+                self.archive = IArchive(self.ABCcache)
+
 
     def updateTags(self):
         tags = cmds.ABCGetTags(self.ABCcache)

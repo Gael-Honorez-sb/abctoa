@@ -34,7 +34,6 @@ from propertywidgets import property_editorByType
 reload(property_editorByType)
 from propertywidgets.property_editorByType import PropertyEditor
 
-
 from ui import UI_ABCHierarchy
 reload(UI_ABCHierarchy)
 
@@ -531,9 +530,11 @@ class ShaderManager(QMainWindow, UI_ABCHierarchy.Ui_NAM):
 
     def clearing(self):
         self.clearCBs()
-
-        MMessage.removeCallback( self.afterNewSceneCBId )
-        MMessage.removeCallback( self.afterOpenSceneCBId )
+        try:
+            MMessage.removeCallback( self.afterNewSceneCBId )
+            MMessage.removeCallback( self.afterOpenSceneCBId )
+        except:
+            pass
 
 
     def setCurrentLayer(self):
@@ -874,10 +875,10 @@ class ShaderManager(QMainWindow, UI_ABCHierarchy.Ui_NAM):
             expandAll = True
 
         if item.hasChidren():
-            items = cmds.ABCHierarchy(item.cache.ABCcache, item.getPath().replace("/", "|"))
-            if items != None :
+            items = item.cache.getHierarchy(item.getPath())
+            if len(items) != 0 :
                 createdItems = self.createBranch(item, items)
-                if expandAll :
+                if expandAll:
                     for i in createdItems:
                         self.hierarchyWidget.expandItem(i)
                         self.expandItem(i)
@@ -894,8 +895,8 @@ class ShaderManager(QMainWindow, UI_ABCHierarchy.Ui_NAM):
         '''
         createdItems = []
         for item in abcchild :
-            itemType = item.partition(":")[0]
-            itemName = item.partition(":")[-1]
+            itemType = item["type"]
+            itemName = item["name"]
 
             itemExists = False
             for i in xrange(0, parentItem.childCount()) :
@@ -911,12 +912,13 @@ class ShaderManager(QMainWindow, UI_ABCHierarchy.Ui_NAM):
                 newItem.checkProperties(self.getLayer())
                
                 # check if the item has chidren, but go no further...
-                childsItems = cmds.ABCHierarchy(newItem.cache.ABCcache, newItem.getPath().replace("/", "|"))
+                childsItems = newItem.cache.getHierarchy(newItem.getPath())
                 if childsItems:
                     newItem.setChildIndicatorPolicy(QtGui.QTreeWidgetItem.ShowIndicator)
                     newItem.setHasChildren(True)
                 else:
                     newItem.setHasChildren(False)
+
 
                 parentItem.addChild(newItem)
 
@@ -931,7 +933,7 @@ class ShaderManager(QMainWindow, UI_ABCHierarchy.Ui_NAM):
     def populate(self) :
         for cache in self.ABCViewerNode.values():
             if cache.cache != "":
-                firstLevel = cmds.ABCHierarchy(cache.ABCcache)
+                firstLevel = cache.getHierarchy()
 
                 root = treeitem.abcTreeItem(cache, [], "Transform", self)
                 #root.setCheckState(0, QtCore.Qt.Unchecked)
@@ -1030,9 +1032,7 @@ class ShaderManager(QMainWindow, UI_ABCHierarchy.Ui_NAM):
             for shader in shaders:
                 for path in shader:
                     if path.startswith("/"):
-                        try:
-                            cmds.ABCHierarchy(self.ABCViewerNode[shape].getAbcPath(), path.replace("/", "|"))
-                        except:
+                        if self.ABCViewerNode[shape].getHierarchy(path) == None:
                             toRemove.append(path)
             
             for remove in toRemove:
