@@ -16,7 +16,6 @@ License along with this library.*/
 #include "alembicHolderOverride.h"
 #include "version.h"
 
-#include "cmds/ABCHierarchy.h"
 #include "cmds/ABCGetTags.h"
 #include "json/json.h"
 
@@ -75,12 +74,6 @@ MStatus initializePlugin( MObject obj )
 
     if (!status) {
         status.perror("registerNodeDrawOverride");
-        return status;
-    }
-
-    status = plugin.registerCommand( "ABCHierarchy", ABCHierarchy::creator);
-    if (!status) {
-        status.perror("registerCommand");
         return status;
     }
 
@@ -156,12 +149,6 @@ MStatus uninitializePlugin( MObject obj)
         return status;
     }
 
-
-    status = plugin.deregisterCommand( "ABCHierarchy" );
-    if (!status) {
-        status.perror("deregisterCommand");
-        return status;
-    }
     status = plugin.deregisterCommand( "ABCGetTags" );
     if (!status) {
         status.perror("deregisterCommand");
