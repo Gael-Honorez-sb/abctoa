@@ -34,6 +34,7 @@ TAG = 6
 POINTS = 7
 LIGHT = 8
 CURVES = 9
+COLLECTIONS = 10
 
 class abcTreeItem(QtGui.QTreeWidgetItem):
     def __init__(self, cache, path, itemType, parent=None, *args, **kwargs):
@@ -70,6 +71,8 @@ class abcTreeItem(QtGui.QTreeWidgetItem):
             self.icon = CURVES
         elif "Light" in itemType:
             self.icon = LIGHT
+        elif "Collections" in itemType:
+            self.icon = COLLECTIONS            
         else:
             self.icon = SHAPE
 
@@ -138,8 +141,6 @@ class abcTreeItem(QtGui.QTreeWidgetItem):
 
     def getPath(self):
         return "/" + "/".join(self.path)
-
-
 
     def assignShaderFromFile(self, shader):
         self.shaderToAssign = shader
