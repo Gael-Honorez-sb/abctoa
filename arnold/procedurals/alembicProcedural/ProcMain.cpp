@@ -56,6 +56,7 @@
 
 #include <Alembic/AbcCoreFactory/IFactory.h>
 #include <Alembic/AbcCoreOgawa/ReadWrite.h>
+#include <Alembic/AbcCollection/All.h>
 #include <Alembic/AbcGeom/Visibility.h>
 
 #include <boost/tokenizer.hpp>
@@ -227,6 +228,10 @@ void WalkObject( IObject & parent, const ObjectHeader &i_ohead, ProcArgs &args,
     {
         //don't complain about discovering a faceset upon traversal
     }
+	else if ( Alembic::AbcCollection::ICollections::matches( ohead ) )
+    {
+        // Collection are group of object.
+	}
     else
     {
 
@@ -746,7 +751,6 @@ int ProcInit( struct AtNode *node, void **user_ptr )
                 {
                     for ( size_t i = 0; i < root.getNumChildren(); ++i )
                     {
-                        std::vector<std::string> tags;
                         WalkObjectForInstancer( root, root.getChildHeader(i), *args,
                                     path.end(), path.end(), 0 );
                     }
@@ -914,7 +918,6 @@ int ProcInit( struct AtNode *node, void **user_ptr )
         {
             for ( size_t i = 0; i < root.getNumChildren(); ++i )
             {
-                std::vector<std::string> tags;
                 WalkObject( root, root.getChildHeader(i), *args,
                             path.end(), path.end(), 0 );
             }
@@ -927,7 +930,6 @@ int ProcInit( struct AtNode *node, void **user_ptr )
                     root.getChildHeader( *I );
             if ( nextChildHeader != NULL )
             {
-                std::vector<std::string> tags;
                 WalkObject( root, *nextChildHeader, *args, I+1,
                         path.end(), 0);
             }
