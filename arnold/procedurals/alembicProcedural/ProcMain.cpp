@@ -94,11 +94,12 @@ void WalkObject( IObject & parent, const ObjectHeader &i_ohead, ProcArgs &args,
              PathList::const_iterator I, PathList::const_iterator E,
                     MatrixSampleMap * xformSamples)
 {
-    IObject nextParentObject = parent.getChild(i_ohead.getName());
+    IObject nextParentObject;
+	
     std::auto_ptr<MatrixSampleMap> concatenatedXformSamples;
 
     // Check for instances
-    const ObjectHeader& ohead = parent.isChildInstance(i_ohead.getName()) ? nextParentObject.getHeader() : i_ohead;
+    const ObjectHeader& ohead = parent.isChildInstance(i_ohead.getName()) ? parent.getChild(i_ohead.getName()).getHeader() : i_ohead;
 
     if ( IXform::matches( ohead ) )
     {
@@ -110,7 +111,8 @@ void WalkObject( IObject & parent, const ObjectHeader &i_ohead, ProcArgs &args,
         // also check visibility flags
 
         if (isVisible(child, xs, &args) == false)
-        {}
+        {
+		}
         else if ( args.excludeXform )
         {
             nextParentObject = child;
@@ -239,8 +241,6 @@ void WalkObject( IObject & parent, const ObjectHeader &i_ohead, ProcArgs &args,
 
     if ( nextParentObject.valid() )
     {
-        //std::cerr << nextParentObject.getFullName() << std::endl;
-
         if ( I == E )
         {
             for ( size_t i = 0; i < nextParentObject.getNumChildren() ; ++i )
