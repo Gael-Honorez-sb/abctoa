@@ -1,6 +1,7 @@
 
 #include "parseAttributes.h"
 #include "abcshaderutils.h"
+#include "PathUtil.h"
 
 #include <pystring.h>
 #include <boost/regex.hpp>
@@ -182,7 +183,7 @@ bool isVisible(IObject child, IXformSchema xs, ProcArgs* args)
 bool isVisibleForArnold(IObject child, ProcArgs* args)
 {
     AtUInt16 minVis = AI_RAY_ALL & ~(AI_RAY_GLOSSY|AI_RAY_DIFFUSE|AI_RAY_REFRACTED|AI_RAY_REFLECTED|AI_RAY_SHADOW|AI_RAY_CAMERA);
-    std::string name = args->nameprefix + child.getFullName();
+    std::string name = child.getFullName();
 
     if(args->linkAttributes)
     {
@@ -190,9 +191,10 @@ bool isVisibleForArnold(IObject child, ProcArgs* args)
         {
                 Json::Value attributes;
                 if(it->find("/") != string::npos)
-                    if(name.find(*it) != string::npos)
+                    if(isPathContainsInOtherPath(name, *it))
+					{
                         attributes = args->attributesRoot[*it];
-
+					}
 
                 if(attributes.size() > 0)
                 {
@@ -213,7 +215,6 @@ bool isVisibleForArnold(IObject child, ProcArgs* args)
                         }
 
                     }
-
                 }
         }
     }
