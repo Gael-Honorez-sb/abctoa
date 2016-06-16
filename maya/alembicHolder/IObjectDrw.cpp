@@ -123,7 +123,10 @@ IObjectDrw::IObjectDrw( IObject &iObj, bool iResetIfNoChildren, std::vector<std:
         size_t numChildren = m_object.getNumChildren();
         for ( size_t i = 0; i < numChildren; ++i )
         {
-            const ObjectHeader &ohead = m_object.getChildHeader( i );
+
+			
+			const ObjectHeader& ohead = m_object.isChildInstance(i) ? m_object.getChild(i).getHeader() : m_object.getChildHeader( i );
+
             // Decide what to make.
             DrawablePtr dptr;
             if ( IPolyMesh::matches( ohead ) )
