@@ -40,6 +40,7 @@
 //#include "Foundation.h"
 #include "Drawable.h"
 #include <maya/MAnimControl.h>
+#include "cmds/ArchiveHelper.h"
 
 namespace AlembicHolder {
 

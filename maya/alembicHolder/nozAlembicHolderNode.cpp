@@ -655,7 +655,7 @@ MStatus nozAlembicHolder::compute( const MPlug& plug, MDataBlock& block )
 
 	}
 
-    if (plug == aUpdateCache)
+	else if (plug == aUpdateCache)
     {
         MStatus status;
         MFnDagNode fn(thisMObject());
