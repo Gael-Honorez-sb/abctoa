@@ -169,7 +169,7 @@ void Scene::draw( SceneState &s_state, std::string selection, chrono_t iSeconds,
     dctx.setSelection(selection);
     dctx.setShaderColors(m_params->shaderColors);
     dctx.setNormalFlipped(flippedNormal);
-
+	dctx.setParams(m_params);
 	m_drawable->draw( dctx );
 
 }

@@ -191,6 +191,9 @@ void ICurvesDrw::draw( const DrawContext &iCtx )
         return;
     }
 
+	holderPrms* params = iCtx.getParams();
+	if(!isVisibleForArnold(m_curves, m_currentTime, params))
+		return;
 
     if(iCtx.getSelection() != "")
     {
