@@ -151,6 +151,7 @@ public:
 
 protected:
     int dUpdate;
+	int dUpdateA;
 
 };
 // UI class    - defines the UI part of a shape node
