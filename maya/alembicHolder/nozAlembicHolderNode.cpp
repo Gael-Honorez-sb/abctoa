@@ -451,6 +451,23 @@ MStatus nozAlembicHolder::initialize() {
     addAttribute(aShaderPath);
     addAttribute(aTime);
     addAttribute(aTimeOffset);
+	
+	addAttribute(aJsonFile);
+	addAttribute(aJsonFileSecondary);
+	addAttribute(aShadersNamespace);
+	addAttribute(aAbcShaders);
+	addAttribute(aUvsArchive);
+	addAttribute(aShadersAssignation);
+	addAttribute(aAttributes);
+	addAttribute(aDisplacementsAssignation);
+	addAttribute(aLayersOverride);
+	addAttribute(aSkipJsonFile);
+	addAttribute(aSkipShaders);
+	addAttribute(aSkipAttributes);
+	addAttribute(aSkipLayers);
+	addAttribute(aSkipDisplacements);
+	
+	addAttribute(aUpdateAssign);
     addAttribute(aUpdateCache);
     addAttribute(aBoundMin);
     addAttribute(aBoundMax);
@@ -648,10 +665,18 @@ MStatus nozAlembicHolder::compute( const MPlug& plug, MDataBlock& block )
 			{
 				std::string path = itr.key().asString();
 				fGeometry.m_params->attributes.push_back(path);
-
 			}
+			
 			std::sort(fGeometry.m_params->attributes.begin(), fGeometry.m_params->attributes.end());
+			
 		}
+		else
+		{
+			fGeometry.m_params->linkAttributes = false;
+		}
+
+		fGeometry.m_abcdirty = true;
+		block.outputValue(aForceReload).setBool(false);
 
 	}
 
@@ -766,10 +791,16 @@ MStatus nozAlembicHolder::compute( const MPlug& plug, MDataBlock& block )
 bool nozAlembicHolder::GetPlugData()
 {
     int update = 0;
+	int updateA = 0;
     MPlug updatePlug(thisMObject(), aUpdateCache );
+	MPlug updateAssign(thisMObject(), aUpdateAssign );
     updatePlug.getValue( update );
-    if (update != dUpdate)
+	updateAssign.getValue( updateA );
+	
+
+    if (update != dUpdate || updateA != dUpdateA)
     {
+		dUpdateA = updateA;
         dUpdate = update;
         return true;
     }

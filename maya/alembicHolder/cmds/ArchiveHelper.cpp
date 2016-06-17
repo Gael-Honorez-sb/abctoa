@@ -90,9 +90,9 @@ bool isVisible(IObject child, IXformSchema xs, chrono_t currentTime, holderPrms 
     return true;
 }
 
-bool isVisible(IObject child, chrono_t currentTime, holderPrms* params)
+bool isVisible(IObject child, chrono_t currentTime, holderPrms* params, bool currentlyVisible)
 {
-    if(GetVisibility( child, ISampleSelector( currentTime ) ) == kVisibilityHidden)
+    if(GetVisibility( child, ISampleSelector( currentTime ) ) == kVisibilityHidden || currentlyVisible==false)
     {
         // check if the object is not forced to be visible
         std::string name = child.getFullName();
@@ -132,10 +132,11 @@ bool isVisible(IObject child, chrono_t currentTime, holderPrms* params)
     return true;
 }
 
-bool isVisibleForArnold(IObject child, chrono_t currentTime, holderPrms* params)
+bool isVisibleForArnold(IObject child, chrono_t currentTime, holderPrms* params, bool currentlyVisible)
 {
-    if (!isVisible(child, currentTime, params))
+    if (!isVisible(child, currentTime, params, currentlyVisible))
         return false;
+
     unsigned short minVis = AI_RAY_ALL & ~(AI_RAY_GLOSSY|AI_RAY_DIFFUSE|AI_RAY_REFRACTED|AI_RAY_REFLECTED|AI_RAY_SHADOW|AI_RAY_CAMERA);
     std::string name = child.getFullName();
 

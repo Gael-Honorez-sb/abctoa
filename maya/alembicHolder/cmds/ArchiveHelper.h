@@ -40,8 +40,8 @@ using namespace Alembic::AbcGeom;
 
 
 bool isVisible(IObject child, IXformSchema xs, chrono_t currentTime, holderPrms *params);
-bool isVisible(IObject child, chrono_t currentTime, holderPrms* params);
-bool isVisibleForArnold(IObject child, chrono_t currentTime, holderPrms* params);
+bool isVisible(IObject child, chrono_t currentTime, holderPrms* params, bool currentlyVisible);
+bool isVisibleForArnold(IObject child, chrono_t currentTime, holderPrms* params, bool currentlyVisible = true);
 
 
 

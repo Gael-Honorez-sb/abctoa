@@ -255,7 +255,7 @@ void IPolyMeshDrw::draw( const DrawContext &iCtx )
 
 
 	holderPrms* params = iCtx.getParams();
-	if(!isVisibleForArnold(m_polyMesh, m_currentTime, params))
+	if(!isVisibleForArnold(m_polyMesh, m_currentTime, params, m_visible))
 		return;
 
     if(iCtx.getSelection() != "")
