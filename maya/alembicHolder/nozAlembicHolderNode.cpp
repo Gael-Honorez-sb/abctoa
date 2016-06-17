@@ -656,15 +656,33 @@ MStatus nozAlembicHolder::compute( const MPlug& plug, MDataBlock& block )
 					OverrideProperties(jrootattributes, jrootLayers[layerName]["properties"]);
 			}
 		}
+		
+		fGeometry.m_params->attributes.clear();
 
 		if( jrootattributes.size() > 0 )
 		{
+			bool addtoPath = false;
 			fGeometry.m_params->linkAttributes = true;
 			fGeometry.m_params->attributesRoot = jrootattributes;
 			for( Json::ValueIterator itr = jrootattributes.begin() ; itr != jrootattributes.end() ; itr++ )
 			{
+				addtoPath = false;
+
 				std::string path = itr.key().asString();
-				fGeometry.m_params->attributes.push_back(path);
+
+				Json::Value attributes = jrootattributes[path];
+				for( Json::ValueIterator itr = attributes.begin() ; itr != attributes.end() ; itr++ )
+				{
+					std::string attribute = itr.key().asString();
+                    if (attribute == "forceVisible" || attribute == "visibility")
+					{
+						addtoPath = true;
+						break;
+					}
+				}
+				if(addtoPath)
+					fGeometry.m_params->attributes.push_back(path);
+
 			}
 			
 			std::sort(fGeometry.m_params->attributes.begin(), fGeometry.m_params->attributes.end());
