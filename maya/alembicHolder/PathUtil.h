@@ -41,7 +41,7 @@
 #include <json/json.h>
 
 typedef std::vector<std::string> PathList;
-
+bool isPathContainsInOtherPath(const std::string &path, const std::string &otherPath );
 void TokenizePath( const std::string &path, PathList &result );
 bool pathInJsonString(const std::string &path, const std::string &jsonString );
 std::string replace_all(const std::string &str, const char *from, const char *to);

@@ -292,7 +292,7 @@ void AlembicHolderOverride::draw(const MHWRender::MDrawContext& context, const M
                 glColor3fv(data->fWireframeColor);
                 glPolygonMode(GL_FRONT_AND_BACK, MGL_LINE);
                 if (cache->abcSceneManager.hasKey(cache->m_currscenekey))
-					cache->abcSceneManager.getScene(cache->m_currscenekey)->draw(cache->abcSceneState, cache->m_currselectionkey, cache->time);
+					cache->abcSceneManager.getScene(cache->m_currscenekey)->draw(cache->abcSceneState, cache->m_currselectionkey, cache->time, cache->m_params);
 
                 glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
             }
@@ -318,11 +318,11 @@ void AlembicHolderOverride::draw(const MHWRender::MDrawContext& context, const M
             glEnable(MGL_CULL_FACE);
             glCullFace(MGL_FRONT);
             if (cache->abcSceneManager.hasKey(cache->m_currscenekey))
-				 cache->abcSceneManager.getScene(cache->m_currscenekey)->draw(cache->abcSceneState, cache->m_currselectionkey, cache->time, cache->shaderColors, true);
+				 cache->abcSceneManager.getScene(cache->m_currscenekey)->draw(cache->abcSceneState, cache->m_currselectionkey, cache->time, cache->m_params, true);
 
             glCullFace(MGL_BACK);
             if (cache->abcSceneManager.hasKey(cache->m_currscenekey))
-				cache->abcSceneManager.getScene(cache->m_currscenekey)->draw(cache->abcSceneState, cache->m_currselectionkey, cache->time, cache->shaderColors, false);
+				cache->abcSceneManager.getScene(cache->m_currscenekey)->draw(cache->abcSceneState, cache->m_currselectionkey, cache->time, cache->m_params, false);
 
             glDisable(MGL_CULL_FACE);
 

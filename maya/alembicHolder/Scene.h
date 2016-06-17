@@ -40,6 +40,7 @@
 #include "Foundation.h"
 //#include "GLCamera.h"
 #include "Drawable.h"
+#include "parseJson.h"
 
 #include <maya/MAnimControl.h>
 
@@ -88,7 +89,7 @@ public:
 
     //! This draws, assuming a camera matrix has already been set.
     //! ...
-    void draw( SceneState &s_state, std::string selection, double time, std::map<std::string, MColor> shaderColors = std::map<std::string, MColor>(), bool flippedNormal = false);
+    void draw( SceneState &s_state, std::string selection, double time, holderPrms *m_params, bool flippedNormal = false);
 
     void setSelectionPath( std::string selectionPath );
 

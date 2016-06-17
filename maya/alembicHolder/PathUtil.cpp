@@ -41,6 +41,29 @@
 
 //-*****************************************************************************
 
+bool isPathContainsInOtherPath(const std::string &path, const std::string &otherPath )
+{
+    std::vector<std::string> pathParts;
+    std::vector<std::string> jsonPathParts;
+
+    TokenizePath(path, pathParts);
+    TokenizePath(otherPath, jsonPathParts);
+
+    if(jsonPathParts.size() > pathParts.size())
+        return false;
+
+    bool validPath = true;
+    for(int i = 0; i < jsonPathParts.size(); i++)
+    {
+        if(pathParts[i].compare(jsonPathParts[i]) != 0)
+            validPath = false;
+    }
+    if(validPath)
+        return validPath;
+
+    return false;
+}
+
 bool pathInJsonString(const std::string &path, const std::string &jsonString )
 {
     std::vector<std::string> pathParts;
