@@ -45,7 +45,6 @@ def importMaterials(jsonfile):
         name =str(mat["name"])
         
         groupNode = NodegraphAPI.CreateNode('Group', root)
-        print groupNode
         groupNode.setName(name)
         groupNode.addOutputPort("out")
 
@@ -117,9 +116,20 @@ def importMaterials(jsonfile):
                         paramKValue.getChildByIndex(1).setValue(str(paramValue[1]),0)
                         paramKValue.getChildByIndex(2).setValue(str(paramValue[2]),0)
                 elif paramType == "stringArray":
-                    for i in range(paramKValue.getNumChildren()):
-                        print paramKValue.getChildByIndex(i).getValue(0)
-                        print "not the same str array"
+                    paramKEnable.setValue(1,0)
+                    for i in range(len(paramValue)):
+                        paramKValue.getChildByIndex(i).setValue(str(paramValue[i]),0)
+
+                elif paramType == "intArray":
+                    paramKEnable.setValue(1,0)
+                    for i in range(len(paramValue)):
+                        paramKValue.getChildByIndex(i).setValue(str(paramValue[i]),0)
+
+                elif paramType == "floatArray":
+                    paramKEnable.setValue(1,0)
+                    for i in range(len(paramValue)):
+                        paramKValue.getChildByIndex(i).setValue(str(paramValue[i]),0)
+
                 else: 
                     valueInK = paramKValue.getValue(0)
                     if paramValue != valueInK:
@@ -164,7 +174,7 @@ def importMaterials(jsonfile):
         networkMaterialNode.addInputPort('arnoldSurface')
         networkMaterialNode.getInputPort('arnoldSurface').connect(createdNodes[terminalNodeName].getOutputPort('out'))
         networkMaterialNode.getParameter('name').setValue(str(name), 0)
-        networkMaterialNode.getParameter('namespace').setValue(str(os.path.basename(rootf)), 0)
+        networkMaterialNode.getParameter('namespace').setValue(str(os.path.basename(rootf).replace("-", "_")), 0)
 
         networkMaterialNode.getOutputPort('out').connect(groupNode.getReturnPort('out'))
 
@@ -177,7 +187,8 @@ def importMaterials(jsonfile):
             if not hintsParam:
                 param.createChildString('hints', '')
                 hintsParam = param.getChild('hints')
-            hints = dict(dstName = map["interfaceName"])
+            page, name = map["interfaceName"].split(":")
+            hints = dict(dstName = str(page) + "_" + str(name), dstPage = str(page))
             hintsParam.setValue(repr(hints), 0)
             
 
@@ -186,4 +197,4 @@ def importMaterials(jsonfile):
     NodegraphAPI.SetNodePosition(mergeNode, ((xPosGroup-xPosGroupOffset) / 2, -500))
     mergeNode.getOutputPort('out').connect(LookFileMaterialsOut.getInputPort('in'))
     NodegraphAPI.SetNodePosition(LookFileMaterialsOut, ((xPosGroup-xPosGroupOffset) / 2, -600))
-        
+    

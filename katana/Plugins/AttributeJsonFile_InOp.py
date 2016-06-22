@@ -96,11 +96,17 @@ def registerJsonFile_In():
 
     nodeBuilder.setParametersTemplateAttr( paramGb.build() )
 
-    nodeBuilder.setHintsForNode( { 'help' : 'Create an Arnold volume node suitable for OpenVDB density grids' } )
+
+    nodeBuilder.setHintsForNode( { 'help' : 'Read a Json file and assign Arnold attributes accordingly.' } )
+
+    nodeBuilder.setHintsForParameter( "filepath",
+                                      { 'widget' : 'fileInput',
+                                        'help' : "Path to the JSON file" } )
     
     nodeBuilder.setHintsForParameter( "assetLocation",
                                       { 'widget' : 'scenegraphLocation',
                                         'help' : "Locations of geometry, material, or network material" } )
+
 
     # Register our Op build function
     nodeBuilder.setBuildOpChainFnc( buildOpChain )
