@@ -74,6 +74,14 @@ def bakeMaterials(alembicFile, jsonfile):
                     param["val"]=[]
                     for v in val:
                         param["val"].append(v)
+                elif type(val) == imath.FloatArray: 
+                    param["type"] = "floatArray"
+                    param["val"]=[]
+                    for v in val:
+                        param["val"].append(v)
+                elif type(val) == imath.IntArray: 
+                    param["type"] = "intArray"
+                    param["val"]=[]                        
                 elif type(val) == str: 
                     param["type"] = "string"                
                 elif type(val) == bool: 
