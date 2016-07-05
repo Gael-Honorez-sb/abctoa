@@ -49,8 +49,6 @@ int DJB2Hash(unsigned char *str)
     return hashUnion.hashInt;
 }
 
-class CExtensionAttrHelper;
-
 AtNode*  CABCViewerTranslator::CreateArnoldNodes()
 {
     return AddArnoldNode("procedural");
@@ -108,7 +106,7 @@ void CABCViewerTranslator::Update(AtNode* procedural)
 }
 
 
-AtNode* CABCViewerTranslator::ExportProcedural(AtNode* procedural, bool update)
+void CABCViewerTranslator::ExportProcedural(AtNode* procedural, bool update)
 {
 	MStatus stat;
     m_DagNode.setObject(m_dagPath.node());
@@ -321,8 +319,6 @@ AtNode* CABCViewerTranslator::ExportProcedural(AtNode* procedural, bool update)
 		AiNodeSetBool(procedural, "allow_updates", true); // do we need a security valve here ? like a new parameter to control that ?
 		*/
     }
-    return procedural;
-
 }
 
 
@@ -361,8 +357,11 @@ void CABCViewerTranslator::ExportStandinsShaders(AtNode* procedural)
     }
 }
 
-void CABCViewerTranslator::UpdateMotion(AtNode* anode, unsigned int step)
+void CABCViewerTranslator::ExportMotion(AtNode* anode, unsigned int step)
 {
+   // Check if motionblur is enabled and early out if it's not.
+   if (!IsMotionBlurEnabled()) return;
+
     ExportMatrix(anode, step);
 }
 
