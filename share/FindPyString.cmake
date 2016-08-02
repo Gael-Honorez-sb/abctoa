@@ -13,6 +13,11 @@
 
 message("-- Searching PyString libraries.......")
 
+IF(NOT PYSTRING_DIR AND NOT $ENV{PYSTRING_DIR} STREQUAL "")
+  SET(PYSTRING_DIR $ENV{PYSTRING_DIR})
+ENDIF()
+
+
 set(LIBRARY_PATHS 
 	/usr/lib
 	/usr/local/lib

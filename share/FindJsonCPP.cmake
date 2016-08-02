@@ -16,6 +16,11 @@
 # 2011 Philippe Crassous (ENSAM ParisTech / Institut Image) p.crassous _at_ free.fr
 
 
+IF(NOT JSONCPP_ROOT_DIR AND NOT $ENV{JSONCPP_ROOT_DIR} STREQUAL "")
+  SET(JSONCPP_ROOT_DIR $ENV{JSONCPP_ROOT_DIR})
+ENDIF()
+
+
 set(JSONCPP_ROOT_DIR
 	"${JSONCPP_ROOT_DIR}"
 	CACHE
@@ -58,7 +63,12 @@ elseif(MSVC)
 		list(APPEND _jsoncppnames json_vc9_libmt)
 	elseif(MSVC_VERSION EQUAL 1600)
 		list(APPEND _jsoncppnames json_vc10_libmt)
+	elseif(MSVC_VERSION EQUAL 1700)
+		list(APPEND _jsoncppnames json_vc11_libmt)
+	elseif(MSVC_VERSION EQUAL 1800)
+		list(APPEND _jsoncppnames json_vc12_libmt)		
 	endif()
+	
 else()
 	list(APPEND _jsoncppnames
 		json_suncc_libmt
