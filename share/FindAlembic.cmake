@@ -46,6 +46,10 @@
 
 message("-- Searching Alembic libraries.......")
 
+IF(NOT ALEMBIC_DIR AND NOT $ENV{ALEMBIC_DIR} STREQUAL "")
+  SET(ALEMBIC_DIR $ENV{ALEMBIC_DIR})
+ENDIF()
+
 macro(ALEMBIC_SET_PROPERTIES target)
 	
 	if(ALEMBIC_SHARED_LIBS)
