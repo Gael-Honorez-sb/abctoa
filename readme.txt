@@ -35,6 +35,7 @@ Contributors (in alphabetical order)
 -------------------------------------
 Kjelle Apers
 Chad Dombrova
+Pal Mezei
 
 Thanks to all testers for their feedback and bug reports !
 

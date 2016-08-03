@@ -82,6 +82,10 @@ if platform.system() == "Darwin":
 elif platform.system() == "Windows":
     # Windows
     createBinaryDistribution(name_win, droot)
+    serverPath = "//server01/shared/Dev/AbcToA_Builds"
+    if os.path.exists(serverPath):
+        shutil.copyfile(os.path.join('%s.zip' % name_win), serverPath)
+
 elif platform.system() == "Linux":
     # Linux
     createBinaryDistribution(name_linux, droot)

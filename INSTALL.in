@@ -1,9 +1,12 @@
+REQUIREMENTS
+-------------
+
+- Maya @MAYA_VERSION@
+- MtoA @MTOA_VERSION@
+
 BINARY DISTRIBUTION
 -------------------
 The distribution package is a Maya module folder.
-
-- You need PySide for your Maya version ( ie. http://3devartist.blogspot.com.tr/2012/11/pyside-113-for-autodesk-maya-2013-x64.html )
-- You also need MtoA > 1.1.2.0 ( http://www.solidangle.com )
 
 Unzip the 'modules" in any directory inside the MAYA_MODULE_PATH environment variable.
 
