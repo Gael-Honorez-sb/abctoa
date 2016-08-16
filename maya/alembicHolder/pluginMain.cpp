@@ -37,17 +37,14 @@ License along with this library.*/
 MString    drawDbClassification("drawdb/geometry/alembicHolder");
 MString    drawRegistrantId("alembicHolder");
 
-#ifdef WIN32
-#define EXTERN_DECL __declspec( dllexport )
-#else
-#define EXTERN_DECL extern
+#ifdef _WIN32
+#define DLLEXPORT __declspec(dllexport)
+#else 
+#undef DLLEXPORT
+#define DLLEXPORT __attribute__ ((visibility("default")))
 #endif
 
-EXTERN_DECL MStatus initializePlugin( MObject obj );
-EXTERN_DECL MStatus uninitializePlugin( MObject obj );
-
-
-MStatus initializePlugin( MObject obj )
+DLLEXPORT MStatus initializePlugin( MObject obj )
 {
     MStatus   status;
     MFnPlugin plugin( obj, HOLDER_VENDOR, ARCH_VERSION, H_TOSTRING(MAYA_VERSION));
@@ -130,7 +127,7 @@ MStatus initializePlugin( MObject obj )
     return status;
 }
 
-MStatus uninitializePlugin( MObject obj)
+DLLEXPORT MStatus uninitializePlugin( MObject obj)
 {
     MStatus   status;
     MFnPlugin plugin( obj );

@@ -1,15 +1,32 @@
-set(ARNOLD_VERSION 4.2.2.0)
-set(MTOA_VERSION 1.1.2.0)
-set(ARNOLD_BASE_DIR c:/solidangle/Arnold-${ARNOLD_VERSION})
-set(MTOA_BASE_DIR c:/solidangle/mtoadeploy/2013)
-set(ENV{MAYA_VERSION} 2013)
-set(MAYA_LOCATION "c:/Program Files/Autodesk/Maya2013")
-set(ALEMBIC_DIR z:/Dev/Alembic1.5.4)
-set(HDF5_USE_STATIC_LIBRARIES 1)
-set(HDF5_ROOT z:/Dev/Alembic/forCompile/HDF5/1.8.9)
-set(SZIP z:/Dev/Alembic/forCompile/HDF5/1.8.9)
-set(JSONCPP_ROOT_DIR z:/Dev/jsoncpp)
-set(PYSTRING_DIR z:/Dev/PyString)
-set(Boost_INCLUDE_DIRS z:/Dev/Boost/1_55_0)
-set(ZLIB_ROOT z:/Dev/Alembic/forCompile/zlib)
-set(INSTALL_ROOT z:/deploy/modules)
+set(INSTALL_ROOT F:/Apps/abcToArnold/maya2015_mtoa1.2.7.3/modules)
+
+set(ARNOLD_INCLUDE_DIR F:/development/arnold/mtoa_1.2.7.3/Arnold-4.2.13.4-windows/include)
+set(ARNOLD_LIBRARY F:/development/arnold/mtoa_1.2.7.3/Arnold-4.2.13.4-windows/lib)
+
+set(MTOA_INCLUDE_DIR F:/solidangle/mtoadeploy/2015/include)
+set(MTOA_LIBRARY F:/solidangle/mtoadeploy/2015/lib)
+
+set(MAYA_VERSION 2015)
+set(MAYA_INCLUDE_DIR F:/Apps/Autodesk/Maya2015/include)
+set(MAYA_LIBRARY F:/Apps/Autodesk/Maya2015/lib)
+
+set(ALEMBIC_INCLUDE_DIR F:/development/thirdparty_libs/alembic/install/include)
+set(ALEMBIC_LIBRARY F:/development/thirdparty_libs/alembic/install/lib/Release/win64)
+
+#set(HDF5_INCLUDE_DIR F:/development/thirdparty_libs/hdf5/install/include/win64)
+#set(HDF5_LIBRARY F:/development/thirdparty_libs/hdf5/install/lib/Release/win64)
+
+set(ILMBASE_INCLUDE_DIR F:/development/thirdparty_libs/ilmbase/install/include)
+set(ILMBASE_LIBRARY F:/development/thirdparty_libs/ilmbase/install/lib/Release/win64)
+
+#set(ZLIB_INCLUDE_DIR F:/development/thirdparty_libs/zlib/install/include)
+#set(ZLIB_LIBRARY F:/development/thirdparty_libs/zlib/install/lib/Release/win64)
+
+set(BOOST_ROOT F:/development/thirdparty_libs/boost/boost_1_59_0)
+set(BOOST_LIBRARYDIR F:/development/thirdparty_libs/boost/boost_1_59_0/stage/win64)
+
+set(JSONCPP_INCLUDE_DIR F:/development/external/abctoarnoldorig/abctoarnold/contrib/install/include)
+set(JSONCPP_LIBRARY F:/development/external/abctoarnoldorig/abctoarnold/contrib/install/lib/Release/win64)
+
+set(PYSTRING_INCLUDE_DIR F:/development/external/abctoarnoldorig/abctoarnold/contrib/install/include)
+set(PYSTRING_LIBRARY F:/development/external/abctoarnoldorig/abctoarnold/contrib/install/lib/Release/win64)
