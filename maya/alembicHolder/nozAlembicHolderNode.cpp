@@ -42,6 +42,7 @@ License along with this library.*/
 #include <maya/MHWGeometryUtilities.h>
 #include <maya/MFnMessageAttribute.h>
 #include <maya/MFileObject.h>
+#include <maya/MObjectArray.h>
 
 #include <stdio.h>
 #include <map>
@@ -338,20 +339,36 @@ MStatus nozAlembicHolder::initialize() {
     addAttribute(aBoundMin);
     addAttribute(aBoundMax);
 
-    attributeAffects ( aForceReload, aUpdateCache );
-    attributeAffects ( aBoundingExtended, aUpdateCache );
-    attributeAffects ( aAbcFile, aUpdateCache );
-    attributeAffects ( aObjectPath, aUpdateCache );
-    attributeAffects ( aSelectionPath, aUpdateCache );
-    attributeAffects ( aTime, aUpdateCache );
-    attributeAffects ( aTimeOffset, aUpdateCache );
-
-    attributeAffects ( aUpdateCache, aBoundMin );
-    attributeAffects ( aUpdateCache, aBoundMax );
-
-
     return MS::kSuccess;
 
+}
+
+MStatus nozAlembicHolder::setDependentsDirty(const MPlug& plug, MPlugArray& plugArray)
+{
+    if (plug != aForceReload && plug != aBoundingExtended && plug != aAbcFile && plug != aObjectPath
+        && plug != aSelectionPath && plug != aTime && plug != aTimeOffset && plug != aUpdateCache)
+        return MPxNode::setDependentsDirty(plug, plugArray);
+
+    if ((plug == aTime || plug == aTimeOffset) && isConstant)
+        return MPxNode::setDependentsDirty(plug, plugArray);
+
+    if (plug == aUpdateCache)
+    {
+        MObjectArray objArray;
+        objArray.append(aBoundMin);
+        objArray.append(aBoundMax);
+        for (unsigned i(0), numObjects = objArray.length(); i < numObjects; i++)
+        {
+            MPlug plug(thisMObject(), objArray[i]);
+            plugArray.append(plug);
+        }
+    }
+    else
+    {
+        MPlug plug(thisMObject(), aUpdateCache);
+        plugArray.append(plug);
+    }
+    return MPxNode::setDependentsDirty(plug, plugArray);
 }
 
 std::string nozAlembicHolder::getSelectionKey() const {
@@ -379,8 +396,7 @@ std::string nozAlembicHolder::getSceneKey() const {
     return std::string((abcfile + "|" + objectPath).asChar());
 }
 
-
-MStatus nozAlembicHolder::compute( const MPlug& plug, MDataBlock& block )
+MStatus nozAlembicHolder::compute(const MPlug& plug, MDataBlock& block)
 {
     if (plug == aUpdateCache)
     {
@@ -471,9 +487,9 @@ MStatus nozAlembicHolder::compute( const MPlug& plug, MDataBlock& block )
                 MHWRender::MRenderer::setGeometryDrawDirty(thisMObject());
 
             }
-
-
             fGeometry.m_abcdirty = true;
+            if(fGeometry.abcSceneManager.hasKey(fGeometry.m_currscenekey))
+                isConstant = fGeometry.abcSceneManager.getScene(fGeometry.m_currscenekey)->isConstant();
 
         }
 

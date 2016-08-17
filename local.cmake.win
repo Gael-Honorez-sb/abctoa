@@ -25,8 +25,8 @@ set(ILMBASE_LIBRARY F:/development/thirdparty_libs/ilmbase/install/lib/Release/w
 set(BOOST_ROOT F:/development/thirdparty_libs/boost/boost_1_59_0)
 set(BOOST_LIBRARYDIR F:/development/thirdparty_libs/boost/boost_1_59_0/stage/win64)
 
-set(JSONCPP_INCLUDE_DIR F:/development/external/abctoarnoldorig/abctoarnold/contrib/install/include)
-set(JSONCPP_LIBRARY F:/development/external/abctoarnoldorig/abctoarnold/contrib/install/lib/Release/win64)
+set(JSONCPP_INCLUDE_DIR F:/development/external/abctoarnold/contrib/install/include)
+set(JSONCPP_LIBRARY F:/development/external/abctoarnold/contrib/install/lib/Release/win64)
 
-set(PYSTRING_INCLUDE_DIR F:/development/external/abctoarnoldorig/abctoarnold/contrib/install/include)
-set(PYSTRING_LIBRARY F:/development/external/abctoarnoldorig/abctoarnold/contrib/install/lib/Release/win64)
+set(PYSTRING_INCLUDE_DIR F:/development/external/abctoarnold/contrib/install/include)
+set(PYSTRING_LIBRARY F:/development/external/abctoarnold/contrib/install/lib/Release/win64)
