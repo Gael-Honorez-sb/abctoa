@@ -91,7 +91,7 @@ public:
     virtual bool isBounded() const;
     virtual MBoundingBox boundingBox()const ;
     bool GetPlugData();
-
+    MStatus setDependentsDirty(MPlug const & inPlug, MPlugArray  & affectedPlugs);
 
     virtual void copyInternalData( MPxNode* srcNode );
 
@@ -124,6 +124,7 @@ private:
     static    MObject    aUpdateCache;
     static    MObject    aBoundMin;
     static    MObject    aBoundMax;
+    bool isConstant;
 
 public:
     static  MTypeId     id;
