@@ -20,7 +20,7 @@ class SceneManager
     public:
         void addScene(std::string abcFile, std::string objectPath) {
             std::fstream file;
-            file.open(abcFile.c_str());
+            file.open(abcFile.c_str(), std::ios_base::in);
             if (file.is_open())
             {
                  //the file exists
