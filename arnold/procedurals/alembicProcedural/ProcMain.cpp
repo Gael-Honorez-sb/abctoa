@@ -635,10 +635,10 @@ int ProcInit( struct AtNode *node, void **user_ptr )
         if (customLayer && AiNodeLookUpUserParameter(node, "layersOverride") !=NULL)
         {
             Json::Reader reader;
-            bool parsingSuccessful = reader.parse( AiNodeGetStr(node, "layersOverride"), jrootLayers );
+            parsingSuccessful = reader.parse( AiNodeGetStr(node, "layersOverride"), jrootLayers );
         }
         // Check if we have to skip something....
-        if( jrootLayers[layer].size() > 0 && customLayer)
+        if( jrootLayers[layer].size() > 0 && customLayer && parsingSuccessful)
         {
             skipShaders = jrootLayers[layer].get("removeShaders", skipShaders).asBool();
             skipDisplacement = jrootLayers[layer].get("removeDisplacements", skipDisplacement).asBool();

@@ -38,6 +38,7 @@
 #define _AlembicHolder_DrawContext_h_
 
 #include "Foundation.h"
+#include "parseJson.h"
 
 namespace AlembicHolder {
 
@@ -77,6 +78,10 @@ public:
     void setNormalFlipped(bool flippedNormal) {m_normalFlipped = flippedNormal;}
     const bool &isNormalFlipped() const {return m_normalFlipped;}
 
+	// scene params
+	void setParams(holderPrms* params) { m_params = params;};
+	holderPrms* getParams() const { return m_params; };
+
 protected:
     M44d m_localToWorld;
     M44d m_worldToCamera;
@@ -84,6 +89,7 @@ protected:
     std::string m_selectionPath;
     std::map<std::string, MColor> m_shaderColors;
     bool m_normalFlipped;
+	holderPrms* m_params;
 };
 
 } // End namespace AlembicHolder

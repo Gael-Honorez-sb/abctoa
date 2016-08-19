@@ -16,12 +16,32 @@ License along with this library.*/
 #define ARCHIVEHELPER_H_
 
 
+
 //-*****************************************************************************
 #include <Alembic/Abc/All.h>
 #include <Alembic/AbcGeom/All.h>
+#include "../parseJson.h"
+#include "../pathUtil.h"
 //-*****************************************************************************
 
+#define AI_RAY_UNDEFINED   0x00         /**< undefined type                                  */
+#define AI_RAY_CAMERA      0x01         /**< ray originating at the camera                   */
+#define AI_RAY_SHADOW      0x02         /**< shadow ray towards a light source               */
+#define AI_RAY_REFLECTED   0x04         /**< mirror reflection ray                           */
+#define AI_RAY_REFRACTED   0x08         /**< mirror refraction ray                           */
+#define AI_RAY_SUBSURFACE  0x10         /**< subsurface scattering probe ray                 */
+#define AI_RAY_DIFFUSE     0x20         /**< indirect diffuse (also known as diffuse GI) ray */
+#define AI_RAY_GLOSSY      0x40         /**< glossy/blurred reflection ray                   */
+#define AI_RAY_ALL         0xFF         /**< mask for all ray types                          */
+#define AI_RAY_GENERIC     AI_RAY_ALL   /**< mask for all ray types							 */
+
+
 using namespace Alembic::AbcGeom;
+
+
+bool isVisible(IObject child, IXformSchema xs, chrono_t currentTime, holderPrms *params);
+bool isVisible(IObject child, chrono_t currentTime, holderPrms* params, bool currentlyVisible);
+bool isVisibleForArnold(IObject child, chrono_t currentTime, holderPrms* params, bool currentlyVisible = true);
 
 
 
