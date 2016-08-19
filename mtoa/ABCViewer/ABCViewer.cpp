@@ -108,7 +108,7 @@ void CABCViewerTranslator::Update(AtNode* procedural)
 
 void CABCViewerTranslator::ExportProcedural(AtNode* procedural, bool update)
 {
-	MStatus stat;
+    MStatus stat;
     m_DagNode.setObject(m_dagPath.node());
     
     ExportMatrix(procedural, 0);
@@ -147,33 +147,34 @@ void CABCViewerTranslator::ExportProcedural(AtNode* procedural, bool update)
         MPlug objectPath = m_DagNode.findPlug("cacheGeomPath");
 
         MPlug shaders = m_DagNode.findPlug("shaders", &stat);
-		if(stat == MS::kSuccess)
-		{
-			for (unsigned int i=0;i<shaders.numElements();++i)
-			{
-				MPlug plug = shaders.elementByPhysicalIndex(i, &stat);
-				if(stat == MS::kSuccess)
-				{
-					MPlugArray connections;
-					plug.connectedTo(connections, true, false, &stat);
-					if(stat == MS::kSuccess)
-						for (unsigned int k=0; k<connections.length(); ++k)
-						{
-							MPlug sgPlug = connections[k];
-							if (sgPlug.node().apiType() == MFn::kShadingEngine || sgPlug.node().apiType() == MFn::kDisplacementShader)
-							{
-								ExportNode(sgPlug);
-							}
-						}
-				}
+        if(stat == MS::kSuccess)
+        {
+            for (unsigned int i=0;i<shaders.numElements();++i)
+            {
+                MPlug plug = shaders.elementByPhysicalIndex(i, &stat);
+                if(stat == MS::kSuccess)
+                {
+                    MPlugArray connections;
+                    plug.connectedTo(connections, true, false, &stat);
+                    if(stat == MS::kSuccess)
+                        for (unsigned int k=0; k<connections.length(); ++k)
+                        {
+                            MPlug sgPlug = connections[k];
+                            if (sgPlug.node().apiType() == MFn::kShadingEngine || sgPlug.node().apiType() == MFn::kDisplacementShader)
+                            {
+                                ExportNode(sgPlug);
+                            }
+                        }
+                }
 
-			}
-		}
+            }
+        }
 
 
         MPlug jsonFile = m_DagNode.findPlug("jsonFile");
         MPlug secondaryJsonFile = m_DagNode.findPlug("secondaryJsonFile");
         MPlug shadersNamespace = m_DagNode.findPlug("shadersNamespace");
+        MPlug shadersAttribute = m_DagNode.findPlug("shadersAttribute");
         MPlug abcShaders = m_DagNode.findPlug("abcShaders");
         MPlug uvsArchive = m_DagNode.findPlug("uvsArchive");
         MPlug shadersAssignation = m_DagNode.findPlug("shadersAssignation");
@@ -268,6 +269,12 @@ void CABCViewerTranslator::ExportProcedural(AtNode* procedural, bool update)
             AiNodeSetStr(procedural, "shadersNamespace", shadersNamespace.asString().asChar());
         }
 
+        if(shadersAttribute.asString() != "")
+        {
+            AiNodeDeclare(procedural, "shadersAttribute", "constant STRING");
+            AiNodeSetStr(procedural, "shadersAttribute", shadersAttribute.asString().asChar());
+        }
+
         if(shadersAssignation.asString() != "")
         {
             AiNodeDeclare(procedural, "shadersAssignation", "constant STRING");
@@ -311,13 +318,13 @@ void CABCViewerTranslator::ExportProcedural(AtNode* procedural, bool update)
         AiNodeSetStr(procedural, "data", data.expandEnvironmentVariablesAndTilde().asChar());
 
         ExportBoundingBox(procedural);
-		/*
-		if (!AiNodeLookUpUserParameter(procedural, "allow_updates"))
-		{
-			AiNodeDeclare(procedural, "allow_updates", "constant BOOL");
-		}
-		AiNodeSetBool(procedural, "allow_updates", true); // do we need a security valve here ? like a new parameter to control that ?
-		*/
+        /*
+        if (!AiNodeLookUpUserParameter(procedural, "allow_updates"))
+        {
+            AiNodeDeclare(procedural, "allow_updates", "constant BOOL");
+        }
+        AiNodeSetBool(procedural, "allow_updates", true); // do we need a security valve here ? like a new parameter to control that ?
+        */
     }
 }
 

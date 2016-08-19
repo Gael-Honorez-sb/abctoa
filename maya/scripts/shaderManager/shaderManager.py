@@ -60,7 +60,7 @@ class ShaderManager(QMainWindow, UI_ABCHierarchy.Ui_NAM):
 
         self.shaderToAssign = None
         self.ABCViewerNode = {}
-        self.tags = {}
+
         self.getNode()
         self.getCache()
         
@@ -146,6 +146,7 @@ class ShaderManager(QMainWindow, UI_ABCHierarchy.Ui_NAM):
 
         #Widcard management
         self.wildCardButton.pressed.connect(self.addWildCard)
+        self.autoAssignButton.pressed.connect(self.autoAssign)
 
 
     def showEvent(self, event):
@@ -763,7 +764,8 @@ class ShaderManager(QMainWindow, UI_ABCHierarchy.Ui_NAM):
 
         allSelected = []
         for item in self.hierarchyWidget.selectedItems():
-            allSelected.append(item.getPath())
+            if item.isTag == False and item.isWildCard == False:
+                allSelected.append(item.getPath())
 
         if "/" in allSelected:
             allSelected = []
@@ -1061,21 +1063,22 @@ class ShaderManager(QMainWindow, UI_ABCHierarchy.Ui_NAM):
 
                 if cmds.objExists(str(shape) + ".jsonFile"):
                     cur = cmds.getAttr("%s.jsonFile" % shape)
-                    for p in os.path.expandvars(cur).split(";"):
-                        try:
-                            f = open(p, "r")
-                            allLines = json.load(f)
-                            if "shaders" in allLines:
-                                cacheAssignations.addShaders(allLines["shaders"], fromFile=True)
-                            if "attributes" in allLines:
-                                cacheAssignations.addOverrides(allLines["attributes"], fromFile=True)
-                            if "displacement" in allLines:
-                                cacheAssignations.addDisplacements(allLines["displacement"], fromFile=True)
-                            if "layers" in allLines:
-                                cacheAssignations.addLayers(allLines["layers"], fromFile=True)
-                            f.close()
-                        except:
-                            pass
+                    if cur is not None:
+                        for p in os.path.expandvars(cur).split(";"):
+                            try:
+                                f = open(p, "r")
+                                allLines = json.load(f)
+                                if "shaders" in allLines:
+                                    cacheAssignations.addShaders(allLines["shaders"], fromFile=True)
+                                if "attributes" in allLines:
+                                    cacheAssignations.addOverrides(allLines["attributes"], fromFile=True)
+                                if "displacement" in allLines:
+                                    cacheAssignations.addDisplacements(allLines["displacement"], fromFile=True)
+                                if "layers" in allLines:
+                                    cacheAssignations.addLayers(allLines["layers"], fromFile=True)
+                                f.close()
+                            except:
+                                pass
 
 
                 if not cmds.objExists(str(shape) + ".shadersAssignation"):
@@ -1185,3 +1188,9 @@ class ShaderManager(QMainWindow, UI_ABCHierarchy.Ui_NAM):
                 item = pitem
 
         self.createWildCard(item)
+
+    def autoAssign(self):
+        ''' Assign shaders to selected tags, using their name.'''
+        for item in self.hierarchyWidget.selectedItems():
+            if item.isTag:
+                item.autoAssignShader()

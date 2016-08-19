@@ -1,9 +1,9 @@
 # -*- coding: utf-8 -*-
 
-# Form implementation generated from reading ui file 'UI_ABCHierarchy.ui'
+# Form implementation generated from reading ui file 's:\projects\Gael_Testing\config\modules_2015\abcToA-2.0.0\scripts\shaderManager\ui\UI_ABCHierarchy.ui'
 #
-# Created: Fri Mar 13 14:06:45 2015
-#      by: pyside-uic 0.2.15 running on PySide 1.2.1
+# Created: Fri Aug 19 15:16:53 2016
+#      by: pyside-uic 0.2.15 running on PySide 1.2.4
 #
 # WARNING! All changes made in this file will be lost!
 
@@ -19,13 +19,6 @@ class Ui_NAM(object):
         self.centralwidget.setObjectName("centralwidget")
         self.gridLayout_2 = QtGui.QGridLayout(self.centralwidget)
         self.gridLayout_2.setObjectName("gridLayout_2")
-        self.wildCardButton = QtGui.QPushButton(self.centralwidget)
-        self.wildCardButton.setMaximumSize(QtCore.QSize(200, 16777215))
-        self.wildCardButton.setObjectName("wildCardButton")
-        self.gridLayout_2.addWidget(self.wildCardButton, 2, 0, 1, 1)
-        self.refreshManagerBtn = QtGui.QPushButton(self.centralwidget)
-        self.refreshManagerBtn.setObjectName("refreshManagerBtn")
-        self.gridLayout_2.addWidget(self.refreshManagerBtn, 2, 1, 1, 1)
         self.gridLayout = QtGui.QGridLayout()
         self.gridLayout.setObjectName("gridLayout")
         self.overrideShaders = QtGui.QCheckBox(self.centralwidget)
@@ -113,7 +106,7 @@ class Ui_NAM(object):
         self.isolateCheckbox = QtGui.QCheckBox(self.centralwidget)
         self.isolateCheckbox.setObjectName("isolateCheckbox")
         self.gridLayout.addWidget(self.isolateCheckbox, 0, 4, 1, 1)
-        self.gridLayout_2.addLayout(self.gridLayout, 1, 0, 1, 1)
+        self.gridLayout_2.addLayout(self.gridLayout, 0, 0, 1, 3)
         self.splitter_2 = QtGui.QSplitter(self.centralwidget)
         sizePolicy = QtGui.QSizePolicy(QtGui.QSizePolicy.Preferred, QtGui.QSizePolicy.Minimum)
         sizePolicy.setHorizontalStretch(0)
@@ -147,7 +140,19 @@ class Ui_NAM(object):
         self.displacementList.setMaximumSize(QtCore.QSize(300, 16777215))
         self.displacementList.setSpacing(2)
         self.displacementList.setObjectName("displacementList")
-        self.gridLayout_2.addWidget(self.splitter_2, 1, 1, 1, 1)
+        self.gridLayout_2.addWidget(self.splitter_2, 0, 3, 1, 1)
+        self.wildCardButton = QtGui.QPushButton(self.centralwidget)
+        self.wildCardButton.setMaximumSize(QtCore.QSize(200, 16777215))
+        self.wildCardButton.setObjectName("wildCardButton")
+        self.gridLayout_2.addWidget(self.wildCardButton, 1, 0, 1, 1)
+        self.autoAssignButton = QtGui.QPushButton(self.centralwidget)
+        self.autoAssignButton.setObjectName("autoAssignButton")
+        self.gridLayout_2.addWidget(self.autoAssignButton, 1, 1, 1, 1)
+        spacerItem1 = QtGui.QSpacerItem(983, 20, QtGui.QSizePolicy.Expanding, QtGui.QSizePolicy.Minimum)
+        self.gridLayout_2.addItem(spacerItem1, 1, 2, 1, 1)
+        self.refreshManagerBtn = QtGui.QPushButton(self.centralwidget)
+        self.refreshManagerBtn.setObjectName("refreshManagerBtn")
+        self.gridLayout_2.addWidget(self.refreshManagerBtn, 1, 3, 1, 1)
         NAM.setCentralWidget(self.centralwidget)
         self.menubar = QtGui.QMenuBar(NAM)
         self.menubar.setGeometry(QtCore.QRect(0, 0, 1600, 21))
@@ -162,8 +167,6 @@ class Ui_NAM(object):
 
     def retranslateUi(self, NAM):
         NAM.setWindowTitle(QtGui.QApplication.translate("NAM", "Nozon Alembic Cache Manager", None, QtGui.QApplication.UnicodeUTF8))
-        self.wildCardButton.setText(QtGui.QApplication.translate("NAM", "Add WilCard Assignation", None, QtGui.QApplication.UnicodeUTF8))
-        self.refreshManagerBtn.setText(QtGui.QApplication.translate("NAM", "Refresh Manager", None, QtGui.QApplication.UnicodeUTF8))
         self.overrideShaders.setText(QtGui.QApplication.translate("NAM", "Override All Shaders", None, QtGui.QApplication.UnicodeUTF8))
         self.overrideDisps.setText(QtGui.QApplication.translate("NAM", "Override all displacement shaders", None, QtGui.QApplication.UnicodeUTF8))
         self.overrideProps.setText(QtGui.QApplication.translate("NAM", "Override all object properties", None, QtGui.QApplication.UnicodeUTF8))
@@ -174,4 +177,7 @@ class Ui_NAM(object):
         self.isolateCheckbox.setText(QtGui.QApplication.translate("NAM", "Isolate Selected", None, QtGui.QApplication.UnicodeUTF8))
         self.shadersList.setSortingEnabled(True)
         self.displacementList.setSortingEnabled(True)
+        self.wildCardButton.setText(QtGui.QApplication.translate("NAM", "Add WildCard Assignation", None, QtGui.QApplication.UnicodeUTF8))
+        self.autoAssignButton.setText(QtGui.QApplication.translate("NAM", "Auto-Assign Shaders to Selected Tags", None, QtGui.QApplication.UnicodeUTF8))
+        self.refreshManagerBtn.setText(QtGui.QApplication.translate("NAM", "Refresh Manager", None, QtGui.QApplication.UnicodeUTF8))
 

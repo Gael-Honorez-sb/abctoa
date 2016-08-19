@@ -552,9 +552,9 @@ int ProcInit( struct AtNode *node, void **user_ptr )
                     args->ns = jroot["namespace"].asString() + ":";
 
 				
-				if(jroot["shaderAssignationAttribute"].isString())
+				if(jroot["shadersAttribute"].isString())
 				{
-					args->shaderAssignationAttribute = jroot["shaderAssignationAttribute"].asString();
+					args->shaderAssignationAttribute = jroot["shadersAttribute"].asString();
 					args->useShaderAssignationAttribute = true;
 				}
 
@@ -697,6 +697,17 @@ int ProcInit( struct AtNode *node, void **user_ptr )
         const char* shadersNamespace = AiNodeGetStr(node, "shadersNamespace");
         if (shadersNamespace && strlen(shadersNamespace))
             args->ns = std::string(shadersNamespace) + ":";
+    }
+
+    // If shaderAttributes attribute is set it has priority
+    if (AiNodeLookUpUserParameter(node, "shadersAttribute") !=NULL)
+    {
+        const char* shadersAttribute = AiNodeGetStr(node, "shadersAttribute");
+        if (shadersAttribute && strlen(shadersAttribute))
+        {
+            args->useShaderAssignationAttribute = true;
+            args->shaderAssignationAttribute = std::string(shadersAttribute);
+        }
     }
 
     //Check displacements

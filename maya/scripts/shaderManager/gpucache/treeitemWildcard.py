@@ -40,6 +40,7 @@ class wildCardItem(treeitem.abcTreeItem):
         self.shaderToAssign = ""
 
         self.isWildCard = True
+        self.isTag = False
         self.protected = False
         self.hasChildren = False
 

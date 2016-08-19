@@ -63,29 +63,39 @@ void getTags(IObject iObj, std::vector<std::string> & tags, ProcArgs* args)
 
     if ( arbGeomParams != NULL && arbGeomParams.valid() )
     {
-        if (arbGeomParams.getPropertyHeader("mtoa_constant_tags") != NULL)
+        std::vector<std::string> tagsString;
+        tagsString.push_back("mtoa_constant_tags");
+        tagsString.push_back("tags");
+        if(args->useShaderAssignationAttribute)
+            tagsString.push_back(args->shaderAssignationAttribute);
+
+        for (std::vector<std::string>::iterator it = tagsString.begin() ; it != tagsString.end(); ++it)
         {
-            const PropertyHeader * tagsHeader = arbGeomParams.getPropertyHeader("mtoa_constant_tags");
-            if (IStringGeomParam::matches( *tagsHeader ))
+            if (arbGeomParams.getPropertyHeader(*it) != NULL)
             {
-                IStringGeomParam param( arbGeomParams,  "mtoa_constant_tags" );
-                if ( param.valid() )
+                const PropertyHeader * tagsHeader = arbGeomParams.getPropertyHeader(*it);
+                if (IStringGeomParam::matches( *tagsHeader ))
                 {
-                    IStringGeomParam::prop_type::sample_ptr_type valueSample = param.getExpandedValue().getVals();
-                    if ( param.getScope() == kConstantScope || param.getScope() == kUnknownScope)
+                    IStringGeomParam param( arbGeomParams,  *it );
+                    if ( param.valid() )
                     {
-                        Json::Value jtags;
-                        Json::Reader reader;
-                        if(reader.parse(valueSample->get()[0], jtags))
+                        IStringGeomParam::prop_type::sample_ptr_type valueSample = param.getExpandedValue().getVals();
+                        if ( param.getScope() == kConstantScope || param.getScope() == kUnknownScope)
                         {
-                            for( Json::ValueIterator itr = jtags.begin() ; itr != jtags.end() ; itr++ )
+                            Json::Value jtags;
+                            Json::Reader reader;
+                            if(reader.parse(valueSample->get()[0], jtags))
                             {
-                                std::string tag = jtags[itr.key().asUInt()].asString();
-                                tags.push_back(tag);
+                                for( Json::ValueIterator itr = jtags.begin() ; itr != jtags.end() ; itr++ )
+                                {
+                                    std::string tag = jtags[itr.key().asUInt()].asString();
+                                    tags.push_back(tag);
+                                }
                             }
+                            else
+                                tags.push_back(valueSample->get()[0]);
                         }
                     }
-
                 }
             }
         }

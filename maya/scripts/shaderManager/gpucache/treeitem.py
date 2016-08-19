@@ -45,6 +45,7 @@ class abcTreeItem(QtGui.QTreeWidgetItem):
         self.tags = []
 
         self.isWildCard = False
+        self.isTag = False
         self.hasChildren = False
 
         self.cacheAssignations = self.cache.getAssignations()
