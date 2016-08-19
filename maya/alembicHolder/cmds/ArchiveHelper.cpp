@@ -18,6 +18,165 @@ License along with this library.*/
 #include "boost/foreach.hpp"
 using namespace Alembic::AbcGeom;
 
+
+bool isVisible(IObject child, IXformSchema xs, chrono_t currentTime, holderPrms *params)
+{
+    if(GetVisibility( child, ISampleSelector( currentTime ) ) == kVisibilityHidden)
+    {
+        // check if the object is not forced to be visible
+        std::string name = child.getFullName();
+
+        if(params->linkAttributes)
+        {
+            for(std::vector<std::string>::iterator it=params->attributes.begin(); it!=params->attributes.end(); ++it)
+            {
+                Json::Value attributes;
+                if (it->find("/") != string::npos && name.find(*it) != string::npos)
+                    attributes = params->attributesRoot[*it];
+
+                if(attributes.size() > 0)
+                {
+                    for( Json::ValueIterator itr = attributes.begin() ; itr != attributes.end() ; itr++ )
+                    {
+                        std::string attribute = itr.key().asString();
+                        if (attribute == "forceVisible")
+                        {
+
+                            bool vis = params->attributesRoot[*it][itr.key().asString()].asBool();
+                            if(vis)
+                                return true;
+                            else
+                                return false;
+                        }
+                    }
+                }
+            }
+        }
+        return false;
+    }
+
+    // Check it's a xform and that xform has a tag "DISPLAY" to skip it.
+    ICompoundProperty prop = xs.getArbGeomParams();
+    if ( prop != NULL && prop.valid() )
+    {
+        if (prop.getPropertyHeader("mtoa_constant_tags") != NULL)
+        {
+            const PropertyHeader * tagsHeader = prop.getPropertyHeader("mtoa_constant_tags");
+            if (IStringGeomParam::matches( *tagsHeader ))
+            {
+                IStringGeomParam param( prop,  "mtoa_constant_tags" );
+                if ( param.valid() )
+                {
+                    IStringGeomParam::prop_type::sample_ptr_type valueSample =
+                                    param.getExpandedValue( ISampleSelector( currentTime ) ).getVals();
+
+                    if ( param.getScope() == kConstantScope || param.getScope() == kUnknownScope)
+                    {
+                        Json::Value jtags;
+                        Json::Reader reader;
+                        if(reader.parse(valueSample->get()[0], jtags))
+                            for( Json::ValueIterator itr = jtags.begin() ; itr != jtags.end() ; itr++ )
+                            {
+
+                                if (jtags[itr.key().asUInt()].asString() == "RENDER" )
+                                    return false;
+                            }
+                    }
+                }
+            }
+        }
+    }
+
+    return true;
+}
+
+bool isVisible(IObject child, chrono_t currentTime, holderPrms* params, bool currentlyVisible)
+{
+    if(GetVisibility( child, ISampleSelector( currentTime ) ) == kVisibilityHidden || currentlyVisible==false)
+    {
+        // check if the object is not forced to be visible
+        std::string name = child.getFullName();
+
+        if(params->linkAttributes)
+        {
+            for(std::vector<std::string>::iterator it=params->attributes.begin(); it!=params->attributes.end(); ++it)
+            {
+                Json::Value attributes;
+                if (it->find("/") != string::npos && name.find(*it) != string::npos)
+                    attributes = params->attributesRoot[*it];
+
+
+                if(attributes.size() > 0)
+                {
+                    for( Json::ValueIterator itr = attributes.begin() ; itr != attributes.end() ; itr++ )
+                    {
+                        std::string attribute = itr.key().asString();
+                        if (attribute == "forceVisible")
+                        {
+
+                            bool vis = params->attributesRoot[*it][itr.key().asString()].asBool();
+                            if(vis)
+                                return true;
+                            else
+                                return false;
+                        }
+
+                    }
+
+                }
+            }
+        }
+        return false;
+    }
+
+    return true;
+}
+
+bool isVisibleForArnold(IObject child, chrono_t currentTime, holderPrms* params, bool currentlyVisible)
+{
+    if (!isVisible(child, currentTime, params, currentlyVisible))
+        return false;
+
+    unsigned short minVis = AI_RAY_ALL & ~(AI_RAY_GLOSSY|AI_RAY_DIFFUSE|AI_RAY_REFRACTED|AI_RAY_REFLECTED|AI_RAY_SHADOW|AI_RAY_CAMERA);
+    std::string name = child.getFullName();
+
+    if(params->linkAttributes)
+    {
+        for(std::vector<std::string>::iterator it=params->attributes.begin(); it!=params->attributes.end(); ++it)
+        {
+                Json::Value attributes;
+                if(it->find("/") != string::npos)
+                    if(isPathContainsInOtherPath(name, *it))
+					{
+                        attributes = params->attributesRoot[*it];
+					}
+
+                if(attributes.size() > 0)
+                {
+                    for( Json::ValueIterator itr = attributes.begin() ; itr != attributes.end() ; itr++ )
+                    {
+                        std::string attribute = itr.key().asString();
+                        if (attribute == "visibility")
+                        {
+
+                            unsigned short vis = params->attributesRoot[*it][itr.key().asString()].asInt();
+                            if(vis <= minVis)
+                            {
+                                return false;
+                            }
+
+                            break;
+                        }
+
+                    }
+                }
+        }
+    }
+    return true;
+
+}
+
+
 bool getNamedObj( IObject & iObjTop, const std::string &objectPath)
 {
 

@@ -43,10 +43,13 @@ License along with this library.*/
 #include <maya/MNodeMessage.h>
 #include <maya/MMatrix.h>
 #include <maya/MFnCamera.h>
+#include <maya/MFnRenderLayer.h>
 
 #include <json/json.h>
+#include "parseJson.h"
 
 #include <iostream>
+
 
 class CAlembicDatas
 {
@@ -60,12 +63,12 @@ public:
     bool m_bbextendedmode;
     double time;
 
+	holderPrms *m_params;
+
     //BufferObject buffer;
 
     static AlembicHolder::SceneState   abcSceneState;
     static AlembicHolder::SceneManager abcSceneManager;
-
-    std::map<std::string, MColor> shaderColors;
 };
 
 
@@ -121,7 +124,25 @@ private:
     static    MObject    aSelectionPath;
     static    MObject    aShaderPath;
     static    MObject    aForceReload;
-    static    MObject    aUpdateCache;
+    
+	static    MObject    aJsonFile;
+	static    MObject    aJsonFileSecondary;
+	static    MObject    aShadersNamespace;
+	static    MObject    aAbcShaders;
+	static    MObject	 aUvsArchive;
+	static    MObject	 aShadersAssignation;
+	static    MObject	 aAttributes;
+	static    MObject	 aDisplacementsAssignation;
+	static    MObject	 aLayersOverride;
+	static    MObject    aSkipJsonFile;
+	static    MObject    aSkipShaders;
+	static    MObject    aSkipAttributes;
+	static    MObject    aSkipLayers;
+	static    MObject    aSkipDisplacements;
+	
+	static    MObject	 aUpdateAssign;
+	static    MObject    aUpdateCache;
+
     static    MObject    aBoundMin;
     static    MObject    aBoundMax;
     bool isConstant;
@@ -131,6 +152,7 @@ public:
 
 protected:
     int dUpdate;
+	int dUpdateA;
 
 };
 // UI class    - defines the UI part of a shape node

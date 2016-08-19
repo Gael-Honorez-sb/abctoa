@@ -87,8 +87,26 @@ MObject nozAlembicHolder::aBoundingExtended;
 MObject nozAlembicHolder::aTime;
 MObject nozAlembicHolder::aTimeOffset;
 MObject nozAlembicHolder::aShaderPath;
-MObject nozAlembicHolder::aUpdateCache;
 MObject nozAlembicHolder::aForceReload;
+
+MObject nozAlembicHolder::aJsonFile;
+MObject nozAlembicHolder::aJsonFileSecondary;
+MObject nozAlembicHolder::aShadersNamespace;
+MObject nozAlembicHolder::aAbcShaders;
+MObject nozAlembicHolder::aUvsArchive;
+MObject nozAlembicHolder::aShadersAssignation;
+MObject nozAlembicHolder::aAttributes;
+MObject nozAlembicHolder::aDisplacementsAssignation;
+MObject nozAlembicHolder::aLayersOverride;
+MObject nozAlembicHolder::aSkipJsonFile;
+MObject nozAlembicHolder::aSkipShaders;
+MObject nozAlembicHolder::aSkipAttributes;
+MObject nozAlembicHolder::aSkipLayers;
+MObject nozAlembicHolder::aSkipDisplacements;
+
+
+MObject nozAlembicHolder::aUpdateAssign;
+MObject nozAlembicHolder::aUpdateCache;
 
 // for bbox
 MObject nozAlembicHolder::aBoundMin;
@@ -106,7 +124,8 @@ CAlembicDatas::CAlembicDatas() {
     m_currscenekey = "";
 	m_currselectionkey = "";
     m_abcdirty = false;
-
+	m_params = new holderPrms();
+	m_params->linkAttributes = false;
 }
 
 void abcDirtiedCallback(MObject & nodeMO, MPlug & plug, void* data) {
@@ -263,7 +282,6 @@ MStatus nozAlembicHolder::initialize() {
     tAttr.setReadable(true);
     tAttr.setHidden(false);
     tAttr.setStorable(true);
-    //tAttr.setUsedAsFilename(true);
     tAttr.setKeyable(true);
 
     aObjectPath = tAttr.create("cacheGeomPath", "cmp", MFnStringData::kString);
@@ -288,8 +306,6 @@ MStatus nozAlembicHolder::initialize() {
     tAttr.setKeyable(true);
 
     aShaderPath = mAttr.create("shaders", "shds", &stat);
-    //    tAttr.setWritable(true);
-    //    tAttr.setReadable(true);
     mAttr.setArray(true);
     mAttr.setInternal(true);
 
@@ -309,6 +325,107 @@ MStatus nozAlembicHolder::initialize() {
     nAttr.setHidden(false);
     nAttr.setStorable(true);
     nAttr.setKeyable(true);
+
+    aJsonFile = tAttr.create("jsonFile", "jf", MFnStringData::kString, MObject::kNullObj);
+    tAttr.setWritable(true);
+    tAttr.setReadable(true);
+    tAttr.setHidden(false);
+    tAttr.setStorable(true);
+    tAttr.setKeyable(true);
+
+    aJsonFileSecondary = tAttr.create("secondaryJsonFile", "sjf", MFnStringData::kString, MObject::kNullObj);
+    tAttr.setWritable(true);
+    tAttr.setReadable(true);
+    tAttr.setHidden(false);
+    tAttr.setStorable(true);
+    tAttr.setKeyable(true);
+
+    aShadersNamespace = tAttr.create("shadersNamespace", "sn", MFnStringData::kString, MObject::kNullObj);
+    tAttr.setWritable(true);
+    tAttr.setReadable(true);
+    tAttr.setHidden(false);
+    tAttr.setStorable(true);
+    tAttr.setKeyable(true);
+
+    aAbcShaders = tAttr.create("abcShaders", "abcs", MFnStringData::kString, MObject::kNullObj);
+    tAttr.setWritable(true);
+    tAttr.setReadable(true);
+    tAttr.setHidden(false);
+    tAttr.setStorable(true);
+    tAttr.setKeyable(true);
+
+    aUvsArchive = tAttr.create("uvsArchive", "uvsa", MFnStringData::kString, MObject::kNullObj);
+    tAttr.setWritable(true);
+    tAttr.setReadable(true);
+    tAttr.setHidden(false);
+    tAttr.setStorable(true);
+    tAttr.setKeyable(true);
+
+    aShadersAssignation = tAttr.create("shadersAssignation", "sa", MFnStringData::kString, MObject::kNullObj);
+    tAttr.setWritable(true);
+    tAttr.setReadable(true);
+    tAttr.setHidden(false);
+    tAttr.setStorable(true);
+    tAttr.setKeyable(true);
+
+    aAttributes = tAttr.create("attributes", "attr", MFnStringData::kString, MObject::kNullObj);
+    tAttr.setWritable(true);
+    tAttr.setReadable(true);
+    tAttr.setHidden(false);
+    tAttr.setStorable(true);
+    tAttr.setKeyable(true);
+
+    aDisplacementsAssignation = tAttr.create("displacementsAssignation", "da", MFnStringData::kString, MObject::kNullObj);
+    tAttr.setWritable(true);
+    tAttr.setReadable(true);
+    tAttr.setHidden(false);
+    tAttr.setStorable(true);
+    tAttr.setKeyable(true);
+
+    aLayersOverride = tAttr.create("layersOverride", "lo", MFnStringData::kString, MObject::kNullObj);
+    tAttr.setWritable(true);
+    tAttr.setReadable(true);
+    tAttr.setHidden(false);
+    tAttr.setStorable(true);
+    tAttr.setKeyable(true);
+
+    aSkipJsonFile = nAttr.create("skipJsonFile", "sjf", MFnNumericData::kBoolean, false);
+    nAttr.setWritable(true);
+    nAttr.setReadable(true);
+    nAttr.setHidden(false);
+    nAttr.setStorable(true);
+    nAttr.setKeyable(true);
+
+    aSkipShaders = nAttr.create("skipShaders", "ss", MFnNumericData::kBoolean, false);
+    nAttr.setWritable(true);
+    nAttr.setReadable(true);
+    nAttr.setHidden(false);
+    nAttr.setStorable(true);
+    nAttr.setKeyable(true);
+
+    aSkipAttributes = nAttr.create("skipAttributes", "sa", MFnNumericData::kBoolean, false);
+    nAttr.setWritable(true);
+    nAttr.setReadable(true);
+    nAttr.setHidden(false);
+    nAttr.setStorable(true);
+    nAttr.setKeyable(true);
+
+    aSkipLayers = nAttr.create("skipLayers", "sl", MFnNumericData::kBoolean, false);
+    nAttr.setWritable(true);
+    nAttr.setReadable(true);
+    nAttr.setHidden(false);
+    nAttr.setStorable(true);
+    nAttr.setKeyable(true);
+
+    aSkipDisplacements = nAttr.create("skipDisplacements", "sd", MFnNumericData::kBoolean, false);
+    nAttr.setWritable(true);
+    nAttr.setReadable(true);
+    nAttr.setHidden(false);
+    nAttr.setStorable(true);
+    nAttr.setKeyable(true);
+
+    aUpdateAssign = nAttr.create("updateAssign", "uass", MFnNumericData::kInt, 0);
+    nAttr.setHidden(true);
 
     aUpdateCache = nAttr.create("updateCache", "upc", MFnNumericData::kInt, 0);
     nAttr.setHidden(true);
@@ -335,11 +452,37 @@ MStatus nozAlembicHolder::initialize() {
     addAttribute(aShaderPath);
     addAttribute(aTime);
     addAttribute(aTimeOffset);
+	
+	addAttribute(aJsonFile);
+	addAttribute(aJsonFileSecondary);
+	addAttribute(aShadersNamespace);
+	addAttribute(aAbcShaders);
+	addAttribute(aUvsArchive);
+	addAttribute(aShadersAssignation);
+	addAttribute(aAttributes);
+	addAttribute(aDisplacementsAssignation);
+	addAttribute(aLayersOverride);
+	addAttribute(aSkipJsonFile);
+	addAttribute(aSkipShaders);
+	addAttribute(aSkipAttributes);
+	addAttribute(aSkipLayers);
+	addAttribute(aSkipDisplacements);
+	
+	addAttribute(aUpdateAssign);
     addAttribute(aUpdateCache);
     addAttribute(aBoundMin);
     addAttribute(aBoundMax);
 
-    return MS::kSuccess;
+	attributeAffects ( aJsonFile, aUpdateAssign );
+	attributeAffects ( aJsonFileSecondary, aUpdateAssign );
+	attributeAffects ( aAttributes, aUpdateAssign );
+	attributeAffects ( aLayersOverride, aUpdateAssign );
+	attributeAffects ( aSkipJsonFile, aUpdateAssign );
+	attributeAffects ( aSkipAttributes, aUpdateAssign );
+	attributeAffects ( aSkipLayers, aUpdateAssign );
+
+	attributeAffects ( aForceReload, aUpdateAssign );
+
 
 }
 
@@ -398,10 +541,183 @@ std::string nozAlembicHolder::getSceneKey() const {
 
 MStatus nozAlembicHolder::compute(const MPlug& plug, MDataBlock& block)
 {
-    if (plug == aUpdateCache)
+
+	if (plug == aUpdateAssign)
+	{
+		MStatus status;
+        MFnDagNode fn(thisMObject());
+
+		// Try to parse the JSON attributes here.
+		bool skipJson = false;
+		bool skipAttributes = false;
+		bool skipLayers = false;
+		bool customLayer = false;
+		std::string layerName = "defaultRenderLayer";
+		MObject currentRenderLayerObj = MFnRenderLayer::currentLayer(&status);   
+		if (status)
+		{
+			MFnRenderLayer currentRenderLayer(currentRenderLayerObj, &status);
+			if (status)
+				layerName = currentRenderLayer.name().asChar();
+		}		
+        if(layerName != std::string("defaultRenderLayer"))
+            customLayer = true;
+
+		Json::Value jrootattributes;
+		Json::Value jrootLayers;
+
+		MPlug skipJsonPlug = fn.findPlug("skipJsonFile", &status);
+		if(status == MS::kSuccess)
+			skipJson =  block.inputValue(skipJsonPlug).asBool();
+		MPlug skipAttributesPlug = fn.findPlug("skipAttributes", &status);
+		if(status == MS::kSuccess)
+			skipAttributes =  block.inputValue(skipAttributesPlug).asBool();
+		MPlug skipLayersPlug = fn.findPlug("skipLayers", &status);
+		if(status == MS::kSuccess)
+			skipLayers =  block.inputValue(skipLayersPlug).asBool();
+
+		bool parsingSuccessful = false;
+		MPlug jsonFile = fn.findPlug("jsonFile", &status);
+
+		if(status == MS::kSuccess && skipJson==false )
+		{
+			Json::Value jroot;
+			Json::Reader reader;
+			MString jsonFileStr = block.inputValue(jsonFile).asString();
+			std::ifstream test(jsonFileStr.asChar(), std::ifstream::binary);
+			parsingSuccessful = reader.parse( test, jroot, false );
+
+			MPlug jsonFileSecondary = fn.findPlug("secondaryJsonFile", &status);
+			if(status == MS::kSuccess)
+			{
+				MString jsonFileSecondaryStr = block.inputValue(jsonFile).asString();
+				std::ifstream test2(jsonFileSecondaryStr.asChar(), std::ifstream::binary);
+				Json::Value jroot2;
+				if (reader.parse( test2, jroot2, false ))
+					update(jroot, jroot2);
+			}
+		
+			if ( parsingSuccessful )
+			{
+				if(skipAttributes == false)
+				{
+
+					jrootattributes = jroot["attributes"];
+					MPlug attributesAssignationPlug = fn.findPlug("attributes", &status);
+					if(status == MS::kSuccess)
+					{
+						Json::Reader readerOverride;
+						Json::Value jrootattributesattributes;
+
+						if(readerOverride.parse( block.inputValue(attributesAssignationPlug).asString().asChar(), jrootattributesattributes))
+							OverrideProperties(jrootattributes, jrootattributesattributes);
+
+					}
+				}
+				if(skipLayers == false && customLayer)
+				{
+					jrootLayers = jroot["layers"];
+
+					MPlug layersOverridePlug = fn.findPlug("layersOverride", &status);
+					if(status == MS::kSuccess)
+					{
+						Json::Reader readerOverride;
+						Json::Value jrootLayersattributes;
+
+						if(readerOverride.parse( block.inputValue(layersOverridePlug).asString().asChar(), jrootLayersattributes ))
+						{
+							jrootLayers[layerName]["removeProperties"] = jrootLayersattributes[layerName].get("removeProperties", skipAttributes).asBool();
+
+							if(jrootLayersattributes[layerName]["properties"].size() > 0)
+								OverrideProperties(jrootLayers[layerName]["properties"], jrootLayersattributes[layerName]["properties"]);
+						}
+					}
+				}
+			}
+		}
+
+		if(!parsingSuccessful)
+		{
+			MPlug layersOverridePlug = fn.findPlug("layersOverride", &status);
+
+			if (customLayer && status == MS::kSuccess)
+			{
+				Json::Reader reader;
+				bool parsingSuccessful = reader.parse( block.inputValue(layersOverridePlug).asString().asChar(), jrootLayers );
+
+			}
+			// Check if we have to skip something....
+			if( jrootLayers[layerName].size() > 0 && customLayer && parsingSuccessful)
+			{
+				skipAttributes =jrootLayers[layerName].get("removeProperties", skipAttributes).asBool();
+			}
+
+			MPlug attributesAssignationPlug = fn.findPlug("attributes", &status);
+			if (status == MS::kSuccess  && skipAttributes == false)
+			{
+				Json::Reader reader;
+				bool parsingSuccessful = reader.parse( block.inputValue(attributesAssignationPlug).asString().asChar(), jrootattributes );
+			}
+
+		}
+
+		if( jrootLayers[layerName].size() > 0 && customLayer)
+		{
+			if(jrootLayers[layerName]["properties"].size() > 0)
+			{
+				if(jrootLayers[layerName].get("removeProperties", skipAttributes).asBool())
+					jrootattributes = jrootLayers[layerName]["properties"];
+				else
+					OverrideProperties(jrootattributes, jrootLayers[layerName]["properties"]);
+			}
+		}
+		
+		fGeometry.m_params->attributes.clear();
+
+		if( jrootattributes.size() > 0 )
+		{
+			bool addtoPath = false;
+			fGeometry.m_params->linkAttributes = true;
+			fGeometry.m_params->attributesRoot = jrootattributes;
+			for( Json::ValueIterator itr = jrootattributes.begin() ; itr != jrootattributes.end() ; itr++ )
+			{
+				addtoPath = false;
+
+				std::string path = itr.key().asString();
+
+				Json::Value attributes = jrootattributes[path];
+				for( Json::ValueIterator itr = attributes.begin() ; itr != attributes.end() ; itr++ )
+				{
+					std::string attribute = itr.key().asString();
+                    if (attribute == "forceVisible" || attribute == "visibility")
+					{
+						addtoPath = true;
+						break;
+					}
+				}
+				if(addtoPath)
+					fGeometry.m_params->attributes.push_back(path);
+
+			}
+			
+			std::sort(fGeometry.m_params->attributes.begin(), fGeometry.m_params->attributes.end());
+			
+		}
+		else
+		{
+			fGeometry.m_params->linkAttributes = false;
+		}
+
+		fGeometry.m_abcdirty = true;
+		block.outputValue(aForceReload).setBool(false);
+
+	}
+
+	else if (plug == aUpdateCache)
     {
         MStatus status;
         MFnDagNode fn(thisMObject());
+
         // Try to parse JSON Shader assignation here.
         MPlug shaderAssignation = fn.findPlug("shadersAssignation", &status);
 
@@ -415,7 +731,7 @@ MStatus nozAlembicHolder::compute(const MPlug& plug, MDataBlock& block)
                 Json::Reader reader;
                 parsingSuccessful = reader.parse( jsonAssign.asChar(), jroot, false );
                 if(parsingSuccessful)
-                    ParseShaders(jroot, fGeometry.shaderColors);
+                    ParseShaders(jroot, fGeometry.m_params->shaderColors);
             }
         }
 
@@ -508,10 +824,16 @@ MStatus nozAlembicHolder::compute(const MPlug& plug, MDataBlock& block)
 bool nozAlembicHolder::GetPlugData()
 {
     int update = 0;
+	int updateA = 0;
     MPlug updatePlug(thisMObject(), aUpdateCache );
+	MPlug updateAssign(thisMObject(), aUpdateAssign );
     updatePlug.getValue( update );
-    if (update != dUpdate)
+	updateAssign.getValue( updateA );
+	
+
+    if (update != dUpdate || updateA != dUpdateA)
     {
+		dUpdateA = updateA;
         dUpdate = update;
         return true;
     }
@@ -663,7 +985,7 @@ void CAlembicHolderUI::draw(const MDrawRequest & request, M3dView & view) const
 			{
 				gGLFT->glPolygonMode(GL_FRONT_AND_BACK, MGL_LINE);
 				gGLFT->glPushMatrix();
-				cache->abcSceneManager.getScene(cache->m_currscenekey)->draw(cache->abcSceneState, cache->m_currselectionkey, cache->time);
+				cache->abcSceneManager.getScene(cache->m_currscenekey)->draw(cache->abcSceneState, cache->m_currselectionkey, cache->time, cache->m_params);
 				gGLFT->glPopMatrix();
 				gGLFT->glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 			}
@@ -710,14 +1032,14 @@ void CAlembicHolderUI::drawingMeshes( std::string sceneKey, CAlembicDatas * cach
         glEnable(MGL_CULL_FACE);
         glLightModeli(MGL_LIGHT_MODEL_TWO_SIDE, 0);
         glCullFace(MGL_FRONT);
-		cache->abcSceneManager.getScene(sceneKey)->draw(cache->abcSceneState, selectionKey, cache->time, cache->shaderColors, true);
+		cache->abcSceneManager.getScene(sceneKey)->draw(cache->abcSceneState, selectionKey, cache->time, cache->m_params, true);
         glCullFace(MGL_BACK);
-        cache->abcSceneManager.getScene(sceneKey)->draw(cache->abcSceneState, selectionKey, cache->time, cache->shaderColors, false);
+        cache->abcSceneManager.getScene(sceneKey)->draw(cache->abcSceneState, selectionKey, cache->time, cache->m_params, false);
         gGLFT->glLightModeli(MGL_LIGHT_MODEL_TWO_SIDE, 1);
         glDisable(MGL_CULL_FACE);
     }
     else
-		cache->abcSceneManager.getScene(sceneKey)->draw(cache->abcSceneState, selectionKey, cache->time, cache->shaderColors, true);
+		cache->abcSceneManager.getScene(sceneKey)->draw(cache->abcSceneState, selectionKey, cache->time, cache->m_params, true);
 
     glDisable(MGL_POLYGON_OFFSET_FILL);
     glFrontFace(MGL_CCW);

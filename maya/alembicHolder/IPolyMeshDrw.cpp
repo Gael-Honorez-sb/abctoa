@@ -241,7 +241,7 @@ void IPolyMeshDrw::updateData()
 
 int IPolyMeshDrw::getNumTriangles()
 {
-    if ( !valid() || !m_visible)
+    if ( !valid() )
         return 0;
 
     return m_drwHelpers[m_currentTime].getNumTriangles();
@@ -250,8 +250,13 @@ int IPolyMeshDrw::getNumTriangles()
 //-*****************************************************************************
 void IPolyMeshDrw::draw( const DrawContext &iCtx )
 {
-    if ( !valid() || !m_visible)
+    if ( !valid() )
         return;
+
+
+	holderPrms* params = iCtx.getParams();
+	if(!isVisibleForArnold(m_polyMesh, m_currentTime, params, m_visible))
+		return;
 
     if(iCtx.getSelection() != "")
     {

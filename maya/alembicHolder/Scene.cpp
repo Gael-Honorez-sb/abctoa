@@ -144,7 +144,7 @@ int Scene::getNumTriangles() const
 
 
 //-*****************************************************************************
-void Scene::draw( SceneState &s_state, std::string selection, chrono_t iSeconds, std::map<std::string, MColor> shaderColors, bool flippedNormal)
+void Scene::draw( SceneState &s_state, std::string selection, chrono_t iSeconds, holderPrms *m_params, bool flippedNormal)
 {
 
    static MGLFunctionTable *gGLFT = NULL;
@@ -167,9 +167,9 @@ void Scene::draw( SceneState &s_state, std::string selection, chrono_t iSeconds,
     dctx.setWorldToCamera( currentMatrix );
     dctx.setPointSize( s_state.pointSize );
     dctx.setSelection(selection);
-    dctx.setShaderColors(shaderColors);
+    dctx.setShaderColors(m_params->shaderColors);
     dctx.setNormalFlipped(flippedNormal);
-
+	dctx.setParams(m_params);
 	m_drawable->draw( dctx );
 
 }

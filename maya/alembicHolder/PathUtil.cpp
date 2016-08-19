@@ -41,6 +41,29 @@
 
 //-*****************************************************************************
 
+bool isPathContainsInOtherPath(const std::string &path, const std::string &otherPath )
+{
+    std::vector<std::string> pathParts;
+    std::vector<std::string> jsonPathParts;
+
+    TokenizePathAbc(path, pathParts);
+    TokenizePathAbc(otherPath, jsonPathParts);
+
+    if(jsonPathParts.size() > pathParts.size())
+        return false;
+
+    bool validPath = true;
+    for(int i = 0; i < jsonPathParts.size(); i++)
+    {
+        if(pathParts[i].compare(jsonPathParts[i]) != 0)
+            validPath = false;
+    }
+    if(validPath)
+        return validPath;
+
+    return false;
+}
+
 bool pathInJsonString(const std::string &path, const std::string &jsonString )
 {
     std::vector<std::string> pathParts;
@@ -88,6 +111,21 @@ void TokenizePath( const std::string &path, std::vector<std::string> &result )
     }
 }
 
+void TokenizePathAbc( const std::string &path, std::vector<std::string> &result )
+{
+    typedef boost::char_separator<char> Separator;
+    typedef boost::tokenizer<Separator> Tokenizer;
+
+    Tokenizer tokenizer( path, Separator( "/" ) );
+
+    for ( Tokenizer::iterator iter = tokenizer.begin() ; iter != tokenizer.end() ;
+          ++iter )
+    {
+        if ( (*iter).empty() ) { continue; }
+
+        result.push_back( *iter );
+    }
+}
 
 /*
 * Return a new string with all occurrences of 'from' replaced with 'to'
