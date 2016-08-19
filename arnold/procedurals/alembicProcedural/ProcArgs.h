@@ -106,7 +106,11 @@ struct ProcArgs
     bool linkDisplacement;
     bool linkAttributes;
 
-    std::string ns;
+	bool useShaderAssignationAttribute;
+    
+	std::string ns;
+	std::string shaderAssignationAttribute;
+	
 
     bool useUvArchive;
     Alembic::AbcGeom::IObject uvsRoot;

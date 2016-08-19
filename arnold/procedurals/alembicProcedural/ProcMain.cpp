@@ -527,6 +527,8 @@ int ProcInit( struct AtNode *node, void **user_ptr )
 
     bool parsingSuccessful = false;
 
+	args->useShaderAssignationAttribute = false;
+
     if (AiNodeLookUpUserParameter(node, "jsonFile") !=NULL && skipJson == false)
     {
         Json::Value jroot;
@@ -548,6 +550,13 @@ int ProcInit( struct AtNode *node, void **user_ptr )
             {
                 if(jroot["namespace"].isString())
                     args->ns = jroot["namespace"].asString() + ":";
+
+				
+				if(jroot["shaderAssignationAttribute"].isString())
+				{
+					args->shaderAssignationAttribute = jroot["shaderAssignationAttribute"].asString();
+					args->useShaderAssignationAttribute = true;
+				}
 
                 jrootShaders = jroot["shaders"];
                 if (AiNodeLookUpUserParameter(node, "shadersAssignation") !=NULL)

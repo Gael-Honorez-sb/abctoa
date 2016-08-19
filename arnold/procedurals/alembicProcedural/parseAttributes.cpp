@@ -446,16 +446,16 @@ void ParseShaders(Json::Value jroot, const std::string& ns, const std::string& n
         {
             if(args->useAbcShaders)
             {
-                std::string orginalName = itr.key().asString();
+                std::string originalName = itr.key().asString();
                 // we must get rid of .message if it's there
-                if(pystring::endswith(orginalName, ".message"))
+                if(pystring::endswith(originalName, ".message"))
                 {
-                    orginalName = pystring::replace(orginalName, ".message", "");
+                    originalName = pystring::replace(originalName, ".message", "");
                 }
 
-                AiMsgDebug( "[ABC] Create shader %s from ABC", orginalName.c_str());
+                AiMsgDebug( "[ABC] Create shader %s from ABC", originalName.c_str());
 
-                IObject object = args->materialsObject.getChild(orginalName);
+                IObject object = args->materialsObject.getChild(originalName);
                 if (IMaterial::matches(object.getHeader()))
                     shaderNode = createNetwork(object, shaderName, *args);
 

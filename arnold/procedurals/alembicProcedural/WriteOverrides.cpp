@@ -207,27 +207,46 @@ AtNode* getShader(const std::string& name, const std::vector<std::string>& tags,
     return appliedShader;
 }
 
-void ApplyShaders(const std::string& name, AtNode* node, const std::vector<std::string>& tags, ProcArgs & args)
+AtNode* getShaderByName(const std::string& name, ProcArgs & args)
 {
-    bool foundInPath = false;
+    for(std::map<std::string, AtNode*>::iterator it = args.shaders.begin(); it != args.shaders.end(); ++it)
+    {
+		if(name.compare(it->first) == 0)
+			return it->second;
+    }
+
+    return NULL;
+}
+
+
+bool ApplyShaders(const std::string& name, AtNode* node, const std::vector<std::string>& tags, ProcArgs & args)
+{
     AtNode* appliedShader = getShader(name, tags, args);
 
-    if(appliedShader != NULL)
+    if(ApplyShader(name, node, appliedShader))
     {
-	
-        std::string newName = std::string(AiNodeGetName(appliedShader)) + std::string("_") + name;
-        //AiNodeSetStr(appliedShader, "name", newName.c_str());
-
-        AtArray* shaders = AiArrayAllocate( 1 , 1, AI_TYPE_NODE);
-        AiArraySetPtr(shaders, 0, appliedShader);
-
-        AiNodeSetArray(node, "shader", shaders);
-        //AiNodeSetPtr(instanceNode, "shader", appliedShader);
+        return true;
     }
     else
     {
         AtArray* shaders = AiNodeGetArray(args.proceduralNode, "shader");
         if (shaders->nelements != 0)
             AiNodeSetArray(node, "shader", AiArrayCopy(shaders));
+		return false;
     }
+}
+
+
+bool ApplyShader(const std::string& name, AtNode* node, AtNode* shader)
+{
+	if(shader != NULL)
+	{
+		AtArray* shaders = AiArrayAllocate( 1 , 1, AI_TYPE_NODE);
+        AiArraySetPtr(shaders, 0, shader);
+
+        AiNodeSetArray(node, "shader", shaders);
+        return true;
+	}
+	return false;
+
 }
