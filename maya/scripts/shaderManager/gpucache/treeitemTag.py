@@ -19,6 +19,7 @@ import maya.mel as mel
 import maya.cmds as cmds
 
 import treeitem
+import autoAssignRule
 
 TRANSFORM = 1
 SHAPE = 2
@@ -40,6 +41,7 @@ class tagItem(treeitem.abcTreeItem):
         self.shaderToAssign = ""
 
         self.isWildCard = False
+        self.isTag = True
         self.protected = False
         self.hasChildren = False
 
@@ -62,6 +64,19 @@ class tagItem(treeitem.abcTreeItem):
 
     def getAssignation(self):
         return self.tag
+
+    def autoAssignShader(self):
+        ''' 
+        Assign the shader returned by the auto Assign rule.
+        '''
+        path = self.getPath()
+        reload(autoAssignRule)
+        shader = autoAssignRule.applyRules(path)
+        if shader is not None:
+            self.cache.assignShader(path, shader)
+            self.interface.checkShaders(self.interface.getLayer(), item=self)
+            self.interface.hierarchyWidget.resizeColumnToContents(1)
+
 
     def pressed(self):
         menu = QtGui.QMenu(self.interface)

@@ -90,6 +90,7 @@ void ABCGetTags::visitObject( IObject iObj, Json::Value & results )
     {
 		IXform xform( iObj, kWrapExisting );
 		IXformSchema ms = xform.getSchema();
+
 		arbGeomParams = ms.getArbGeomParams();
 		name = xform.getFullName();
     }

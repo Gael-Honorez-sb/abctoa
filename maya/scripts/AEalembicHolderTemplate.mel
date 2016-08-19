@@ -72,6 +72,7 @@ global proc AEalembicHolderTemplate(string $nodeName)
         editorTemplate -callCustom "alembicABCPathNew" "alembicABCPathReplace" "cacheFileName";
         editorTemplate -label "Geometry Path" -addControl "cacheGeomPath";
         editorTemplate -label "Selection Path" -addControl "cacheSelectionPath";
+		editorTemplate -label "Attribute for shaders assignation" -addControl "shadersAttribute";
 		editorTemplate -label "bounding Box Extended Mode" -addControl "boundingBoxExtendedMode";
         editorTemplate -label "Time Offset" -addControl "timeOffset";
 		editorTemplate -label "load At Init" -addControl "loadAtInit";

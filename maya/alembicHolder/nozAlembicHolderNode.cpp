@@ -92,6 +92,7 @@ MObject nozAlembicHolder::aForceReload;
 MObject nozAlembicHolder::aJsonFile;
 MObject nozAlembicHolder::aJsonFileSecondary;
 MObject nozAlembicHolder::aShadersNamespace;
+MObject nozAlembicHolder::aShadersAttribute;
 MObject nozAlembicHolder::aAbcShaders;
 MObject nozAlembicHolder::aUvsArchive;
 MObject nozAlembicHolder::aShadersAssignation;
@@ -347,6 +348,13 @@ MStatus nozAlembicHolder::initialize() {
     tAttr.setStorable(true);
     tAttr.setKeyable(true);
 
+    aShadersAttribute = tAttr.create("shadersAttribute", "sattr", MFnStringData::kString, MObject::kNullObj);
+    tAttr.setWritable(true);
+    tAttr.setReadable(true);
+    tAttr.setHidden(false);
+    tAttr.setStorable(true);
+    tAttr.setKeyable(true);
+
     aAbcShaders = tAttr.create("abcShaders", "abcs", MFnStringData::kString, MObject::kNullObj);
     tAttr.setWritable(true);
     tAttr.setReadable(true);
@@ -456,6 +464,7 @@ MStatus nozAlembicHolder::initialize() {
 	addAttribute(aJsonFile);
 	addAttribute(aJsonFileSecondary);
 	addAttribute(aShadersNamespace);
+	addAttribute(aShadersAttribute);
 	addAttribute(aAbcShaders);
 	addAttribute(aUvsArchive);
 	addAttribute(aShadersAssignation);
@@ -483,7 +492,7 @@ MStatus nozAlembicHolder::initialize() {
 
 	attributeAffects ( aForceReload, aUpdateAssign );
 
-
+	return MS::kSuccess;
 }
 
 MStatus nozAlembicHolder::setDependentsDirty(const MPlug& plug, MPlugArray& plugArray)

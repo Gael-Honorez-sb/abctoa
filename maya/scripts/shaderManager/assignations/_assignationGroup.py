@@ -106,8 +106,9 @@ class assignationGroup(object):
             for tag in wildShaders[shader]:
                 if tags:
                     if tag in tags:
-                        if path in tags[tag]:
-                            return self.createShaderEntity(shader, inherited=True)
+                        for tagPath in tags[tag]:
+                            if tagPath in path:
+                                return self.createShaderEntity(shader, inherited=True)
 
         ### if we go this far, we didn't find any shader. We are iterating over the wildcards.        
         for shader in wildShaders:

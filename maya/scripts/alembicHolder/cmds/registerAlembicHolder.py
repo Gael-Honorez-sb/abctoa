@@ -40,7 +40,10 @@ def reloadShaderManager(mayaWindow):
     global _shadermanager
     import shaderManager
     _shadermanager.clearing()
-    _shadermanager.deleteLater()
+    try:
+        _shadermanager.deleteLater()
+    except:
+        pass
     reload(shaderManager)
     _shadermanager = shaderManager.manager(mayaWindow)
 

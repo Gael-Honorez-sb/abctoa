@@ -174,12 +174,69 @@ class gpucache(object):
                 self.archive = IArchive(self.ABCcache)
 
 
+    def getShadersAttributes(self):
+        results = []
+        if self.archive:
+
+            archiveTop = self.archive.getTop()
+            iObj = self.getShaderAttribute(archiveTop, objectPath)
+            if iObj == None:
+                return None
+
+    def visitShaderAttributeAndTags(self, iObj, allowedTags, results):
+        if not iObj.valid():
+            return
+        ohead = iObj.getHeader()
+        arbGeomParams = None
+        if IXform.matches(ohead):
+            arbGeomParams = IXform(iObj, WrapExistingFlag.kWrapExisting).getSchema().getArbGeomParams()
+        if IPolyMesh.matches(ohead):
+            arbGeomParams = IPolyMesh(iObj, WrapExistingFlag.kWrapExisting).getSchema().getArbGeomParams()
+        if ISubD.matches(ohead):
+            arbGeomParams = ISubD(iObj, WrapExistingFlag.kWrapExisting).getSchema().getArbGeomParams()
+        if ICurves.matches(ohead):
+            arbGeomParams = ICurves(iObj, WrapExistingFlag.kWrapExisting).getSchema().getArbGeomParams()
+        if IPoints.matches(ohead):
+            arbGeomParams = IPoints(iObj, WrapExistingFlag.kWrapExisting).getSchema().getArbGeomParams()                
+
+        if arbGeomParams is not None and arbGeomParams.valid():
+            for attrName in allowedTags:
+                propHeader = arbGeomParams.getPropertyHeader(attrName)
+                if(propHeader is not None):
+                     if (IStringGeomParam.matches( propHeader )):
+                        param = IStringGeomParam( arbGeomParams, attrName )
+                        if param.valid():
+                            val = param.getExpandedValue().getVals()[0]
+                            try:
+                                for tag in json.loads(val):
+                                    if not tag in results:
+                                        results[tag] = [iObj.getFullName()]
+                                    else:
+                                        results[tag].append(iObj.getFullName())
+                            except:
+                                if not val in results:
+                                    results[val] = [iObj.getFullName()]
+                                else:
+                                    results[val].append(iObj.getFullName())
+
+        for i in range(iObj.getNumChildren()):
+            self.visitShaderAttributeAndTags(IObject(iObj, iObj.getChildHeader(i).getName() ), allowedTags, results)
+
+    '''
+    Update all the tags available in the current cache.
+    '''
     def updateTags(self):
-        tags = cmds.ABCGetTags(self.ABCcache)
-        try:
-            self.tags = json.loads(tags)
-        except:
-            self.tags = {}
+        if not self.archive:
+            return
+        aTop = self.archive.getTop()
+        allowedTags = ["mtoa_constant_tags", "tags"]
+        shAttr = str(cmds.getAttr(self.shape + ".shadersAttribute"))
+        if shAttr != "":
+            allowedTags.append(shAttr)
+        self.tags = {}
+        self.visitShaderAttributeAndTags(aTop, allowedTags, self.tags)
+
+
 
     def updateShaders(self, shaders):
         if self.isValid():

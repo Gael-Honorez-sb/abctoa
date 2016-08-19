@@ -977,31 +977,7 @@ AtNode* createInstance(
             AiNodeSetArray(instanceNode, "shader", shadersArray);
         }
         else
-            if(!ApplyShaders(originalName, instanceNode, tags, args) && args.useShaderAssignationAttribute)
-			{
-				if ( arbGeomParams != NULL && arbGeomParams.valid() )
-				{
-					if (arbGeomParams.getPropertyHeader(args.shaderAssignationAttribute) != NULL)
-					{
-						const PropertyHeader * tagsHeader = arbGeomParams.getPropertyHeader(args.shaderAssignationAttribute);
-						if (IStringGeomParam::matches( *tagsHeader ))
-						{
-							IStringGeomParam param( arbGeomParams,  args.shaderAssignationAttribute );
-							if ( param.valid() )
-							{
-								IStringGeomParam::prop_type::sample_ptr_type valueSample = param.getExpandedValue().getVals();
-								if ( param.getScope() == kConstantScope || param.getScope() == kUnknownScope)
-								{
-									AtNode* appliedShader = getShaderByName(args.ns + valueSample->get()[0], args);
-									ApplyShader(originalName, instanceNode, appliedShader);
-								}
-
-							}
-						}
-					}
-				}
-			}
-
+            ApplyShaders(originalName, instanceNode, tags, args);
     }
 
     args.createdNodes->addNode(instanceNode);
