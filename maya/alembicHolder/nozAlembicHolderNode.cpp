@@ -165,8 +165,8 @@ void nodePreRemovalCallback(MObject& obj, void* data) {
     }
 }
 
-nozAlembicHolder::nozAlembicHolder() {
-        //std::cout << "class creator" << std::endl;
+nozAlembicHolder::nozAlembicHolder() 
+{
 }
 
 nozAlembicHolder::~nozAlembicHolder() {
@@ -226,7 +226,7 @@ void nozAlembicHolder::postConstructor()
 {
     // This call allows the shape to have shading groups assigned
     setRenderable(true);
-
+    isConstant = false;
     // callbacks
     MObject node = thisMObject();
     MNodeMessage::addAttributeChangedCallback(node, abcChangedCallback, this);
@@ -482,22 +482,15 @@ MStatus nozAlembicHolder::initialize() {
     addAttribute(aBoundMin);
     addAttribute(aBoundMax);
 
-	attributeAffects ( aJsonFile, aUpdateAssign );
-	attributeAffects ( aJsonFileSecondary, aUpdateAssign );
-	attributeAffects ( aAttributes, aUpdateAssign );
-	attributeAffects ( aLayersOverride, aUpdateAssign );
-	attributeAffects ( aSkipJsonFile, aUpdateAssign );
-	attributeAffects ( aSkipAttributes, aUpdateAssign );
-	attributeAffects ( aSkipLayers, aUpdateAssign );
-
-	attributeAffects ( aForceReload, aUpdateAssign );
+    attributeAffects(aAbcFile, aUpdateCache);
 
 	return MS::kSuccess;
 }
 
 MStatus nozAlembicHolder::setDependentsDirty(const MPlug& plug, MPlugArray& plugArray)
 {
-    if (plug != aForceReload && plug != aBoundingExtended && plug != aAbcFile && plug != aObjectPath
+
+    if (plug != aForceReload && plug != aBoundingExtended && plug != aObjectPath
         && plug != aSelectionPath && plug != aTime && plug != aTimeOffset && plug != aUpdateCache)
         return MPxNode::setDependentsDirty(plug, plugArray);
 
