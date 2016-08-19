@@ -133,6 +133,14 @@ def writeJson(namespace=None):
                 except:
                     pass
 
+            if cmds.objExists("%s.shadersAttribute" % shape):
+                try:
+                    cur = cmds.getAttr("%s.shadersAttribute"  % shape)
+                    if cur != "":
+                        assignations["shadersAttribute"] = cur
+                except:
+                    pass
+
             if namespace:
                 assignations["namespace"] = namespace
             else :
