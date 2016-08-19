@@ -1,0 +1,32 @@
+set(INSTALL_ROOT F:/Apps/abcToArnold/maya2015_mtoa1.2.7.3/modules)
+
+set(ARNOLD_INCLUDE_DIR F:/development/arnold/mtoa_1.2.7.3/Arnold-4.2.13.4-windows/include)
+set(ARNOLD_LIBRARY F:/development/arnold/mtoa_1.2.7.3/Arnold-4.2.13.4-windows/lib)
+
+set(MTOA_INCLUDE_DIR F:/solidangle/mtoadeploy/2015/include)
+set(MTOA_LIBRARY F:/solidangle/mtoadeploy/2015/lib)
+
+set(MAYA_VERSION 2015)
+set(MAYA_INCLUDE_DIR F:/Apps/Autodesk/Maya2015/include)
+set(MAYA_LIBRARY F:/Apps/Autodesk/Maya2015/lib)
+
+set(ALEMBIC_INCLUDE_DIR F:/development/thirdparty_libs/alembic/install/include)
+set(ALEMBIC_LIBRARY F:/development/thirdparty_libs/alembic/install/lib/Release/win64)
+
+#set(HDF5_INCLUDE_DIR F:/development/thirdparty_libs/hdf5/install/include/win64)
+#set(HDF5_LIBRARY F:/development/thirdparty_libs/hdf5/install/lib/Release/win64)
+
+set(ILMBASE_INCLUDE_DIR F:/development/thirdparty_libs/ilmbase/install/include)
+set(ILMBASE_LIBRARY F:/development/thirdparty_libs/ilmbase/install/lib/Release/win64)
+
+#set(ZLIB_INCLUDE_DIR F:/development/thirdparty_libs/zlib/install/include)
+#set(ZLIB_LIBRARY F:/development/thirdparty_libs/zlib/install/lib/Release/win64)
+
+set(BOOST_ROOT F:/development/thirdparty_libs/boost/boost_1_59_0)
+set(BOOST_LIBRARYDIR F:/development/thirdparty_libs/boost/boost_1_59_0/stage/win64)
+
+set(JSONCPP_INCLUDE_DIR F:/development/external/abctoarnold/contrib/install/include)
+set(JSONCPP_LIBRARY F:/development/external/abctoarnold/contrib/install/lib/Release/win64)
+
+set(PYSTRING_INCLUDE_DIR F:/development/external/abctoarnold/contrib/install/include)
+set(PYSTRING_LIBRARY F:/development/external/abctoarnold/contrib/install/lib/Release/win64)
