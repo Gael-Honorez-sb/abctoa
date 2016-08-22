@@ -484,6 +484,16 @@ MStatus nozAlembicHolder::initialize() {
 
     attributeAffects(aAbcFile, aUpdateCache);
 
+    // Update assinations
+	attributeAffects(aJsonFile, aUpdateAssign);
+	attributeAffects(aJsonFileSecondary, aUpdateAssign);
+	attributeAffects(aAttributes, aUpdateAssign);
+	attributeAffects(aLayersOverride, aUpdateAssign);
+	attributeAffects(aSkipJsonFile, aUpdateAssign);
+	attributeAffects(aSkipAttributes, aUpdateAssign);
+	attributeAffects(aSkipLayers, aUpdateAssign);
+	attributeAffects(aForceReload, aUpdateAssign);
+
 	return MS::kSuccess;
 }
 
@@ -493,6 +503,7 @@ MStatus nozAlembicHolder::setDependentsDirty(const MPlug& plug, MPlugArray& plug
     if (plug != aForceReload && plug != aBoundingExtended && plug != aObjectPath
         && plug != aSelectionPath && plug != aTime && plug != aTimeOffset && plug != aUpdateCache)
         return MPxNode::setDependentsDirty(plug, plugArray);
+
 
     if ((plug == aTime || plug == aTimeOffset) && isConstant)
         return MPxNode::setDependentsDirty(plug, plugArray);
