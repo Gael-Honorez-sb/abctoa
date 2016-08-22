@@ -99,7 +99,7 @@ void WalkObject( IObject & parent, const ObjectHeader &i_ohead, ProcArgs &args,
     std::auto_ptr<MatrixSampleMap> concatenatedXformSamples;
 
     // Check for instances
-    const ObjectHeader& ohead = parent.isChildInstance(i_ohead.getName()) ? parent.getChild(i_ohead.getName()).getHeader() : i_ohead;
+    ObjectHeader ohead = parent.isChildInstance(i_ohead.getName()) ? parent.getChild(i_ohead.getName()).getHeader() : i_ohead;
 
     if ( IXform::matches( ohead ) )
     {
@@ -934,7 +934,6 @@ int ProcInit( struct AtNode *node, void **user_ptr )
         {
             for ( size_t i = 0; i < root.getNumChildren(); ++i )
             {
-                std::vector<std::string> tags;
                 WalkObject( root, root.getChildHeader(i), *args,
                             path.end(), path.end(), 0 );
             }
@@ -947,7 +946,6 @@ int ProcInit( struct AtNode *node, void **user_ptr )
                     root.getChildHeader( *I );
             if ( nextChildHeader != NULL )
             {
-                std::vector<std::string> tags;
                 WalkObject( root, *nextChildHeader, *args, I+1,
                         path.end(), 0);
             }
