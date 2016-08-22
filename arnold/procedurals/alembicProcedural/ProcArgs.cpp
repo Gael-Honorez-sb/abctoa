@@ -266,28 +266,6 @@ void ProcArgs::usage()
     std::cerr << "If used, the procedural will look for a shader path attribute "
                  "for all objects in the scene, and will put user attributes "
                  "accordingly to the datas of the xml path if the path is found. ";
-    std::cerr << std::endl;
-    std::cerr << std::endl;
-
-
-
-
-    std::cerr << "-makeinstance" << std::endl;
-    std::cerr << std::endl;
-
-    std::cerr << "This behavior is disabled by default. If enabled, the "
-                 "procedural will attempt to identify identical primitives "
-                 "(using Alembic's per-array-property hash keys) and create "
-                 "corresponding \"ginstance\" nodes. Two primitives are "
-                 "considered equivalent if the keys of their relevant point "
-                 "position samples match along with any specified "
-                 "subdivision values. This works across multiple archives or "
-                 "invokations of the procedural. It currently does not write "
-                 "unique user data per instance but will likely do so "
-                 "automatically (when necessary) in a future release. "
-                 "The ray visibility of the source primitive will be set to "
-                 "AI_RAY_NONE and the \"ginstance\" node's will be set to "
-                 "that of the calling \"procedural\" node.";
 
     std::cerr << std::endl;
 
