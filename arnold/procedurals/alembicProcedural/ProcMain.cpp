@@ -99,7 +99,7 @@ void WalkObject( IObject & parent, const ObjectHeader &i_ohead, ProcArgs &args,
     std::auto_ptr<MatrixSampleMap> concatenatedXformSamples;
 
     // Check for instances
-    ObjectHeader ohead = parent.isChildInstance(i_ohead.getName()) ? parent.getChild(i_ohead.getName()).getHeader() : i_ohead;
+    const ObjectHeader ohead = parent.isChildInstance(i_ohead.getName()) ? parent.getChild(i_ohead.getName()).getHeader() : i_ohead;
 
     if ( IXform::matches( ohead ) )
     {
