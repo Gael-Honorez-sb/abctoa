@@ -195,7 +195,7 @@ AtNode* getShader(const std::string& name, const std::vector<std::string>& tags,
             }
         }
 
-        //else if(foundInPath == false)
+        else if(foundInPath == false)
         {
             if (std::find(tags.begin(), tags.end(), it->first) != tags.end())
             {
