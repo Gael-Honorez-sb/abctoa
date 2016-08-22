@@ -192,7 +192,7 @@ bool isVisible(IObject child, IXformSchema xs, ProcArgs* args)
 
 bool isVisibleForArnold(IObject child, ProcArgs* args)
 {
-    AtUInt16 minVis = AI_RAY_ALL & ~(AI_RAY_GLOSSY|AI_RAY_DIFFUSE|AI_RAY_REFRACTED|AI_RAY_REFLECTED|AI_RAY_SHADOW|AI_RAY_CAMERA);
+    AtUInt16 minVis = AI_RAY_ALL & ~(AI_RAY_GLOSSY|AI_RAY_DIFFUSE|AI_RAY_SUBSURFACE|AI_RAY_REFRACTED|AI_RAY_REFLECTED|AI_RAY_SHADOW|AI_RAY_CAMERA);
     std::string name = child.getFullName();
 
     if(args->linkAttributes)

@@ -286,7 +286,8 @@ void ProcArgs::usage()
                  "unique user data per instance but will likely do so "
                  "automatically (when necessary) in a future release. "
                  "The ray visibility of the source primitive will be set to "
-                 "AI_RAY_NONE and the \"ginstance\" node's will be set to "
+                 "
+                 _NONE and the \"ginstance\" node's will be set to "
                  "that of the calling \"procedural\" node.";
 
     std::cerr << std::endl;

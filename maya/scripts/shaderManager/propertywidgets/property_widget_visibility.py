@@ -23,6 +23,7 @@ class PropertyWidgetVisibility(PropertyWidget):
 
     self.paramName = params["name"]
 
+    self.minVal = AI_RAY_ALL & ~(AI_RAY_GLOSSY|AI_RAY_DIFFUSE|AI_RAY_SUBSURFACE|AI_RAY_REFRACTED|AI_RAY_REFLECTED|AI_RAY_SHADOW|AI_RAY_CAMERA)
 
     self.controller = controller
     self.controller.setPropertyValue.connect(self.changed)
@@ -31,7 +32,7 @@ class PropertyWidgetVisibility(PropertyWidget):
     self.allSwitch = QPushButton(self)
     self.allSwitch.setText("All Off")
     self.allSwitch.pressed.connect(self.switchPressed)
-    
+
     self.switch = True
 
     self.viz = {}
@@ -41,12 +42,10 @@ class PropertyWidgetVisibility(PropertyWidget):
     self.viz["glossy"] = QCheckBox(self)
     self.viz["reflection"] = QCheckBox(self)
     self.viz["refraction"] = QCheckBox(self)
+    self.viz["subsurface"] = QCheckBox(self)
 
     self.default = params["value"]
     self.setViz(self.default)
-    #self.widget.setChecked(self.default)
-    #self.PropertyChanged(self.default)
-
 
     grid= QGridLayout()
     grid.addWidget(self.allSwitch, 1, 1)
@@ -63,7 +62,7 @@ class PropertyWidgetVisibility(PropertyWidget):
 
   def switchPressed(self):
     if self.switch:
-        self.setViz(144)
+        self.setViz(self.minVal)
         self.allSwitch.setText("All On")
         self.switch = False
     else:
@@ -86,10 +85,19 @@ class PropertyWidgetVisibility(PropertyWidget):
         value &= ~AI_RAY_REFLECTED
     if not self.viz["refraction"].isChecked():
         value &= ~AI_RAY_REFRACTED
+    if not self.viz["subsurface"].isChecked():
+        value &= ~AI_RAY_SUBSURFACE
 
     return value
 
   def setViz(self, value):
+
+    if value <= self.minVal:
+        self.allSwitch.setText("All On")
+        self.switch = False
+    else:
+        self.allSwitch.setText("All Off")
+        self.switch = True
 
     for v in self.viz:
       self.viz[v].setChecked(0)
@@ -100,18 +108,23 @@ class PropertyWidgetVisibility(PropertyWidget):
     if value > AI_RAY_ALL & ~(AI_RAY_GLOSSY|AI_RAY_DIFFUSE):
         self.viz["diffuse"].setChecked(1)
         value = value - AI_RAY_DIFFUSE
-    if value > AI_RAY_ALL & ~(AI_RAY_GLOSSY|AI_RAY_DIFFUSE|AI_RAY_REFRACTED):
+    if value > AI_RAY_ALL & ~(AI_RAY_GLOSSY|AI_RAY_DIFFUSE|AI_RAY_SUBSURFACE):
+        self.viz["subsurface"].setChecked(1)
+        value = value - AI_RAY_SUBSURFACE        
+    if value > AI_RAY_ALL & ~(AI_RAY_GLOSSY|AI_RAY_DIFFUSE|AI_RAY_SUBSURFACE|AI_RAY_REFRACTED):
         self.viz["refraction"].setChecked(1)
         value = value - AI_RAY_REFRACTED
-    if value > AI_RAY_ALL & ~(AI_RAY_GLOSSY|AI_RAY_DIFFUSE|AI_RAY_REFRACTED|AI_RAY_REFLECTED):
+    if value > AI_RAY_ALL & ~(AI_RAY_GLOSSY|AI_RAY_DIFFUSE|AI_RAY_SUBSURFACE|AI_RAY_REFRACTED|AI_RAY_REFLECTED):
         self.viz["reflection"].setChecked(1)
         value = value - AI_RAY_REFLECTED
-    if value > AI_RAY_ALL & ~(AI_RAY_GLOSSY|AI_RAY_DIFFUSE|AI_RAY_REFRACTED|AI_RAY_REFLECTED|AI_RAY_SHADOW):
+    if value > AI_RAY_ALL & ~(AI_RAY_GLOSSY|AI_RAY_DIFFUSE|AI_RAY_SUBSURFACE|AI_RAY_REFRACTED|AI_RAY_REFLECTED|AI_RAY_SHADOW):
         self.viz["cast_shadows"].setChecked(1)
         value = value - AI_RAY_SHADOW
-    if value > AI_RAY_ALL & ~(AI_RAY_GLOSSY|AI_RAY_DIFFUSE|AI_RAY_REFRACTED|AI_RAY_REFLECTED|AI_RAY_SHADOW|AI_RAY_CAMERA):
+    if value > AI_RAY_ALL & ~(AI_RAY_GLOSSY|AI_RAY_DIFFUSE|AI_RAY_SUBSURFACE|AI_RAY_REFRACTED|AI_RAY_REFLECTED|AI_RAY_SHADOW|AI_RAY_CAMERA):
         self.viz["camera"].setChecked(1)
         value = value - AI_RAY_CAMERA
+
+
 
 
 

@@ -124,6 +124,11 @@ void ApplyOverrides(const std::string& name, AtNode* node, const std::vector<std
                                         procViz &= ~AI_RAY_DIFFUSE;
                                     else
                                         attrViz &= ~AI_RAY_DIFFUSE;
+                                    compViz &= ~AI_RAY_SUBSURFACE;
+                                    if(procViz > compViz)
+                                        procViz &= ~AI_RAY_SUBSURFACE;
+                                    else
+                                        attrViz &= ~AI_RAY_SUBSURFACE;
                                     compViz &= ~AI_RAY_REFRACTED;
                                     if(procViz > compViz)
                                         procViz &= ~AI_RAY_REFRACTED;

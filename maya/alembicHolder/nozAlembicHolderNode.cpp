@@ -485,14 +485,14 @@ MStatus nozAlembicHolder::initialize() {
     attributeAffects(aAbcFile, aUpdateCache);
 
     // Update assinations
-	attributeAffects(aJsonFile, aUpdateAssign);
+	/*attributeAffects(aJsonFile, aUpdateAssign);
 	attributeAffects(aJsonFileSecondary, aUpdateAssign);
 	attributeAffects(aAttributes, aUpdateAssign);
 	attributeAffects(aLayersOverride, aUpdateAssign);
 	attributeAffects(aSkipJsonFile, aUpdateAssign);
 	attributeAffects(aSkipAttributes, aUpdateAssign);
 	attributeAffects(aSkipLayers, aUpdateAssign);
-	attributeAffects(aForceReload, aUpdateAssign);
+	attributeAffects(aForceReload, aUpdateAssign);*/
 
 	return MS::kSuccess;
 }

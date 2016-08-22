@@ -137,7 +137,7 @@ bool isVisibleForArnold(IObject child, chrono_t currentTime, holderPrms* params,
     if (!isVisible(child, currentTime, params, currentlyVisible))
         return false;
 
-    unsigned short minVis = AI_RAY_ALL & ~(AI_RAY_GLOSSY|AI_RAY_DIFFUSE|AI_RAY_REFRACTED|AI_RAY_REFLECTED|AI_RAY_SHADOW|AI_RAY_CAMERA);
+    unsigned short minVis = AI_RAY_ALL & ~(AI_RAY_GLOSSY|AI_RAY_DIFFUSE|AI_RAY_SUBSURFACE|AI_RAY_REFRACTED|AI_RAY_REFLECTED|AI_RAY_SHADOW|AI_RAY_CAMERA);
     std::string name = child.getFullName();
 
     if(params->linkAttributes)
