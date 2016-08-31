@@ -85,6 +85,20 @@ def assignTagsFromSetName():
                 tags.append(set)
                 cmds.setAttr(s + ".mtoa_constant_tags", json.dumps(tags), type="string")
 
+def assignAttributeMaterial():
+    sel = cmds.ls(sl=1)
+    shapes = cmds.listRelatives(sel, ad=1)
+    if not shapes:
+        shapes=sel
+    if shapes:
+        for s in shapes:
+            mat = cmds.listConnections(s, type="shadingEngine")
+            if mat:
+                mat = mat[0]
+                if not cmds.objExists(s + ".shaderName"):
+                    cmds.addAttr(s, ln='shaderName', dt='string') 
+                cmds.setAttr(s + ".shaderName", mat, type="string") 
+
 				
 def registerAlembicHolder():
     if not cmds.about(b=1):
@@ -100,6 +114,7 @@ def registerAlembicHolder():
         cmds.menuItem('importtAssign', label='Import Assignation on selected caches', parent='AlembicHolderMenu', c=lambda *args: importAssignations())
         cmds.menuItem( divider=True )
         cmds.menuItem('assignTagsSets', label='Assign tags from Selected Selection Sets', parent='AlembicHolderMenu', c=lambda *args: assignTagsFromSetName())
+        cmds.menuItem('assignAttrMat', label='Set attribute on Selected objects from shader name', parent='AlembicHolderMenu', c=lambda *args: assignAttributeMaterial())
         cmds.menuItem( divider=True )
         cmds.menuItem('ReloadAlembicShaderManager', label='Reload Shader Manager(coding)', parent='AlembicHolderMenu', c=lambda *args: reloadShaderManager(mayaWindow))
         cmds.menuItem( divider=True )
