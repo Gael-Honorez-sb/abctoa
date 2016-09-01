@@ -194,17 +194,34 @@ bool isVisibleForArnold(IObject child, ProcArgs* args)
 {
     AtUInt16 minVis = AI_RAY_ALL & ~(AI_RAY_GLOSSY|AI_RAY_DIFFUSE|AI_RAY_SUBSURFACE|AI_RAY_REFRACTED|AI_RAY_REFLECTED|AI_RAY_SHADOW|AI_RAY_CAMERA);
     std::string name = child.getFullName();
-
+    int pathSize = 0;
     if(args->linkAttributes)
     {
         for(std::vector<std::string>::iterator it=args->attributes.begin(); it!=args->attributes.end(); ++it)
         {
                 Json::Value attributes;
                 if(it->find("/") != string::npos)
+                {
                     if(isPathContainsInOtherPath(name, *it))
 					{
-                        attributes = args->attributesRoot[*it];
+                        std::string overridePath = *it;
+                        if(overridePath.length() > pathSize)
+                        {
+                            pathSize = overridePath.length();
+                            attributes = args->attributesRoot[*it];
+                        }
 					}
+                }
+                else if(matchPattern(name,*it)) // based on wildcard expression
+                {
+                    std::string overridePath = *it;
+                    if(overridePath.length() > pathSize)
+                    {   
+                        pathSize = overridePath.length();
+                        attributes = args->attributesRoot[*it];
+                    }
+            
+                }
 
                 if(attributes.size() > 0)
                 {
