@@ -21,7 +21,7 @@ License along with this library.*/
 #include <Alembic/Abc/All.h>
 #include <Alembic/AbcGeom/All.h>
 #include "../parseJson.h"
-#include "../pathUtil.h"
+#include "../PathUtil.h"
 //-*****************************************************************************
 
 #define AI_RAY_UNDEFINED   0x00         /**< undefined type                                  */
