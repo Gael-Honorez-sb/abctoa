@@ -1339,7 +1339,10 @@ bool CAlembicHolderUI::select(MSelectInfo &selectInfo,
     GLfloat minZ;
     Select* selector;
 
-	AlembicHolder::ScenePtr _ptr = geom->abcSceneManager.getScene(geom->m_currscenekey);
+    AlembicHolder::ScenePtr _ptr = geom->abcSceneManager.getScene(geom->m_currscenekey);
+    if(_ptr == NULL)
+        return false;
+
     size_t numTriangles = _ptr->getNumTriangles();
     const unsigned int bufferSize = (unsigned int)std::min(numTriangles,(size_t)100000);
         
