@@ -80,7 +80,7 @@ public:
 	const size_t hash(std::string const& s);
 
 	std::string getHash(const std::string& fileName,     
-						const std::map<std::string, AtNode*>& shaders,
+						const std::vector<std::pair<std::string, AtNode*> >& shaders,
 						const std::map<std::string, AtNode*>& displacements,
 						const Json::Value& attributesRoot,
 						double frame

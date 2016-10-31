@@ -153,7 +153,7 @@ const size_t FileCache::hash(std::string const& s)
  }
 
 std::string FileCache::getHash(const std::string& fileName,     
-							   const std::map<std::string, AtNode*>& shaders,
+							   const std::vector<std::pair<std::string, AtNode*> >& shaders,
 							   const std::map<std::string, AtNode*>& displacements,
 							   const Json::Value& attributesRoot,
 							   double frame
@@ -161,7 +161,7 @@ std::string FileCache::getHash(const std::string& fileName,
 {
 
 	std::ostringstream shaderBuff;
-	for (std::map<std::string, AtNode*>::const_iterator it = shaders.begin(); it != shaders.end(); ++it) 
+	for (std::vector<std::pair<std::string, AtNode*> >::const_iterator it = shaders.begin(); it != shaders.end(); ++it)
 	{
 		shaderBuff << it->first;
 	}

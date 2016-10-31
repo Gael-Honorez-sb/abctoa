@@ -172,7 +172,7 @@ AtNode* getShader(const std::string& name, const std::vector<std::string>& tags,
     bool foundInPath = false;
     int pathSize = 0;
     AtNode* appliedShader = NULL;
-    for(std::map<std::string, AtNode*>::iterator it = args.shaders.begin(); it != args.shaders.end(); ++it)
+    for(std::vector<std::pair<std::string, AtNode*> >::iterator it = args.shaders.begin(); it != args.shaders.end(); ++it)
     {
         //check both path & tag
         if(it->first.find("/") != std::string::npos)
@@ -214,7 +214,7 @@ AtNode* getShader(const std::string& name, const std::vector<std::string>& tags,
 
 AtNode* getShaderByName(const std::string& name, ProcArgs & args)
 {
-    for(std::map<std::string, AtNode*>::iterator it = args.shaders.begin(); it != args.shaders.end(); ++it)
+    for(std::vector<std::pair<std::string, AtNode*> >::iterator it = args.shaders.begin(); it != args.shaders.end(); ++it)
     {
 		if(name.compare(it->first) == 0)
 			return it->second;
