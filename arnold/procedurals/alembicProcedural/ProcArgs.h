@@ -115,7 +115,7 @@ struct ProcArgs
     bool useUvArchive;
     Alembic::AbcGeom::IObject uvsRoot;
 
-    std::map<std::string, AtNode*> shaders;
+    std::vector<std::pair<std::string, AtNode*> > shaders;
     std::map<std::string, AtNode*> displacements;
 	std::map<std::string, std::string> pathRemapping;
     std::vector<std::string> attributes;

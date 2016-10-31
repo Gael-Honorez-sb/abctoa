@@ -519,7 +519,7 @@ void ParseShaders(Json::Value jroot, const std::string& ns, const std::string& n
                 if(type == 0)
                     args->displacements[val.asString().c_str()] = shaderNode;
                 else if(type == 1)
-                    args->shaders[val.asString().c_str()] = shaderNode;
+                    args->shaders.push_back(std::pair<std::string, AtNode*>(val.asString().c_str(), shaderNode));
 
             }
         }
