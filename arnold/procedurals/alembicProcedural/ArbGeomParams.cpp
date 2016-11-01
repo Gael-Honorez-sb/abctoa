@@ -841,9 +841,8 @@ void AddArbitraryProceduralParams(AtNode* proc, AtNode * primNode)
         {
             if (strcmp(paramName, "skipJson") == 0 ||
                 strcmp(paramName, "skipShaders") == 0 ||
-                strcmp(paramName, "skipOverrides") == 0 ||
+                strcmp(paramName, "skipAttributes") == 0 ||
                 strcmp(paramName, "skipDisplacements") == 0 ||
-                strcmp(paramName, "skipOverrides") == 0 ||
                 strcmp(paramName, "skipLayers") == 0
                 )
                 continue;

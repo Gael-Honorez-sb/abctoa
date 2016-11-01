@@ -411,7 +411,7 @@ MStatus nozAlembicHolder::initialize() {
     nAttr.setStorable(true);
     nAttr.setKeyable(true);
 
-    aSkipAttributes = nAttr.create("skipAttributes", "sa", MFnNumericData::kBoolean, false);
+    aSkipAttributes = nAttr.create("skipAttributes", "sat", MFnNumericData::kBoolean, false);
     nAttr.setWritable(true);
     nAttr.setReadable(true);
     nAttr.setHidden(false);

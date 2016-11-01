@@ -1125,7 +1125,7 @@ class ShaderManager(QMainWindow, UI_ABCHierarchy.Ui_NAM):
                         except:
                             pass
 
-                attrs=["Json","Shaders","Overrides","Displacements"]
+                attrs=["Json","Shaders","Attributes","Displacements"]
                 for attr in attrs:
                     if not cmds.objExists(str(shape) + ".skip%s" % attr):
                         cmds.addAttr(shape, ln='skip%s' % attr, at='bool')
