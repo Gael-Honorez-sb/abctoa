@@ -445,8 +445,6 @@ int ProcInit( struct AtNode *node, void **user_ptr )
         skipAttributes = AiNodeGetBool(node, "skipAttributes");
     if (AiNodeLookUpUserParameter(node, "skipDisplacements") != NULL )
         skipDisplacement = AiNodeGetBool(node, "skipDisplacements");
-    if (AiNodeLookUpUserParameter(node, "skipAttributes") != NULL )
-        skipAttributes = AiNodeGetBool(node, "skipAttributes");
     if (AiNodeLookUpUserParameter(node, "skipLayers") != NULL )
         skipLayers = AiNodeGetBool(node, "skipLayers");
 
@@ -457,14 +455,14 @@ int ProcInit( struct AtNode *node, void **user_ptr )
 	if(const char* env_p = std::getenv("PATH_REMAPPING")) // TODO: Read from json file and procedural parameters & merge them all.
 	{
 		Json::Reader pathRemappingReader;
-        Json::Value pathRemappingReaderattributes;
+        Json::Value pathRemappingReaderOverrides;
 
-		if(pathRemappingReader.parse( env_p, pathRemappingReaderattributes ))
+		if(pathRemappingReader.parse( env_p, pathRemappingReaderOverrides ))
 		{
-			for( Json::ValueIterator itr = pathRemappingReaderattributes.begin() ; itr != pathRemappingReaderattributes.end() ; itr++ )
+			for( Json::ValueIterator itr = pathRemappingReaderOverrides.begin() ; itr != pathRemappingReaderOverrides.end() ; itr++ )
 			{
 				std::string path1 = itr.key().asString();
-				std::string path2 = pathRemappingReaderattributes[itr.key().asString()].asString();
+				std::string path2 = pathRemappingReaderOverrides[itr.key().asString()].asString();
 				AiMsgDebug("Remapping %s to %s", path1.c_str(), path2.c_str());
 				args->pathRemapping[path1] = path2;
 			}
@@ -521,7 +519,7 @@ int ProcInit( struct AtNode *node, void **user_ptr )
     }
 
     Json::Value jrootShaders;
-    Json::Value jrootattributes;
+    Json::Value jrootAttributes;
     Json::Value jrootDisplacements;
     Json::Value jrootLayers;
 
@@ -562,26 +560,26 @@ int ProcInit( struct AtNode *node, void **user_ptr )
                 if (AiNodeLookUpUserParameter(node, "shadersAssignation") !=NULL)
                 {
                     Json::Reader readerOverride;
-                    Json::Value jrootShadersattributes;
-                    std::vector<std::string> pathattributes;
-                    if(readerOverride.parse( AiNodeGetStr(node, "shadersAssignation"), jrootShadersattributes ))
-                        if(jrootShadersattributes.size() > 0)
-                            jrootShaders = OverrideAssignations(jrootShaders, jrootShadersattributes);
+                    Json::Value jrootShadersOverrides;
+                    std::vector<std::string> pathOverrides;
+                    if(readerOverride.parse( AiNodeGetStr(node, "shadersAssignation"), jrootShadersOverrides ))
+                        if(jrootShadersOverrides.size() > 0)
+                            jrootShaders = OverrideAssignations(jrootShaders, jrootShadersOverrides);
                 }
             }
 
 
             if(skipAttributes == false)
             {
-                jrootattributes = jroot["attributes"];
+                jrootAttributes = jroot["attributes"];
 
                 if (AiNodeLookUpUserParameter(node, "attributes") !=NULL)
                 {
                     Json::Reader readerOverride;
-                    Json::Value jrootattributesattributes;
+                    Json::Value jrootAttributesOverrides;
 
-                    if(readerOverride.parse( AiNodeGetStr(node, "attributes"), jrootattributesattributes))
-                        OverrideProperties(jrootattributes, jrootattributesattributes);
+                    if(readerOverride.parse( AiNodeGetStr(node, "attributes"), jrootAttributesOverrides))
+                        OverrideProperties(jrootAttributes, jrootAttributesOverrides);
 
                 }
             }
@@ -593,11 +591,11 @@ int ProcInit( struct AtNode *node, void **user_ptr )
                 if (AiNodeLookUpUserParameter(node, "displacementsAssignation") !=NULL)
                 {
                     Json::Reader readerOverride;
-                    Json::Value jrootDisplacementsattributes;
+                    Json::Value jrootDisplacementsOverrides;
 
-                    if(readerOverride.parse( AiNodeGetStr(node, "displacementsAssignation"), jrootDisplacementsattributes ))
-                        if(jrootDisplacementsattributes.size() > 0)
-                            jrootDisplacements = OverrideAssignations(jrootDisplacements, jrootDisplacementsattributes);
+                    if(readerOverride.parse( AiNodeGetStr(node, "displacementsAssignation"), jrootDisplacementsOverrides ))
+                        if(jrootDisplacementsOverrides.size() > 0)
+                            jrootDisplacements = OverrideAssignations(jrootDisplacements, jrootDisplacementsOverrides);
                 }
             }
 
@@ -607,22 +605,22 @@ int ProcInit( struct AtNode *node, void **user_ptr )
                 if (AiNodeLookUpUserParameter(node, "layersOverride") !=NULL)
                 {
                     Json::Reader readerOverride;
-                    Json::Value jrootLayersattributes;
+                    Json::Value jrootLayersOverrides;
 
-                    if(readerOverride.parse( AiNodeGetStr(node, "layersOverride"), jrootLayersattributes ))
+                    if(readerOverride.parse( AiNodeGetStr(node, "layersOverride"), jrootLayersOverrides ))
                     {
-                        jrootLayers[layer]["removeShaders"] = jrootLayersattributes[layer].get("removeShaders", skipShaders).asBool();
-                        jrootLayers[layer]["removeDisplacements"] = jrootLayersattributes[layer].get("removeDisplacements", skipDisplacement).asBool();
-                        jrootLayers[layer]["removeProperties"] = jrootLayersattributes[layer].get("removeProperties", skipAttributes).asBool();
+                        jrootLayers[layer]["removeShaders"] = jrootLayersOverrides[layer].get("removeShaders", skipShaders).asBool();
+                        jrootLayers[layer]["removeDisplacements"] = jrootLayersOverrides[layer].get("removeDisplacements", skipDisplacement).asBool();
+                        jrootLayers[layer]["removeProperties"] = jrootLayersOverrides[layer].get("removeProperties", skipAttributes).asBool();
 
-                        if(jrootLayersattributes[layer]["shaders"].size() > 0)
-                            jrootLayers[layer]["shaders"] = OverrideAssignations(jrootLayers[layer]["shaders"], jrootLayersattributes[layer]["shaders"]);
+                        if(jrootLayersOverrides[layer]["shaders"].size() > 0)
+                            jrootLayers[layer]["shaders"] = OverrideAssignations(jrootLayers[layer]["shaders"], jrootLayersOverrides[layer]["shaders"]);
 
-                        if(jrootLayersattributes[layer]["displacements"].size() > 0)
-                            jrootLayers[layer]["displacements"] = OverrideAssignations(jrootLayers[layer]["displacements"], jrootLayersattributes[layer]["displacements"]);
+                        if(jrootLayersOverrides[layer]["displacements"].size() > 0)
+                            jrootLayers[layer]["displacements"] = OverrideAssignations(jrootLayers[layer]["displacements"], jrootLayersOverrides[layer]["displacements"]);
 
-                        if(jrootLayersattributes[layer]["properties"].size() > 0)
-                            OverrideProperties(jrootLayers[layer]["properties"], jrootLayersattributes[layer]["properties"]);
+                        if(jrootLayersOverrides[layer]["properties"].size() > 0)
+                            OverrideProperties(jrootLayers[layer]["properties"], jrootLayersOverrides[layer]["properties"]);
                     }
                 }
             }
@@ -654,7 +652,7 @@ int ProcInit( struct AtNode *node, void **user_ptr )
         if (AiNodeLookUpUserParameter(node, "attributes") !=NULL  && skipAttributes == false)
         {
             Json::Reader reader;
-            bool parsingSuccessful = reader.parse( AiNodeGetStr(node, "attributes"), jrootattributes );
+            bool parsingSuccessful = reader.parse( AiNodeGetStr(node, "attributes"), jrootAttributes );
         }
         if (AiNodeLookUpUserParameter(node, "displacementsAssignation") !=NULL  && skipDisplacement == false)
         {
@@ -685,9 +683,9 @@ int ProcInit( struct AtNode *node, void **user_ptr )
         if(jrootLayers[layer]["properties"].size() > 0)
         {
             if(jrootLayers[layer].get("removeProperties", skipAttributes).asBool())
-                jrootattributes = jrootLayers[layer]["properties"];
+                jrootAttributes = jrootLayers[layer]["properties"];
             else
-                OverrideProperties(jrootattributes, jrootLayers[layer]["properties"]);
+                OverrideProperties(jrootAttributes, jrootLayers[layer]["properties"]);
         }
     }
 
@@ -727,11 +725,11 @@ int ProcInit( struct AtNode *node, void **user_ptr )
     }
 
 
-    if( jrootattributes.size() > 0 )
+    if( jrootAttributes.size() > 0 )
     {
         args->linkAttributes = true;
-        args->attributesRoot = jrootattributes;
-        for( Json::ValueIterator itr = jrootattributes.begin() ; itr != jrootattributes.end() ; itr++ )
+        args->attributesRoot = jrootAttributes;
+        for( Json::ValueIterator itr = jrootAttributes.begin() ; itr != jrootAttributes.end() ; itr++ )
         {
             std::string path = itr.key().asString();
             args->attributes.push_back(path);
