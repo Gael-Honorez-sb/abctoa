@@ -38,7 +38,7 @@
 #include "WriteTransform.h"
 #include "WriteOverrides.h"
 #include "ArbGeomParams.h"
-#include "PathUtil.h"
+#include "../../../common/PathUtil.h"
 #include "parseAttributes.h"
 #include "NodeCache.h"
 
@@ -214,7 +214,7 @@ std::string getHash(
             //check both path & tag
             if(it->first.find("/") != string::npos)
             {
-                if(isPathContainsInOtherPath(originalName, it->first))
+                if(pathContainsOtherPath(originalName, it->first))
                 {
                     appliedDisplacement = it->second;
                     foundInPath = true;
@@ -252,7 +252,7 @@ std::string getHash(
             Json::Value overrides;
             if(it->find("/") != string::npos)
             {
-                if(isPathContainsInOtherPath(originalName, *it))
+                if(pathContainsOtherPath(originalName, *it))
                 {
                     overrides = args.attributesRoot[*it];
                     foundInPath = true;
@@ -588,7 +588,7 @@ AtNode* writeMesh(
     {
         customUv = true;
         PathList path;
-        TokenizePath( prim.getFullName(), path );
+        TokenizePath( prim.getFullName(), "/", path );
         IObject current = args.uvsRoot;
         for ( size_t i = 0; i < path.size(); ++i )
         {
@@ -736,7 +736,7 @@ AtNode* writeMesh(
             //check both path & tag
             if(it->first.find("/") != string::npos)
             {
-                if(isPathContainsInOtherPath(originalName, it->first))
+                if(pathContainsOtherPath(originalName, it->first))
                 {
                     appliedDisplacement = it->second;
                     foundInPath = true;
@@ -1017,7 +1017,7 @@ bool isMeshLight(
             Json::Value overrides;
             if(it->find("/") != string::npos)
             {
-                if(isPathContainsInOtherPath(originalName, *it))
+                if(pathContainsOtherPath(originalName, *it))
                 {
                     overrides = args.attributesRoot[*it];
                     foundInPath = true;

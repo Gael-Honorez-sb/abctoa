@@ -41,7 +41,7 @@
 #include "parseAttributes.h"
 #include "NodeCache.h"
 
-#include "PathUtil.h"
+#include "../../../common/PathUtil.h"
 
 #include <ai.h>
 #include <sstream>
@@ -119,7 +119,7 @@ std::string getHash(
             Json::Value overrides;
             if(it->find("/") != string::npos)
             {
-                if(isPathContainsInOtherPath(originalName, *it))
+                if(pathContainsOtherPath(originalName, *it))
                 {
                     overrides = args.attributesRoot[*it];
                     foundInPath = true;

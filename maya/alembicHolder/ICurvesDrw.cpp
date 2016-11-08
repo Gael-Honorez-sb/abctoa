@@ -36,7 +36,7 @@
 
 #include "ICurvesDrw.h"
 #include "RenderModules.h"
-#include "PathUtil.h"
+#include "../../common/PathUtil.h"
 #include "samplingUtils.h"
 
 namespace AlembicHolder {

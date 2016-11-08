@@ -1,6 +1,6 @@
 set(PROC arnoldAlembicProcedural)
 
-file(GLOB SRC "*.cpp" "*h" "../../../common/abcshaderutils.h" "../../../common/abcshaderutils.cpp")
+file(GLOB SRC "*.cpp" "*h" "../../../common/abcshaderutils.h" "../../../common/abcshaderutils.cpp" "../../../common/PathUtil.h" "../../../common/PathUtil.cpp")
 
 include_directories(${Boost_INCLUDE_DIR})
 include_directories(${JSONCPP_INCLUDE_DIRS})

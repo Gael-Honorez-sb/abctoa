@@ -40,7 +40,7 @@
 #include "Foundation.h"
 #include "IObjectDrw.h"
 #include "MeshDrwHelper.h"
-#include "PathUtil.h"
+#include "../../common/PathUtil.h"
 
 namespace AlembicHolder {
 
