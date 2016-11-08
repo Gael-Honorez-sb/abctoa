@@ -33,19 +33,16 @@
 // OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 //
 //-*****************************************************************************
-#ifndef _Alembic_Prman_PathUtil_h_
-#define _Alembic_Prman_PathUtil_h_
+#ifndef _Common_PathUtil_h_
+#define _Common_PathUtil_h_
 
-
-#include <Alembic/AbcGeom/All.h>
 #include <json/json.h>
 
 typedef std::vector<std::string> PathList;
-bool isPathContainsInOtherPath(const std::string &path, const std::string &otherPath );
-void TokenizePath( const std::string &path, PathList &result );
-void TokenizePathAbc( const std::string &path, std::vector<std::string> &result );
+bool pathContainsOtherPath(const std::string &path, const std::string &otherPath );
+void TokenizePath(const std::string &path, const char *separator, PathList &result );
 bool pathInJsonString(const std::string &path, const std::string &jsonString );
 std::string replace_all(const std::string &str, const char *from, const char *to);
 static std::string translate(const char *pattern);
-bool matchPattern(std::string str, std::string pat);
+bool matchPattern(const std::string& str, const std::string& pat);
 #endif

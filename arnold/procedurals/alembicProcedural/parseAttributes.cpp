@@ -1,7 +1,7 @@
 
 #include "parseAttributes.h"
 #include "abcshaderutils.h"
-#include "PathUtil.h"
+#include "../../../common/PathUtil.h"
 
 #include <pystring.h>
 #include <boost/regex.hpp>
@@ -202,7 +202,7 @@ bool isVisibleForArnold(IObject child, ProcArgs* args)
                 Json::Value attributes;
                 if(it->find("/") != string::npos)
                 {
-                    if(isPathContainsInOtherPath(name, *it))
+                    if(pathContainsOtherPath(name, *it))
 					{
                         std::string overridePath = *it;
                         if(overridePath.length() > pathSize)

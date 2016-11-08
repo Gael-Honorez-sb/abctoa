@@ -8,7 +8,7 @@
 #include <Alembic/AbcGeom/Visibility.h>
 
 #include "ProcArgs.h"
-#include "PathUtil.h"
+#include "../../../common/PathUtil.h"
 #include "SampleUtil.h"
 
 #include "ArbGeomParams.h"

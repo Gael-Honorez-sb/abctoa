@@ -40,7 +40,7 @@
 
 #include "ProcArgs.h"
 #include "getBounds.h"
-#include "PathUtil.h"
+#include "../../../common/PathUtil.h"
 #include "SampleUtil.h"
 #include "WriteGeo.h"
 #include "WritePoint.h"
@@ -924,7 +924,7 @@ int ProcInit( struct AtNode *node, void **user_ptr )
 
     IObject root = archive.getTop();
     PathList path;
-    TokenizePath( args->objectpath, path );
+    TokenizePath( args->objectpath, "/", path );
 
     //try
     {

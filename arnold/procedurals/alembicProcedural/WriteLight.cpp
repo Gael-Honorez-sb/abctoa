@@ -4,7 +4,7 @@
 #include "parseAttributes.h"
 #include "WriteTransform.h"
 #include "WriteOverrides.h"
-#include "PathUtil.h"
+#include "../../../common/PathUtil.h"
 #include "parseAttributes.h"
 
 
@@ -177,7 +177,7 @@ void GetColorTemperatureOverride(const std::string& name, const std::vector<std:
         Json::Value overrides;
         if(it->find("/") != std::string::npos)
         {
-            bool curFoundInPath = isPathContainsInOtherPath(name, *it);
+            bool curFoundInPath = pathContainsOtherPath(name, *it);
             if(curFoundInPath)
             {
                 foundInPath = true;

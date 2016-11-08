@@ -36,7 +36,7 @@
 
 #include "Scene.h"
 #include "IObjectDrw.h"
-#include "PathUtil.h"
+#include "../../common/PathUtil.h"
 #include <Alembic/AbcCoreFactory/IFactory.h>
 #include "boost/foreach.hpp"
 
@@ -75,7 +75,7 @@ Scene::Scene( const std::string &abcFileName, const std::string &objectPath )
 
     // try to walk to the path
     PathList path;
-    TokenizePath( objectPath, path );
+    TokenizePath( objectPath, "|", path );
 
     m_drawable.reset( new IObjectDrw( m_topObject, false, path ) );
 

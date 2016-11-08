@@ -1,6 +1,6 @@
 //-*****************************************************************************
 //
-// Copyright (c) 2009-2011,
+// Copyright (c) 2009-2010,
 //  Sony Pictures Imageworks Inc. and
 //  Industrial Light & Magic, a division of Lucasfilm Entertainment Company Ltd.
 //
@@ -35,18 +35,19 @@
 //-*****************************************************************************
 #include "PathUtil.h"
 
-#include <algorithm>
 #include <boost/tokenizer.hpp>
 #include <boost/regex.hpp>
-#include "ai.h"
+#include <pystring.h>
+
 //-*****************************************************************************
-bool isPathContainsInOtherPath(const std::string &path, const std::string &otherPath )
+
+bool pathContainsOtherPath(const std::string &path, const std::string &otherPath )
 {
     std::vector<std::string> pathParts;
     std::vector<std::string> jsonPathParts;
 
-    TokenizePath(path, pathParts);
-    TokenizePath(otherPath, jsonPathParts);
+    TokenizePath(path, "/", pathParts);
+    TokenizePath(otherPath, "/", jsonPathParts);
 
     if(jsonPathParts.size() > pathParts.size())
         return false;
@@ -63,22 +64,50 @@ bool isPathContainsInOtherPath(const std::string &path, const std::string &other
     return false;
 }
 
+bool pathInJsonString(const std::string &path, const std::string &jsonString )
+{
+    std::vector<std::string> pathParts;
+    std::vector<std::string> jsonPathParts;
+    pystring::split(path, pathParts, "/");
 
-void TokenizePath( const std::string &path, std::vector<std::string> &result )
+    Json::Value jroot;
+    Json::Reader reader;
+    bool parsingSuccessful = reader.parse( jsonString, jroot, false );
+    if(parsingSuccessful)
+    {
+        for( Json::ValueIterator itr = jroot.begin() ; itr != jroot.end() ; itr++ )
+        {
+            std::string jpath = jroot[itr.key().asUInt()].asString();
+            pystring::split(jpath, jsonPathParts, "/");
+
+            if(jsonPathParts.size() > pathParts.size())
+                continue;
+
+            bool validPath = true;
+            for(int i = 0; i < jsonPathParts.size(); i++)
+                if(pathParts[i].compare(jsonPathParts[i]) != 0)
+                    validPath = false;
+           
+            if(validPath)
+                return validPath;
+        }
+    }
+    return false;
+}
+
+void TokenizePath(const std::string &path, const char* separator, std::vector<std::string> &result)
 {
     typedef boost::char_separator<char> Separator;
     typedef boost::tokenizer<Separator> Tokenizer;
 
-    Tokenizer tokenizer( path, Separator( "/" ) );
+    Tokenizer tokenizer(path, Separator(separator));
 
-    for ( Tokenizer::iterator iter = tokenizer.begin() ; iter != tokenizer.end() ;
-          ++iter )
+    for (Tokenizer::iterator iter = tokenizer.begin(); iter != tokenizer.end(); ++iter)
     {
-        if ( (*iter).empty() ) { continue; }
-        result.push_back( *iter );
+        if ((*iter).empty()) { continue; }
+        result.push_back(*iter);
     }
 }
-
 
 /*
 * Return a new string with all occurrences of 'from' replaced with 'to'

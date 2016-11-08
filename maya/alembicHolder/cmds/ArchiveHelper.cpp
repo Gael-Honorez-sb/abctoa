@@ -14,7 +14,7 @@ License along with this library.*/
 #include "ArchiveHelper.h"
 //-*****************************************************************************
 
-#include "../PathUtil.h"
+#include "../../../common/PathUtil.h"
 #include "boost/foreach.hpp"
 using namespace Alembic::AbcGeom;
 
@@ -146,7 +146,7 @@ bool isVisibleForArnold(IObject child, chrono_t currentTime, holderPrms* params,
         {
                 Json::Value attributes;
                 if(it->find("/") != string::npos)
-                    if(isPathContainsInOtherPath(name, *it))
+                    if(pathContainsOtherPath(name, *it))
 					{
                         attributes = params->attributesRoot[*it];
 					}
@@ -181,7 +181,7 @@ bool getNamedObj( IObject & iObjTop, const std::string &objectPath)
 {
 
     PathList path;
-    TokenizePath( objectPath, path );
+    TokenizePath( objectPath, "|", path );
 
     const ObjectHeader *nextChildHeader = &iObjTop.getHeader();
     IObject nextParentObject = iObjTop;

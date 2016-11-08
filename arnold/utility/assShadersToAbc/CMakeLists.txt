@@ -1,6 +1,6 @@
 set(UTIL assShadersToAbc)
 
-file(GLOB SRC "*.cpp" "*h" "../../../common/*.h" "../../../common/*.cpp")
+file(GLOB SRC "*.cpp" "*h" "../../../common/abc*.h" "../../../common/abc*.cpp")
 
 include_directories(${Boost_INCLUDE_DIR})
 include_directories(${JSONCPP_INCLUDE_DIRS})

@@ -34,7 +34,7 @@
 //
 //-*****************************************************************************
 
-#include "PathUtil.h"
+#include "../../../common/PathUtil.h"
 #include "WriteOverrides.h"
 #include <ai.h>
 #include <sstream>
@@ -53,7 +53,7 @@ void ApplyOverrides(const std::string& name, AtNode* node, const std::vector<std
         Json::Value overrides;
         if(it->find("/") != std::string::npos)
         {
-            bool curFoundInPath = isPathContainsInOtherPath(name, *it);
+            bool curFoundInPath = pathContainsOtherPath(name, *it);
             if(curFoundInPath)
             {
                 foundInPath = true;
@@ -177,7 +177,7 @@ AtNode* getShader(const std::string& name, const std::vector<std::string>& tags,
         //check both path & tag
         if(it->first.find("/") != std::string::npos)
         {
-            if(isPathContainsInOtherPath(name, it->first))
+            if(pathContainsOtherPath(name, it->first))
             {
                 foundInPath = true;
                 std::string shaderPath = it->first;

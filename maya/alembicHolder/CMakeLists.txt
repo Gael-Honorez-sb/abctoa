@@ -1,6 +1,6 @@
 set(MAYAPLUGIN alembicHolder)
 
-file(GLOB SRC "*.cpp" "*h" "cmds/*.cpp" "cmds/*.h")
+file(GLOB SRC "*.cpp" "*h" "cmds/*.cpp" "cmds/*.h" "../../common/PathUtil.cpp" "../../common/PathUtil.h")
 
 
 add_library(${MAYAPLUGIN} SHARED ${SRC})
