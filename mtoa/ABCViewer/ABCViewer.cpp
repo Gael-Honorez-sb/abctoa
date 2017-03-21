@@ -1,7 +1,6 @@
 #include "ABCViewer.h"
 #include <ai_nodes.h>
 
-#include <boost/algorithm/string.hpp>
 #include <vector>
 
 #include "attributes/AttrHelper.h"
@@ -111,7 +110,7 @@ void CABCViewerTranslator::ExportProcedural(AtNode* procedural, bool update)
     MStatus stat;
     m_DagNode.setObject(m_dagPath.node());
     
-    ExportMatrix(procedural, 0);
+    ExportMatrix(procedural);
     ProcessRenderFlagsCustom(procedural);
 
     if (!update)

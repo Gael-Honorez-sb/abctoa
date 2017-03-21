@@ -12,10 +12,11 @@ You should have received a copy of the GNU Lesser General Public
 License along with this library.*/
 
 #include "ArchiveHelper.h"
+#include <algorithm>
 //-*****************************************************************************
 
 #include "../../../common/PathUtil.h"
-#include "boost/foreach.hpp"
+
 using namespace Alembic::AbcGeom;
 
 
@@ -186,13 +187,14 @@ bool getNamedObj( IObject & iObjTop, const std::string &objectPath)
     const ObjectHeader *nextChildHeader = &iObjTop.getHeader();
     IObject nextParentObject = iObjTop;
 
-    BOOST_FOREACH(std::string &childName, path)
+    //std::for_each(std::string &childName, path)
+    for(PathList::iterator iter = path.begin(); iter != path.end(); ++iter)
     {
-        nextChildHeader = nextParentObject.getChildHeader( childName );
+        nextChildHeader = nextParentObject.getChildHeader( *iter );
         if ( nextChildHeader == NULL ) {
             break;
         } else {
-            nextParentObject = IObject( nextParentObject, childName );
+            nextParentObject = IObject( nextParentObject, *iter );
         }
     }
 

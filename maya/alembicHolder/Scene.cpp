@@ -38,8 +38,6 @@
 #include "IObjectDrw.h"
 #include "../../common/PathUtil.h"
 #include <Alembic/AbcCoreFactory/IFactory.h>
-#include "boost/foreach.hpp"
-
 //-*****************************************************************************
 
 namespace AlembicHolder {
@@ -55,9 +53,6 @@ Scene::Scene( const std::string &abcFileName, const std::string &objectPath )
   , m_minTime( ( chrono_t )FLT_MAX )
   , m_maxTime( ( chrono_t )-FLT_MAX )
 {
-    boost::timer Timer;
-
-
     Alembic::AbcCoreFactory::IFactory factory;
 	factory.setOgawaNumStreams(16);
     m_archive = factory.getArchive(abcFileName );

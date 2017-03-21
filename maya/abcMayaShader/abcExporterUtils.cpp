@@ -254,7 +254,7 @@ void processArrayValues(AtNode* sit, const char *paramName, AtArray* paramArray,
     else if (typeArray == AI_TYPE_BYTE)
     {
         Alembic::AbcCoreAbstract::MetaData md;
-        md.set("type", boost::lexical_cast<std::string>("byte"));
+        md.set("type", std::string("byte"));
         //type int
         Abc::OUInt32ArrayProperty prop(matObj.getSchema().getNetworkNodeParameters(nodeName.asChar()), paramName, md);
         std::vector<unsigned int> vals;
@@ -512,7 +512,7 @@ void exportParameterFromArray(AtNode* sit, Mat::OMaterial matObj, AtArray* param
     {
         //type int
         Alembic::AbcCoreAbstract::MetaData md;
-        md.set("type", boost::lexical_cast<std::string>("byte"));
+        md.set("type", std::string("byte"));
         Abc::OUInt32Property prop(matObj.getSchema().getNetworkNodeParameters(nodeName.asChar()), paramName, md);
         prop.set(AiArrayGetByte(paramArray, index));
     }
@@ -664,7 +664,7 @@ void exportParameter(AtNode* sit, Mat::OMaterial matObj, int type, MString nodeN
     else if (type == AI_TYPE_BYTE)
     {
         Alembic::AbcCoreAbstract::MetaData md;
-        md.set("type", boost::lexical_cast<std::string>("byte"));
+        md.set("type", std::string("byte"));
 
         //type Byte
         Abc::OUInt32Property prop(matObj.getSchema().getNetworkNodeParameters(nodeName.asChar()), paramName, md);
@@ -680,19 +680,19 @@ void exportParameter(AtNode* sit, Mat::OMaterial matObj, int type, MString nodeN
         float val;
         bool success = AiMetaDataGetFlt(arnoldNodeEntry, paramName, "min", &val);
         if(success)
-            md.set("min", boost::lexical_cast<std::string>(val));
+            md.set("min", std::to_string(val));
 
         success = AiMetaDataGetFlt(arnoldNodeEntry, paramName, "max", &val);
         if(success)
-            md.set("max", boost::lexical_cast<std::string>(val));
+            md.set("max", std::to_string(val));
 
         success = AiMetaDataGetFlt(arnoldNodeEntry, paramName, "softmin", &val);
         if(success)
-            md.set("softmin", boost::lexical_cast<std::string>(val));
+            md.set("softmin", std::to_string(val));
 
         success = AiMetaDataGetFlt(arnoldNodeEntry, paramName, "softmax", &val);
         if(success)
-            md.set("softmax", boost::lexical_cast<std::string>(val));
+            md.set("softmax", std::to_string(val));
 
         Abc::OFloatProperty prop(matObj.getSchema().getNetworkNodeParameters(nodeName.asChar()), paramName, md);
         prop.set(AiNodeGetFlt(sit, paramName));

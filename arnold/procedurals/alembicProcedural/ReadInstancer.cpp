@@ -139,9 +139,9 @@ void WalkObjectForInstancer( IObject & parent, const ObjectHeader &i_ohead, Proc
 			AiNodeSetStr(instance, "name", newName.c_str());
 			AiNodeSetStr(instance, "dso", AiNodeGetStr(proc, "dso"));
 			std::string dataField(AiNodeGetStr(proc, "data"));
-			boost::smatch what;
-			if(boost::regex_match(dataField, what, e))
-				dataField = what[1] + newName + what[3];
+			std::smatch what;
+			if(std::regex_match(dataField, what, e))
+				dataField = what[1].str() + newName + what[3].str();
 
 			AiNodeSetStr(instance, "data", dataField.c_str());
 			AiNodeSetMatrix(instance, "matrix", outMtx);

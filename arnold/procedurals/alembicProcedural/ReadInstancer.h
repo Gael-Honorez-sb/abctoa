@@ -12,13 +12,13 @@
 #include "SampleUtil.h"
 
 #include "ArbGeomParams.h"
-#include <boost/regex.hpp>
+#include <regex>
 
 
 using namespace Alembic::AbcGeom;
 //-*****************************************************************************
 
-static const boost::regex e("(.+-nameprefix\\s)([\\w]+)(\\s.+)");
+static const std::regex e("(.+-nameprefix\\s)([\\w]+)(\\s.+)");
 
 void WalkObjectForInstancer( IObject & parent, const ObjectHeader &i_ohead, ProcArgs &args,
              PathList::const_iterator I, PathList::const_iterator E,

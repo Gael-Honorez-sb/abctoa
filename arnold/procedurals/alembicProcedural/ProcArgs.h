@@ -44,8 +44,11 @@
 
 #include <Alembic/AbcGeom/All.h>
 
-#include "NodeCache.h"
+#include "pystring.h"
 #include "json/json.h"
+
+#include "NodeCache.h"
+
 
 //-*****************************************************************************
 

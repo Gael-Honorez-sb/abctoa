@@ -5,8 +5,7 @@
 #include <map>
 #include "json/json.h"
 #include <vector>
-#include <boost/tokenizer.hpp>
-#include <boost/algorithm/string.hpp>
+#include <regex>
 #include "ProcArgs.h"
 #include <Alembic/Abc/All.h>
 #include <Alembic/AbcMaterial/IMaterial.h>

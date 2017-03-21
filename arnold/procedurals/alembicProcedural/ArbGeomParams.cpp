@@ -39,13 +39,12 @@
 #include <sstream>
 
 
-#include <boost/algorithm/string/replace.hpp>
 #define   AI_TYPE_DOUBLE   0x10
 
 std::string CleanAttributeName(std::string str)
 {
-   boost::replace_first(str, "mtoa_constant_", "");
-   return str;
+    pystring::replace(str, "mtoa_constant_", "");
+    return str;
 }
 
 

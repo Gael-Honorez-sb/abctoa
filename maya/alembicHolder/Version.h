@@ -16,7 +16,7 @@ License along with this library.*/
 #define H_TOSTRING(str) H_VAL(str)
 
 #define HOLDER_VENDOR "Nozon"
-#define HOLDER_VERSION_NUM 2.1.0
+#define HOLDER_VERSION_NUM 2.2.1
 
 
 #define ARCH_VERSION         H_TOSTRING(HOLDER_VERSION_NUM) 

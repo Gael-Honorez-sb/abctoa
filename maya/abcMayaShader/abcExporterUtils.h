@@ -23,7 +23,6 @@ License along with this library.*/
 #include <Alembic/AbcCoreOgawa/All.h>
 #include <Alembic/AbcMaterial/OMaterial.h>
 
-#include <boost/lexical_cast.hpp>
 #include <pystring.h>
 
 #include <sstream>

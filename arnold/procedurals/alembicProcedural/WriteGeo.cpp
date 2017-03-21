@@ -48,8 +48,6 @@
 #include "json/json.h"
 #include "json/value.h"
 
-#include <boost/regex.hpp>
-
 //-*****************************************************************************
 
 #if AI_VERSION_ARCH_NUM == 3
@@ -531,7 +529,7 @@ AtNode* writeMesh(
                 {
                     if(name.find(*it) != string::npos || std::find(tags.begin(), tags.end(), *it) != tags.end() || matchPattern(name,*it))
                     {
-                        const Json::Value overrides = args.attributesRoot[*it];
+                        Json::Value overrides = args.attributesRoot[*it];
                         if(overrides.size() > 0)
                         {
                             for( Json::ValueIterator itr = overrides.begin() ; itr != overrides.end() ; itr++ )
@@ -657,7 +655,7 @@ AtNode* writeMesh(
         {
             if(name.find(*it) != string::npos || std::find(tags.begin(), tags.end(), *it) != tags.end() || matchPattern(name,*it))
             {
-                const Json::Value overrides = args.attributesRoot[*it];
+                Json::Value overrides = args.attributesRoot[*it];
                 if(overrides.size() > 0)
                 {
                     for( Json::ValueIterator itr = overrides.begin() ; itr != overrides.end() ; itr++ )

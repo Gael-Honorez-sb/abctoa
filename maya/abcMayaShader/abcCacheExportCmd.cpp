@@ -119,7 +119,8 @@ MStatus abcCacheExportCmd::doIt( const MArgList &args)
             CNodeTranslator* translator = arnoldSession->ExportNode(toExport);
             if(true)
              {
-                 AtNode* root = translator->GetArnoldRootNode();
+                 AtNode* root = translator->
+                     ->GetArnoldRootNode();
                  exportedNodes->insert(root);
                  // We need to traverse the tree again...
                  getAllArnoldNodes(root, exportedNodes);

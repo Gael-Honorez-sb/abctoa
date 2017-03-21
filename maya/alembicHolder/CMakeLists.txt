@@ -5,16 +5,23 @@ file(GLOB SRC "*.cpp" "*h" "cmds/*.cpp" "cmds/*.h" "../../common/PathUtil.cpp" "
 
 add_library(${MAYAPLUGIN} SHARED ${SRC})
 
-include_directories(${Boost_INCLUDE_DIR})
-include_directories(${JSONCPP_INCLUDE_DIRS})
-include_directories(${PYSTRING_INCLUDE_DIR})
+include_directories(${CMAKE_SOURCE_DIR}/ThirdParty/jsoncpp/include)
+include_directories(${CMAKE_SOURCE_DIR}/ThirdParty/pystring)
+include_directories(${CMAKE_SOURCE_DIR}/alembic/lib)
+include_directories(${CMAKE_BINARY_DIR}/alembic/lib)
+
+INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR}/thirdParty/openEXR/IlmBase/Half)
+INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR}/thirdParty/openEXR/IlmBase/Iex)
+INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR}/thirdParty/openEXR/IlmBase/IexMath)
+INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR}/thirdParty/openEXR/IlmBase/IlmThread)
+INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR}/thirdParty/openEXR/IlmBase/Imath)
+INCLUDE_DIRECTORIES(${CMAKE_BINARY_DIR}/thirdParty/openEXR/IlmBase/config)
 
 
-target_link_libraries(${MAYAPLUGIN} ${PYSTRING_LIBRARIES} ${MAYA_LIBRARIES} ${JSONCPP_LIBRARIES} ${Boost_REGEX_LIBRARY} ${Boost_SYSTEM_LIBRARY} ${Boost_CHRONO_LIBRARY} ${Boost_DATE_TIME_LIBRARY} ${Boost_THREAD_LIBRARY})
+target_link_libraries(${MAYAPLUGIN} ${MAYA_LIBRARIES} Alembic jsoncpp_lib_static pystring_lib_static Iex Half)
 
 
 MAYA_SET_PLUGIN_PROPERTIES(${MAYAPLUGIN})
-ALEMBIC_SET_PROPERTIES(${MAYAPLUGIN})
 
 if (${CMAKE_SYSTEM_NAME} MATCHES "Windows")
 	target_link_libraries(${MAYAPLUGIN} OpenGl32)

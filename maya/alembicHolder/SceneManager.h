@@ -9,8 +9,6 @@
 #include <vector>
 #include <fstream>
 
-#include <boost/shared_ptr.hpp>
-
 namespace AlembicHolder {
 
 typedef std::pair<AlembicHolder::ScenePtr, unsigned int> CountedScene;

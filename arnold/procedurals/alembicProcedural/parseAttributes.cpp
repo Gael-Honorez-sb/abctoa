@@ -4,8 +4,6 @@
 #include "../../../common/PathUtil.h"
 
 #include <pystring.h>
-#include <boost/regex.hpp>
-#include <boost/lexical_cast.hpp>
 
 namespace
 {
@@ -254,7 +252,7 @@ void OverrideProperties(Json::Value & jroot, Json::Value jrootAttributes)
 {
     for( Json::ValueIterator itr = jrootAttributes.begin() ; itr != jrootAttributes.end() ; itr++ )
     {
-        const Json::Value paths = jrootAttributes[itr.key().asString()];
+        Json::Value paths = jrootAttributes[itr.key().asString()];
         for( Json::ValueIterator overPath = paths.begin() ; overPath != paths.end() ; overPath++ )
         {
             Json::Value attr = paths[overPath.key().asString()];
@@ -272,7 +270,7 @@ Json::Value OverrideAssignations(Json::Value jroot, Json::Value jrootOverrides)
     for( Json::ValueIterator itr = jrootOverrides.begin() ; itr != jrootOverrides.end() ; itr++ )
     {
         Json::Value tmp = jroot[itr.key().asString()];
-        const Json::Value paths = jrootOverrides[itr.key().asString()];
+        Json::Value paths = jrootOverrides[itr.key().asString()];
         for( Json::ValueIterator shaderPath = paths.begin() ; shaderPath != paths.end() ; shaderPath++ )
         {
             Json::Value val = paths[shaderPath.key().asUInt()];
@@ -284,7 +282,7 @@ Json::Value OverrideAssignations(Json::Value jroot, Json::Value jrootOverrides)
         }
         else
         {
-            const Json::Value shaderPaths = jrootOverrides[itr.key().asString()];
+            Json::Value shaderPaths = jrootOverrides[itr.key().asString()];
             for( Json::ValueIterator itr2 = shaderPaths.begin() ; itr2 != shaderPaths.end() ; itr2++ )
             {
                 newJroot[itr.key().asString()].append(jrootOverrides[itr.key().asString()][itr2.key().asUInt()]);
@@ -294,7 +292,7 @@ Json::Value OverrideAssignations(Json::Value jroot, Json::Value jrootOverrides)
     // Now adding back the original shaders without the ones overriden
     for( Json::ValueIterator itr = jroot.begin() ; itr != jroot.end() ; itr++ )
     {
-        const Json::Value pathsShader = jroot[itr.key().asString()];
+        Json::Value pathsShader = jroot[itr.key().asString()];
         const Json::Value curval = newJroot[itr.key().asString()];
         for( Json::ValueIterator shaderPathOrig = pathsShader.begin() ; shaderPathOrig != pathsShader.end() ; shaderPathOrig++ )
         {
@@ -362,8 +360,8 @@ AtNode* createNetwork(IObject object, std::string prefix, ProcArgs & args)
         std::string nodeType = "<undefined>";
         bool nodeArray = false;
         
-        boost::regex expr ("(.*)\\[([\\d]+)\\]");
-        boost::smatch what;
+        std::regex expr ("(.*)\\[([\\d]+)\\]");
+        std::smatch what;
         abcnode.getTarget(target);
 
         std::map<std::string, std::vector<AtNode*> > nodeArrayConnections;
@@ -381,10 +379,11 @@ AtNode* createNetwork(IObject object, std::string prefix, ProcArgs & args)
                     if (abcnode.getConnection(j, inputName, connectedNodeName, connectedOutputName))
                     {
                         nodeArray = false;
-                        if (boost::regex_search(inputName, what, expr))
+                        if (std::regex_search(inputName, what, expr))
                         {
                             std::string realInputName = what[1];
-                            int inputIndex = boost::lexical_cast<int>(what[2]);
+                            
+                            int inputIndex = std::stoi(what[2]);
                             abcnode.getNodeType(nodeType);
                             const AtNodeEntry * nentry = AiNodeEntryLookUp(nodeType.c_str());
                             const AtParamEntry * pentry = AiNodeEntryLookUpParameter(nentry, realInputName.c_str());
@@ -497,20 +496,19 @@ void ParseShaders(Json::Value jroot, const std::string& ns, const std::string& n
                     AiMsgDebug( "[ABC] Searching shader %s deeper underground...", itr.key().asCString());
                     // look for the same namespace for shaders...
                     std::vector<std::string> strs;
-                    boost::split(strs,nameprefix,boost::is_any_of(":"));
+                    pystring::split(nameprefix, strs, ":");
                     if(strs.size() > 1)
                     {
                         strs.pop_back();
                         strs.push_back(itr.key().asString());
-
-                        shaderNode = AiNodeLookUpByName(boost::algorithm::join(strs, ":").c_str());
+                        shaderNode = AiNodeLookUpByName(pystring::join(":", strs).c_str());
                     }
                 }
             }
         }
         if(shaderNode != NULL)
         {
-            const Json::Value paths = jroot[itr.key().asString()];
+            Json::Value paths = jroot[itr.key().asString()];
             AiMsgDebug("[ABC] Shader exists, checking paths. size = %d", paths.size());
             for( Json::ValueIterator itr2 = paths.begin() ; itr2 != paths.end() ; itr2++ )
             {

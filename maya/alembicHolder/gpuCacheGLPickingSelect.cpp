@@ -10,7 +10,6 @@
 //+
 
 #include "gpuCacheGLPickingSelect.h"
-#include <boost/shared_array.hpp>
 #include <algorithm>
 
 //==============================================================================
@@ -70,7 +69,7 @@ void GLPickingSelect::processEdges(
 )
 {
     const unsigned int bufferSize = (unsigned int)std::min(numWires,size_t(100000));
-    boost::shared_array<GLuint> buffer(new GLuint[bufferSize*4]);
+    std::shared_ptr<GLuint> buffer(new GLuint[bufferSize*4]);
 
     M3dView view = fSelectInfo.view();
     /*
@@ -110,7 +109,7 @@ void GLPickingSelect::processTriangles(
 )
 {
     const unsigned int bufferSize = (unsigned int)std::min(numTriangles,size_t(100000));
-    boost::shared_array<GLuint>buffer (new GLuint[bufferSize*4]);
+    std::shared_ptr<GLuint>buffer (new GLuint[bufferSize*4]);
 
     M3dView view = fSelectInfo.view();
     /*

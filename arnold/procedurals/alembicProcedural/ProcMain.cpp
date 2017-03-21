@@ -58,10 +58,6 @@
 #include <Alembic/AbcCoreOgawa/ReadWrite.h>
 #include <Alembic/AbcGeom/Visibility.h>
 
-#include <boost/tokenizer.hpp>
-#include <boost/algorithm/string.hpp>
-
-
 #include <iostream>
 #include <fstream>
 

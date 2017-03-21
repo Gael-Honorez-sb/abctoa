@@ -40,8 +40,6 @@
 #include "Foundation.h"
 #include "DrawContext.h"
 #include "RenderModules.h"
-#include "boost/noncopyable.hpp"
-
 
 namespace AlembicHolder {
 

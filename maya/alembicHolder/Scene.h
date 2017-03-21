@@ -44,8 +44,6 @@
 
 #include <maya/MAnimControl.h>
 
-#include <boost/shared_ptr.hpp>
-
 namespace AlembicHolder {
 
 //-*****************************************************************************
@@ -114,7 +112,7 @@ protected:
     DrawablePtr m_drawable;
 };
 
-typedef boost::shared_ptr<Scene> ScenePtr;
+typedef std::shared_ptr<Scene> ScenePtr;
 
 } // End namespace AlembicHolder
 

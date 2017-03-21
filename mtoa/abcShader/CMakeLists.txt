@@ -2,7 +2,7 @@ set(MTOATRANSLATOR abcShader)
 
 file(GLOB SRC "*.cpp" "*h")
 
-include_directories(${Boost_INCLUDE_DIR})
+
 include_directories(${MTOA_INCLUDE_DIR})
 include_directories(${ARNOLD_INCLUDE_DIR})
 

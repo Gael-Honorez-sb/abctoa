@@ -48,8 +48,6 @@
 
 #include "json/value.h"
 
-#include <boost/regex.hpp>
-// #include <boost/thread.hpp>
 //-*****************************************************************************
 
 #if AI_VERSION_ARCH_NUM == 3
@@ -239,7 +237,7 @@ AtNode* writeCurves(
         {
             if(name.find(*it) != string::npos || std::find(tags.begin(), tags.end(), *it) != tags.end() || matchPattern(name,*it))
             {
-                const Json::Value overrides = args.attributesRoot[*it];
+                Json::Value overrides = args.attributesRoot[*it];
                 if(overrides.size() > 0)
                 {
                     for( Json::ValueIterator itr = overrides.begin() ; itr != overrides.end() ; itr++ )

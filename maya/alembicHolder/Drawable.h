@@ -39,8 +39,6 @@
 
 #include "Foundation.h"
 #include "DrawContext.h"
-#include "boost/noncopyable.hpp"
-#include "boost/shared_ptr.hpp"
 
 namespace AlembicHolder {
 
@@ -48,11 +46,14 @@ namespace AlembicHolder {
 //! What can a drawable do?
 //! Obviously, it can draw!
 //! It can tell you a set of times that it has samples for.
-class Drawable : private boost::noncopyable
+class Drawable
 {
+private:
+    Drawable(const Drawable& other) = delete; // non construction-copyable
+    Drawable& operator=(const Drawable&) = delete; // non copyable
 public:
+    
     Drawable() {}
-
     //! Virtual destructor for abstract base class
     //! ...
     virtual ~Drawable() {}
@@ -87,7 +88,7 @@ public:
 };
 
 //-*****************************************************************************
-typedef boost::shared_ptr<Drawable> DrawablePtr;
+typedef std::shared_ptr<Drawable> DrawablePtr;
 typedef std::vector<DrawablePtr> DrawablePtrVec;
 
 } // End namespace AlembicHolder

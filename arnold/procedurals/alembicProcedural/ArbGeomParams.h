@@ -38,6 +38,8 @@
 #define _Alembic_Arnold_ArbGeomParams_h_
 
 #include <ai.h>
+
+#include "pystring.h"
 #include <Alembic/AbcGeom/All.h>
 
 using namespace Alembic::AbcGeom;

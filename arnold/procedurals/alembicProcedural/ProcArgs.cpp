@@ -35,8 +35,6 @@
 //-*****************************************************************************
 #include "ProcArgs.h"
 
-#include <boost/tokenizer.hpp>
-
 #include <vector>
 #include <algorithm>
 #include <iostream>
@@ -67,14 +65,14 @@ ProcArgs::ProcArgs( const char * paramStr )
    shutterOpen = AiNodeGetFlt(camera, "shutter_start");
    shutterClose = AiNodeGetFlt(camera, "shutter_end");
 
-    typedef boost::char_separator<char> Separator;
-    typedef boost::tokenizer<Separator> Tokenizer;
 
+    std::vector<std::string> Tokenizer;
     std::vector<std::string> tokens;
     std::string params( paramStr );
 
-    Tokenizer tokenizer( params, Separator(" ") );
-    for ( Tokenizer::iterator iter = tokenizer.begin(); iter != tokenizer.end() ;
+    pystring::split(params, Tokenizer, " ");
+
+    for (std::vector<std::string>::iterator iter = Tokenizer.begin(); iter != Tokenizer.end() ;
           ++iter )
     {
         if ( (*iter).empty() ) { continue; }

@@ -16,7 +16,6 @@ License along with this library.*/
 #include <maya/MArgDatabase.h>
 #include <maya/MGlobal.h>
 #include "abcExporterUtils.h"
-#include <boost/lexical_cast.hpp>
 
 #include <sstream>
 
