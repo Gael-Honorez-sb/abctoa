@@ -93,15 +93,7 @@ void CABCViewerTranslator::ProcessRenderFlagsCustom(AtNode* node)
 
 void CABCViewerTranslator::Export(AtNode* procedural)
 {
-    ExportProcedural(procedural, false);
-    //Update(procedural);
-}
-
-
-void CABCViewerTranslator::Update(AtNode* procedural)
-{
-
-    ExportProcedural(procedural, true);
+    ExportProcedural(procedural, IsExported());
 }
 
 
@@ -161,7 +153,7 @@ void CABCViewerTranslator::ExportProcedural(AtNode* procedural, bool update)
                             MPlug sgPlug = connections[k];
                             if (sgPlug.node().apiType() == MFn::kShadingEngine || sgPlug.node().apiType() == MFn::kDisplacementShader)
                             {
-                                ExportNode(sgPlug);
+                                ExportConnectedNode(sgPlug);
                             }
                         }
                 }
@@ -301,7 +293,7 @@ void CABCViewerTranslator::ExportProcedural(AtNode* procedural, bool update)
         std::string objectPathStr = objectPath.asString().asChar();
 
 
-        boost::replace_all(objectPathStr, "|", "/");
+        objectPathStr = pystring::replace(objectPathStr, "|", "/");
 
         if(objectPathStr == "")
             objectPathStr = "/";
@@ -331,7 +323,7 @@ void CABCViewerTranslator::ExportProcedural(AtNode* procedural, bool update)
 
 void CABCViewerTranslator::ExportShaders()
 {
-  ExportStandinsShaders(GetArnoldRootNode());
+  ExportStandinsShaders(GetArnoldNode());
 }
 
 
@@ -346,7 +338,7 @@ void CABCViewerTranslator::ExportStandinsShaders(AtNode* procedural)
     if (!shadingGroupPlug.isNull())
     {
 
-        AtNode *shader = ExportNode(shadingGroupPlug);
+        AtNode *shader = ExportConnectedNode(shadingGroupPlug);
         if (shader != NULL)
         {
             AiNodeSetPtr(procedural, "shader", shader);
@@ -363,12 +355,12 @@ void CABCViewerTranslator::ExportStandinsShaders(AtNode* procedural)
     }
 }
 
-void CABCViewerTranslator::ExportMotion(AtNode* anode, unsigned int step)
+void CABCViewerTranslator::ExportMotion(AtNode* anode)
 {
    // Check if motionblur is enabled and early out if it's not.
    if (!IsMotionBlurEnabled()) return;
 
-    ExportMatrix(anode, step);
+    ExportMatrix(anode);
 }
 
 void CABCViewerTranslator::ExportBoundingBox(AtNode* procedural)

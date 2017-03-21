@@ -119,8 +119,8 @@ const std::vector<CachedNodeFile>& FileCache::getCachedFile(const std::string& c
 	std::map<std::string, std::vector<CachedNodeFile>* >::iterator I = ArnoldFileCache.find(cacheId);
 	if (I != ArnoldFileCache.end())
 	{
-		std::map<std::string, AtNode* >::iterator J = ArnoldFileCacheProc.find(cacheId);
-		if(J != ArnoldFileCacheProc.end() && AiNodeLookUpByName(AiNodeGetName(J->second)) != NULL)
+        std::map<std::string, std::string >::iterator J = ArnoldFileCacheProc.find(cacheId);
+        if (J != ArnoldFileCacheProc.end() && AiNodeLookUpByName(J->second.c_str()) != NULL)
 			return *I->second;
 		else
 		{
@@ -220,6 +220,6 @@ void FileCache::addCache(const std::string& cacheId, NodeCollector* createdNodes
 		}
 
 		ArnoldFileCache.insert(std::pair<std::string, std::vector<CachedNodeFile>* >(cacheId, nodeCache));
-		ArnoldFileCacheProc.insert(std::pair<std::string, AtNode* >(cacheId, createdNodes->getProcedural()));
+        ArnoldFileCacheProc.insert(std::pair<std::string, std::string >(cacheId, AiNodeGetName(createdNodes->getProcedural())));
 	}
 }

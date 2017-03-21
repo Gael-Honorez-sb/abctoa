@@ -35,8 +35,8 @@ License along with this library.*/
 #include <Alembic/AbcMaterial/OMaterial.h>
 #include "ai.h"
 #include "session/ArnoldSession.h"
+#include "utils/Universe.h"
 #include "translators/NodeTranslator.h"
-
 
 namespace Abc =  Alembic::Abc;
 namespace Mat = Alembic::AbcMaterial;

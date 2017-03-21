@@ -89,7 +89,7 @@ public:
 
 private:
 	std::map<std::string, std::vector<CachedNodeFile>* > ArnoldFileCache;
-	std::map<std::string, AtNode* > ArnoldFileCacheProc; // This is used to check if the procedural creating the cache still exists. If not, chances are that the whole cache is not valid.
+    std::map<std::string, std::string > ArnoldFileCacheProc; // This is used to check if the procedural creating the cache still exists. If not, chances are that the whole cache is not valid.
 	AtCritSec lock;
 };
 

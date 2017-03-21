@@ -106,12 +106,12 @@ MStatus abcContainersExportCmd::doIt( const MArgList &args)
         }
          if(!toExport.isNull())
          {
-             CNodeTranslator* translator = arnoldSession->ExportNode(toExport, exportedNodes, NULL ,false, &stat);
+             CNodeTranslator* translator = arnoldSession->ExportNode(toExport, exportedNodes, NULL ,false, -1, &stat);
              if(exportedNodes->size() > 0)
              {
-                 AtNode* root = translator->GetArnoldRootNode();
+                 AtNode* root = translator->GetArnoldNode();
 
-                 std::set<AtNode*>::const_iterator sit (exportedNodes->begin()), send(exportedNodes->end());
+                 std::unordered_set<AtNode*>::const_iterator sit (exportedNodes->begin()), send(exportedNodes->end());
                  for(;sit!=send;++sit)
                  {
                      // adding the node to the network
