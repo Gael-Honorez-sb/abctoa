@@ -48,10 +48,27 @@ IF ("${CMAKE_SYSTEM_NAME}" MATCHES "Linux")
 ENDIF()
 
 OPTION(USE_HDF5 "Include HDF5 stuff" OFF)
-OPTION(USE_STATIC_BOOST "Build with static Boost libs" OFF)
 OPTION(USE_ILMBASE_STATIC_LIBS "Build with static ilmBase libs" ON)
 OPTION(USE_STATIC_HDF5 "Build with static HDF5 libs" OFF)
 OPTION(ALEMBIC_SHARED_LIBS "Build shared libraries" ON)
+option(USE_NSIS "Use NSIS generator to produce installer" OFF)
+
+# Custom target for packaging.
+if(USE_NSIS)
+  set(CPACK_GENERATOR "NSIS")
+else(USE_NSIS)
+  set(CPACK_GENERATOR "ZIP")
+endif(USE_NSIS)
+
+
+
+set(CPACK_PACKAGE_VERSION "${ABCTOA_MAJOR_VERSION}")
+set(CPACK_PACKAGE_VERSION_PATCH "${ABCTOA_PATCH_VERSION}")
+set(CPACK_PACKAGE_VENDOR "Nozon")
+set(CPACK_PACKAGE_INSTALL_REGISTRY_KEY "abcToA")
+
+set(CPACK_SOURCE_GENERATOR "TGZ")
+
 
 IF (LINUX OR DARWIN)
 	INCLUDE(CheckCXXCompilerFlag)
@@ -121,7 +138,6 @@ find_package(Mtoa REQUIRED)
 # Find maya
 find_package(Maya REQUIRED)
 
-
 # Find HDF5
 if(USE_HDF5)
 	find_package(AlembicHDF5 REQUIRED)
@@ -136,15 +152,7 @@ configure_file(
 )
 
 if (NOT DEFINED INSTALL_DIR)
-    if (DEFINED INSTALL_ROOT)
-        set(INSTALL_DIR "${INSTALL_ROOT}/abcToA-${ABCTOA_VERSION}")
-        message("INSTALL_ROOT defined. Adding versions automatically:\n\t${INSTALL_DIR}")
-    else()
-		set(INSTALL_ROOT "${CMAKE_BINARY_DIR}/dist")
-        set(INSTALL_DIR "${INSTALL_ROOT}/abcToA-${ABCTOA_VERSION}")
-		
-        message("INSTALL_DIR not defined. Defaulting to:\n\t${INSTALL_DIR}")
-    endif()
+	set(INSTALL_DIR "abcToA-${ABCTOA_VERSION}")
 else()
     message("Installing to:\n\t${INSTALL_DIR}")
 endif()
@@ -215,8 +223,5 @@ configure_file(
 )
   
 # 
-configure_file(
-    "${PROJECT_SOURCE_DIR}/package.in.py"
-    "${PROJECT_SOURCE_DIR}/package.py"
-)
+
 

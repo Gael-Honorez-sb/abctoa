@@ -49,8 +49,8 @@ namespace AlembicHolder {
 class Drawable
 {
 private:
-    Drawable(const Drawable& other) = delete; // non construction-copyable
-    Drawable& operator=(const Drawable&) = delete; // non copyable
+    Drawable(const Drawable&); // non construction-copyable
+    Drawable& operator=(const Drawable&); // non copyable
 public:
     
     Drawable() {}

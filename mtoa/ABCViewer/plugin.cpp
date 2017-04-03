@@ -11,19 +11,21 @@
 extern "C"
 {
 
-DLLEXPORT void initializeExtension(CExtension &plugin)
-{
-   MStatus status;
+    EXPORT_API_VERSION
 
-   plugin.Requires("alembicHolder");
-   status = plugin.RegisterTranslator("alembicHolder",
-         "",
-         CABCViewerTranslator::creator,
-         CABCViewerTranslator::NodeInitializer);
-}
+    DLLEXPORT void initializeExtension(CExtension &plugin)
+    {
+        MStatus status;
 
-DLLEXPORT void deinitializeExtension(CExtension &plugin)
-{
-}
+            plugin.Requires("alembicHolder");
+            status = plugin.RegisterTranslator("alembicHolder",
+                                                "",
+                                                CABCViewerTranslator::creator,
+                                                CABCViewerTranslator::NodeInitializer);
+    }
+
+    DLLEXPORT void deinitializeExtension(CExtension &plugin)
+    {
+    }
 
 }

@@ -1,6 +1,7 @@
 
 #include "translators/shape/ShapeTranslator.h"
-#include "translators/NodeTranslator.h" 
+#include "extension/Extension.h"
+//#include "translators/NodeTranslator.h" 
 #include "pystring.h"
 
 class CABCViewerTranslator
@@ -17,14 +18,17 @@ public:
     {
         return new CABCViewerTranslator();
     }
-protected:
+
+    virtual void ExportShaders();
+
+private:
 
    void ProcessRenderFlagsCustom(AtNode* node);
    void ExportBoundingBox(AtNode* procedural);
    void ExportStandinsShaders(AtNode* procedural);
    void ExportProcedural(AtNode* procedural, bool update);
 
-   virtual void ExportShaders();
+   
 
 protected:
    MFnDagNode m_DagNode;
