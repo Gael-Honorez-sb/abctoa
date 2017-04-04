@@ -193,7 +193,7 @@ static std::string translate(const char *pattern)
 
 bool matchPattern(const std::string& str, const std::string& pat)
 {
-    std::regex rx (translate(pat.c_str()).c_str());
+    std::regex rx (pat);
     bool result = std::regex_search(str,rx);
     return result;
 }
