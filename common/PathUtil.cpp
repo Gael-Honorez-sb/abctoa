@@ -177,7 +177,7 @@ static std::string translate(const char *pattern)
                 result += "]";
             }
         } else {
-            if (isalnum(c)) {
+            if (isalnum(c) || c== '_') {
                 result += c;
             } else {
                 result += "\\";
@@ -188,12 +188,23 @@ static std::string translate(const char *pattern)
     /*
 * Make the expression multi-line and make the dot match any character at all.
 */
-    return result + "\\Z(?ms)";
+    return result;
 }
 
 bool matchPattern(const std::string& str, const std::string& pat)
 {
-    std::regex rx (pat);
-    bool result = std::regex_search(str,rx);
+    bool result = false;
+
+    try 
+    {
+        std::regex rx (translate(pat.c_str()).c_str());
+        result = std::regex_search(str,rx);
+    } 
+ 
+    catch (const std::regex_error& e) 
+    {
+        return false;
+    }
+    
     return result;
 }
