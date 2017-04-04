@@ -61,6 +61,8 @@ public:
 
     virtual void draw( const DrawContext & iCtx );
 
+    virtual void accept(DrawableVisitor& visitor) const { visitor.visit(*this); }
+
 protected:
     ICurves m_curves;
 

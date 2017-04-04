@@ -44,6 +44,26 @@
 
 namespace AlembicHolder {
 
+class IXformDrw;
+class IPolyMeshDrw;
+class IPointsDrw;
+class ICurvesDrw;
+
+// The visitor dispatches on the sub node data type, i.e. transform vs
+// shape. It is up to the visitor to recurse into the children of the
+// sub node. This allows the visitor to control the traversal of the
+// sub nodes. Note that this is somewhat different from the canonical
+// visitor design pattern.
+class DrawableVisitor {
+public:
+    virtual void visit(const IXformDrw& curves) { assert(false); }
+    virtual void visit(const IPolyMeshDrw& curves) { assert(false); }
+    virtual void visit(const IPointsDrw& curves) { assert(false); }
+    virtual void visit(const ICurvesDrw& curves) { assert(false); }
+
+    virtual ~DrawableVisitor() {}
+};
+
 //-*****************************************************************************
 //! What can a drawable do?
 //! Obviously, it can draw!
@@ -84,6 +104,8 @@ public:
     //! Draw the object (and its children) at the current frame.
     //! ...
     virtual void draw( const DrawContext & iCtx ) = 0;
+
+    virtual void accept(DrawableVisitor& visitor) const = 0;
 };
 
 //-*****************************************************************************

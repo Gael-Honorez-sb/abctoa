@@ -63,6 +63,8 @@ public:
 
     virtual int getNumTriangles();
 
+    virtual void accept(DrawableVisitor& visitor) const { visitor.visit(*this); }
+
 protected:
     IXform m_xform;
     M44d m_localToParent;

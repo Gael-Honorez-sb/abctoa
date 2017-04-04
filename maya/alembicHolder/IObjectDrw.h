@@ -69,6 +69,12 @@ public:
 
     virtual void draw( const DrawContext & iCtx );
 
+    void accept(DrawableVisitor& visitor) const override
+    {
+        for (auto& child : m_children)
+            child->accept(visitor);
+    }
+
 protected:
     IObject m_object;
 

@@ -60,6 +60,8 @@ public:
     virtual void draw( const DrawContext & iCtx );
     virtual int getNumTriangles();
 
+    virtual void accept(DrawableVisitor& visitor) const { visitor.visit(*this); }
+
 protected:
     IPolyMesh m_polyMesh;
     IPolyMeshSchema::Sample m_samp;
