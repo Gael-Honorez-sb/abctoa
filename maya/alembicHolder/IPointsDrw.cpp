@@ -84,7 +84,7 @@ IPointsDrw::~IPointsDrw()
 }
 
 //-*****************************************************************************
-bool IPointsDrw::valid()
+bool IPointsDrw::valid() const
 {
     return IObjectDrw::valid() && m_points.valid();
 }
@@ -92,31 +92,6 @@ bool IPointsDrw::valid()
 //-*****************************************************************************
 void IPointsDrw::setTime( chrono_t iSeconds )
 {
-
-	// The frame is different. We should clear all the data.
-	if(m_currentFrame != MAnimControl::currentTime().value())
-	{
-		for (std::map<double, PointDrwHelper>::iterator iter = m_drwHelpers.begin(); iter != m_drwHelpers.end(); ++iter) 
-			iter->second.makeInvalid();
-
-		for (std::map<double, Box3d>::iterator iter = m_bounds.begin(); iter != m_bounds.end(); ++iter) 
-			iter->second.makeEmpty();
-
-		m_drwHelpers.clear();
-		m_bounds.clear();
-
-		m_currentFrame = MAnimControl::currentTime().value();
-	}
-
-	if(m_drwHelpers.count(iSeconds) == 1)
-	{
-		if (iSeconds != m_currentTime)
-			IObjectDrw::setTime( iSeconds );
-		return;
-	}
-
-
-
     // Use nearest for now.
 	Alembic::AbcGeom::IPointsSchema schema = m_points.getSchema();
 	
@@ -125,45 +100,45 @@ void IPointsDrw::setTime( chrono_t iSeconds )
 
     m_ss =  ISampleSelector(iSeconds, ISampleSelector::kNearIndex );
 
-    if ( IsAncestorInvisible(m_points,m_ss) ) {
-        m_visible = false;
+    // Bail if invisible.
+    m_visible = !IsAncestorInvisible(m_points, m_ss);
+    if (!m_visible)
+        return;
+
+    // Bail if time hasn't changed.
+    if (iSeconds == m_currentTime)
+        return;
+
+    IObjectDrw::setTime( iSeconds );
+    if ( !valid() )
+    {
+        m_drwHelper.makeInvalid();
         return;
     }
-    else
-        m_visible = true;
-    if (iSeconds != m_currentTime) {
-        IObjectDrw::setTime( iSeconds );
-        if ( !valid() )
-        {
-			m_drwHelpers[iSeconds].makeInvalid();
-            return;
-        }
-        //IPolyMeshSchema::Sample psamp;
-        if ( m_points.getSchema().isConstant() )
-        {
-			m_drwHelpers[iSeconds].setConstant( m_points.getSchema().isConstant() );
-        }
-        else if ( m_points.getSchema().getNumSamples() > 0 )
-        {
-            m_points.getSchema().get( m_samp, m_ss );           
-        }
-
-        m_bounds[iSeconds].makeEmpty();
-        m_needtoupdate = true;
+    //IPolyMeshSchema::Sample psamp;
+    if ( m_points.getSchema().isConstant() )
+    {
+        m_drwHelper.setConstant( m_points.getSchema().isConstant() );
     }
+    else if ( m_points.getSchema().getNumSamples() > 0 )
+    {
+        m_drwHelper.makeInvalid();
+        m_points.getSchema().get( m_samp, m_ss );
+    }
+
+    m_bounds = m_boundsProp.getValue( m_ss );
+    m_needtoupdate = true;
 }
 
 void IPointsDrw::updateData()
 {
-	
-Alembic::Abc::P3fArraySamplePtr ceilPoints; 
-
+    Alembic::Abc::P3fArraySamplePtr ceilPoints;
 
 	P3fArraySamplePtr points = m_samp.getPositions();
     // update the points
-    m_drwHelpers[m_currentTime].update( points, getBounds(), m_alpha );
+    m_drwHelper.update( points, getBounds(), m_alpha );
 
-    if ( !m_drwHelpers[m_currentTime].valid() )
+    if ( !m_drwHelper.valid() )
     {
         m_points.reset();
         return;
@@ -172,15 +147,9 @@ Alembic::Abc::P3fArraySamplePtr ceilPoints;
 
 }
 
-Box3d IPointsDrw::getBounds()
+Box3d IPointsDrw::getBounds() const
 {
-    if(m_bounds[m_currentTime].isEmpty())
-	{
-		m_ss =  ISampleSelector(m_currentTime, ISampleSelector::kNearIndex );
-        m_bounds[m_currentTime] = m_boundsProp.getValue( m_ss );
-	}
-    return m_bounds[m_currentTime];
-
+    return m_bounds;
 }
 
 //-*****************************************************************************
@@ -207,7 +176,7 @@ void IPointsDrw::draw( const DrawContext &iCtx )
 
     gGLFT->glPushAttrib( MGL_ENABLE_BIT );
     gGLFT->glDisable( MGL_LIGHTING );
-	m_drwHelpers[m_currentTime].draw( iCtx );
+	m_drwHelper.draw( iCtx );
     gGLFT->glPopAttrib( );
 	IObjectDrw::draw( iCtx );
 }

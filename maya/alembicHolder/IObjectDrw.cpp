@@ -237,19 +237,19 @@ IObjectDrw::~IObjectDrw()
 }
 
 //-*****************************************************************************
-chrono_t IObjectDrw::getMinTime()
+chrono_t IObjectDrw::getMinTime() const
 {
     return m_minTime;
 }
 
 //-*****************************************************************************
-chrono_t IObjectDrw::getMaxTime()
+chrono_t IObjectDrw::getMaxTime() const
 {
     return m_maxTime;
 }
 
 //-*****************************************************************************
-bool IObjectDrw::valid()
+bool IObjectDrw::valid() const
 {
     return m_object.valid();
 }
@@ -257,64 +257,40 @@ bool IObjectDrw::valid()
 //-*****************************************************************************
 void IObjectDrw::setTime( chrono_t iTime )
 {
+    // Bail if time hasn't changed.
+    if (iTime == m_currentTime)
+        return;
 
-	if(m_currentFrame != MAnimControl::currentTime().value())
-	{
-		for (std::map<double, Box3d>::iterator iter = m_bounds.begin(); iter != m_bounds.end(); ++iter) 
-			iter->second.makeEmpty();
+    m_bounds.makeEmpty();
+    m_currentTime = iTime;
 
-		m_bounds.clear();
+    if ( !m_object ) { return; }
 
-		m_currentFrame = MAnimControl::currentTime().value();
-	}
+    // Object itself has no properties to worry about.
 
-    if (iTime != m_currentTime)
+	for ( auto iter = m_children.begin(); iter != m_children.end(); ++iter )
     {
-        m_currentTime = iTime;
-
-        if ( !m_object ) { return; }
-
-        // Object itself has no properties to worry about.
-
-		for ( DrawablePtrVec::iterator iter = m_children.begin();
-              iter != m_children.end(); ++iter )
+        DrawablePtr dptr = (*iter);
+        if ( dptr )
         {
-            DrawablePtr dptr = (*iter);
-            if ( dptr )
-            {
-                dptr->setTime( iTime );
-                //m_bounds.extendBy( dptr->getBounds() );
-            }
+            dptr->setTime( iTime );
+            m_bounds.extendBy( dptr->getBounds() );
         }
     }
 }
 
 //-*****************************************************************************
-Box3d IObjectDrw::getBounds()
+Box3d IObjectDrw::getBounds() const
 {
-	if (m_bounds[m_currentTime].isEmpty())
-    {
-        for ( DrawablePtrVec::iterator iter = m_children.begin();
-              iter != m_children.end(); ++iter )
-        {
-            DrawablePtr dptr = (*iter);
-            if ( dptr )
-            {
-                m_bounds[m_currentTime].extendBy( dptr->getBounds() );
-            }
-        }
-    }
-
-    return m_bounds[m_currentTime];
+    return m_bounds;
 }
 
 
-int IObjectDrw::getNumTriangles()
+int IObjectDrw::getNumTriangles() const
 {
     if ( !m_object ) { return 0; }
     int numTriangles = 0;
-    for ( DrawablePtrVec::iterator iter = m_children.begin();
-          iter != m_children.end(); ++iter )
+    for ( auto iter = m_children.cbegin(); iter != m_children.cend(); ++iter )
     {
         DrawablePtr dptr = (*iter);
         if ( dptr )

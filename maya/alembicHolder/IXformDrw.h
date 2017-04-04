@@ -54,14 +54,12 @@ public:
 
     virtual ~IXformDrw();
 
-    virtual bool valid();
-
+    virtual bool valid() const;
     virtual void setTime( chrono_t iSeconds );
+    virtual Box3d getBounds() const;
+    virtual int getNumTriangles() const;
 
-	virtual Box3d getBounds();
     virtual void draw( const DrawContext & iCtx );
-
-    virtual int getNumTriangles();
 
     virtual void accept(DrawableVisitor& visitor) const { visitor.visit(*this); }
 

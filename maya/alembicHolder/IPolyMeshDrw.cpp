@@ -89,7 +89,7 @@ IPolyMeshDrw::~IPolyMeshDrw()
 }
 
 //-*****************************************************************************
-bool IPolyMeshDrw::valid()
+bool IPolyMeshDrw::valid() const
 {
     return IObjectDrw::valid() && m_polyMesh.valid();
 }
@@ -97,28 +97,6 @@ bool IPolyMeshDrw::valid()
 //-*****************************************************************************
 void IPolyMeshDrw::setTime( chrono_t iSeconds )
 {
-	// The frame is different. We should clear all the data.
-	if(m_currentFrame != MAnimControl::currentTime().value())
-	{
-		for (std::map<double, MeshDrwHelper>::iterator iter = m_drwHelpers.begin(); iter != m_drwHelpers.end(); ++iter) 
-			iter->second.makeInvalid();
-
-		for (std::map<double, Box3d>::iterator iter = m_bounds.begin(); iter != m_bounds.end(); ++iter) 
-			iter->second.makeEmpty();
-
-		m_drwHelpers.clear();
-		m_bounds.clear();
-
-		m_currentFrame = MAnimControl::currentTime().value();
-	}
-
-	if(m_drwHelpers.count(iSeconds) == 1)
-	{
-		if (iSeconds != m_currentTime)
-			IObjectDrw::setTime( iSeconds );
-		return;
-	}
-
     // Use nearest for now.
     Alembic::AbcGeom::IPolyMeshSchema schema = m_polyMesh.getSchema();
 	
@@ -129,77 +107,73 @@ void IPolyMeshDrw::setTime( chrono_t iSeconds )
 
     m_ss =  ISampleSelector(iSeconds, ISampleSelector::kNearIndex );
 
-    if ( IsAncestorInvisible(m_polyMesh,m_ss) ) {
-        m_visible = false;
+    // Bail if invisible.
+    m_visible = !IsAncestorInvisible(m_polyMesh, m_ss);
+    if (!m_visible)
+        return;
+
+    // Bail if time hasn't changed.
+    if (iSeconds == m_currentTime)
+        return;
+
+    IObjectDrw::setTime( iSeconds );
+    if ( !valid() )
+    {
+        m_drwHelper.makeInvalid();
         return;
     }
-    else
-        m_visible = true;
-    if (iSeconds != m_currentTime) {
-        IObjectDrw::setTime( iSeconds );
-        if ( !valid() )
-        {
-			m_drwHelpers[iSeconds].makeInvalid();
-            return;
-        }
-        //IPolyMeshSchema::Sample psamp;
-        if ( m_polyMesh.getSchema().isConstant() )
-        {
-			m_drwHelpers[iSeconds].setConstant( m_polyMesh.getSchema().isConstant() );
-        }
-        else if ( m_polyMesh.getSchema().getNumSamples() > 0 )
-        {
-            m_polyMesh.getSchema().get( m_samp, m_ss );
-            
-            IN3fGeomParam normParam = m_polyMesh.getSchema().getNormalsParam();
+    //IPolyMeshSchema::Sample psamp;
+    if ( m_polyMesh.getSchema().isConstant() )
+    {
+        m_drwHelper.setConstant( m_polyMesh.getSchema().isConstant() );
+    }
+    else if ( m_polyMesh.getSchema().getNumSamples() > 0 )
+    {
+        m_drwHelper.makeInvalid();
+        m_polyMesh.getSchema().get( m_samp, m_ss );
 
-            if(normParam.valid())
+        IN3fGeomParam normParam = m_polyMesh.getSchema().getNormalsParam();
+
+        if(normParam.valid())
+        {
+            switch ( normParam.getScope() )
             {
-                switch ( normParam.getScope() )
+                case kVaryingScope:
+                case kVertexScope:
                 {
-                    case kVaryingScope:
-                    case kVertexScope:
-                    {
-                        m_normal_samp = normParam.getExpandedValue(m_ss);
-                        break;
-                    }
-                    case kFacevaryingScope:
-                    {
-                        m_normal_samp = normParam.getIndexedValue(m_ss);
-                        break;
-                    }
-
+                    m_normal_samp = normParam.getExpandedValue(m_ss);
+                    break;
                 }
-                
+                case kFacevaryingScope:
+                {
+                    m_normal_samp = normParam.getIndexedValue(m_ss);
+                    break;
+                }
+
             }
 
         }
 
-        m_bounds[iSeconds].makeEmpty();
-        m_needtoupdate = true;
     }
+
+    m_bounds = m_boundsProp.getValue( m_ss );
+    m_needtoupdate = true;
 }
 
-Box3d IPolyMeshDrw::getBounds()
+Box3d IPolyMeshDrw::getBounds() const
 {
-    if(m_bounds[m_currentTime].isEmpty())
-	{
-		m_ss =  ISampleSelector(m_currentTime, ISampleSelector::kNearIndex );
-        m_bounds[m_currentTime] = m_boundsProp.getValue( m_ss );
-	}
-
-    return m_bounds[m_currentTime];
+    return m_bounds;
 }
 
 
 void IPolyMeshDrw::updateData()
 {
-    
-    Alembic::Abc::P3fArraySamplePtr ceilPoints; 
 
-    if (m_alpha != 0.0) 
+    Alembic::Abc::P3fArraySamplePtr ceilPoints;
+
+    if (m_alpha != 0.0)
     {
-			ceilPoints = m_polyMesh.getSchema().getPositionsProperty().getValue( Alembic::Abc::ISampleSelector(m_ceilIndex) ); 
+			ceilPoints = m_polyMesh.getSchema().getPositionsProperty().getValue( Alembic::Abc::ISampleSelector(m_ceilIndex) );
     }
 
 	P3fArraySamplePtr points = m_samp.getPositions();
@@ -207,10 +181,10 @@ void IPolyMeshDrw::updateData()
     Int32ArraySamplePtr counts = m_samp.getFaceCounts();
 
     N3fArraySamplePtr normals;
-    
+
     if(m_normal_samp.valid())
     {
-        
+
         switch ( m_normal_samp.getScope() )
         {
             case kVaryingScope:
@@ -228,10 +202,10 @@ void IPolyMeshDrw::updateData()
     }
 
     // update the mesh
-    m_drwHelpers[m_currentTime].update( points, ceilPoints, normals,
+    m_drwHelper.update( points, ceilPoints, normals,
                             indices, counts, getBounds(), m_alpha );
 
-    if ( !m_drwHelpers[m_currentTime].valid() )
+    if ( !m_drwHelper.valid() )
     {
         m_polyMesh.reset();
         return;
@@ -239,12 +213,12 @@ void IPolyMeshDrw::updateData()
     m_needtoupdate = false;
 }
 
-int IPolyMeshDrw::getNumTriangles()
+int IPolyMeshDrw::getNumTriangles() const
 {
     if ( !valid() )
         return 0;
 
-    return m_drwHelpers[m_currentTime].getNumTriangles();
+    return m_drwHelper.getNumTriangles();
 }
 
 //-*****************************************************************************
@@ -252,7 +226,6 @@ void IPolyMeshDrw::draw( const DrawContext &iCtx )
 {
     if ( !valid() )
         return;
-
 
 	holderPrms* params = iCtx.getParams();
 	if(!isVisibleForArnold(m_polyMesh, m_currentTime, params, m_visible))
@@ -290,7 +263,7 @@ void IPolyMeshDrw::draw( const DrawContext &iCtx )
             foundInPath = true;
         }
     }
-    
+
 
     if(shaderColors.size() > 0)
         gGLFT->glColor4f(objColor.r, objColor.g, objColor.b, 1.0f);
@@ -299,7 +272,7 @@ void IPolyMeshDrw::draw( const DrawContext &iCtx )
         updateData();
 
 
-    m_drwHelpers[m_currentTime].draw( iCtx );
+    m_drwHelper.draw( iCtx );
 
     IObjectDrw::draw( iCtx );
 }

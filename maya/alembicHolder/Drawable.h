@@ -79,16 +79,16 @@ public:
 
     //! Get the min time.
     //! ...
-    virtual chrono_t getMinTime() = 0;
+    virtual chrono_t getMinTime() const = 0;
 
     //! Get the max time.
     //! ...
-    virtual chrono_t getMaxTime() = 0;
+    virtual chrono_t getMaxTime() const = 0;
 
     //! This function returns whether or not the
     //! drawable is in a valid state. As we read frames into
     //! the drawables, it's possible for some drawables to become invalid.
-    virtual bool valid() = 0;
+    virtual bool valid() const = 0;
 
     //! This functions sets the drawable and all its children
     //! to a new time, in seconds.
@@ -96,10 +96,10 @@ public:
 
     //! This function gets the bounding box at the
     //! currently set time.
-    virtual Box3d getBounds() = 0;
+    virtual Box3d getBounds() const = 0;
 
     // This function return the number of triangles in the scene
-    virtual int getNumTriangles() = 0;
+    virtual int getNumTriangles() const = 0;
 
     //! Draw the object (and its children) at the current frame.
     //! ...

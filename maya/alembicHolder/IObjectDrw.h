@@ -56,16 +56,16 @@ public:
 
     virtual ~IObjectDrw();
 
-    virtual chrono_t getMinTime();
-    virtual chrono_t getMaxTime();
+    virtual chrono_t getMinTime() const;
+    virtual chrono_t getMaxTime() const;
 
-    virtual bool valid();
+    virtual bool valid() const;
 
     virtual void setTime( chrono_t iSeconds );
 
-    virtual Box3d getBounds();
+    virtual Box3d getBounds() const;
 
-    virtual int getNumTriangles();
+    virtual int getNumTriangles() const;
 
     virtual void draw( const DrawContext & iCtx );
 
@@ -90,7 +90,7 @@ protected:
     DrawablePtrVec m_children;
     IBox3dProperty m_boundsProp;
     ISampleSelector m_ss;
-    std::map<double,Box3d> m_bounds;
+    Box3d m_bounds;
 };
 
 } // End namespace AlembicHolder

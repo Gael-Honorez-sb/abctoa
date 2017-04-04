@@ -53,12 +53,13 @@ public:
 
     virtual ~IPolyMeshDrw();
 
-    virtual bool valid();
+    virtual bool valid() const;
     virtual void setTime( chrono_t iSeconds );
     virtual void updateData();
-    virtual Box3d getBounds();
+    virtual Box3d getBounds() const;
+    virtual int getNumTriangles() const;
+
     virtual void draw( const DrawContext & iCtx );
-    virtual int getNumTriangles();
 
     virtual void accept(DrawableVisitor& visitor) const { visitor.visit(*this); }
 
@@ -67,7 +68,7 @@ protected:
     IPolyMeshSchema::Sample m_samp;
     IN3fGeomParam::Sample m_normal_samp;
     IBox3dProperty m_boundsProp;
-    std::map<chrono_t, MeshDrwHelper> m_drwHelpers;
+    MeshDrwHelper m_drwHelper;
     bool m_needtoupdate;
     double m_alpha;
     Alembic::AbcCoreAbstract::index_t m_index, m_ceilIndex;

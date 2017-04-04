@@ -80,7 +80,7 @@ IXformDrw::~IXformDrw()
 }
 
 //-*****************************************************************************
-bool IXformDrw::valid()
+bool IXformDrw::valid() const
 {
     return IObjectDrw::valid() && m_xform.valid();
 }
@@ -89,23 +89,15 @@ bool IXformDrw::valid()
 //-*****************************************************************************
 void IXformDrw::setTime( chrono_t iSeconds )
 {
-	
-	if(m_currentFrame != MAnimControl::currentTime().value())
-	{
-		for (std::map<double, Box3d>::iterator iter = m_bounds.begin(); iter != m_bounds.end(); ++iter) 
-			iter->second.makeEmpty();
-
-		m_bounds.clear();
-		m_currentFrame = MAnimControl::currentTime().value();
-	}
-
-	// Let the object set the time of all the children
-	IObjectDrw::setTime( iSeconds );
 	if ( !valid() )
 	{
 		m_localToParent.makeIdentity();
 		return;
 	}
+
+	// Bail if time hasn't changed.
+	if (iSeconds == m_currentFrame)
+		return;
 
 	// Use nearest to get our matrix.
 	// Use nearest for now.
@@ -114,62 +106,33 @@ void IXformDrw::setTime( chrono_t iSeconds )
 	m_xform.getSchema().get(tmpXform,ss);
 	m_localToParent = tmpXform.getMatrix();
 
-	if (iSeconds != m_currentTime)
+	IObjectDrw::setTime( iSeconds );
+
+	// Okay, now we need to recalculate the bounds.
+	m_bounds.makeEmpty();
+	for ( auto& dptr : m_children)
 	{
-		 IObjectDrw::setTime( iSeconds );
-		// Okay, now we need to recalculate the bounds.
-		m_bounds[iSeconds].makeEmpty();
-		for ( DrawablePtrVec::iterator iter = m_children.begin();
-				iter != m_children.end(); ++iter )
-		{
-			DrawablePtr dptr = (*iter);
-			if ( dptr )
-			{
-				Box3d bnds = dptr->getBounds();
-				if ( !bnds.isEmpty() )
-				{
-					bnds = Imath::transform( bnds, m_localToParent );
-					m_bounds[iSeconds].extendBy( bnds );
-				}
-			}
-		}
+		if (!dptr)
+			continue;
+
+		Box3d bnds = dptr->getBounds();
+		if (bnds.isEmpty())
+			continue;
+
+		bnds = Imath::transform( bnds, m_localToParent );
+		m_bounds.extendBy( bnds );
 	}
 }
 
-Box3d IXformDrw::getBounds()
+Box3d IXformDrw::getBounds() const
 {
-
-    if(m_bounds[m_currentTime].isEmpty())
-	{
-		// Use nearest to get our matrix.
-		// Use nearest for now.
-		ISampleSelector ss( m_currentTime, ISampleSelector::kNearIndex );
-		XformSample tmpXform;
-		m_xform.getSchema().get(tmpXform,ss);
-		m_localToParent = tmpXform.getMatrix();
-
-		for ( DrawablePtrVec::iterator iter = m_children.begin();
-				iter != m_children.end(); ++iter )
-		{
-			DrawablePtr dptr = (*iter);
-			if ( dptr )
-			{
-				Box3d bnds = dptr->getBounds();
-				if ( !bnds.isEmpty() )
-				{
-					bnds = Imath::transform( bnds, m_localToParent );
-					m_bounds[m_currentTime].extendBy( bnds );
-				}
-			}
-		}
-	}
-    return m_bounds[m_currentTime];
+    return m_bounds;
 }
 
-int IXformDrw::getNumTriangles()
+int IXformDrw::getNumTriangles() const
 {
     if ( !valid() ) { return 0; }
-    
+
     return IObjectDrw::getNumTriangles();
 
 }
