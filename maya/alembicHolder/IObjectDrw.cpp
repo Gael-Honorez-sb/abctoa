@@ -52,12 +52,21 @@ IObjectDrw::IObjectDrw( IObject &iObj, bool iResetIfNoChildren, std::vector<std:
   , m_minTime( ( chrono_t )FLT_MAX )
   , m_maxTime( ( chrono_t )-FLT_MAX )
   , m_currentTime( ( chrono_t )-FLT_MAX )
+  , m_visible(false)
 {
     // If not valid, just bail.
     if ( !m_object ) { return; }
 
-   if (path.size())
-   {
+    Alembic::AbcGeom::IVisibilityProperty visibility =
+        Alembic::AbcGeom::GetVisibilityProperty(m_object);
+    if (!visibility.valid()) {
+        m_visible = true;
+    } else {
+        m_visible = visibility.getValue() != Alembic::AbcGeom::kVisibilityHidden;
+    }
+
+    if (path.size())
+    {
         const ObjectHeader *ohead = m_object.getChildHeader( path[0] );
 
         if ( ohead!=NULL )

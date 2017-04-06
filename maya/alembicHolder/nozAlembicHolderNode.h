@@ -107,6 +107,7 @@ public:
     std::string getSelectionKey() const;
 
     CAlembicDatas* alembicData();
+    const CAlembicDatas* alembicData() const { return &fGeometry; }
 
 
 

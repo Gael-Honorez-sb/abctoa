@@ -40,6 +40,7 @@
 //#include "Foundation.h"
 #include "Drawable.h"
 #include <maya/MAnimControl.h>
+#include <maya/MBoundingBox.h>
 #include "cmds/ArchiveHelper.h"
 
 namespace AlembicHolder {
@@ -64,6 +65,12 @@ public:
     virtual void setTime( chrono_t iSeconds );
 
     virtual Box3d getBounds() const;
+    MBoundingBox getBoundsMaya() const
+    {
+        const auto toMPoint = [](const Imath::V3d& v) { return MPoint(v.x, v.y, v.z); };
+        const auto& bounds = getBounds();
+        return MBoundingBox(toMPoint(bounds.min), toMPoint(bounds.max));
+    }
 
     virtual int getNumTriangles() const;
 
@@ -74,6 +81,10 @@ public:
         for (auto& child : m_children)
             child->accept(visitor);
     }
+
+    const DrawablePtrVec& getChildren() const { return m_children; }
+    const IObject& getIObject() const { return m_object; }
+    bool isVisible() const { return m_visible; }
 
 protected:
     IObject m_object;

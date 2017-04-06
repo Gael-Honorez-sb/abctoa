@@ -96,6 +96,8 @@ public:
     // for infos
     int getNumTriangles() const;
 
+    DrawablePtr getDrawable() { return m_drawable; }
+
 protected:
     std::string m_fileName;
     std::string m_objectPath;

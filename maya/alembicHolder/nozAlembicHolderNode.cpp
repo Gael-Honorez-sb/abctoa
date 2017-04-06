@@ -434,9 +434,15 @@ MStatus nozAlembicHolder::initialize() {
 
     aUpdateAssign = nAttr.create("updateAssign", "uass", MFnNumericData::kInt, 0);
     nAttr.setHidden(true);
+    nAttr.setStorable(false);
+    nAttr.setReadable(false);
+    nAttr.setWritable(false);
 
     aUpdateCache = nAttr.create("updateCache", "upc", MFnNumericData::kInt, 0);
     nAttr.setHidden(true);
+    nAttr.setStorable(false);
+    nAttr.setReadable(false);
+    nAttr.setWritable(false);
 
     aForceReload = nAttr.create("forceReload", "frel", MFnNumericData::kBoolean, false, &stat);
     nAttr.setDefault(false);
@@ -774,9 +780,9 @@ MStatus nozAlembicHolder::compute(const MPlug& plug, MDataBlock& block)
 
         std::string key = mkey.asChar();
 
-        if ((fGeometry.m_currscenekey != key && mkey != "|" ) || hasToReload)
+        if (fGeometry.m_currscenekey != key || hasToReload)
         {
-            if (fGeometry.m_currscenekey != key && mkey != "|" )
+            if (fGeometry.m_currscenekey != key)
             {
                 CAlembicDatas::abcSceneManager.removeScene(fGeometry.m_currscenekey);
                 if(CAlembicDatas::abcSceneManager.hasKey(fGeometry.m_currscenekey) == 0)

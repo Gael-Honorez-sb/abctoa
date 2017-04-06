@@ -17,7 +17,7 @@ MAYA_SET_PLUGIN_PROPERTIES(${MAYAPLUGIN})
 ALEMBIC_SET_PROPERTIES(${MAYAPLUGIN})
 
 if (${CMAKE_SYSTEM_NAME} MATCHES "Windows")
-	target_link_libraries(${MAYAPLUGIN} OpenGl32)
+	target_link_libraries(${MAYAPLUGIN} OpenGl32 wbemuuid)
 endif()
 
 if (${CMAKE_SYSTEM_NAME} MATCHES "Darwin")

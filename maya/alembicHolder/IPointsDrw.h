@@ -42,6 +42,8 @@
 #include "PointDrwHelper.h"
 #include "RenderModules.h"
 
+#include <maya/MBoundingBox.h>
+
 namespace AlembicHolder {
 
 //-*****************************************************************************
@@ -57,6 +59,7 @@ public:
 
     virtual void setTime( chrono_t iSeconds );
     virtual Box3d getBounds() const;
+
     virtual void updateData();
 
     virtual void draw( const DrawContext & iCtx );

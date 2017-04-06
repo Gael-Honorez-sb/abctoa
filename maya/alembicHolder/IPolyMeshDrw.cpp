@@ -40,12 +40,13 @@
 
 namespace AlembicHolder {
 
-    static MGLFunctionTable *gGLFT = NULL;
+    extern MGLFunctionTable *gGLFT;
 
 //-*****************************************************************************
 IPolyMeshDrw::IPolyMeshDrw( IPolyMesh &iPmesh, std::vector<std::string> path )
   : IObjectDrw( iPmesh, false, path )
   , m_polyMesh( iPmesh )
+  , m_triangulator( m_polyMesh.getSchema(), true )
 {
     // Get out if problems.
     if ( !m_polyMesh.valid() )
@@ -75,6 +76,10 @@ IPolyMeshDrw::IPolyMeshDrw( IPolyMesh &iPmesh, std::vector<std::string> path )
             chrono_t maxTime = iTsmp->getSampleTime( numSamps-1 );
             m_maxTime = std::max( m_maxTime, maxTime );
         }
+    }
+
+    if (m_polyMesh.getSchema().isConstant()) {
+        updateSample(iTsmp->getSampleTime(0));
     }
 
 	m_currentFrame = MAnimControl::currentTime().value();
@@ -122,6 +127,7 @@ void IPolyMeshDrw::setTime( chrono_t iSeconds )
         m_drwHelper.makeInvalid();
         return;
     }
+
     //IPolyMeshSchema::Sample psamp;
     if ( m_polyMesh.getSchema().isConstant() )
     {
@@ -129,6 +135,8 @@ void IPolyMeshDrw::setTime( chrono_t iSeconds )
     }
     else if ( m_polyMesh.getSchema().getNumSamples() > 0 )
     {
+        updateSample(iSeconds);
+
         m_drwHelper.makeInvalid();
         m_polyMesh.getSchema().get( m_samp, m_ss );
 
@@ -275,6 +283,13 @@ void IPolyMeshDrw::draw( const DrawContext &iCtx )
     m_drwHelper.draw( iCtx );
 
     IObjectDrw::draw( iCtx );
+}
+
+void IPolyMeshDrw::updateSample(chrono_t iSeconds)
+{
+    m_triangulator.fillBBoxAndVisSample(iSeconds);
+    m_triangulator.fillTopoAndAttrSample(iSeconds);
+    m_shapeSample = m_triangulator.getSample(iSeconds);
 }
 
 } // End namespace AlembicHolder

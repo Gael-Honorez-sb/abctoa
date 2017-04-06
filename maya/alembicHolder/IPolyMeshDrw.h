@@ -37,6 +37,7 @@
 #ifndef _AlembicHolder_IPolyMeshDrw_h_
 #define _AlembicHolder_IPolyMeshDrw_h_
 
+#include "gpuCacheDataProvider.h"
 #include "Foundation.h"
 #include "IObjectDrw.h"
 #include "MeshDrwHelper.h"
@@ -59,9 +60,13 @@ public:
     virtual Box3d getBounds() const;
     virtual int getNumTriangles() const;
 
+    const IPolyMeshSchema::Sample& getSample() const { return m_samp; }
+
     virtual void draw( const DrawContext & iCtx );
 
     virtual void accept(DrawableVisitor& visitor) const { visitor.visit(*this); }
+
+    boost::shared_ptr<const AlembicHolder::ShapeSample> getSample(double seconds) const { return m_shapeSample; }
 
 protected:
     IPolyMesh m_polyMesh;
@@ -72,6 +77,11 @@ protected:
     bool m_needtoupdate;
     double m_alpha;
     Alembic::AbcCoreAbstract::index_t m_index, m_ceilIndex;
+
+    AlembicHolder::CacheReaderAlembicPrivate::Triangulator m_triangulator;
+    AlembicHolder::ShapeSample::CPtr m_shapeSample;
+
+    void updateSample(chrono_t iSeconds);
 };
 
 } // End namespace AlembicHolder
