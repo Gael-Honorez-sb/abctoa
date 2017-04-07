@@ -12,6 +12,8 @@
 //**************************************************************************/
 //+
 
+#include "gpuCacheMaterialNodes.h"
+#include "gpuCacheMaterial.h"
 #include "gpuCacheSample.h"
 #include "Drawable.h"
 #include "nozAlembicHolderNode.h"
@@ -117,6 +119,7 @@ public:
 
     // Current state methods
     const AlembicHolder::DrawablePtr& getGeometry() const { return fGeometry; }
+    MaterialGraphMap::Ptr getMaterial() const { return fMaterial;}
     bool isPartVisible(const std::string& partName) const;
     double getTime() const { return fTimeInSeconds; }
 
@@ -155,6 +158,7 @@ private:
     MPlug            fReceiveShadowsPlug;
 
     AlembicHolder::DrawablePtr        fGeometry;
+    MaterialGraphMap::Ptr             fMaterial;
     double                            fTimeInSeconds;
 
     boost::posix_time::ptime fUpdateTime;

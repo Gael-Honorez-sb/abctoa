@@ -16,6 +16,7 @@ License along with this library.*/
 #ifndef _nozAlembicHolderNode
 #define _nozAlembicHolderNode
 
+#include "Drawable.h"
 #include "Foundation.h"
 #include "Scene.h"
 #include "SceneManager.h"
@@ -108,6 +109,8 @@ public:
 
     CAlembicDatas* alembicData();
     const CAlembicDatas* alembicData() const { return &fGeometry; }
+    AlembicHolder::DrawablePtr getGeometry() const;
+    AlembicHolder::MaterialGraphMap::Ptr getMaterial() const;
 
 
 

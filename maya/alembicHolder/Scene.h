@@ -41,6 +41,7 @@
 //#include "GLCamera.h"
 #include "Drawable.h"
 #include "parseJson.h"
+#include "gpuCacheMaterial.h"
 
 #include <maya/MAnimControl.h>
 
@@ -97,6 +98,7 @@ public:
     int getNumTriangles() const;
 
     DrawablePtr getDrawable() { return m_drawable; }
+    MaterialGraphMap::Ptr getMaterials() const { return m_materials; }
 
 protected:
     std::string m_fileName;
@@ -114,6 +116,9 @@ protected:
     Box3d m_bounds;
 
     DrawablePtr m_drawable;
+
+    AlembicHolder::MaterialGraphMap::Ptr m_materials;
+    void readMaterials(const IObject& topObject);
 };
 
 typedef boost::shared_ptr<Scene> ScenePtr;

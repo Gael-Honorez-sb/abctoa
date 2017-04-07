@@ -9,10 +9,12 @@
 //**************************************************************************/
 //+
 
+#include "gpuCacheSubSceneOverride.h"
 #include "gpuCacheBoundingBoxVisitor.h"
 #include "gpuCacheDataProvider.h"
 #include "gpuCacheFrustum.h"
-#include "gpuCacheSubSceneOverride.h"
+#include "gpuCacheMaterial.h"
+#include "gpuCacheMaterialNodes.h"
 #include "gpuCacheUnitBoundingBox.h"
 #include "Drawable.h"
 #include "IXformDrw.h"
@@ -84,17 +86,6 @@
 
 namespace AlembicHolder {
 
-// Hash object for MString
-struct MStringHash : std::unary_function<MString, std::size_t>
-{
-    std::size_t operator()(const MString& key) const
-    {
-        unsigned int length = key.length();
-        const char* begin = key.asChar();
-        return boost::hash_range(begin, begin + length);
-    }
-};
-
 //==============================================================================
 // CLASS DisplayPref
 //==============================================================================
@@ -155,8 +146,128 @@ DisplayPref::WireframeOnShadedMode DisplayPref::wireframeOnShadedMode()
     return fsWireframeOnShadedMode;
 }
 
-} // namespace AlembicHolder
+/*==============================================================================
+* CLASS ShadedModeColor
+*============================================================================*/
 
+// This class evaluates the material property values of a material node.
+// The value is expected to be the same as viewport's shaded mode.
+class ShadedModeColor : boost::noncopyable
+{
+public:
+    static bool evaluateBool(const MaterialProperty::Ptr& prop,
+        double                       timeInSeconds);
+
+    static float evaluateFloat(const MaterialProperty::Ptr& prop,
+        double                       timeInSeconds);
+
+    static MColor evaluateDefaultColor(const MaterialProperty::Ptr& prop,
+        double                       timeInSeconds);
+
+    static MColor evaluateColor(const MaterialProperty::Ptr& prop,
+        double                       timeInSeconds);
+};
+
+bool ShadedModeColor::evaluateBool(
+    const MaterialProperty::Ptr& prop,
+    double                       timeInSeconds
+)
+{
+    assert(prop && prop->type() == MaterialProperty::kBool);
+    if (!prop || prop->type() != MaterialProperty::kBool) {
+        return false;
+    }
+
+    const MaterialNode::Ptr     srcNode = prop->srcNode();
+    const MaterialProperty::Ptr srcProp = prop->srcProp();
+    if (srcNode && srcProp) {
+        // If there is a connection, we use the default value.
+        return prop->getDefaultAsBool();
+    }
+    else {
+        // Otherwise, we use the value in the property.
+        return prop->asBool(timeInSeconds);
+    }
+}
+
+float ShadedModeColor::evaluateFloat(
+    const MaterialProperty::Ptr& prop,
+    double                       timeInSeconds
+)
+{
+    assert(prop && prop->type() == MaterialProperty::kFloat);
+    if (!prop || prop->type() != MaterialProperty::kFloat) {
+        return 0.0f;
+    }
+
+    const MaterialNode::Ptr     srcNode = prop->srcNode();
+    const MaterialProperty::Ptr srcProp = prop->srcProp();
+    if (srcNode && srcProp) {
+        // If there is a connection, we use the default value.
+        return prop->getDefaultAsFloat();
+    }
+    else {
+        // Otherwise, we use the value in the property.
+        return prop->asFloat(timeInSeconds);
+    }
+}
+
+MColor ShadedModeColor::evaluateDefaultColor(
+    const MaterialProperty::Ptr& prop,
+    double                       timeInSeconds
+)
+{
+    assert(prop && prop->type() == MaterialProperty::kRGB);
+    if (!prop || prop->type() != MaterialProperty::kRGB) {
+        return MColor::kOpaqueBlack;
+    }
+
+    // Check source connections.
+    const MaterialNode::Ptr     srcNode = prop->srcNode();
+    const MaterialProperty::Ptr srcProp = prop->srcProp();
+    if (srcNode && srcProp) {
+        // There is a source connection. Let's check if it's a texture2d node.
+        const boost::shared_ptr<const Texture2d> srcTex =
+            boost::dynamic_pointer_cast<const Texture2d>(srcNode);
+        if (srcTex && srcTex->OutColor == srcProp) {
+            // This property has a source texture2d node and the output
+            // of the texture2d node is outColor.
+            // We use the Default Color as the outColor.
+            return srcTex->DefaultColor->asColor(timeInSeconds);
+        }
+        else {
+            // The source is not texture2d.outColor.
+            // We use the default value instead.
+            return prop->getDefaultAsColor();
+        }
+    }
+
+    // No source connection. We use the value in the property directly.
+    return prop->asColor(timeInSeconds);
+}
+
+MColor ShadedModeColor::evaluateColor(
+    const MaterialProperty::Ptr& prop,
+    double                       timeInSeconds
+)
+{
+    assert(prop && prop->type() == MaterialProperty::kRGB);
+    if (!prop || prop->type() != MaterialProperty::kRGB) {
+        return MColor::kOpaqueBlack;
+    }
+
+    // Check source connections.
+    const MaterialNode::Ptr     srcNode = prop->srcNode();
+    const MaterialProperty::Ptr srcProp = prop->srcProp();
+    if (srcNode && srcProp) {
+        // If there is a connection, we use the default value.
+        return prop->getDefaultAsColor();
+    }
+    else {
+        // Otherwise, we use the value in the property.
+        return prop->asColor(timeInSeconds);
+    }
+}
 
 namespace {
 
@@ -203,6 +314,7 @@ size_t MayaBufferSizeHelper(MHWRender::MVertexBuffer* mayaBuffer)
     return mayaBuffer->descriptor().dimension() * mayaBuffer->vertexCount();
 }
 
+}
 
 // An implementation of the Array interface which wraps a Maya-owned data buffer.  This
 // buffer may reside on the GPU, so we do not provide direct read access.  Read access
@@ -1486,7 +1598,6 @@ private:
 };
 
 
-#if 0
 //==============================================================================
 // CLASS MaterialGraphTranslatorShaded
 //==============================================================================
@@ -1723,7 +1834,6 @@ private:
     Deleter           fDeleter;
     const double      fTimeInSeconds;
 };
-#endif
 
 //==============================================================================
 // CLASS ShaderInstanceCache
@@ -1914,7 +2024,6 @@ public:
         return ShaderInstancePtr();
     }
 
-#if 0
     // This method will get a cached MShaderInstance for the given material.
     ShaderInstancePtr getSharedShadedMaterialShader(
         const MaterialGraph::Ptr& material,
@@ -1988,7 +2097,6 @@ public:
             entry.timeInSeconds = timeInSeconds;
         }
     }
-#endif
 
 private:
     // Release the MShaderInstance and remove the pointer from the cache.
@@ -2010,7 +2118,7 @@ private:
         fWireShadersWithCB.get<1>().erase(shader);
         fBoundingBoxPlaceHolderShaders.get<1>().erase(shader);
         fDiffuseColorShaders.get<1>().erase(shader);
-        //fShadedMaterialShaders.get<1>().erase(shader);
+        fShadedMaterialShaders.get<1>().erase(shader);
     }
 
 private:
@@ -2042,7 +2150,6 @@ private:
 
     };
 
-#if 0
     // MaterialGraph as hash key.
     struct MaterialGraphHash : std::unary_function<MaterialGraph::Ptr, std::size_t>
     {
@@ -2051,7 +2158,6 @@ private:
             return boost::hash_value(key.get());
         }
     };
-#endif
 
     // MShaderInstance* cached by MColor as hash key. And as MString
     struct ColorAndShaderInstance {
@@ -2073,7 +2179,6 @@ private:
         >
     > ColorAndShaderInstanceCache;
 
-#if 0
     // MShaderInstance* cached by MaterialGraph as hash key.
     struct MaterialAndShaderInstance {
         MaterialGraph::Ptr                 material;
@@ -2095,13 +2200,12 @@ private:
             >
         >
     > MaterialAndShaderInstanceCache;
-#endif
 
     ColorAndShaderInstanceCache    fWireShaders;
     ColorAndShaderInstanceCache    fWireShadersWithCB;
     ColorAndShaderInstanceCache    fBoundingBoxPlaceHolderShaders;
     ColorAndShaderInstanceCache    fDiffuseColorShaders;
-    //MaterialAndShaderInstanceCache fShadedMaterialShaders;
+    MaterialAndShaderInstanceCache fShadedMaterialShaders;
 };
 
 
@@ -3643,10 +3747,6 @@ void NodeDirtyCallback(MObject& node, MPlug& plug, void* clientData)
     }
 }
 
-}
-
-
-namespace AlembicHolder {
 
 using namespace MHWRender;
 
@@ -4333,8 +4433,7 @@ public:
 
                 // Check if we have any material that is assigned to this index group.
                 ShaderInstancePtr shader;
-                /*
-                const std::vector<MString>&  materialsAssignment = shape.getMaterials();
+                const std::vector<MString>&  materialsAssignment = shape.getMaterialAssignments();
                 const MaterialGraphMap::Ptr& materials = subSceneOverride.getMaterial();
                 if (materials && groupId < materialsAssignment.size()) {
                     const MaterialGraph::Ptr graph = materials->find(materialsAssignment[groupId]);
@@ -4344,7 +4443,6 @@ public:
                         );
                     }
                 }
-                */
 
                 if (shader) {
                     // We have successfully created a material shader.
@@ -5233,24 +5331,6 @@ MHWRender::DrawAPI SubSceneOverride::supportedDrawAPIs() const
     return MHWRender::kAllDevices;
 }
 
-namespace {
-    DrawablePtr getGeometryFromShapeNode(const ShapeNode& shapeNode) {
-        auto cache = shapeNode.alembicData();
-        if (!cache)
-            return nullptr;
-
-        const auto& key = cache->m_currscenekey;
-        if (!cache->abcSceneManager.hasKey(key))
-            return nullptr;
-
-        const auto& scene = cache->abcSceneManager.getScene(key);
-        if (!scene)
-            return nullptr;
-
-        return scene->getDrawable();
-    }
-} // unnamed namespace
-
 bool SubSceneOverride::requiresUpdate(const MSubSceneContainer& container,
                                       const MFrameContext&      frameContext) const
 {
@@ -5276,17 +5356,11 @@ bool SubSceneOverride::requiresUpdate(const MSubSceneContainer& container,
     }
 
     // Get the cached geometry and materials.
-    //SubNode::Ptr          geometry = fShapeNode->getCachedGeometry();
-    //MaterialGraphMap::Ptr material = fShapeNode->getCachedMaterial();
-
-    //auto cache = fShapeNode->alembicData();
-    //auto& scene = cache->abcSceneManager.getScene(cache->m_currscenekey);
-    //const auto& geometry = scene->getDrawable();
-    const auto& geometry = getGeometryFromShapeNode(*fShapeNode);
+    SubNodePtr            geometry = fShapeNode->getGeometry();
+    MaterialGraphMap::Ptr material = fShapeNode->getMaterial();
 
     // Check if the cached geometry or materials have been changed.
-    //if (geometry != fGeometry || material != fMaterial) {
-    if (geometry.get() != fGeometry.get()) {
+    if (geometry != fGeometry || material != fMaterial) {
         return true;
     }
 
@@ -5374,16 +5448,18 @@ void SubSceneOverride::update(MSubSceneContainer&  container,
     // buffers that are not used by any render items will be evicted.
     BuffersCache::getInstance().shrink();
 
-    const auto& geometry = getGeometryFromShapeNode(*fShapeNode);
+    // Get the cached geometry and materials.
+    SubNodePtr            geometry = fShapeNode->getGeometry();
+    MaterialGraphMap::Ptr material = fShapeNode->getMaterial();
 
     // Remember the current time.
     fUpdateTime = boost::date_time::microsec_clock<boost::posix_time::ptime>::local_time();
 
     // Check if the cached geometry or materials have been changed.
-    if (geometry != fGeometry) {
+    if (geometry != fGeometry || material != fMaterial) {
         // Set the cached geometry and materials.
         fGeometry = geometry;
-        //fMaterial = material;
+        fMaterial = material;
 
         // Rebuild render items.
         fInstanceRenderItems.clear();
@@ -5680,7 +5756,7 @@ void SubSceneOverride::updateMaterials(MHWRender::MSubSceneContainer&  container
     }
 
     //Update the materials.
-    //ShaderInstanceCache::getInstance().updateCachedShadedShaders(fTimeInSeconds);
+    ShaderInstanceCache::getInstance().updateCachedShadedShaders(fTimeInSeconds);
 }
 
 }

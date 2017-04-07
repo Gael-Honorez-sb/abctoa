@@ -872,6 +872,40 @@ CAlembicDatas* nozAlembicHolder::alembicData()
     return NULL;
 }
 
+AlembicHolder::DrawablePtr nozAlembicHolder::getGeometry() const
+{
+    auto cache = alembicData();
+    if (!cache)
+        return nullptr;
+
+    const auto& key = cache->m_currscenekey;
+    if (!cache->abcSceneManager.hasKey(key))
+        return nullptr;
+
+    const auto& scene = cache->abcSceneManager.getScene(key);
+    if (!scene)
+        return nullptr;
+
+    return scene->getDrawable();
+}
+
+AlembicHolder::MaterialGraphMap::Ptr nozAlembicHolder::getMaterial() const
+{
+    const CAlembicDatas* cache = alembicData();
+    if (!cache)
+        return nullptr;
+
+    const auto& key = cache->m_currscenekey;
+    if (!cache->abcSceneManager.hasKey(key))
+        return nullptr;
+
+    const auto& scene = cache->abcSceneManager.getScene(key);
+    if (!scene)
+        return nullptr;
+
+    return scene->getMaterials();
+}
+
 // UI IMPLEMENTATION
 
 CAlembicHolderUI::~CAlembicHolderUI() {

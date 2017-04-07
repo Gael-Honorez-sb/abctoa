@@ -36,6 +36,7 @@
 
 #include "IPolyMeshDrw.h"
 #include <Alembic/AbcGeom/Visibility.h>
+#include <Alembic/AbcMaterial/MaterialAssignment.h>
 #include "samplingUtils.h"
 
 namespace AlembicHolder {
@@ -162,6 +163,30 @@ void IPolyMeshDrw::setTime( chrono_t iSeconds )
 
         }
 
+    }
+
+    // Read material assignments
+    {
+        // Whole object material assignment
+        MString material;
+
+        std::string materialAssignmentPath;
+        if (Alembic::AbcMaterial::getMaterialAssignmentPath(m_polyMesh, materialAssignmentPath)) {
+            // We assume all materials are stored in "/materials"
+            std::string prefix = "/materials/";
+
+            if (std::equal(prefix.begin(), prefix.end(), materialAssignmentPath.begin())) {
+                std::string objectName = materialAssignmentPath.substr(prefix.size()).c_str();
+                // No material inheritance here.
+                if (objectName.find("/") == std::string::npos) {
+                    material = objectName.c_str();
+                }
+            }
+        }
+
+        if (material.length() > 0) {
+            m_materialAssignments.push_back(material);
+        }
     }
 
     m_bounds = m_boundsProp.getValue( m_ss );
