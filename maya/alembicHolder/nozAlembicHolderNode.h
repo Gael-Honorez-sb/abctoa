@@ -12,7 +12,6 @@ You should have received a copy of the GNU Lesser General Public
 License along with this library.*/
 
 
-
 #ifndef _nozAlembicHolderNode
 #define _nozAlembicHolderNode
 
@@ -73,6 +72,22 @@ public:
 };
 
 
+struct MStringComp
+{
+    bool operator() (MString lhs, MString rhs) const
+    {
+        int res = strcmp(lhs.asChar(), rhs.asChar());
+        if (res < 0) {
+            return true;
+        }
+        else {
+            return false;
+        }
+        return strcmp(lhs.asChar(), rhs.asChar()) <= 0;
+    }
+};
+
+
 class nozAlembicHolder : public MPxSurfaceShape
 {
 public:
@@ -81,16 +96,16 @@ public:
 
     virtual void postConstructor();
     virtual MStatus compute( const MPlug& plug, MDataBlock& data );
-//
-//    virtual bool getInternalValueInContext     (     const MPlug &      plug,
-//            MDataHandle &      dataHandle,
-//            MDGContext &      ctx
-//        )     ;
-//
-//    virtual bool setInternalValueInContext     (     const MPlug &      plug,
-//                MDataHandle &      dataHandle,
-//                MDGContext &      ctx
-//            )     ;
+
+    virtual bool getInternalValueInContext     (     const MPlug &      plug,
+            MDataHandle &      dataHandle,
+            MDGContext &      ctx
+        )     ;
+
+    virtual bool setInternalValueInContext     (     const MPlug &      plug,
+                MDataHandle &      dataHandle,
+                MDGContext &      ctx
+            )     ;
 
     virtual bool isBounded() const;
     virtual MBoundingBox boundingBox()const ;
@@ -116,9 +131,20 @@ public:
 
 
 
+    MTime getTimeOffset() const { return MPlug(thisMObject(), aTimeOffset).asMTime(); }
+
+    typedef std::map<MString, MGLuint, MStringComp> TextureMap;
+    TextureMap* getTextureMap() { return &textureMap; }
+
+    typedef std::set<MString, MStringComp> TextureSet;
+    TextureSet* getOwnTextures() { return &ownTextures; }
+
+    short getTextRes() const { return textRes; }
 
 private:
     CAlembicDatas        fGeometry;
+    TextureMap           textureMap;
+    TextureSet           ownTextures;
     static    MObject    aAbcFile;
     static    MObject    aObjectPath;
     static    MObject    aBoundingExtended;
@@ -152,6 +178,9 @@ private:
     static    MObject    aBoundMax;
     bool isConstant;
 
+    static MObject       aTextureResolution;
+    short textRes;
+
 public:
     static  MTypeId     id;
 
@@ -160,48 +189,81 @@ protected:
 	int dUpdateA;
 
 };
-// UI class    - defines the UI part of a shape node
-class CAlembicHolderUI: public MPxSurfaceShapeUI {
+
+class CAlembicHolderUI : public MPxSurfaceShapeUI {
 public:
-    CAlembicHolderUI();
-    virtual ~CAlembicHolderUI();
+
+    static void* creator();
+
+    CAlembicHolderUI ();
+    ~CAlembicHolderUI ();
+
     virtual void getDrawRequests(const MDrawInfo & info,
-            bool objectAndActiveOnly, MDrawRequestQueue & requests);
+        bool objectAndActiveOnly,
+        MDrawRequestQueue & queue);
+
+    // Viewport 1.0 draw
     virtual void draw(const MDrawRequest & request, M3dView & view) const;
 
-    void drawBoundingBox( const MDrawRequest & request, M3dView & view ) const;
-    void drawingMeshes( std::string sceneKey, CAlembicDatas * cache, std::string selectionKey) const;
-
-    MPoint getPointAtDepth(MSelectInfo &selectInfo, double    depth) const;
-
+    virtual bool snap(MSelectInfo &snapInfo) const;
     virtual bool select(MSelectInfo &selectInfo, MSelectionList &selectionList,
-            MPointArray &worldSpaceSelectPts) const;
-
-    void getDrawRequestsWireFrame(MDrawRequest&, const MDrawInfo&);
-    void getDrawRequestsBoundingBox(MDrawRequest&, const MDrawInfo&);
-    void            getDrawRequestsShaded(      MDrawRequest&,
-                                              const MDrawInfo&,
-                                              MDrawRequestQueue&,
-                                              MDrawData& data );
+        MPointArray &worldSpaceSelectPts) const;
 
 
-    static void * creator();
+private:
+    // Prohibited and not implemented.
+    CAlembicHolderUI(const CAlembicHolderUI& obj);
+    const CAlembicHolderUI& operator=(const CAlembicHolderUI& obj);
+
+    static MPoint getPointAtDepth(MSelectInfo &selectInfo, double depth);
+
+    // Helper functions for the viewport 1.0 drawing purposes.
+    void drawBoundingBox(const MDrawRequest & request, M3dView & view) const;
+    void drawWireframe(const MDrawRequest & request, M3dView & view) const;
+    void drawShaded(const MDrawRequest & request, M3dView & view, bool depthOffset) const;
+
     // Draw Tokens
-    //
-    enum {
+    enum DrawToken {
+        kBoundingBox,
         kDrawWireframe,
         kDrawWireframeOnShaded,
         kDrawSmoothShaded,
-        kDrawFlatShaded,
-        kDrawBoundingBox,
-        kLastToken
+        kDrawSmoothShadedDepthOffset
+    };
+};
+
+
+namespace AlembicHolder {
+
+///////////////////////////////////////////////////////////////////////////////
+//
+// DisplayPref
+//
+// Keeps track of the display preference.
+//
+////////////////////////////////////////////////////////////////////////////////
+
+class DisplayPref {
+public:
+    enum WireframeOnShadedMode {
+        kWireframeOnShadedFull,
+        kWireframeOnShadedReduced,
+        kWireframeOnShadedNone
     };
 
-}; // class CArnoldStandInShapeUI
+    static WireframeOnShadedMode wireframeOnShadedMode();
+
+    static MStatus initCallback();
+    static MStatus removeCallback();
+
+private:
+    static void displayPrefChanged(void*);
+
+    static WireframeOnShadedMode fsWireframeOnShadedMode;
+    static MCallbackId fsDisplayPrefChangedCallbackId;
+};
+
+} // namespace AlembicHolder
 
 
-
-
-#endif
-
-
+#endif // header guard

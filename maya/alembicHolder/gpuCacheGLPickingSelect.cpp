@@ -1,15 +1,17 @@
 //-
 //**************************************************************************/
-// Copyright 2012 Autodesk, Inc. All rights reserved. 
+// Copyright 2012 Autodesk, Inc. All rights reserved.
 //
-// Use of this software is subject to the terms of the Autodesk 
-// license agreement provided at the time of installation or download, 
-// or which otherwise accompanies this software in either electronic 
+// Use of this software is subject to the terms of the Autodesk
+// license agreement provided at the time of installation or download,
+// or which otherwise accompanies this software in either electronic
 // or hard copy form.
 //**************************************************************************/
 //+
 
 #include "gpuCacheGLPickingSelect.h"
+#include "gpuCacheBoundingBoxVisitor.h"
+#include "gpuCacheVBOProxy.h"
 #include <boost/shared_array.hpp>
 #include <algorithm>
 
@@ -49,7 +51,7 @@ unsigned int closestElem(unsigned int nbPick, const GLuint* buffPtr)
 //
 GLPickingSelect::GLPickingSelect(
     MSelectInfo& selectInfo
-) 
+)
     : fSelectInfo(selectInfo),
       fMinZ(std::numeric_limits<float>::max())
 {}
@@ -57,7 +59,7 @@ GLPickingSelect::GLPickingSelect(
 
 //------------------------------------------------------------------------------
 //
-GLPickingSelect::~GLPickingSelect() 
+GLPickingSelect::~GLPickingSelect()
 {}
 
 
@@ -86,7 +88,7 @@ void GLPickingSelect::processEdges(
     {
         Frustum frustum(localToPort.inverse());
         MMatrix xform(modelViewMatrix);
-        
+
         DrawWireframeState state(frustum, seconds);
         DrawWireframeTraversal traveral(state, xform, false, Frustum::kUnknown);
         rootNode->accept(traveral);
@@ -95,7 +97,7 @@ void GLPickingSelect::processEdges(
     int nbPick = view.endSelect();
 
     if (nbPick > 0) {
-        unsigned int Zdepth = closestElem(nbPick, buffer.get());    
+        unsigned int Zdepth = closestElem(nbPick, buffer.get());
         float depth = float(Zdepth)/MAX_HW_DEPTH_VALUE;
         fMinZ = std::min(depth,fMinZ);
     }*/
@@ -126,7 +128,7 @@ void GLPickingSelect::processTriangles(
     {/*
         Frustum frustum(localToPort.inverse());
         MMatrix xform(modelViewMatrix);
-        
+
         DrawShadedState state(frustum, seconds);
         DrawShadedTraversal traveral(state, xform, false, Frustum::kUnknown);
         rootNode->accept(traveral);*/
@@ -136,7 +138,42 @@ void GLPickingSelect::processTriangles(
     int nbPick = view.endSelect();
 
     if (nbPick > 0) {
-        unsigned int Zdepth = closestElem(nbPick, buffer.get());    
+        unsigned int Zdepth = closestElem(nbPick, buffer.get());
+        float depth = float(Zdepth)/MAX_HW_DEPTH_VALUE;
+        fMinZ = std::min(depth,fMinZ);
+    }
+}
+
+//------------------------------------------------------------------------------
+//
+void GLPickingSelect::processBoundingBox(
+    const AlembicHolder::DrawablePtr&    rootNode,
+    const double       seconds
+)
+{
+    // Allocate select buffer.
+    const unsigned int bufferSize = 12;
+    GLuint buffer[12*4];
+
+    // Get the current viewport.
+    M3dView view = fSelectInfo.view();
+
+    // Get the bounding box.
+    MBoundingBox boundingBox = AlembicHolder::BoundingBoxVisitor::boundingBox(rootNode, seconds);
+
+    // Draw the bounding box.
+    view.beginSelect(buffer, bufferSize*4);
+    view.pushName(0);
+    {
+        AlembicHolder::VBOProxy vboProxy;
+        vboProxy.drawBoundingBox(boundingBox);
+    }
+    view.popName();
+    int nbPick = view.endSelect();
+
+    // Determine the closest point.
+    if (nbPick > 0) {
+        unsigned int Zdepth = closestElem(nbPick, buffer);
         float depth = float(Zdepth)/MAX_HW_DEPTH_VALUE;
         fMinZ = std::min(depth,fMinZ);
     }

@@ -105,6 +105,7 @@ void IXformDrw::setTime( chrono_t iSeconds )
 	XformSample tmpXform;
 	m_xform.getSchema().get(tmpXform,ss);
 	m_localToParent = tmpXform.getMatrix();
+	m_is_reflection = (getMMatrix().det3x3() < 0.0f);
 
 	IObjectDrw::setTime( iSeconds );
 

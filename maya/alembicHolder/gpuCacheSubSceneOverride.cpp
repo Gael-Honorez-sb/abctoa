@@ -86,66 +86,6 @@
 
 namespace AlembicHolder {
 
-//==============================================================================
-// CLASS DisplayPref
-//==============================================================================
-
-DisplayPref::WireframeOnShadedMode DisplayPref::fsWireframeOnShadedMode;
-MCallbackId DisplayPref::fsDisplayPrefChangedCallbackId;
-
-MStatus DisplayPref::initCallback()
-{
-    MStatus stat;
-
-    // Register DisplayPreferenceChanged callback
-    fsDisplayPrefChangedCallbackId = MEventMessage::addEventCallback(
-        "DisplayPreferenceChanged", DisplayPref::displayPrefChanged, NULL, &stat);
-    MCHECKERROR(stat, "MEventMessage::addEventCallback(DisplayPreferenceChanged");
-
-    // Trigger the callback manually to init class members
-    displayPrefChanged(NULL);
-
-    return MS::kSuccess;
-}
-
-MStatus DisplayPref::removeCallback()
-{
-    MStatus stat;
-
-    // Remove DisplayPreferenceChanged callback
-    MEventMessage::removeCallback(fsDisplayPrefChangedCallbackId);
-    MCHECKERROR(stat, "MEventMessage::removeCallback(DisplayPreferenceChanged)");
-
-    return MS::kSuccess;
-}
-
-void DisplayPref::displayPrefChanged(void*)
-{
-    MStatus stat;
-    // Wireframe on shaded mode: Full/Reduced/None
-    MString wireframeOnShadedActive = MGlobal::executeCommandStringResult(
-        "displayPref -q -wireframeOnShadedActive", false, false, &stat);
-    if (stat) {
-        if (wireframeOnShadedActive == "full") {
-            fsWireframeOnShadedMode = kWireframeOnShadedFull;
-        }
-        else if (wireframeOnShadedActive == "reduced") {
-            fsWireframeOnShadedMode = kWireframeOnShadedReduced;
-        }
-        else if (wireframeOnShadedActive == "none") {
-            fsWireframeOnShadedMode = kWireframeOnShadedNone;
-        }
-        else {
-            assert(0);
-        }
-    }
-}
-
-DisplayPref::WireframeOnShadedMode DisplayPref::wireframeOnShadedMode()
-{
-    return fsWireframeOnShadedMode;
-}
-
 /*==============================================================================
 * CLASS ShadedModeColor
 *============================================================================*/

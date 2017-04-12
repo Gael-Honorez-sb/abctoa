@@ -34,37 +34,7 @@ class nozAlembicHolder;
 
 namespace AlembicHolder {
 
-///////////////////////////////////////////////////////////////////////////////
-//
-// DisplayPref
-//
-// Keeps track of the display preference.
-//
-////////////////////////////////////////////////////////////////////////////////
-
-class DisplayPref
-{
-public:
-    enum WireframeOnShadedMode {
-        kWireframeOnShadedFull,
-        kWireframeOnShadedReduced,
-        kWireframeOnShadedNone
-    };
-
-    static WireframeOnShadedMode wireframeOnShadedMode();
-
-    static MStatus initCallback();
-    static MStatus removeCallback();
-
-private:
-    static void displayPrefChanged(void*);
-
-    static WireframeOnShadedMode fsWireframeOnShadedMode;
-    static MCallbackId fsDisplayPrefChangedCallbackId;
-};
-
-typedef ::nozAlembicHolder ShapeNode;
-//typedef AlembicHolder::Drawable SubNode;
+typedef nozAlembicHolder ShapeNode;
 
 /*==============================================================================
  * CLASS SubSceneOverride

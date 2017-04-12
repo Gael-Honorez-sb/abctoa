@@ -68,6 +68,7 @@ public:
 
     const IXform& getXform() const { return m_xform; }
     const MMatrix getMMatrix() const { return MMatrix(m_localToParent.x); }
+    bool isReflection() const { return m_is_reflection; }
 
     /*
     boost::shared_ptr<AlembicHolder::XformSample> getSample(double seconds) const {
@@ -82,6 +83,7 @@ public:
 
 protected:
     IXform m_xform;
+    bool m_is_reflection;
     M44d m_localToParent;
 };
 
