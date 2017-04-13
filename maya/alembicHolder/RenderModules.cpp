@@ -89,6 +89,8 @@ BufferObject::render(bool normalFlipped) const
     // release vbo's
     gGLFT->glBindBufferARB(MGL_ARRAY_BUFFER_ARB, 0);
     gGLFT->glBindBufferARB(MGL_ELEMENT_ARRAY_BUFFER_ARB, 0);
+
+    gGLFT->glDisableClientState(MGL_VERTEX_ARRAY);
 }
 
 void
