@@ -3554,7 +3554,7 @@ public:
             if (currentSelection.find(val.first) == currentSelection.end()) {
                 ShapeNodeSubSceneMap::iterator it = fShapeNodes.find(val.second);
                 if (it != fShapeNodes.end() && it->second) {
-                    it->second->dirtyEverything();
+                    it->second->dirtyVisibility();
                 }
             }
         }
@@ -3564,7 +3564,7 @@ public:
             if (fLastSelection.find(val.first) == fLastSelection.end()) {
                 ShapeNodeSubSceneMap::iterator it = fShapeNodes.find(val.second);
                 if (it != fShapeNodes.end() && it->second) {
-                    it->second->dirtyEverything();
+                    it->second->dirtyVisibility();
                 }
             }
         }
@@ -4025,15 +4025,21 @@ public:
     void updateVisibility(SubSceneOverride&   subSceneOverride,
                           MSubSceneContainer& container,
                           const bool          visibility,
-                          const IPolyMeshDrw& shape)
+                          const IPolyMeshDrw& shape,
+                          bool isSelected,
+                          const MColor& wireColor)
     {
         // Cache the sub-node visibility flag.
         fVisibility = visibility;
+        fIsSelected = isSelected;
 
         // Enable or disable render items.
         toggleBoundingBoxItem();
+        updateBoundingBoxShader(wireColor);
         toggleDormantWireItem();
+        updateDormantWireShader(wireColor);
         toggleActiveWireItem();
+        updateActiveWireShader(wireColor);
         toggleShadedItems();
     }
 
@@ -4234,14 +4240,21 @@ public:
             //);
         }
 
+        updateBoundingBoxShader(wireColor);
+        toggleBoundingBoxItem();
+    }
+
+    void updateBoundingBoxShader(const MColor& wireColor)
+    {
+        if (!fBoundingBoxItem)
+            return;
+
         // Update shader color.
         ShaderInstancePtr boundingBoxShader =
             ShaderInstanceCache::getInstance().getSharedBoundingBoxPlaceHolderShader(wireColor);
         if (boundingBoxShader) {
             fBoundingBoxItem->setShader(boundingBoxShader);
         }
-
-        toggleBoundingBoxItem();
     }
 
     void updateDormantWireItems(SubSceneOverride&   subSceneOverride,
@@ -4278,7 +4291,14 @@ public:
             hwInstanceManager->installHardwareInstanceData(fDormantWireItem);
         }
 
+        updateDormantWireShader(wireColor);
         toggleDormantWireItem();
+    }
+
+    void updateDormantWireShader(const MColor& wireColor)
+    {
+        if (!fDormantWireItem)
+            return;
 
         // Dormant wireframe color.
         ShaderInstancePtr dormantWireShader =
@@ -4323,8 +4343,14 @@ public:
             hwInstanceManager->installHardwareInstanceData(fActiveWireItem);
         }
 
+        updateActiveWireShader(wireColor);
         toggleActiveWireItem();
+    }
 
+    void updateActiveWireShader(const MColor& wireColor)
+    {
+        if (!fActiveWireItem)
+            return;
         // Active wireframe color.
         ShaderInstancePtr activeWireShader =
             (DisplayPref::wireframeOnShadedMode() == DisplayPref::kWireframeOnShadedFull)
@@ -4764,9 +4790,13 @@ public:
 
     UpdateVisibilityVisitor(SubSceneOverride&      subSceneOverride,
                             MSubSceneContainer&    container,
-                            SubNodeRenderItemList& subNodeItems)
+                            SubNodeRenderItemList& subNodeItems,
+                            bool isSelected,
+                            const MColor& wireColor)
         : ParentClass(subSceneOverride, container, subNodeItems),
-          fVisibility(true)
+          fVisibility(true),
+          fIsSelected(isSelected),
+          fWireColor(wireColor)
     {
         // The visibility visitor should always traverse into invisible sub-nodes
         // because we have to disable the render items for these invisible sub-nodes.
@@ -4797,7 +4827,9 @@ public:
             fSubSceneOverride,
             fContainer,
             visibility,
-            shape
+            shape,
+            fIsSelected,
+            fWireColor
         );
     }
 
@@ -4817,6 +4849,8 @@ public:
 
 private:
     bool fVisibility;
+    const bool fIsSelected;
+    const MColor fWireColor;
 };
 
 
@@ -5077,8 +5111,26 @@ public:
             return;
         }
 
+        // Check if this instance is selected.
+        const auto isPathSelected = [](MDagPath path) {
+            MSelectionList selectedList;
+            MGlobal::getActiveSelectionList(selectedList);
+            do {
+                if (selectedList.hasItem(path)) {
+                    return true;
+                }
+            } while (path.pop());
+            return false;
+        };
+        const DisplayStatus displayStatus = MGeometryUtilities::displayStatus(fDagPath);
+        fIsSelected = (displayStatus == kActive) ||
+                      (displayStatus == kLead)   ||
+                      (displayStatus == kHilite) ||
+                      isPathSelected(fDagPath);
+
         // Update the sub-node visibility.
-        UpdateVisibilityVisitor visitor(subSceneOverride, container, fSubNodeItems);
+        const MColor wireColor = MGeometryUtilities::wireframeColor(fDagPath);
+        UpdateVisibilityVisitor visitor(subSceneOverride, container, fSubNodeItems, fIsSelected, wireColor);
         visitor.setDontPrune(!fVisibilityValid);
         subSceneOverride.getGeometry()->accept(visitor);
         fVisibilityValid = true;
