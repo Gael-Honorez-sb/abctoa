@@ -1052,11 +1052,10 @@ class ShaderManager(QMainWindow, UI_ABCHierarchy.Ui_NAM):
                 shape = x
             else:
                 shapes = cmds.listRelatives(x, shapes=True, f=1)
-                if shapes:
-                    shape = shapes[0]
+                if not shapes:
+                    continue
+                shape = shapes[0]
             if cmds.nodeType(shape) == "gpuCache" or cmds.nodeType(shape) == "alembicHolder":
-
-
 
                 self.ABCViewerNode[shape] = gpucache.gpucache(shape, self)
                 cacheAssignations = self.ABCViewerNode[shape].getAssignations()
