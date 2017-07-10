@@ -56,6 +56,8 @@ struct SceneState
     float pointSize;
 };
 
+struct AbcLoadError {};
+
 //-*****************************************************************************
 class Scene
 {
