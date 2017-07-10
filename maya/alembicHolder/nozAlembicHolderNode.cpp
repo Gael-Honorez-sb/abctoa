@@ -155,8 +155,13 @@ void abcChangedCallback(MNodeMessage::AttributeMessage msg, MPlug & plug,
         MPlug & otherPlug, void* data) {
 }
 
-void nodePreRemovalCallback(MObject& obj, void* data) {
-    std::string sceneKey = ((nozAlembicHolder*) data)->getSceneKey();
+nozAlembicHolder::nozAlembicHolder()
+{
+}
+
+nozAlembicHolder::~nozAlembicHolder()
+{
+    std::string sceneKey = getSceneKey();
     CAlembicDatas::abcSceneManager.removeScene(sceneKey);
     if(CAlembicDatas::abcSceneManager.hasKey(sceneKey) == 0)
     {
@@ -168,13 +173,6 @@ void nodePreRemovalCallback(MObject& obj, void* data) {
         }
 
     }
-}
-
-nozAlembicHolder::nozAlembicHolder()
-{
-}
-
-nozAlembicHolder::~nozAlembicHolder() {
 }
 
 void nozAlembicHolder::setHolderTime() const {
@@ -235,7 +233,6 @@ void nozAlembicHolder::postConstructor()
     // callbacks
     MObject node = thisMObject();
     MNodeMessage::addAttributeChangedCallback(node, abcChangedCallback, this);
-    MNodeMessage::addNodePreRemovalCallback(node, nodePreRemovalCallback, this);
 
 
 }
