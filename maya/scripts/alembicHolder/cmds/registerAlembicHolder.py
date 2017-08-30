@@ -14,8 +14,11 @@
 import maya.cmds as cmds
 
 import maya.OpenMayaUI as apiUI
-import shiboken
-from PySide import QtGui
+try:
+    import shiboken
+except:
+    import shiboken2 as shiboken
+from Qt import QtGui, QtWidgets
 
 global _shadermanager
 _shadermanager = None
@@ -27,7 +30,7 @@ def getMayaWindow():
     """
     ptr = apiUI.MQtUtil.mainWindow()
     if ptr is not None:
-        return shiboken.wrapInstance(long(ptr), QtGui.QMainWindow)
+        return shiboken.wrapInstance(long(ptr), QtWidgets.QMainWindow)
 
 def alembicShaderManager(mayaWindow):
     global _shadermanager

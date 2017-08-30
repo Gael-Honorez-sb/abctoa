@@ -11,7 +11,7 @@
 # You should have received a copy of the GNU Lesser General Public
 # License along with this library.
 
-from PySide import QtGui, QtCore
+from Qt import QtGui, QtCore, QtWidgets
 import os
 import functools
 
@@ -35,9 +35,9 @@ POINTS = 7
 LIGHT = 8
 CURVES = 9
 
-class abcTreeItem(QtGui.QTreeWidgetItem):
+class abcTreeItem(QtWidgets.QTreeWidgetItem):
     def __init__(self, cache, path, itemType, parent=None, *args, **kwargs):
-        QtGui.QTreeWidgetItem.__init__(self, *args, **kwargs)
+        QtWidgets.QTreeWidgetItem.__init__(self, *args, **kwargs)
         self.interface = parent
         self.cache = cache
         self.path = path
@@ -151,17 +151,17 @@ class abcTreeItem(QtGui.QTreeWidgetItem):
         self.assignDisplacement()
 
     def pressed(self):
-        menu = QtGui.QMenu(self.interface)
+        menu = QtWidgets.QMenu(self.interface)
         shader = self.interface.getShader()
         if shader:
             if  cmds.nodeType(shader) == "displacementShader":
-                assignDisplacement = QtGui.QAction("Assign %s" % shader, menu)
+                assignDisplacement = QtWidgets.QAction("Assign %s" % shader, menu)
                 assignDisplacement.triggered.connect(self.assignDisplacement)
                 self.shaderToAssign = shader
                 menu.addAction(assignDisplacement)
 
             else:
-                assignShader = QtGui.QAction("Assign %s" % shader, menu)
+                assignShader = QtWidgets.QAction("Assign %s" % shader, menu)
                 assignShader.triggered.connect(self.assignShader)
                 self.shaderToAssign = shader
                 menu.addAction(assignShader)
@@ -169,7 +169,7 @@ class abcTreeItem(QtGui.QTreeWidgetItem):
         if len(self.cache.parent.shadersFromFile) > 0:
             menu.addSeparator()
             for sh in self.cache.parent.shadersFromFile:
-                assignShader = QtGui.QAction("Assign %s" % sh, menu)
+                assignShader = QtWidgets.QAction("Assign %s" % sh, menu)
                 assignShader.triggered.connect(functools.partial(self.assignShaderFromFile, sh))
                 self.shaderToAssign = shader
                 menu.addAction(assignShader)
@@ -178,7 +178,7 @@ class abcTreeItem(QtGui.QTreeWidgetItem):
             menu.addSeparator()
             for sh in self.cache.parent.displaceFromFile:
                 sh = sh.replace(".message", "")
-                assignShader = QtGui.QAction("Assign displacement %s" % sh, menu)
+                assignShader = QtWidgets.QAction("Assign displacement %s" % sh, menu)
 
                 assignShader.triggered.connect(functools.partial(self.assignDisplacementFromFile, sh))
                 self.shaderToAssign = shader
@@ -189,11 +189,11 @@ class abcTreeItem(QtGui.QTreeWidgetItem):
         shader = self.cache.assignations.getShader(path, self.interface.getLayer())
         if shader:
             if shader["fromfile"] == False:
-                deassignShader = QtGui.QAction("Deassign %s" % shader["shader"], menu)
+                deassignShader = QtWidgets.QAction("Deassign %s" % shader["shader"], menu)
                 deassignShader.triggered.connect(self.deassignShader)
                 menu.addAction(deassignShader)
             else:
-                importShaderInscene= QtGui.QAction("Import %s in Scene" % shader["shader"], menu)
+                importShaderInscene= QtWidgets.QAction("Import %s in Scene" % shader["shader"], menu)
                 importShaderInscene.triggered.connect(self.importShaderInScene)
                 menu.addAction(importShaderInscene)                
 
@@ -201,16 +201,16 @@ class abcTreeItem(QtGui.QTreeWidgetItem):
         shader = self.cache.assignations.getDisplace(path, self.interface.getLayer())
         if shader:
             if shader["fromfile"] == False:
-                deassignShader = QtGui.QAction("Deassign displace %s" % shader["shader"], menu)
+                deassignShader = QtWidgets.QAction("Deassign displace %s" % shader["shader"], menu)
                 deassignShader.triggered.connect(self.deassignDisplace)
                 menu.addAction(deassignShader)
             else:
-                importDisplaceInscene= QtGui.QAction("Import %s in Scene" % shader["shader"], menu)
+                importDisplaceInscene= QtWidgets.QAction("Import %s in Scene" % shader["shader"], menu)
                 importDisplaceInscene.triggered.connect(self.importDisplaceInscene)
                 menu.addAction(importDisplaceInscene)                 
 
         menu.addSeparator()
-        importinscene= QtGui.QAction("Import in Scene", menu)
+        importinscene= QtWidgets.QAction("Import in Scene", menu)
         importinscene.triggered.connect(self.importinscene)
         menu.addAction(importinscene)
 

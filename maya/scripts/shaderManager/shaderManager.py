@@ -19,9 +19,10 @@ d = os.path.dirname(__file__)
 import json
 from arnold import *
 
-from PySide import QtGui, QtCore
-from PySide.QtGui import *
-from PySide.QtCore import *
+from Qt import QtGui, QtCore, QtWidgets
+from Qt.QtGui import *
+from Qt.QtCore import *
+from Qt.QtWidgets import *
 
 from gpucache import gpucache, treeitem, treeDelegate, treeitemWildcard, treeitemTag
 reload(treeitem)
@@ -72,7 +73,7 @@ class ShaderManager(QMainWindow, UI_ABCHierarchy.Ui_NAM):
 
         self.propertyEditing = False
 
-        self.propertyEditorWindow = QtGui.QDockWidget(self)
+        self.propertyEditorWindow = QtWidgets.QDockWidget(self)
         self.propertyEditorWindow.setAllowedAreas(QtCore.Qt.LeftDockWidgetArea | QtCore.Qt.RightDockWidgetArea)
         self.propertyEditorWindow.setWindowTitle("Properties")
         self.propertyEditorWindow.setMinimumWidth(300)
@@ -152,12 +153,12 @@ class ShaderManager(QMainWindow, UI_ABCHierarchy.Ui_NAM):
     def showEvent(self, event):
         self.reset()
         self.isolateCheckbox.setChecked(0)
-        return QtGui.QMainWindow.showEvent(self, event)
+        return QtWidgets.QMainWindow.showEvent(self, event)
 
     def hideEvent(self, event):
         self.reset()
         self.isolateCheckbox.setChecked(0)
-        return QtGui.QMainWindow.hideEvent(self, event)
+        return QtWidgets.QMainWindow.hideEvent(self, event)
 
     def reset(self, *args, **kwargs):
         try:
@@ -344,13 +345,13 @@ class ShaderManager(QMainWindow, UI_ABCHierarchy.Ui_NAM):
                 if cmds.nodeType(nodeName) == "displacementShader":
                     icon = QtGui.QIcon()
                     icon.addFile(os.path.join(d, "../../icons/sg.xpm"), QtCore.QSize(25,25))
-                    item = QtGui.QListWidgetItem(nodeName)
+                    item = QtWidgets.QListWidgetItem(nodeName)
                     item.setIcon(icon)
                     self.displacementList.addItem(item)
                 else:
                     icon = QtGui.QIcon()
                     icon.addFile(os.path.join(d, "../../icons/sg.xpm"), QtCore.QSize(25,25))
-                    item = QtGui.QListWidgetItem(nodeName)
+                    item = QtWidgets.QListWidgetItem(nodeName)
                     item.setIcon(icon)
                     self.shadersList.addItem(item)
 
@@ -686,7 +687,7 @@ class ShaderManager(QMainWindow, UI_ABCHierarchy.Ui_NAM):
         icon = QtGui.QIcon()
         icon.addFile(os.path.join(d, "../../icons/sg.xpm"), QtCore.QSize(25,25))
         for shader in shaders:
-            item = QtGui.QListWidgetItem(shader)
+            item = QtWidgets.QListWidgetItem(shader)
             item.setIcon(icon)
             self.shadersList.addItem(item)
 
@@ -696,7 +697,7 @@ class ShaderManager(QMainWindow, UI_ABCHierarchy.Ui_NAM):
         icon = QtGui.QIcon()
         icon.addFile(os.path.join(d, "../../icons/displacement.xpm"), QtCore.QSize(25,25))
         for sg in displaces:
-            item = QtGui.QListWidgetItem(sg)
+            item = QtWidgets.QListWidgetItem(sg)
             item.setIcon(icon)
             self.displacementList.addItem(item)
 
@@ -827,7 +828,7 @@ class ShaderManager(QMainWindow, UI_ABCHierarchy.Ui_NAM):
 
     def itemPressed(self, item, col) :
         self.lastClick = 1
-        if QtGui.QApplication.mouseButtons()  == QtCore.Qt.RightButton:
+        if QtWidgets.QApplication.mouseButtons()  == QtCore.Qt.RightButton:
             item.pressed()
 
 
@@ -848,7 +849,7 @@ class ShaderManager(QMainWindow, UI_ABCHierarchy.Ui_NAM):
         if column == 0:
             if item.isWildCard:
                 if not item.protected:
-                    text, ok = QtGui.QInputDialog.getText(self, 'WildCard expression',  'Enter the expression:', QtGui.QLineEdit.Normal, item.getPath())
+                    text, ok = QtWidgets.QInputDialog.getText(self, 'WildCard expression',  'Enter the expression:', QtWidgets.QLineEdit.Normal, item.getPath())
                     if ok:
                         #first change the path
                         item.setExpression(text)
@@ -872,7 +873,7 @@ class ShaderManager(QMainWindow, UI_ABCHierarchy.Ui_NAM):
 
     def expandItem(self, item) :
         expandAll = False
-        modifiers = QtGui.QApplication.keyboardModifiers()
+        modifiers = QtWidgets.QApplication.keyboardModifiers()
         if modifiers == QtCore.Qt.ShiftModifier:
             expandAll = True
 
@@ -888,7 +889,7 @@ class ShaderManager(QMainWindow, UI_ABCHierarchy.Ui_NAM):
             return
 
 
-        item.setChildIndicatorPolicy(QtGui.QTreeWidgetItem.DontShowIndicator)
+        item.setChildIndicatorPolicy(QtWidgets.QTreeWidgetItem.DontShowIndicator)
 
     def createBranch(self, parentItem, abcchild, hierarchy = False, p = "/") :
         ''' 
@@ -916,7 +917,7 @@ class ShaderManager(QMainWindow, UI_ABCHierarchy.Ui_NAM):
                 # check if the item has chidren, but go no further...
                 childsItems = newItem.cache.getHierarchy(newItem.getPath())
                 if childsItems:
-                    newItem.setChildIndicatorPolicy(QtGui.QTreeWidgetItem.ShowIndicator)
+                    newItem.setChildIndicatorPolicy(QtWidgets.QTreeWidgetItem.ShowIndicator)
                     newItem.setHasChildren(True)
                 else:
                     newItem.setHasChildren(False)
@@ -1143,7 +1144,7 @@ class ShaderManager(QMainWindow, UI_ABCHierarchy.Ui_NAM):
 
         newItem = treeitemWildcard.wildCardItem(parentItem.cache, wildcard, self)
         parentItem.cache.itemsTree.append(newItem)
-        newItem.setChildIndicatorPolicy(QtGui.QTreeWidgetItem.DontShowIndicator)
+        newItem.setChildIndicatorPolicy(QtWidgets.QTreeWidgetItem.DontShowIndicator)
         parentItem.addChild(newItem)
         
         newItem.checkShaders(self.getLayer())
@@ -1156,7 +1157,7 @@ class ShaderManager(QMainWindow, UI_ABCHierarchy.Ui_NAM):
 
         newItem = treeitemTag.tagItem(parentItem.cache, tag, self)
         parentItem.cache.itemsTree.append(newItem)
-        newItem.setChildIndicatorPolicy(QtGui.QTreeWidgetItem.DontShowIndicator)
+        newItem.setChildIndicatorPolicy(QtWidgets.QTreeWidgetItem.DontShowIndicator)
         parentItem.addChild(newItem)
         
         newItem.checkShaders(self.getLayer())

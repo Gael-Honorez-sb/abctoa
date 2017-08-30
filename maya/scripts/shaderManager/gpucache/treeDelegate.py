@@ -11,7 +11,7 @@
 # You should have received a copy of the GNU Lesser General Public
 # License along with this library.
 
-from PySide import QtGui, QtCore
+from Qt import QtGui, QtCore, QtWidgets
 import os
 
 TRANSFORM = 1
@@ -47,17 +47,17 @@ ICONS[7].addFile(os.path.join(d, "../../../icons/points.png"),QtCore.QSize(ICONS
 ICONS[8].addFile(os.path.join(d, "../../../icons/light.png"),QtCore.QSize(ICONSIZE,ICONSIZE) )
 ICONS[9].addFile(os.path.join(d, "../../../icons/curves.png"),QtCore.QSize(ICONSIZE,ICONSIZE) )
 
-class treeDelegate(QtGui.QStyledItemDelegate):
+class treeDelegate(QtWidgets.QStyledItemDelegate):
     def __init__(self, *args, **kwargs):
-        QtGui.QStyledItemDelegate.__init__(self, *args, **kwargs)
+        QtWidgets.QStyledItemDelegate.__init__(self, *args, **kwargs)
 
     def paint(self, painter, option, index, *args, **kwargs):
         
-        options = QtGui.QStyleOptionViewItemV4(option)
+        options = QtWidgets.QStyleOptionViewItem(option)
 
         self.initStyleOption(options, index)
 
-        style = options.widget.style() if options.widget else  QtGui.QApplication.style()
+        style = options.widget.style() if options.widget else  QtWidgets.QApplication.style()
 
         options.text = ""
         style.drawControl(style.CE_ItemViewItem, options, painter, options.widget)
@@ -66,7 +66,7 @@ class treeDelegate(QtGui.QStyledItemDelegate):
 
         painter.save()
 
-        if options.state & QtGui.QStyle.State_MouseOver:
+        if options.state & QtWidgets.QStyle.State_MouseOver:
             painter.fillRect(option.rect, QtGui.QColor("#202020"))
         
         html = QtGui.QTextDocument()

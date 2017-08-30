@@ -12,7 +12,7 @@
 # License along with this library.
 
 from shaderManager.assignations._assignations import cacheAssignations
-from PySide import QtCore
+from Qt import QtCore
 
 import json
 import maya.cmds as cmds

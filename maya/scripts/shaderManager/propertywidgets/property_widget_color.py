@@ -11,8 +11,9 @@
 # You should have received a copy of the GNU Lesser General Public
 # License along with this library.
 
-from PySide.QtGui import *
-from PySide.QtCore import *
+from Qt.QtGui import *
+from Qt.QtCore import *
+from Qt.QtWidgets import *
 from arnold import *
 from property_widget import *
 class PropertyWidgetColor(PropertyWidget):
