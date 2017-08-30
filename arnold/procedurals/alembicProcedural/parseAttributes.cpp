@@ -190,7 +190,7 @@ bool isVisible(IObject child, IXformSchema xs, ProcArgs* args)
 
 bool isVisibleForArnold(IObject child, ProcArgs* args)
 {
-    AtUInt16 minVis = AI_RAY_ALL & ~(AI_RAY_GLOSSY|AI_RAY_DIFFUSE|AI_RAY_SUBSURFACE|AI_RAY_REFRACTED|AI_RAY_REFLECTED|AI_RAY_SHADOW|AI_RAY_CAMERA);
+    uint16_t minVis = AI_RAY_ALL & ~(AI_RAY_SUBSURFACE | AI_RAY_SPECULAR_REFLECT | AI_RAY_DIFFUSE_REFLECT | AI_RAY_VOLUME | AI_RAY_SPECULAR_TRANSMIT | AI_RAY_DIFFUSE_TRANSMIT |AI_RAY_SHADOW|AI_RAY_CAMERA);
     std::string name = child.getFullName();
     int pathSize = 0;
     if(args->linkAttributes)
@@ -229,7 +229,7 @@ bool isVisibleForArnold(IObject child, ProcArgs* args)
                         if (attribute == "visibility")
                         {
 
-                            AtUInt16 vis = args->attributesRoot[*it][itr.key().asString()].asInt();
+                            uint16_t vis = args->attributesRoot[*it][itr.key().asString()].asInt();
                             if(vis <= minVis)
                             {
                                 AiMsgDebug("Object %s is invisible", name.c_str());
@@ -390,7 +390,8 @@ AtNode* createNetwork(IObject object, std::string prefix, ProcArgs & args)
                             if(AiParamGetType(pentry) == AI_TYPE_ARRAY)
                             {
                                 AtArray* parray = AiNodeGetArray(aShaders[abcnode.getName().c_str()], realInputName.c_str());
-                                if(parray->type == AI_TYPE_NODE)
+                                
+                                if(AiArrayGetType(parray) == AI_TYPE_NODE)
                                 {
                                     nodeArray = true;
                                     std::vector<AtNode*> connArray;
@@ -458,10 +459,10 @@ AtNode* createNetwork(IObject object, std::string prefix, ProcArgs & args)
 
 }
 
-void ParseShaders(Json::Value jroot, const std::string& ns, const std::string& nameprefix, ProcArgs* args, AtByte type)
+void ParseShaders(Json::Value jroot, const std::string& ns, const std::string& nameprefix, ProcArgs* args, uint8_t type)
 {
     // We have to lock here as we need to be sure that another thread is not checking the root while we are creating it here.
-    AtScopedLock sc(args->lock);
+
     for( Json::ValueIterator itr = jroot.begin() ; itr != jroot.end() ; itr++ )
     {
         

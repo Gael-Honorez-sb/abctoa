@@ -409,7 +409,7 @@ inline void doNormals<IPolyMesh>(IPolyMesh& prim, AtNode *meshNode, const Sample
                unsigned int base = 0;
                AtArray* nsides = AiNodeGetArray(meshNode, "nsides");
                std::vector<unsigned int> nvidxReversed;
-               for (unsigned int i = 0; i < nsides->nelements / nsides->nkeys; ++i)
+               for (unsigned int i = 0; i < AiArrayGetNumElements(nsides) / AiArrayGetNumKeys(nsides); ++i)
                {
                   int curNum = AiArrayGetUInt(nsides ,i);
 
@@ -461,7 +461,7 @@ AtNode* writeMesh(
 
     // Getting all the data relative to the mesh.
     std::vector<unsigned int> vidxs;
-    std::vector<AtByte> nsides;
+    std::vector<uint8_t> nsides;
     std::vector<float> vlist;
 
     std::vector<float> uvlist;
@@ -492,7 +492,7 @@ AtNode* writeMesh(
                     return NULL;
                 }
 
-                nsides.push_back( (AtByte) n );
+                nsides.push_back( (uint8_t) n );
             }
 
             size_t vidxSize = sample.getFaceIndices()->size();
@@ -770,7 +770,7 @@ AtNode* writeMesh(
 
     AiNodeSetArray(meshNode, "vlist",
             AiArrayConvert( vlist.size() / (numSampleTimes * 3),
-                    numSampleTimes, AI_TYPE_POINT, &vlist[0]
+                    numSampleTimes, AI_TYPE_VECTOR, &vlist[0]
                             ));
 
 
@@ -849,7 +849,7 @@ AtNode* writeMesh(
     if ( faceSetNames.size() > 0 )
     {
 
-        std::vector<AtByte> faceSetArray;
+        std::vector<uint8_t> faceSetArray;
         // By default, we are using all the faces.
         faceSetArray.resize(nsides.size());
         for ( int i = 0; i < (int) nsides.size(); ++i )
@@ -868,7 +868,7 @@ AtNode* writeMesh(
                 for( int f = 0; f < (int) faceSetSample.getFaces()->size(); f++)
                 {
                     if(faceArray[f] <= nsides.size() )
-                        faceSetArray[faceArray[f]] = (AtByte) i;
+                        faceSetArray[faceArray[f]] = (uint8_t) i;
                     else
                         AiMsgWarning("Face set is higher than nsides side");
                 }
@@ -1125,14 +1125,14 @@ void ProcessPolyMesh( IPolyMesh &polymesh, ProcArgs &args,
 
     getSampleTimes(polymesh, args, sampleTimes);
     std::string cacheId = getHash(name, originalName, polymesh, args, sampleTimes);
-    AiCritSecEnter(&args.lock);
+
     AtNode* meshNode = args.nodeCache->getCachedNode(cacheId);
 
     if(meshNode == NULL)
     { // We don't have a cache, so we much create this mesh.
         meshNode = writeMesh(name, originalName, cacheId, polymesh, args, sampleTimes);
     }
-    AiCritSecLeave(&args.lock);
+
     AtNode *instanceNode = NULL;
     // we can create the instance, with correct transform, attributes & shaders.
     if(meshNode != NULL)

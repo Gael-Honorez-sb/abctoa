@@ -109,36 +109,41 @@ void ApplyOverrides(const std::string& name, AtNode* node, const std::vector<std
                         {
                             if(attribute=="visibility")
                             {
-                                AtByte attrViz = val.asInt();
+                                uint8_t attrViz = val.asInt();
                                 // special case, we must determine it against the general viz.
-                                AtByte procViz = AiNodeGetByte( args.proceduralNode, "visibility" );
-                                AtByte compViz = AI_RAY_ALL;
+                                uint8_t procViz = AiNodeGetByte( args.proceduralNode, "visibility" );
+                                uint8_t compViz = AI_RAY_ALL;
                                 {
-                                    compViz &= ~AI_RAY_GLOSSY;
-                                    if(procViz > compViz)
-                                        procViz &= ~AI_RAY_GLOSSY;
-                                    else
-                                        attrViz &= ~AI_RAY_GLOSSY;
-                                    compViz &= ~AI_RAY_DIFFUSE;
-                                    if(procViz > compViz)
-                                        procViz &= ~AI_RAY_DIFFUSE;
-                                    else
-                                        attrViz &= ~AI_RAY_DIFFUSE;
                                     compViz &= ~AI_RAY_SUBSURFACE;
-                                    if(procViz > compViz)
+                                    if (procViz > compViz)
                                         procViz &= ~AI_RAY_SUBSURFACE;
                                     else
                                         attrViz &= ~AI_RAY_SUBSURFACE;
-                                    compViz &= ~AI_RAY_REFRACTED;
+                                    compViz &= ~AI_RAY_SUBSURFACE;
                                     if(procViz > compViz)
-                                        procViz &= ~AI_RAY_REFRACTED;
+                                        procViz &= ~AI_RAY_SPECULAR_REFLECT;
                                     else
-                                        attrViz &= ~AI_RAY_REFRACTED;
-                                    compViz &= ~AI_RAY_REFLECTED;
+                                        attrViz &= ~AI_RAY_SPECULAR_REFLECT;
+                                    compViz &= ~AI_RAY_DIFFUSE_REFLECT;
                                     if(procViz > compViz)
-                                        procViz &= ~AI_RAY_REFLECTED;
+                                        procViz &= ~AI_RAY_DIFFUSE_REFLECT;
                                     else
-                                        attrViz &= ~AI_RAY_REFLECTED;
+                                        attrViz &= ~AI_RAY_DIFFUSE_REFLECT;
+                                    compViz &= ~AI_RAY_VOLUME;
+                                    if(procViz > compViz)
+                                        procViz &= ~AI_RAY_VOLUME;
+                                    else
+                                        attrViz &= ~AI_RAY_VOLUME;
+                                    compViz &= ~AI_RAY_SPECULAR_TRANSMIT;
+                                    if(procViz > compViz)
+                                        procViz &= ~AI_RAY_SPECULAR_TRANSMIT;
+                                    else
+                                        attrViz &= ~AI_RAY_SPECULAR_TRANSMIT;
+                                    compViz &= ~AI_RAY_DIFFUSE_TRANSMIT;
+                                    if(procViz > compViz)
+                                        procViz &= ~AI_RAY_DIFFUSE_TRANSMIT;
+                                    else
+                                        attrViz &= ~AI_RAY_DIFFUSE_TRANSMIT;
                                     compViz &= ~AI_RAY_SHADOW;
                                     if(procViz > compViz)
                                         procViz &= ~AI_RAY_SHADOW;
@@ -235,7 +240,7 @@ bool ApplyShaders(const std::string& name, AtNode* node, const std::vector<std::
     else
     {
         AtArray* shaders = AiNodeGetArray(args.proceduralNode, "shader");
-        if (shaders->nelements != 0)
+        if (AiArrayGetNumElements(shaders) != 0)
             AiNodeSetArray(node, "shader", AiArrayCopy(shaders));
 		return false;
     }

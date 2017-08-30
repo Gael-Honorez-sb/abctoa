@@ -115,9 +115,7 @@ void ApplyTransformation( struct AtNode * node,
         }
     }
 
-    AiNodeSetArray(node, "matrix",
-                ArrayConvert(1, xformSamples->size(),
-                        AI_TYPE_MATRIX, &mlist[0]));
+    AiNodeSetArray(node, "matrix", AiArrayConvert(1, xformSamples->size(), AI_TYPE_MATRIX, &mlist[0]));
 
 
     if ( sampleTimes.size() > 1 )
@@ -126,15 +124,11 @@ void ApplyTransformation( struct AtNode * node,
         // transform_time_samples
         if ( nodeHasParameter( node, "transform_time_samples" ) )
         {
-            AiNodeSetArray(node, "transform_time_samples",
-                            ArrayConvert(sampleTimes.size(), 1,
-                                    AI_TYPE_FLOAT, &sampleTimes[0]));
+            AiNodeSetArray(node, "transform_time_samples", AiArrayConvert(sampleTimes.size(), 1, AI_TYPE_FLOAT, &sampleTimes[0]));
         }
         else if ( nodeHasParameter( node, "time_samples" ) )
         {
-            AiNodeSetArray(node, "time_samples",
-                            ArrayConvert(sampleTimes.size(), 1,
-                                    AI_TYPE_FLOAT, &sampleTimes[0]));
+            AiNodeSetArray(node, "time_samples", AiArrayConvert(sampleTimes.size(), 1, AI_TYPE_FLOAT, &sampleTimes[0]));
         }
         else
         {

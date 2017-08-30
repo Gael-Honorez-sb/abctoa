@@ -29,11 +29,11 @@ float ScaleLightExposure(float exposure, ProcArgs &args)
 {
     // Scale the light intensity to match the scale of the procedural
     double e = static_cast<double>(exposure);
-    AtMatrix m;
-    AtVector scaleVector = AiVector(1.0, 0.0, 0.0);
     
-    AiNodeGetMatrix(args.proceduralNode, "matrix", m);
-    AiM4VectorByMatrixMult (&scaleVector, m, &scaleVector);  
+    AtVector scaleVector = AtVector(1.0, 0.0, 0.0);
+    
+    AtMatrix m = AiNodeGetMatrix(args.proceduralNode, "matrix");
+    scaleVector = AiM4VectorByMatrixMult (m, scaleVector);
     float scaleFactor = AiV3Length(scaleVector);
     e += log(scaleFactor * scaleFactor) / log(2.0);
     exposure = static_cast<float>(e);
@@ -154,7 +154,7 @@ AtRGB ConvertKelvinToRGB(float kelvin)
         rgb.b -= w;
     }
 
-    float greatest = MAX(rgb.r, MAX(rgb.g, rgb.b));
+    float greatest = AiMax(rgb.r, AiMax(rgb.g, rgb.b));
 
     if (greatest > 0)
     {
@@ -329,12 +329,12 @@ void ProcessLight( ILight &light, ProcArgs &args,
                         break;
                     case 3:
                         lightNode = AiNode("quad_light");
-                        AtPoint vertices[4];
-                        AiV3Create(vertices[3], 1, 1, 0);
-                        AiV3Create(vertices[0], 1, -1, 0);
-                        AiV3Create(vertices[1], -1, -1, 0);
-                        AiV3Create(vertices[2], -1, 1, 0);
-                        AiNodeSetArray(lightNode, "vertices", AiArrayConvert(4, 1, AI_TYPE_POINT, vertices));
+                        AtVector vertices[4];
+                        vertices[3]= AtVector(1, 1, 0);
+                        vertices[0] = AtVector(1, -1, 0);
+                        vertices[1] = AtVector(-1, -1, 0);
+                        vertices[2] = AtVector(-1, 1, 0);
+                        AiNodeSetArray(lightNode, "vertices", AiArrayConvert(4, 1, AI_TYPE_VECTOR, vertices));
                         break;
                     case 4:
                         lightNode = AiNode("photometric_light");

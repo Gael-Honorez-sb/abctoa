@@ -209,17 +209,17 @@ INSTALL(DIRECTORY maya/samples DESTINATION ${INSTALL_DIR})
 
 configure_file (
   "${CMAKE_SOURCE_DIR}/maya/alembicHolder/version.h.in"
-  "${CMAKE_SOURCE_DIR}/maya/alembicHolder/version.h"
+  "${CMAKE_BINARY_DIR}/maya/alembicHolder/version.h"
   )
 
 configure_file (
 "${CMAKE_SOURCE_DIR}/abcToA.mod.in"
-"${PROJECT_SOURCE_DIR}/abcToA.mod"
+"${CMAKE_BINARY_DIR}/abcToA.mod"
 )
 
 configure_file(
-    "${PROJECT_SOURCE_DIR}/INSTALL.in"
-    "${PROJECT_SOURCE_DIR}/INSTALL"
+    "${CMAKE_SOURCE_DIR}/INSTALL.in"
+    "${CMAKE_BINARY_DIR}/INSTALL"
 )
   
 # 

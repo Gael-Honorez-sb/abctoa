@@ -1,0 +1,37 @@
+REQUIREMENTS
+-------------
+
+- Maya 2018
+- MtoA 2.0.1
+
+BINARY DISTRIBUTION
+-------------------
+The distribution package is a Maya module folder.
+
+Unzip the 'modules" in any directory inside the MAYA_MODULE_PATH environment variable.
+
+ie. for maya 2018 on Windows:
+
+Edit or create
+c:\Users\<user>\Documents\maya\2018-x64\Maya.env (or your OS equivalent)
+
+Add this line:
+MAYA_MODULE_PATH = %MAYA_MODULE_PATH%;c:\maya2018\modules
+or on Linux/osX :
+MAYA_MODULE_PATH = $MAYA_MODULE_PATH:/maya2018/modules
+
+(alternatively, but unadviced, maya will search for modules in c:\Program Files\Autodesk\Maya2018\modules)
+
+Unpack in c:\maya2018\modules
+Resulting in a file :
+c:\maya2018\modules\abcToA.mod
+and a folder :
+c:\maya2018\modules\AbcToA-2.2.1
+
+You can now launch maya and load the plugins.
+
+Alternatively, you can edit the .mod file and place the abcToA-2.2.1 somewhere else:
+ie. change
++ AbcToA 2.2.1 .\AbcToA-2.2.1
+to
++ AbcToA 2.2.1 s:\sharedModules\2013\AbcToA-2.2.1

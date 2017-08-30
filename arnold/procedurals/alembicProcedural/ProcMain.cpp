@@ -61,6 +61,12 @@
 #include <iostream>
 #include <fstream>
 
+AI_PROCEDURAL_NODE_EXPORT_METHODS(alembicProceduralMethods);
+
+node_parameters
+{
+
+}
 
 namespace
 {
@@ -81,10 +87,6 @@ void update(Json::Value& a, Json::Value& b) {
         }
     }
 }
-
-
-
-
 
 void WalkObject( IObject & parent, const ObjectHeader &i_ohead, ProcArgs &args,
              PathList::const_iterator I, PathList::const_iterator E,
@@ -268,153 +270,10 @@ struct caches
 {
     FileCache* g_fileCache;
     NodeCache* g_nodeCache;
-    AtCritSec mycs;
 };
 
-bool ProcInitPlugin(void **plugin_user_ptr)
+procedural_init
 {
-#ifdef WIN32
-    // DIRTY FIX 
-    // magic static* used in the Alembic Schemas are not threadSafe in Visual Studio, so we need to initialized them first.
-        IPolyMesh::getSchemaTitle();
-        IPoints::getSchemaTitle();
-        ICurves::getSchemaTitle();
-        INuPatch::getSchemaTitle();
-        IXform::getSchemaTitle();
-        ISubD::getSchemaTitle();
-#endif
-
-        
-
-        caches *g_caches = new caches();
-        AiCritSecInitRecursive(&g_caches->mycs);
-
-        g_caches->g_fileCache = new FileCache(g_caches->mycs);
-        g_caches->g_nodeCache = new NodeCache(g_caches->mycs);
-        *plugin_user_ptr = g_caches;
-        return true;
-}
-
-
-bool ProcCleanupPlugin(void *plugin_user_ptr)
-{
-    caches *g_caches = reinterpret_cast<caches*>( plugin_user_ptr );
-    AiCritSecClose(&g_caches->mycs);
-    delete g_caches->g_fileCache;
-    delete g_caches->g_nodeCache;
-    delete g_caches;
-    return true;
-
-}
-
-
-bool ProcInitBounds (AtNode *node, AtBBox *bounds, void **user_ptr)
-{
-    // check if we have a instancer archive attribute
-    if (AiNodeLookUpUserParameter(node, "instancerArchive") !=NULL )
-    {
-        std::string fileName(AiNodeGetStr(node, "instancerArchive"));
-        if(fileName.empty())
-        {
-            // if we already have BBox, we skip this part.
-            if( bounds->min.x != 0.0 || bounds->min.y != 0.0 || bounds->min.z != 0.0 ||
-                bounds->max.x != 0.0 || bounds->max.y != 0.0 || bounds->max.z != 0.0
-            )
-                return true;
-        }
-    }
-
-
-    ProcArgs * args = new ProcArgs( AiNodeGetStr( node, "data" ) );
-    std::string resultFile = args->filename;
-    if (AiNodeLookUpUserParameter(node, "instancerArchive") !=NULL )
-    {
-        std::string fileName(AiNodeGetStr(node, "instancerArchive"));
-        if(!fileName.empty())
-        {
-            resultFile = fileName;
-        }
-    }
-
-    #if (AI_VERSION_ARCH_NUM == 3 && AI_VERSION_MAJOR_NUM < 3) || AI_VERSION_ARCH_NUM < 3
-        #error Arnold version 3.3+ required for AlembicArnoldProcedural
-    #endif
-
-        if (!AiCheckAPIVersion(AI_VERSION_ARCH, AI_VERSION_MAJOR, AI_VERSION_MINOR))
-        {
-            std::cout << "AlembicArnoldProcedural compiled with arnold-"
-                      << AI_VERSION
-                      << " but is running with incompatible arnold-"
-                      << AiGetVersion(NULL, NULL, NULL, NULL) << std::endl;
-            return 1;
-        }
-
-    if (resultFile.empty() )
-    {
-        args->usage();
-        return 1;
-    }
-
-
-    IObject root;
-    Alembic::AbcCoreFactory::IFactory factory;
-    IArchive archive = factory.getArchive(resultFile);
-
-    
-    if (!archive.valid())
-    {
-        AiMsgError ( "Cannot read file %s", resultFile.c_str());
-    }
-    else
-    {
-        AiMsgDebug ( "reading file %s", resultFile.c_str());
-        root = archive.getTop();
-    }
-
-    Box3d bbox;
-    bbox.makeEmpty();
-    chrono_t frameTime = args->frame / args->fps;
-    chrono_t shutterOpenTime = ( args->frame + args->shutterOpen ) / args->fps;
-    chrono_t shutterCloseTime = ( args->frame + args->shutterClose ) / args->fps;
-
-     if ( root.getProperties().getPropertyHeader( ".childBnds" ) != NULL )
-     {
-         IBox3dProperty childbnds = Alembic::Abc::IBox3dProperty( archive.getTop().getProperties(),
-                                   ".childBnds", ErrorHandler::kQuietNoopPolicy);
-        
-
-         ISampleSelector m_ss =  ISampleSelector(shutterOpenTime, ISampleSelector::kNearIndex );
-         Box3d bboxRoot = childbnds.getValue(m_ss);
-         bbox.extendBy(bboxRoot);
-         if(shutterOpenTime != shutterCloseTime)
-         {
-              m_ss =  ISampleSelector(shutterOpenTime, ISampleSelector::kNearIndex );
-              bboxRoot = childbnds.getValue(m_ss);
-              bbox.extendBy(bboxRoot);
-         }
-     }
-     else
-     {
-        getBoundingBox(root, shutterOpenTime, bbox);
-        if(shutterOpenTime != shutterCloseTime)
-            getBoundingBox(root, shutterCloseTime, bbox);
-     }
-
-    bounds->min = AiPoint(bbox.min.x, bbox.min.y, bbox.min.z);
-    bounds->max = AiPoint(bbox.max.x, bbox.max.y, bbox.max.z);
-
-    AiMsgDebug("bounds->min %f %f %f", bounds->min.x, bounds->min.y, bounds->min.z);
-    AiMsgDebug("bounds->max %f %f %f", bounds->max.x, bounds->max.y, bounds->max.z);
-
-
-    return true;
-}
-
-//-*************************************************************************
-
-int ProcInit( struct AtNode *node, void **user_ptr )
-{
-
     bool skipJson = false;
     bool skipShaders = false;
     bool skipAttributes = false;
@@ -466,12 +325,12 @@ int ProcInit( struct AtNode *node, void **user_ptr )
 	}
 		
 
-    caches *g_cache = reinterpret_cast<caches*>( AiProceduralGetPluginData(node) );
+    caches *g_cache;// = reinterpret_cast<caches*>(AiProceduralGetPluginData(node));
     
     args->proceduralNode = node;
     args->nodeCache = g_cache->g_nodeCache;
-    args->lock = g_cache->mycs;
-    args->createdNodes = new NodeCollector(args->lock, node);
+
+    args->createdNodes = new NodeCollector(node);
 
     if (AiNodeLookUpUserParameter(node, "abcShaders") !=NULL )
     {
@@ -501,7 +360,7 @@ int ProcInit( struct AtNode *node, void **user_ptr )
         // if so, we try to load the archive.
         IArchive archive;
         Alembic::AbcCoreFactory::IFactory factory;
-        archive = factory.getArchive(AiNodeGetStr(node, "uvsArchive"));
+        archive = factory.getArchive(AiNodeGetStr(node, "uvsArchive").c_str());
         if (!archive.valid())
         {
             AiMsgWarning ( "Cannot read file %s", AiNodeGetStr(node, "uvsArchive"));
@@ -558,7 +417,7 @@ int ProcInit( struct AtNode *node, void **user_ptr )
                     Json::Reader readerOverride;
                     Json::Value jrootShadersOverrides;
                     std::vector<std::string> pathOverrides;
-                    if(readerOverride.parse( AiNodeGetStr(node, "shadersAssignation"), jrootShadersOverrides ))
+                    if(readerOverride.parse( AiNodeGetStr(node, "shadersAssignation").c_str(), jrootShadersOverrides ))
                         if(jrootShadersOverrides.size() > 0)
                             jrootShaders = OverrideAssignations(jrootShaders, jrootShadersOverrides);
                 }
@@ -574,7 +433,7 @@ int ProcInit( struct AtNode *node, void **user_ptr )
                     Json::Reader readerOverride;
                     Json::Value jrootAttributesOverrides;
 
-                    if(readerOverride.parse( AiNodeGetStr(node, "attributes"), jrootAttributesOverrides))
+                    if(readerOverride.parse( AiNodeGetStr(node, "attributes").c_str(), jrootAttributesOverrides))
                         OverrideProperties(jrootAttributes, jrootAttributesOverrides);
 
                 }
@@ -589,7 +448,7 @@ int ProcInit( struct AtNode *node, void **user_ptr )
                     Json::Reader readerOverride;
                     Json::Value jrootDisplacementsOverrides;
 
-                    if(readerOverride.parse( AiNodeGetStr(node, "displacementsAssignation"), jrootDisplacementsOverrides ))
+                    if(readerOverride.parse( AiNodeGetStr(node, "displacementsAssignation").c_str(), jrootDisplacementsOverrides ))
                         if(jrootDisplacementsOverrides.size() > 0)
                             jrootDisplacements = OverrideAssignations(jrootDisplacements, jrootDisplacementsOverrides);
                 }
@@ -603,7 +462,7 @@ int ProcInit( struct AtNode *node, void **user_ptr )
                     Json::Reader readerOverride;
                     Json::Value jrootLayersOverrides;
 
-                    if(readerOverride.parse( AiNodeGetStr(node, "layersOverride"), jrootLayersOverrides ))
+                    if(readerOverride.parse( AiNodeGetStr(node, "layersOverride").c_str(), jrootLayersOverrides ))
                     {
                         jrootLayers[layer]["removeShaders"] = jrootLayersOverrides[layer].get("removeShaders", skipShaders).asBool();
                         jrootLayers[layer]["removeDisplacements"] = jrootLayersOverrides[layer].get("removeDisplacements", skipDisplacement).asBool();
@@ -629,7 +488,7 @@ int ProcInit( struct AtNode *node, void **user_ptr )
         if (customLayer && AiNodeLookUpUserParameter(node, "layersOverride") !=NULL)
         {
             Json::Reader reader;
-            parsingSuccessful = reader.parse( AiNodeGetStr(node, "layersOverride"), jrootLayers );
+            parsingSuccessful = reader.parse( AiNodeGetStr(node, "layersOverride").c_str(), jrootLayers );
         }
         // Check if we have to skip something....
         if( jrootLayers[layer].size() > 0 && customLayer && parsingSuccessful)
@@ -642,18 +501,18 @@ int ProcInit( struct AtNode *node, void **user_ptr )
         if (AiNodeLookUpUserParameter(node, "shadersAssignation") !=NULL && skipShaders == false)
         {
             Json::Reader reader;
-            bool parsingSuccessful = reader.parse( AiNodeGetStr(node, "shadersAssignation"), jrootShaders );
+            bool parsingSuccessful = reader.parse( AiNodeGetStr(node, "shadersAssignation").c_str(), jrootShaders );
         }
 
         if (AiNodeLookUpUserParameter(node, "attributes") !=NULL  && skipAttributes == false)
         {
             Json::Reader reader;
-            bool parsingSuccessful = reader.parse( AiNodeGetStr(node, "attributes"), jrootAttributes );
+            bool parsingSuccessful = reader.parse( AiNodeGetStr(node, "attributes").c_str(), jrootAttributes );
         }
         if (AiNodeLookUpUserParameter(node, "displacementsAssignation") !=NULL  && skipDisplacement == false)
         {
             Json::Reader reader;
-            bool parsingSuccessful = reader.parse( AiNodeGetStr(node, "displacementsAssignation"), jrootDisplacements );
+            bool parsingSuccessful = reader.parse( AiNodeGetStr(node, "displacementsAssignation").c_str(), jrootDisplacements );
         }
     }
 
@@ -744,7 +603,7 @@ int ProcInit( struct AtNode *node, void **user_ptr )
             // if so, we try to load the archive.
             IArchive archive;
             Alembic::AbcCoreFactory::IFactory factory;
-            archive = factory.getArchive(AiNodeGetStr(node, "instancerArchive"));
+            archive = factory.getArchive(AiNodeGetStr(node, "instancerArchive").c_str());
             if (!archive.valid())
             {
                 AiMsgWarning ( "Cannot read file %s", AiNodeGetStr(node, "instancerArchive"));
@@ -858,16 +717,10 @@ int ProcInit( struct AtNode *node, void **user_ptr )
                                 AiNodeSetVec(light, AiParamGetName(pentry), vec.x, vec.y, vec.z);
                                 break;
                             }
-                        case AI_TYPE_POINT:
+                        case AI_TYPE_VECTOR2:
                             {
-                                AtPoint pnt = AiNodeGetPnt(obj, AiParamGetName(pentry));
-                                AiNodeSetPnt(light, AiParamGetName(pentry), pnt.x, pnt.y, pnt.z);
-                                break;
-                            }
-                        case AI_TYPE_POINT2:
-                            {
-                                AtPoint2 pnt2 = AiNodeGetPnt2(obj, AiParamGetName(pentry));
-                                AiNodeSetPnt2(light, AiParamGetName(pentry), pnt2.x, pnt2.y);
+                                AtVector2 pnt2 = AiNodeGetVec2(obj, AiParamGetName(pentry));
+                                AiNodeSetVec2(light, AiParamGetName(pentry), pnt2.x, pnt2.y);
                                 break;
                             }
                         case AI_TYPE_STRING:
@@ -960,7 +813,7 @@ int ProcInit( struct AtNode *node, void **user_ptr )
 
 //-*************************************************************************
 
-int ProcCleanup( void *user_ptr )
+procedural_cleanup
 {
     AiMsgDebug("ProcCleanup");
     //delete reinterpret_cast<ProcArgs*>( user_ptr );
@@ -970,7 +823,7 @@ int ProcCleanup( void *user_ptr )
 
         if(args->createdNodes->getNumNodes() > 0)
         {
-            caches *g_cache = reinterpret_cast<caches*>( AiProceduralGetPluginData(args->proceduralNode) );
+            caches *g_cache;// = reinterpret_cast<caches*>(AiProceduralGetPluginData(args->proceduralNode));
 
             std::string fileCacheId = g_cache->g_fileCache->getHash(args->filename, args->shaders, args->displacements, args->attributesRoot, args->frame);
             g_cache->g_fileCache->addCache(fileCacheId, args->createdNodes);
@@ -989,18 +842,18 @@ int ProcCleanup( void *user_ptr )
 
 //-*************************************************************************
 
-int ProcNumNodes( void *user_ptr )
+procedural_num_nodes
 {
 
     ProcArgs * args = reinterpret_cast<ProcArgs*>( user_ptr );
     AiMsgDebug("got %i nodes", args->createdNodes->getNumNodes());
-    return (int) args->createdNodes->getNumNodes();
+    return args->createdNodes->getNumNodes();
 
 }
 
 //-*************************************************************************
 
-AtNode* ProcGetNode(void *user_ptr, int i)
+procedural_get_node
 {
     
     AiMsgDebug("Should return node %i", i);
@@ -1014,26 +867,26 @@ AtNode* ProcGetNode(void *user_ptr, int i)
 } //end of anonymous namespace
 
 
+  // DSO hook
 #ifdef __cplusplus
 extern "C"
 {
 #endif
 
-AI_EXPORT_LIB int ProcLoader(AtProcVtable *vtable)
-// vtable passed in by proc_loader macro define
-{
-   vtable->Init          = ProcInit;
-   vtable->Cleanup       = ProcCleanup;
-   vtable->NumNodes      = ProcNumNodes;
-   vtable->GetNode       = ProcGetNode;
-   vtable->InitPlugin    = ProcInitPlugin;
-   vtable->CleanupPlugin = ProcCleanupPlugin;
-   vtable->InitBounds    = ProcInitBounds;
-   strcpy(vtable->version, AI_VERSION);
-   return 1;
-}
+    node_loader
+    {
+        if (i>0) return 0;
+    node->methods = alembicProceduralMethods;
+    node->output_type = AI_TYPE_NONE;
+    node->name = "alembicProcedural";
+    node->node_type = AI_NODE_SHAPE_PROCEDURAL;
+    strcpy(node->version, AI_VERSION);
+    return true;
+    }
 
 #ifdef __cplusplus
 }
 #endif
+
+
 

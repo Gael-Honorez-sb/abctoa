@@ -125,13 +125,12 @@ void WalkObjectForInstancer( IObject & parent, const ObjectHeader &i_ohead, Proc
 		for ( size_t pId = 0; pId < pSize; ++pId )
 		{
 			Alembic::Abc::V3f pos = (*v3ptr)[pId];
-            AtPoint apos;
+            AtVector apos;
             apos.x = pos.x;
             apos.y = pos.y;
             apos.z = pos.z;
 
-			AtMatrix outMtx;
-			AiM4Translation (outMtx, &apos);
+			AtMatrix outMtx = AiM4Translation(apos);
 
 			AtNode* instance = AiNode("procedural");
 			std::string newName(AiNodeGetName(proc));
