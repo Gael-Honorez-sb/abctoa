@@ -146,10 +146,10 @@ MStatus abcContainersExportCmd::doIt( const MArgList &args)
                              if(AiParamGetType(paramEntry) == AI_TYPE_ARRAY)
                              {
                                  AtArray* paramArray = AiNodeGetArray(*sit, paramName);
-                                 cout << "this is an array of size " <<  paramArray->nelements << endl;
+                                 cout << "this is an array of size " <<  AiArrayGetNumElements(paramArray) << endl;
 
                                  processArrayValues(*sit, paramName, paramArray, outputType, matObj, nodeName, container.name());
-                                 for(unsigned int i=0; i < paramArray->nelements; i++)
+                                 for(unsigned int i=0; i < AiArrayGetNumElements(paramArray); i++)
                                  {
                                      processArrayParam(*sit, paramName, paramArray, i, outputType, matObj, nodeName, container.name());
                                  }

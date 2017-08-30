@@ -2,6 +2,7 @@ set(MAYAPLUGIN abcMayaShader)
 
 file(GLOB SRC "*.cpp" "*h")
 
+link_directories(${ARNOLD_LIBRARY_DIR})
 add_library(${MAYAPLUGIN} SHARED ${SRC})
 
 MAYA_SET_PLUGIN_PROPERTIES(${MAYAPLUGIN})
@@ -16,11 +17,13 @@ INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR}/thirdParty/openEXR/IlmBase/IlmThread)
 INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR}/thirdParty/openEXR/IlmBase/Imath)
 INCLUDE_DIRECTORIES(${CMAKE_BINARY_DIR}/thirdParty/openEXR/IlmBase/config)
 
+
+
 include_directories(${MTOA_INCLUDE_DIR})
 include_directories(${CMAKE_SOURCE_DIR}/ThirdParty/pystring)
 include_directories(${ARNOLD_INCLUDE_DIR})
 
-target_link_libraries(${MAYAPLUGIN} Alembic pystring_lib_static ${MTOA_LIBRARY} ${MAYA_LIBRARIES} ${ARNOLD_LIBRARY} Iex Half)
+target_link_libraries(${MAYAPLUGIN} Alembic pystring_lib_static ${MTOA_LIBRARY} ${MAYA_LIBRARIES} ai Iex Half)
 
 
 

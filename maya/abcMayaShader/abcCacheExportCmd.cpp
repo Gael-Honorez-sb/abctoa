@@ -164,7 +164,7 @@ MStatus abcCacheExportCmd::doIt( const MArgList &args)
                             AtArray* paramArray = AiNodeGetArray(*sit, paramName);
 
                             processArrayValues(*sit, paramName, paramArray, outputType, matObj, nodeName, container.name());
-                            for(unsigned int i=0; i < paramArray->nelements; i++)
+                            for(unsigned int i=0; i < AiArrayGetNumElements(paramArray); i++)
                             {
                                 processArrayParam(*sit, paramName, paramArray, i, outputType, matObj, nodeName, container.name());
                             }

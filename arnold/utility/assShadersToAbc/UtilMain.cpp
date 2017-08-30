@@ -149,7 +149,7 @@ int main(int argc, char *argv[] )
                     AtArray* paramArray = AiNodeGetArray(*sit, paramName);
                     processArrayValues(*sit, paramName, paramArray, outputType, matObj, nodeName);
                     
-                    for(unsigned int i=0; i < paramArray->nelements; i++)
+                    for(unsigned int i=0; i < AiArrayGetNumElements(paramArray); i++)
                         processArrayParam(*sit, paramName, paramArray, i, outputType, matObj, nodeName, containerName);
 
                 }

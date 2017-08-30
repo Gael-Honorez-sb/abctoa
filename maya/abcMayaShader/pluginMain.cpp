@@ -46,7 +46,7 @@ DLLEXPORT MStatus initializePlugin( MObject obj )
 //
 {
     MStatus   status;
-    MFnPlugin plugin( obj, "nozon", "2013", "Any");
+    MFnPlugin plugin( obj, "nozon", "2017", "Any");
 
 
     MString classification( "shader/surface/");

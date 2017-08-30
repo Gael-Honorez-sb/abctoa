@@ -178,11 +178,11 @@ set(SUBDIRECTORIES
 		alembic
 		ThirdParty
         arnold/procedurals/alembicProcedural
-		arnold/shaders/abcShader
+		#arnold/shaders/abcShader
 		arnold/utility/assShadersToAbc
 		maya/alembicHolder
 		mtoa/ABCViewer
-		mtoa/abcShader
+		#mtoa/abcShader
 )
 
 # loop over subdirectories

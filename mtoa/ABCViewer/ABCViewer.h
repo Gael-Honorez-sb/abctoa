@@ -24,7 +24,6 @@ public:
 private:
 
    void ProcessRenderFlagsCustom(AtNode* node);
-   void ExportBoundingBox(AtNode* procedural);
    void ExportStandinsShaders(AtNode* procedural);
    void ExportProcedural(AtNode* procedural, bool update);
 

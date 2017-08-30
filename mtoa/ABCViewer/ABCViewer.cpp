@@ -119,8 +119,6 @@ void CABCViewerTranslator::ExportProcedural(AtNode* procedural, bool update)
 
         AiNodeSetStr(procedural, "dso", procLib.asChar() );
 
-        bool loadAtInit =  m_DagNode.findPlug("loadAtInit").asBool();
-        AiNodeSetBool(procedural, "load_at_init", loadAtInit);
 
         MString abcfile = m_DagNode.findPlug("cacheFileName").asString();
 
@@ -180,35 +178,16 @@ void CABCViewerTranslator::ExportProcedural(AtNode* procedural, bool update)
         bool skipLayers = m_DagNode.findPlug("skipLayers").asBool();
         bool skipDisplacements = m_DagNode.findPlug("skipDisplacements").asBool();
 
-        if(skipJsonFile)
-        {
-            AiNodeDeclare(procedural, "skipJsonFile", "constant BOOL");
-            AiNodeSetBool(procedural, "skipJsonFile", skipJsonFile);
-        }
+        AiNodeSetBool(procedural, "skipJsonFile", skipJsonFile);
 
-        if(skipShaders)
-        {
-            AiNodeDeclare(procedural, "skipShaders", "constant BOOL");
-            AiNodeSetBool(procedural, "skipShaders", skipShaders);
-        }
+        AiNodeSetBool(procedural, "skipShaders", skipShaders);
 
-        if(skipAttributes)
-        {
-            AiNodeDeclare(procedural, "skipAttributes", "constant BOOL");
-            AiNodeSetBool(procedural, "skipAttributes", skipAttributes);
-        }
+        AiNodeSetBool(procedural, "skipAttributes", skipAttributes);
 
-        if(skipLayers)
-        {
-            AiNodeDeclare(procedural, "skipLayers", "constant BOOL");
-            AiNodeSetBool(procedural, "skipLayers", skipLayers);
-        }
+        AiNodeSetBool(procedural, "skipLayers", skipLayers);
 
-        if(skipDisplacements)
-        {
-            AiNodeDeclare(procedural, "skipDisplacements", "constant BOOL");
-            AiNodeSetBool(procedural, "skipDisplacements", skipDisplacements);
-        }
+        AiNodeSetBool(procedural, "skipDisplacements", skipDisplacements);
+
 
         if(abcShaders.asString() != "")
         {
@@ -216,8 +195,6 @@ void CABCViewerTranslator::ExportProcedural(AtNode* procedural, bool update)
             AbcShadersObject.setRawFullName(abcShaders.asString().expandFilePath());
             AbcShadersObject.setResolveMethod(MFileObject::kInputFile);
             MString  AbcShadersFile = AbcShadersObject.resolvedFullName();
-
-            AiNodeDeclare(procedural, "abcShaders", "constant STRING");
             AiNodeSetStr(procedural, "abcShaders", AbcShadersFile.asChar());
         }
 
@@ -227,8 +204,6 @@ void CABCViewerTranslator::ExportProcedural(AtNode* procedural, bool update)
             UVsfileObject.setRawFullName(uvsArchive.asString().expandFilePath());
             UVsfileObject.setResolveMethod(MFileObject::kInputFile);
             MString UvsFile = UVsfileObject.resolvedFullName();
-
-            AiNodeDeclare(procedural, "uvsArchive", "constant STRING");
             AiNodeSetStr(procedural, "uvsArchive",UvsFile.asChar());
         }
 
@@ -238,8 +213,6 @@ void CABCViewerTranslator::ExportProcedural(AtNode* procedural, bool update)
             JSONfileObject.setRawFullName(jsonFile.asString().expandFilePath());
             JSONfileObject.setResolveMethod(MFileObject::kInputFile);
             MString JSONfile = JSONfileObject.resolvedFullName();
-
-            AiNodeDeclare(procedural, "jsonFile", "constant STRING");
             AiNodeSetStr(procedural, "jsonFile", JSONfile.asChar());
         }
 
@@ -249,44 +222,36 @@ void CABCViewerTranslator::ExportProcedural(AtNode* procedural, bool update)
             JSONfileObject.setRawFullName(secondaryJsonFile.asString().expandFilePath());
             JSONfileObject.setResolveMethod(MFileObject::kInputFile);
             MString JSONfile = JSONfileObject.resolvedFullName();
-
-            AiNodeDeclare(procedural, "secondaryJsonFile", "constant STRING");
             AiNodeSetStr(procedural, "secondaryJsonFile", JSONfile.asChar());
         }
 
         if(shadersNamespace.asString() != "")
         {
-            AiNodeDeclare(procedural, "shadersNamespace", "constant STRING");
             AiNodeSetStr(procedural, "shadersNamespace", shadersNamespace.asString().asChar());
         }
 
         if(shadersAttribute.asString() != "")
         {
-            AiNodeDeclare(procedural, "shadersAttribute", "constant STRING");
             AiNodeSetStr(procedural, "shadersAttribute", shadersAttribute.asString().asChar());
         }
 
         if(shadersAssignation.asString() != "")
         {
-            AiNodeDeclare(procedural, "shadersAssignation", "constant STRING");
             AiNodeSetStr(procedural, "shadersAssignation", shadersAssignation.asString().asChar());
         }
 
         if(attributes.asString() != "")
         {
-            AiNodeDeclare(procedural, "attributes", "constant STRING");
             AiNodeSetStr(procedural, "attributes", attributes.asString().asChar());
         }
 
         if(displacementsAssignation.asString() != "")
         {
-            AiNodeDeclare(procedural, "displacementsAssignation", "constant STRING");
             AiNodeSetStr(procedural, "displacementsAssignation", displacementsAssignation.asString().asChar());
         }
 
         if(layersOverride.asString() != "")
         {
-            AiNodeDeclare(procedural, "layersOverride", "constant STRING");
             AiNodeSetStr(procedural, "layersOverride", layersOverride.asString().asChar());
         }
 
@@ -303,19 +268,12 @@ void CABCViewerTranslator::ExportProcedural(AtNode* procedural, bool update)
         static const MTime sec(1.0, MTime::kSeconds);
         fps = sec.as(MTime::uiUnit());
 
-        MString data;
-        data += "-filename " +  abcfile + " -objectpath " + MString(objectPathStr.c_str()) + " -nameprefix " + m_dagPath.partialPathName() + " -frame " + time.as(time.unit()) + " -fps " + fps;
+        AiNodeSetStr(procedural, "fileName", abcfile.asChar());
+        AiNodeSetStr(procedural, "objectPath", objectPathStr.c_str());
+        AiNodeSetStr(procedural, "namePrefix", m_dagPath.partialPathName().asChar());
+        AiNodeSetFlt(procedural, "frame", time.as(time.unit()));
+        AiNodeSetFlt(procedural, "fps", fps);
 
-        AiNodeSetStr(procedural, "data", data.expandEnvironmentVariablesAndTilde().asChar());
-
-        ExportBoundingBox(procedural);
-        /*
-        if (!AiNodeLookUpUserParameter(procedural, "allow_updates"))
-        {
-            AiNodeDeclare(procedural, "allow_updates", "constant BOOL");
-        }
-        AiNodeSetBool(procedural, "allow_updates", true); // do we need a security valve here ? like a new parameter to control that ?
-        */
     }
 }
 
@@ -363,23 +321,6 @@ void CABCViewerTranslator::ExportMotion(AtNode* anode)
     ExportMatrix(anode);
 }
 
-void CABCViewerTranslator::ExportBoundingBox(AtNode* procedural)
-{
-    MBoundingBox boundingBox = m_DagNode.boundingBox();
-    MPoint bbMin = boundingBox.min();
-    MPoint bbMax = boundingBox.max();
-
-    float minCoords[4];
-    float maxCoords[4];
-
-    bbMin.get(minCoords);
-    bbMax.get(maxCoords);
-
-    AiNodeSetPnt(procedural, "min", minCoords[0], minCoords[1], minCoords[2]);
-    AiNodeSetPnt(procedural, "max", maxCoords[0], maxCoords[1], maxCoords[2]);
-}
-
-
 
 void CABCViewerTranslator::NodeInitializer(CAbTranslator context)
 {
@@ -388,15 +329,11 @@ void CABCViewerTranslator::NodeInitializer(CAbTranslator context)
 
     CAttrData data;
 
-    data.defaultValue.BOOL = false;
+
+    data.defaultValue.BOOL() = false;
     data.name = "overrideGlobalShader";
     data.shortName = "ogs";
     helper.MakeInputBoolean(data) ;
 
-    data.defaultValue.BOOL = true;
-    data.name = "loadAtInit";
-    data.shortName = "lai";
-    data.channelBox = true;
-    helper.MakeInputBoolean(data);
 
 }
