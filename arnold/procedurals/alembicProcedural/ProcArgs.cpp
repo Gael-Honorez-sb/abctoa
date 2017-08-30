@@ -42,21 +42,17 @@
 //-*****************************************************************************
 //INSERT YOUR OWN TOKENIZATION CODE AND STYLE HERE
 
-ProcArgs::ProcArgs( const char * paramStr )
+ProcArgs::ProcArgs( AtNode *node )
   : frame(0.0)
-  , fps(24.0)
-  , shutterOpen(0)
-  , shutterClose(0)
-  , excludeXform(false)
-  , inheritXform(true)
-  , subdIterations(0)
- , subdivType(0)
- , proceduralNode(0)
- , linkShader(false)
- , linkDisplacement(false)
- , linkAttributes(false)
- , useUvArchive(false)
- , useAbcShaders(false)
+  , fps(25.0)
+  , shutterOpen(0.0)
+  , shutterClose(1.0)
+  , proceduralNode(node)
+  , linkShader(false)
+  , linkDisplacement(false)
+  , linkAttributes(false)
+  , useUvArchive(false)
+  , useAbcShaders(false)
 {
 
     // Grab the shutter a camera attached to AiUniverse if present
@@ -65,207 +61,12 @@ ProcArgs::ProcArgs( const char * paramStr )
    shutterOpen = AiNodeGetFlt(camera, "shutter_start");
    shutterClose = AiNodeGetFlt(camera, "shutter_end");
 
+   filename = std::string(AiNodeGetStr(node, "fileName"));
+   nameprefix = std::string(AiNodeGetStr(node, "namePrefix"));
+   objectpath = std::string(AiNodeGetStr(node, "objectPath"));
 
-    std::vector<std::string> Tokenizer;
-    std::vector<std::string> tokens;
-    std::string params( paramStr );
-
-    pystring::split(params, Tokenizer, " ");
-
-    for (std::vector<std::string>::iterator iter = Tokenizer.begin(); iter != Tokenizer.end() ;
-          ++iter )
-    {
-        if ( (*iter).empty() ) { continue; }
-
-        tokens.push_back( *iter );
-    }
-
-    for ( size_t i = 0; i < tokens.size(); ++i )
-    {
-        std::string token = tokens[i];
-        std::transform( token.begin(), token.end(), token.begin(), ::tolower );
-
-        if ( token == "-frame" )
-        {
-            ++i;
-            if ( i < tokens.size() )
-            {
-                frame = atof( tokens[i].c_str() );
-            }
-        }
-        else if ( token == "-fps" )
-        {
-            ++i;
-            if ( i < tokens.size() )
-            {
-                fps = atof( tokens[i].c_str() );
-            }
-        }
-        else if ( token == "-filename" )
-        {
-            ++i;
-            if ( i < tokens.size() )
-            {
-                filename = tokens[i];
-            }
-        }
-        else if ( token == "-nameprefix" )
-        {
-            ++i;
-            if ( i < tokens.size() )
-            {
-                nameprefix = tokens[i];
-            }
-        }
-        else if ( token == "-objectpath" )
-        {
-            ++i;
-            if ( i < tokens.size() )
-            {
-                objectpath = tokens[i];
-            }
-        }
-        else if ( token == "-excludexform" )
-        {
-            excludeXform = true;
-
-        }
-        else if ( token == "-subditerations" )
-        {
-            ++i;
-            if ( i < tokens.size() )
-            {
-                subdIterations = atoi( tokens[i].c_str() );
-            }
-        }
-        else if ( token == "-subdivtype" )
-        {
-            ++i;
-            if ( i < tokens.size() )
-            {
-               subdivType = atoi( tokens[i].c_str() );
-            }
-        }
-        else if ( token == "-subdivadaptivemetric" )
-        {
-            ++i;
-            if ( i < tokens.size() )
-            {
-               subdivAdaptiveMetric = atoi( tokens[i].c_str() );
-            }
-        }
-        else if ( token == "-subdivpixelerror" )
-        {
-            ++i;
-            if ( i < tokens.size() )
-            {
-               subdivPixelError = atof( tokens[i].c_str() );
-            }
-        }
-        else if ( token == "-subdivuvsmoothing" )
-        {
-            ++i;
-            if ( i < tokens.size() )
-            {
-               subdivUvSmoothing = atoi( tokens[i].c_str() );
-            }
-        }
-    }
-}
-
-
-void ProcArgs::usage()
-{
-    std::cerr << "AlembicRiProcedural usage:" << std::endl;
-    std::cerr << std::endl;
-
-
-    std::cerr << "-filename /path/to/some/archive.abc" << std::endl;
-    std::cerr << std::endl;
-
-    std::cerr << "This is the only required argument. "
-                 "It has no default value." << std::endl;
-    std::cerr << std::endl;
-
-
-    std::cerr << "-frame 42" << std::endl;
-    std::cerr << std::endl;
-
-    std::cerr << "The frame number to load from within the archive. "
-                 "The default value is 0. This is combined with -fps to map "
-                 "to Alembic time units (double-precision seconds).";
-
-    std::cerr << std::endl;
-    std::cerr << std::endl;
-
-    std::cerr << "-fps 24" << std::endl;
-    std::cerr << std::endl;
-
-    std::cerr << "Combined with -frame above. The default value is 24.0.";
-    std::cerr << std::endl;
-    std::cerr << std::endl;
-
-
-    std::cerr << "-shutteropen 0.0" << std::endl;
-    std::cerr << "-shutterclose 0.5" << std::endl;
-    std::cerr << std::endl;
-
-
-    std::cerr << "These are frame-relative values which specify the shutter "
-                 "window. The procedural will include all samples present in "
-                 "the archive which are relevant to the shutter window. "
-                 "The default value of both is 0.0 (no motion blur).";
-    std::cerr << std::endl;
-    std::cerr << std::endl;
-
-
-    std::cerr << "-objectpath /assetroot/characters" << std::endl;
-    std::cerr << std::endl;
-
-    std::cerr << "If specified, only objects at or below the provided path "
-                 "(within the archive) will be emitted. When combined with "
-                 "-excludexform, this can also be used to load individual "
-                 "leaf locations within an externally defined hierarchy. Be "
-                 "aware that in that case, you'd need to set the \"matrix\" "
-                 "and \"inherit_xform\" parameters on the procedural node "
-                 "itself. If the path points to a single \"faceset\" object "
-                 "directly beneath a polymesh or subdivision mesh, it'll add "
-                 "a \"face_visibility\" user data array.";
-    std::cerr << std::endl;
-    std::cerr << std::endl;
-
-    std::cerr << "-excludexform" << std::endl;
-    std::cerr << std::endl;
-
-    std::cerr << "If specified, the \"matrix\" parameter will not be set on "
-                 "the resulting primitive nodes." << std::endl;
-    std::cerr << std::endl;
-
-    std::cerr << "-subditerations 2" << std::endl;
-    std::cerr << std::endl;
-
-    std::cerr << "For AbcGeom::ISubD objects, this option specifies the "
-                 "\"subdiv_iterations\" value. It currently has no effect for "
-                 "other primitive types. The default value is 0.";
-    std::cerr << std::endl;
-    std::cerr << std::endl;
-
-    std::cerr << "-nameprefix some_prefix__" << std::endl;
-    std::cerr << std::endl;
-
-    std::cerr << "Because node names are unique scene-wide in arnold, this "
-                 "allows you control potential name clashes when loading or "
-                 "instancing an archive (or multiple equivalently named "
-                 "archives) multiple times. The default name of each node is "
-                 "its full path within the alembic archive.";
-    std::cerr << std::endl;
-    std::cerr << std::endl;
-
-    std::cerr << "If used, the procedural will look for a shader path attribute "
-                 "for all objects in the scene, and will put user attributes "
-                 "accordingly to the datas of the xml path if the path is found. ";
-
-    std::cerr << std::endl;
-
+   frame = AiNodeGetFlt(node, "frame");
+   fps = AiNodeGetFlt(node, "fps");
 
 }
+

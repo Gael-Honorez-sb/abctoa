@@ -18,8 +18,10 @@ INCLUDE_DIRECTORIES(${CMAKE_BINARY_DIR}/thirdParty/openEXR/IlmBase/config)
 include_directories(${CMAKE_SOURCE_DIR}/common)
 include_directories(${ALEMBIC_ILMBASE_INCLUDE_DIRECTORY})
 
+link_directories(${ARNOLD_LIBRARY_DIR})
+
 add_library(${PROC} SHARED ${SRC})
-target_link_libraries(${PROC} ${ARNOLD_LIBRARY} Alembic jsoncpp_lib_static pystring_lib_static Iex Half)
+target_link_libraries(${PROC} ai Alembic jsoncpp_lib_static pystring_lib_static Iex Half)
 set_target_properties(${PROC} PROPERTIES PREFIX "")
 
 if (${CMAKE_SYSTEM_NAME} MATCHES "Windows")

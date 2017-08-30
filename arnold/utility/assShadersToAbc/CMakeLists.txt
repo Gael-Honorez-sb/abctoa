@@ -20,9 +20,10 @@ include_directories(${CMAKE_SOURCE_DIR}/common)
 include_directories(${CMAKE_SOURCE_DIR}/thirdparty/ezOptionParser)
 
 include_directories(${ARNOLD_INCLUDE_DIR})
+link_directories(${ARNOLD_LIBRARY_DIR})
 
 add_executable(${UTIL} ${SRC})
-target_link_libraries(${UTIL} ${ARNOLD_LIBRARY} Alembic jsoncpp_lib_static pystring_lib_static Iex Half)
+target_link_libraries(${UTIL} ai Alembic jsoncpp_lib_static pystring_lib_static Iex Half)
 set_target_properties(${UTIL} PROPERTIES PREFIX "")
 
 if (${CMAKE_SYSTEM_NAME} MATCHES "Windows")

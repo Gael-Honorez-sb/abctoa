@@ -55,48 +55,29 @@
 struct ProcArgs
 {
     //constructor parses
-    ProcArgs( const char * paramStr );
+    ProcArgs( AtNode *node );
 
     //copy constructor
     ProcArgs( const ProcArgs &rhs )
     : filename( rhs.filename )
     , nameprefix( rhs.nameprefix )
-    , xmlpath ( rhs.xmlpath)
     , objectpath( rhs.objectpath )
     , frame( rhs.frame )
     , fps( rhs.fps )
     , shutterOpen( rhs.shutterOpen )
     , shutterClose( rhs.shutterClose )
-    , excludeXform( rhs.excludeXform )
-    , inheritXform( rhs.inheritXform )
-    , subdIterations ( rhs.subdIterations )
-    , subdivType( rhs.subdivType )
-    , subdivAdaptiveMetric (rhs.subdivAdaptiveMetric )
-    , subdivPixelError (rhs.subdivPixelError )
-    , subdivUvSmoothing (rhs.subdivUvSmoothing )
     , proceduralNode( rhs.proceduralNode )
     {}
 
     //member variables
     std::string filename;
     std::string nameprefix;
-    std::string xmlpath;
-
     std::string objectpath;
+
     double frame;
     double fps;
     double shutterOpen;
     double shutterClose;
-
-    bool excludeXform;
-    bool inheritXform;
-
-    int subdIterations;
-    int subdivType;
-
-    int subdivAdaptiveMetric;
-    float subdivPixelError;
-    int subdivUvSmoothing;
 
     AtNode * proceduralNode;
 
@@ -125,8 +106,6 @@ struct ProcArgs
     bool useAbcShaders;
     Alembic::AbcGeom::IObject materialsObject;
     const char* abcShaderFile;
-
-    void usage();
 };
 
 #endif

@@ -8,10 +8,11 @@ include_directories(${ARNOLD_INCLUDE_DIR})
 include_directories(${CMAKE_SOURCE_DIR}/ThirdParty/pystring)
 
 add_library(${MTOATRANSLATOR} SHARED ${SRC})
+link_directories(${ARNOLD_LIBRARY_DIR})
 
 MAYA_SET_TRANSLATOR_PROPERTIES(${MTOATRANSLATOR})
 
-target_link_libraries(${MTOATRANSLATOR} ${MTOA_LIBRARY} ${MAYA_LIBRARIES} ${ARNOLD_LIBRARY} pystring_lib_static)
+target_link_libraries(${MTOATRANSLATOR} ${MTOA_LIBRARY} ${MAYA_LIBRARIES} ai pystring_lib_static)
 set_target_properties(${MTOATRANSLATOR} PROPERTIES PREFIX "")
 
 if (${CMAKE_SYSTEM_NAME} MATCHES "Windows")

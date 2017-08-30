@@ -17,10 +17,11 @@ include_directories(${CMAKE_SOURCE_DIR}/common)
 include_directories(${ARNOLD_INCLUDE_DIR})
 
 include_directories(${CMAKE_SOURCE_DIR}/ThirdParty/pystring)
+link_directories(${ARNOLD_LIBRARY_DIR})
 
 add_library(${SHADER} SHARED ${SRC})
 
-target_link_libraries(${SHADER} ${ARNOLD_LIBRARY} Alembic pystring_lib_static Iex Half)
+target_link_libraries(${SHADER} ai Alembic pystring_lib_static Iex Half)
 set_target_properties(${SHADER} PROPERTIES PREFIX "")
 
 if (${CMAKE_SYSTEM_NAME} MATCHES "Windows")

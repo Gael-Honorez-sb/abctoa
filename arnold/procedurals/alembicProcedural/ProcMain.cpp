@@ -65,12 +65,34 @@ AI_PROCEDURAL_NODE_EXPORT_METHODS(alembicProceduralMethods);
 
 node_parameters
 {
+    AiParameterStr("fileName", "");
+    AiParameterStr("objectPath", "/");
+    AiParameterStr("namePrefix", "");
+    AiParameterFlt("frame", 0.0);
+    AiParameterFlt("fps", 25.0);
+    
 
+    AiParameterStr("jsonFile", "");
+    AiParameterStr("secondaryJsonFile", "");
+    AiParameterStr("shadersNamespace", "");
+    AiParameterStr("shadersAttribute", "");
+    AiParameterStr("abcShaders", "");
+    AiParameterStr("uvsArchive", "");
+    AiParameterStr("shadersAssignation", "");
+    AiParameterStr("attributes", "");
+    AiParameterStr("displacementsAssignation", "");
+    AiParameterStr("layersOverride", "");
+
+    AiParameterStr("instancerArchive", "");
+    
+    AiParameterBool("skipJsonFile", false);
+    AiParameterBool("skipShaders", false);
+    AiParameterBool("skipAttributes", false);
+    AiParameterBool("skipLayers", false);
+    AiParameterBool("skipDisplacements", false);
 }
 
-namespace
-{
-using namespace Alembic::AbcGeom;
+
 
 
 // Recursively copy the values of b into a.
@@ -111,10 +133,6 @@ void WalkObject( IObject & parent, const ObjectHeader &i_ohead, ProcArgs &args,
         if (isVisible(child, xs, &args) == false)
         {
 		}
-        else if ( args.excludeXform )
-        {
-            nextParentObject = child;
-        }
         else
         {
             if ( xs.getNumOps() > 0 )
@@ -270,7 +288,39 @@ struct caches
 {
     FileCache* g_fileCache;
     NodeCache* g_nodeCache;
+
 };
+
+
+node_plugin_initialize
+{
+#ifdef WIN32
+    // DIRTY FIX 
+    // magic static* used in the Alembic Schemas are not threadSafe in Visual Studio, so we need to initialized them first.
+    IPolyMesh::getSchemaTitle();
+    IPoints::getSchemaTitle();
+    ICurves::getSchemaTitle();
+    INuPatch::getSchemaTitle();
+    IXform::getSchemaTitle();
+    ISubD::getSchemaTitle();
+#endif
+
+
+    caches *g_caches = new caches();
+    g_caches->g_fileCache = new FileCache();
+    g_caches->g_nodeCache = new NodeCache();
+    *plugin_data = g_caches;
+    return true;
+}
+
+
+node_plugin_cleanup
+{
+    caches *g_caches = reinterpret_cast<caches*>(plugin_data);
+    delete g_caches->g_fileCache;
+    delete g_caches->g_nodeCache;
+    delete g_caches;
+}
 
 procedural_init
 {
@@ -292,18 +342,13 @@ procedural_init
     }
 
 
-    if (AiNodeLookUpUserParameter(node, "skipJsonFile") != NULL )
-        skipJson = AiNodeGetBool(node, "skipJsonFile");
-    if (AiNodeLookUpUserParameter(node, "skipShaders") != NULL )
-        skipShaders = AiNodeGetBool(node, "skipShaders");
-    if (AiNodeLookUpUserParameter(node, "skipAttributes") != NULL )
-        skipAttributes = AiNodeGetBool(node, "skipAttributes");
-    if (AiNodeLookUpUserParameter(node, "skipDisplacements") != NULL )
-        skipDisplacement = AiNodeGetBool(node, "skipDisplacements");
-    if (AiNodeLookUpUserParameter(node, "skipLayers") != NULL )
-        skipLayers = AiNodeGetBool(node, "skipLayers");
+    skipJson = AiNodeGetBool(node, "skipJsonFile");
+    skipShaders = AiNodeGetBool(node, "skipShaders");
+    skipAttributes = AiNodeGetBool(node, "skipAttributes");
+    skipDisplacement = AiNodeGetBool(node, "skipDisplacements");
+    skipLayers = AiNodeGetBool(node, "skipLayers");
 
-    ProcArgs * args = new ProcArgs( AiNodeGetStr( node, "data" ) );
+    ProcArgs * args = new ProcArgs(node);
     *user_ptr = args;
 
     
@@ -325,19 +370,18 @@ procedural_init
 	}
 		
 
-    caches *g_cache;// = reinterpret_cast<caches*>(AiProceduralGetPluginData(node));
+    caches *g_cache = reinterpret_cast<caches*>(AiNodeGetPluginData(node));
     
-    args->proceduralNode = node;
     args->nodeCache = g_cache->g_nodeCache;
-
     args->createdNodes = new NodeCollector(node);
 
-    if (AiNodeLookUpUserParameter(node, "abcShaders") !=NULL )
-    {
-        const char* abcfile = AiNodeGetStr(node, "abcShaders");
 
+    AtString abcfile = AiNodeGetStr(node, "abcShaders");
+
+    if(abcfile.empty() == false)
+    {
         Alembic::AbcCoreFactory::IFactory factory;
-        IArchive archive = factory.getArchive(abcfile);
+        IArchive archive = factory.getArchive(abcfile.c_str());
         if (!archive.valid())
         {
             AiMsgWarning ( "Cannot read file %s", abcfile);
@@ -350,17 +394,18 @@ procedural_init
             args->materialsObject = materialsObject;
             args->abcShaderFile = abcfile;
         }
-
-
     }
 
+
+
     // check if we have a UV archive attribute
-    if (AiNodeLookUpUserParameter(node, "uvsArchive") !=NULL )
+    AtString uvsArchive = AiNodeGetStr(node, "uvsArchive");
+    // if so, we try to load the archive.
+    if(uvsArchive.empty() == false)
     {
-        // if so, we try to load the archive.
         IArchive archive;
         Alembic::AbcCoreFactory::IFactory factory;
-        archive = factory.getArchive(AiNodeGetStr(node, "uvsArchive").c_str());
+        archive = factory.getArchive(uvsArchive.c_str());
         if (!archive.valid())
         {
             AiMsgWarning ( "Cannot read file %s", AiNodeGetStr(node, "uvsArchive"));
@@ -378,20 +423,32 @@ procedural_init
     Json::Value jrootDisplacements;
     Json::Value jrootLayers;
 
+    AtString jsonFile = AiNodeGetStr(node, "jsonFile");
+    AtString secondaryJsonFile = AiNodeGetStr(node, "secondaryJsonFile");
+    AtString shadersNamespace = AiNodeGetStr(node, "shadersNamespace");
+    AtString shadersAttribute = AiNodeGetStr(node, "shadersAttribute");
+    AtString shadersAssignation = AiNodeGetStr(node, "shadersAssignation");
+    AtString attributes = AiNodeGetStr(node, "attributes");
+    AtString displacementsAssignation = AiNodeGetStr(node, "displacementsAssignation");
+    AtString layersOverride = AiNodeGetStr(node, "layersOverride");
+
+    AtString instancerArchive = AiNodeGetStr(node, "instancerArchive");
+
+
     bool parsingSuccessful = false;
 
 	args->useShaderAssignationAttribute = false;
 
-    if (AiNodeLookUpUserParameter(node, "jsonFile") !=NULL && skipJson == false)
+    if (jsonFile.empty() == false && skipJson == false)
     {
         Json::Value jroot;
         Json::Reader reader;
-        std::ifstream test(AiNodeGetStr(node, "jsonFile"), std::ifstream::binary);
+        std::ifstream test(jsonFile.c_str(), std::ifstream::binary);
         parsingSuccessful = reader.parse( test, jroot, false );
 
-        if (AiNodeLookUpUserParameter(node, "secondaryJsonFile") !=NULL)
+        if (secondaryJsonFile.empty() == false)
         {
-            std::ifstream test2(AiNodeGetStr(node, "secondaryJsonFile"), std::ifstream::binary);
+            std::ifstream test2(secondaryJsonFile.c_str(), std::ifstream::binary);
             Json::Value jroot2;
             if (reader.parse( test2, jroot2, false ))
                 update(jroot, jroot2);
@@ -412,12 +469,12 @@ procedural_init
 				}
 
                 jrootShaders = jroot["shaders"];
-                if (AiNodeLookUpUserParameter(node, "shadersAssignation") !=NULL)
+                if (shadersAssignation.empty() == false)
                 {
                     Json::Reader readerOverride;
                     Json::Value jrootShadersOverrides;
                     std::vector<std::string> pathOverrides;
-                    if(readerOverride.parse( AiNodeGetStr(node, "shadersAssignation").c_str(), jrootShadersOverrides ))
+                    if(readerOverride.parse( shadersAssignation.c_str(), jrootShadersOverrides ))
                         if(jrootShadersOverrides.size() > 0)
                             jrootShaders = OverrideAssignations(jrootShaders, jrootShadersOverrides);
                 }
@@ -428,12 +485,12 @@ procedural_init
             {
                 jrootAttributes = jroot["attributes"];
 
-                if (AiNodeLookUpUserParameter(node, "attributes") !=NULL)
+                if (attributes.empty() == false)
                 {
                     Json::Reader readerOverride;
                     Json::Value jrootAttributesOverrides;
 
-                    if(readerOverride.parse( AiNodeGetStr(node, "attributes").c_str(), jrootAttributesOverrides))
+                    if(readerOverride.parse( attributes.c_str(), jrootAttributesOverrides))
                         OverrideProperties(jrootAttributes, jrootAttributesOverrides);
 
                 }
@@ -443,12 +500,12 @@ procedural_init
             if(skipDisplacement == false)
             {
                 jrootDisplacements = jroot["displacement"];
-                if (AiNodeLookUpUserParameter(node, "displacementsAssignation") !=NULL)
+                if (displacementsAssignation.empty() == false)
                 {
                     Json::Reader readerOverride;
                     Json::Value jrootDisplacementsOverrides;
 
-                    if(readerOverride.parse( AiNodeGetStr(node, "displacementsAssignation").c_str(), jrootDisplacementsOverrides ))
+                    if(readerOverride.parse( displacementsAssignation.c_str(), jrootDisplacementsOverrides ))
                         if(jrootDisplacementsOverrides.size() > 0)
                             jrootDisplacements = OverrideAssignations(jrootDisplacements, jrootDisplacementsOverrides);
                 }
@@ -457,12 +514,12 @@ procedural_init
             if(skipLayers == false && customLayer)
             {
                 jrootLayers = jroot["layers"];
-                if (AiNodeLookUpUserParameter(node, "layersOverride") !=NULL)
+                if (layersOverride.empty() == false)
                 {
                     Json::Reader readerOverride;
                     Json::Value jrootLayersOverrides;
 
-                    if(readerOverride.parse( AiNodeGetStr(node, "layersOverride").c_str(), jrootLayersOverrides ))
+                    if(readerOverride.parse( layersOverride.c_str(), jrootLayersOverrides ))
                     {
                         jrootLayers[layer]["removeShaders"] = jrootLayersOverrides[layer].get("removeShaders", skipShaders).asBool();
                         jrootLayers[layer]["removeDisplacements"] = jrootLayersOverrides[layer].get("removeDisplacements", skipDisplacement).asBool();
@@ -485,10 +542,10 @@ procedural_init
 
     if(!parsingSuccessful)
     {
-        if (customLayer && AiNodeLookUpUserParameter(node, "layersOverride") !=NULL)
+        if (customLayer && layersOverride.empty() == false)
         {
             Json::Reader reader;
-            parsingSuccessful = reader.parse( AiNodeGetStr(node, "layersOverride").c_str(), jrootLayers );
+            parsingSuccessful = reader.parse( layersOverride.c_str(), jrootLayers );
         }
         // Check if we have to skip something....
         if( jrootLayers[layer].size() > 0 && customLayer && parsingSuccessful)
@@ -498,21 +555,21 @@ procedural_init
             skipAttributes =jrootLayers[layer].get("removeProperties", skipAttributes).asBool();
         }
 
-        if (AiNodeLookUpUserParameter(node, "shadersAssignation") !=NULL && skipShaders == false)
+        if (shadersAssignation.empty() == false && skipShaders == false)
         {
             Json::Reader reader;
-            bool parsingSuccessful = reader.parse( AiNodeGetStr(node, "shadersAssignation").c_str(), jrootShaders );
+            bool parsingSuccessful = reader.parse( shadersAssignation.c_str(), jrootShaders );
         }
 
-        if (AiNodeLookUpUserParameter(node, "attributes") !=NULL  && skipAttributes == false)
+        if (attributes.empty() == false && skipAttributes == false)
         {
             Json::Reader reader;
-            bool parsingSuccessful = reader.parse( AiNodeGetStr(node, "attributes").c_str(), jrootAttributes );
+            bool parsingSuccessful = reader.parse( attributes.c_str(), jrootAttributes );
         }
-        if (AiNodeLookUpUserParameter(node, "displacementsAssignation") !=NULL  && skipDisplacement == false)
+        if (displacementsAssignation.empty() == false && skipDisplacement == false)
         {
             Json::Reader reader;
-            bool parsingSuccessful = reader.parse( AiNodeGetStr(node, "displacementsAssignation").c_str(), jrootDisplacements );
+            bool parsingSuccessful = reader.parse( displacementsAssignation.c_str(), jrootDisplacements );
         }
     }
 
@@ -545,22 +602,16 @@ procedural_init
     }
 
     // If shaderNamespace attribute is set it has priority
-    if (AiNodeLookUpUserParameter(node, "shadersNamespace") !=NULL)
+    if (shadersNamespace.empty() == false)
     {
-        const char* shadersNamespace = AiNodeGetStr(node, "shadersNamespace");
-        if (shadersNamespace && strlen(shadersNamespace))
-            args->ns = std::string(shadersNamespace) + ":";
+        args->ns = std::string(shadersNamespace.c_str()) + ":";
     }
 
     // If shaderAttributes attribute is set it has priority
-    if (AiNodeLookUpUserParameter(node, "shadersAttribute") !=NULL)
+    if (shadersAttribute.empty() == false)
     {
-        const char* shadersAttribute = AiNodeGetStr(node, "shadersAttribute");
-        if (shadersAttribute && strlen(shadersAttribute))
-        {
-            args->useShaderAssignationAttribute = true;
-            args->shaderAssignationAttribute = std::string(shadersAttribute);
-        }
+        args->useShaderAssignationAttribute = true;
+        args->shaderAssignationAttribute = std::string(shadersAttribute.c_str());
     }
 
     //Check displacements
@@ -595,41 +646,36 @@ procedural_init
 
 
     // check if we have a instancer archive attribute
-    if (AiNodeLookUpUserParameter(node, "instancerArchive") !=NULL )
+    if (instancerArchive.empty() == false )
     {
-        std::string fileName(AiNodeGetStr(node, "instancerArchive"));
-        if(!fileName.empty())
+        // if so, we try to load the archive.
+        IArchive archive;
+        Alembic::AbcCoreFactory::IFactory factory;
+        archive = factory.getArchive(instancerArchive.c_str());
+        if (!archive.valid())
         {
-            // if so, we try to load the archive.
-            IArchive archive;
-            Alembic::AbcCoreFactory::IFactory factory;
-            archive = factory.getArchive(AiNodeGetStr(node, "instancerArchive").c_str());
-            if (!archive.valid())
-            {
-                AiMsgWarning ( "Cannot read file %s", AiNodeGetStr(node, "instancerArchive"));
-            }
-            else
-            {
-                AiMsgInfo( "Using Instancer archive %s", AiNodeGetStr(node, "instancerArchive"));
+            AiMsgWarning ( "Cannot read file %s", instancerArchive);
+        }
+        else
+        {
+            AiMsgInfo( "Using Instancer archive %s", instancerArchive);
 
-                IObject root = archive.getTop();
-                PathList path;
+            IObject root = archive.getTop();
+            PathList path;
 
-                if ( path.empty() ) //walk the entire scene
+            if ( path.empty() ) //walk the entire scene
+            {
+                for ( size_t i = 0; i < root.getNumChildren(); ++i )
                 {
-                    for ( size_t i = 0; i < root.getNumChildren(); ++i )
-                    {
-                        std::vector<std::string> tags;
-                        WalkObjectForInstancer( root, root.getChildHeader(i), *args,
-                                    path.end(), path.end(), 0 );
-                    }
+                    std::vector<std::string> tags;
+                    WalkObjectForInstancer( root, root.getChildHeader(i), *args,
+                                path.end(), path.end(), 0 );
                 }
-            
-                return 1;
             }
+            
+            return 1;
         }
     }
-
 
     std::string fileCacheId = g_cache->g_fileCache->getHash(args->filename, args->shaders, args->displacements, args->attributesRoot, args->frame);
 
@@ -823,7 +869,7 @@ procedural_cleanup
 
         if(args->createdNodes->getNumNodes() > 0)
         {
-            caches *g_cache;// = reinterpret_cast<caches*>(AiProceduralGetPluginData(args->proceduralNode));
+            caches *g_cache = reinterpret_cast<caches*>(AiNodeGetPluginData(args->proceduralNode));
 
             std::string fileCacheId = g_cache->g_fileCache->getHash(args->filename, args->shaders, args->displacements, args->attributesRoot, args->frame);
             g_cache->g_fileCache->addCache(fileCacheId, args->createdNodes);
@@ -863,9 +909,6 @@ procedural_get_node
     return args->createdNodes->getNode(i);
 
 }
-
-} //end of anonymous namespace
-
 
   // DSO hook
 #ifdef __cplusplus

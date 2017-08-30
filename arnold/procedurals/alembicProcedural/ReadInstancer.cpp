@@ -38,11 +38,6 @@ void WalkObjectForInstancer( IObject & parent, const ObjectHeader &i_ohead, Proc
 
         // also check visibility flags
 
-		if ( args.excludeXform )
-        {
-            nextParentObject = child;
-        }
-        else
         {
             if ( xs.getNumOps() > 0 )
             {
