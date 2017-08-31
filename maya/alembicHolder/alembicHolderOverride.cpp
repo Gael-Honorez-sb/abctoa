@@ -79,7 +79,7 @@ AlembicHolderOverride::~AlembicHolderOverride()
 
 MHWRender::DrawAPI AlembicHolderOverride::supportedDrawAPIs() const
 {
-    return (MHWRender::kOpenGL); // | MHWRender::kDirectX11); TODO support dx11 later
+    return (MHWRender::kOpenGL | MHWRender::kOpenGLCoreProfile); // | MHWRender::kDirectX11); TODO support dx11 later
 }
 
 bool AlembicHolderOverride::isBounded(

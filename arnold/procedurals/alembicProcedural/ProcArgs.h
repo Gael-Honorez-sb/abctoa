@@ -59,7 +59,7 @@ struct ProcArgs
 
     //copy constructor
     ProcArgs( const ProcArgs &rhs )
-    : filename( rhs.filename )
+    : filenames( rhs.filenames )
     , nameprefix( rhs.nameprefix )
     , objectpath( rhs.objectpath )
     , frame( rhs.frame )
@@ -70,7 +70,7 @@ struct ProcArgs
     {}
 
     //member variables
-    std::string filename;
+    std::vector<std::string> filenames;
     std::string nameprefix;
     std::string objectpath;
 
@@ -92,10 +92,6 @@ struct ProcArgs
     
 	std::string ns;
 	std::string shaderAssignationAttribute;
-	
-
-    bool useUvArchive;
-    Alembic::AbcGeom::IObject uvsRoot;
 
     std::vector<std::pair<std::string, AtNode*> > shaders;
     std::map<std::string, AtNode*> displacements;

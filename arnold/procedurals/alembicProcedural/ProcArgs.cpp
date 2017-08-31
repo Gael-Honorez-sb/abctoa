@@ -51,7 +51,6 @@ ProcArgs::ProcArgs( AtNode *node )
   , linkShader(false)
   , linkDisplacement(false)
   , linkAttributes(false)
-  , useUvArchive(false)
   , useAbcShaders(false)
 {
 
@@ -61,7 +60,10 @@ ProcArgs::ProcArgs( AtNode *node )
    shutterOpen = AiNodeGetFlt(camera, "shutter_start");
    shutterClose = AiNodeGetFlt(camera, "shutter_end");
 
-   filename = std::string(AiNodeGetStr(node, "fileName"));
+   AtArray* a_filenames = AiNodeGetArray(node, "fileNames");
+   for (uint32_t i = 0; i < AiArrayGetNumElements(a_filenames); i++)
+       filenames.push_back(AiArrayGetStr(a_filenames, i).c_str());
+
    nameprefix = std::string(AiNodeGetStr(node, "namePrefix"));
    objectpath = std::string(AiNodeGetStr(node, "objectPath"));
 

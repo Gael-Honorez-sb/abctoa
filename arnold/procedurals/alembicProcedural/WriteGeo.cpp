@@ -581,59 +581,6 @@ AtNode* writeMesh(
         }
     }
 
-    bool customUv = false;
-    if(args.useUvArchive)
-    {
-        customUv = true;
-        PathList path;
-        TokenizePath( prim.getFullName(), "/", path );
-        IObject current = args.uvsRoot;
-        for ( size_t i = 0; i < path.size(); ++i )
-        {
-            IObject parent = current;
-            current = current.getChild(path[i]);
-            if(!current.valid())
-            {
-                if(i == path.size()-1)
-                {
-                    current = parent.getChild(path[i]+"Deformed");
-                    if(!current.valid())
-                        customUv = false;
-                }
-                else
-                    customUv = false;
-            }
-        }
-        if (customUv)
-        {
-            customUv = false;
-            if (IPolyMesh::matches(current.getMetaData()))
-            {
-                IPolyMesh polymesh( current, kWrapExisting);
-                if(polymesh.valid())
-                {
-                    ProcessIndexedBuiltinParam(
-                    polymesh.getSchema().getUVsParam(),
-                    singleSampleTimes,
-                    uvlist,
-                    uvidxs,
-                    2);
-                    customUv = true;
-                }
-            }
-        }
-    }
-    if(!customUv)
-    {
-        ProcessIndexedBuiltinParam(
-                ps.getUVsParam(),
-                singleSampleTimes,
-                uvlist,
-                uvidxs,
-                2);
-    }
-
-
     // Set the meshNode.
     AtNode* meshNode = AiNode( "polymesh" );
 

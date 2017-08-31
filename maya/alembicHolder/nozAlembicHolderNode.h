@@ -34,6 +34,7 @@ License along with this library.*/
 #include <maya/MBoundingBox.h>
 #include <maya/MString.h>
 #include <maya/MStringArray.h>
+#include <maya/MFnStringArrayData.h>
 #include <maya/MIntArray.h>
 #include <maya/MDoubleArray.h>
 #include <maya/MFnStringData.h>
@@ -115,7 +116,7 @@ public:
 
 private:
     CAlembicDatas        fGeometry;
-    static    MObject    aAbcFile;
+    static    MObject    aAbcFiles;
     static    MObject    aObjectPath;
     static    MObject    aBoundingExtended;
 //    static  MObject    aBooleanAttr; // example boolean attribute
@@ -130,7 +131,6 @@ private:
 	static    MObject    aShadersNamespace;
 	static    MObject    aShadersAttribute;
 	static    MObject    aAbcShaders;
-	static    MObject	 aUvsArchive;
 	static    MObject	 aShadersAssignation;
 	static    MObject	 aAttributes;
 	static    MObject	 aDisplacementsAssignation;
@@ -161,17 +161,13 @@ class CAlembicHolderUI: public MPxSurfaceShapeUI {
 public:
     CAlembicHolderUI();
     virtual ~CAlembicHolderUI();
-    virtual void getDrawRequests(const MDrawInfo & info,
+    /*virtual void getDrawRequests(const MDrawInfo & info,
             bool objectAndActiveOnly, MDrawRequestQueue & requests);
     virtual void draw(const MDrawRequest & request, M3dView & view) const;
 
     void drawBoundingBox( const MDrawRequest & request, M3dView & view ) const;
     void drawingMeshes( std::string sceneKey, CAlembicDatas * cache, std::string selectionKey) const;
 
-    MPoint getPointAtDepth(MSelectInfo &selectInfo, double    depth) const;
-
-    virtual bool select(MSelectInfo &selectInfo, MSelectionList &selectionList,
-            MPointArray &worldSpaceSelectPts) const;
 
     void getDrawRequestsWireFrame(MDrawRequest&, const MDrawInfo&);
     void getDrawRequestsBoundingBox(MDrawRequest&, const MDrawInfo&);
@@ -180,7 +176,7 @@ public:
                                               MDrawRequestQueue&,
                                               MDrawData& data );
 
-
+*/
     static void * creator();
     // Draw Tokens
     //

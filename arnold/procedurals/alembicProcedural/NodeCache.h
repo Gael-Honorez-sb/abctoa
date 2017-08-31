@@ -69,7 +69,7 @@ public:
 
     const size_t hash(std::string const& s);
 
-    std::string getHash(const std::string& fileName,     
+    std::string getHash(const std::vector<std::string>& fileNames,
                         const std::vector<std::pair<std::string, AtNode*> >& shaders,
                         const std::map<std::string, AtNode*>& displacements,
                         const Json::Value& attributesRoot,

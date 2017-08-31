@@ -16,21 +16,6 @@
 #include <maya/MFnStringArrayData.h>
 #include <maya/MFileObject.h>
 
-#ifdef _WIN32
-    #include <platform/win32/dirent.h>
-    #define PATHSEP ';'
-    #define DIRSEP "\\"
-    #define LIBEXT MString(".dll")
-#else
-    #include <sys/types.h>
-    #include <dirent.h>
-    #include <dlfcn.h>
-
-    #define PATHSEP ':'
-    #define DIRSEP "/"
-
-#endif
-
 union DJB2HashUnion{
     unsigned int hash;
     int hashInt;
@@ -50,7 +35,7 @@ int DJB2Hash(unsigned char *str)
 
 AtNode*  CABCViewerTranslator::CreateArnoldNodes()
 {
-    return AddArnoldNode("procedural");
+    return AddArnoldNode("alembicProcedural");
 }
 
 
@@ -115,21 +100,21 @@ void CABCViewerTranslator::ExportProcedural(AtNode* procedural, bool update)
 
         AiNodeSetStr(procedural, "name", m_dagPath.partialPathName().asChar());
 
-        MString procLib = MString("arnoldAlembicProcedural") + LIBEXT ;
+        MPlug abcfiles = m_DagNode.findPlug("cacheFileNames");
+        unsigned int numCaches = abcfiles.numElements();
 
-        AiNodeSetStr(procedural, "dso", procLib.asChar() );
+        AtArray* cachesFileName = AiArrayAllocate(numCaches, 1, AI_TYPE_STRING);
 
-
-        MString abcfile = m_DagNode.findPlug("cacheFileName").asString();
-
-        MFileObject fileObject;
-        fileObject.setRawFullName(abcfile.expandFilePath());
-        fileObject.setResolveMethod(MFileObject::kInputFile);
-        abcfile = fileObject.resolvedFullName();
-
-
-        //MTime timeEvaluation = MTime(GetExportFrame(), MTime::uiUnit());
-        //MDGContext context = MDGContext (timeEvaluation);
+        for(unsigned int i = 0; i < numCaches; i++)
+        {
+            MPlug fileName = abcfiles[i];
+            MString filename;
+            fileName.getValue(filename);
+            MFileObject fileObject;
+            fileObject.setRawFullName(filename.expandFilePath());
+            fileObject.setResolveMethod(MFileObject::kInputFile);
+            AiArraySetStr(cachesFileName, i, fileObject.resolvedFullName().asChar());
+        }
 
         MTime time = m_DagNode.findPlug("time").asMTime() + m_DagNode.findPlug("timeOffset").asMTime();
 
@@ -268,7 +253,7 @@ void CABCViewerTranslator::ExportProcedural(AtNode* procedural, bool update)
         static const MTime sec(1.0, MTime::kSeconds);
         fps = sec.as(MTime::uiUnit());
 
-        AiNodeSetStr(procedural, "fileName", abcfile.asChar());
+        AiNodeSetArray(procedural, "fileNames", cachesFileName);
         AiNodeSetStr(procedural, "objectPath", objectPathStr.c_str());
         AiNodeSetStr(procedural, "namePrefix", m_dagPath.partialPathName().asChar());
         AiNodeSetFlt(procedural, "frame", time.as(time.unit()));

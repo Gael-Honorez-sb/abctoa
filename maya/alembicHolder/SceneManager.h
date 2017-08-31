@@ -16,36 +16,48 @@ typedef std::pair<AlembicHolder::ScenePtr, unsigned int> CountedScene;
 class SceneManager
 {
     public:
-        void addScene(std::string abcFile, std::string objectPath) {
+        void addScene(std::vector<std::string> abcFiles, std::string objectPath) 
+        {
+            std::string key;
             std::fstream file;
-            file.open(abcFile.c_str(), std::ios_base::in);
-            if (file.is_open())
+            bool allIsGood = true;
+            for (size_t i = 0; i < abcFiles.size(); i++)
             {
-                 //the file exists
-                file.close();
-
-                std::string key = abcFile+"|"+objectPath;
-    //            std::cout << "addScene: " << key << std::endl;
-                try {
-                    if (m_scenes.count(key)) {
-                        m_scenes[key].second++;
-    //                std::cout << "add incr " << std::endl;
-                    } else {
-                        CountedScene cs( AlembicHolder::ScenePtr( new AlembicHolder::Scene(abcFile,objectPath) ), 1);
-                        m_scenes[key] = cs;
-                    }
-                }
-                catch (...)
+                file.open(abcFiles[i].c_str(), std::ios_base::in);
+                if (file.is_open())
                 {
-                    if (m_scenes.count(key)) {
-                        m_scenes.erase(key);
-    //            std::cout << "catch " << std::endl;
-                    }
+                    //the file exists
+                    key += abcFiles[i] + "|";
+                }
+                else
+                {
+                    
+                    std::cout << "[nozAlembicHolder] Can't open file: " << abcFiles[i] << std::endl;
+                    allIsGood = false;
+                }
+                file.close();
+            }
+
+            if (allIsGood == false)
+                return;
+
+
+            key += objectPath;
+
+            try 
+            {
+                if (m_scenes.count(key)) {
+                    m_scenes[key].second++;
+//                std::cout << "add incr " << std::endl;
+                } else {
+                    CountedScene cs( AlembicHolder::ScenePtr( new AlembicHolder::Scene(abcFiles,objectPath) ), 1);
+                    m_scenes[key] = cs;
                 }
             }
-            else {
-                file.close();
-                std::cout << "[nozAlembicHolder] Can't open file: " << abcFile << std::endl;
+            catch (...)
+            {
+                if (m_scenes.count(key)) 
+                    m_scenes.erase(key);
             }
         }
 

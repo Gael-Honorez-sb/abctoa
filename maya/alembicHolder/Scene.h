@@ -59,11 +59,11 @@ class Scene
 public:
     //! Load a scene from the alembic archive given by the filename.
     //! ...
-    Scene( const std::string &abcFileName, const std::string &objectPath);
+    Scene( const std::vector<std::string> &abcFileName, const std::string &objectPath);
 
     //! Return the filename of the archive
     //! ...
-    const std::string &getFileName() const { return m_fileName; }
+    const std::vector<std::string> &getFileName() const { return m_fileName; }
 
     //! Return the min time, in seconds.
     //! ...
@@ -95,7 +95,7 @@ public:
     int getNumTriangles() const;
 
 protected:
-    std::string m_fileName;
+    std::vector<std::string> m_fileName;
     std::string m_objectPath;
 
     std::string m_selectionPath;

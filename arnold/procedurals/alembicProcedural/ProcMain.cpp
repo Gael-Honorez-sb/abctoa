@@ -65,7 +65,7 @@ AI_PROCEDURAL_NODE_EXPORT_METHODS(alembicProceduralMethods);
 
 node_parameters
 {
-    AiParameterStr("fileName", "");
+    AiParameterArray("fileNames", AiArrayAllocate(0, 1, AI_TYPE_STRING));
     AiParameterStr("objectPath", "/");
     AiParameterStr("namePrefix", "");
     AiParameterFlt("frame", 0.0);
@@ -77,7 +77,6 @@ node_parameters
     AiParameterStr("shadersNamespace", "");
     AiParameterStr("shadersAttribute", "");
     AiParameterStr("abcShaders", "");
-    AiParameterStr("uvsArchive", "");
     AiParameterStr("shadersAssignation", "");
     AiParameterStr("attributes", "");
     AiParameterStr("displacementsAssignation", "");
@@ -397,27 +396,6 @@ procedural_init
     }
 
 
-
-    // check if we have a UV archive attribute
-    AtString uvsArchive = AiNodeGetStr(node, "uvsArchive");
-    // if so, we try to load the archive.
-    if(uvsArchive.empty() == false)
-    {
-        IArchive archive;
-        Alembic::AbcCoreFactory::IFactory factory;
-        archive = factory.getArchive(uvsArchive.c_str());
-        if (!archive.valid())
-        {
-            AiMsgWarning ( "Cannot read file %s", AiNodeGetStr(node, "uvsArchive"));
-        }
-        else
-        {
-            AiMsgDebug ( "Using UV archive %s", AiNodeGetStr(node, "uvsArchive"));
-            args->useUvArchive = true;
-            args->uvsRoot = archive.getTop();
-        }
-    }
-
     Json::Value jrootShaders;
     Json::Value jrootAttributes;
     Json::Value jrootDisplacements;
@@ -677,7 +655,7 @@ procedural_init
         }
     }
 
-    std::string fileCacheId = g_cache->g_fileCache->getHash(args->filename, args->shaders, args->displacements, args->attributesRoot, args->frame);
+    std::string fileCacheId = g_cache->g_fileCache->getHash(args->filenames, args->shaders, args->displacements, args->attributesRoot, args->frame);
 
     const std::vector<CachedNodeFile>& createdNodes = g_cache->g_fileCache->getCachedFile(fileCacheId);
     
@@ -805,16 +783,18 @@ procedural_init
 
     Alembic::AbcCoreFactory::IFactory factory;
     factory.setOgawaNumStreams(8);
-    IArchive archive = factory.getArchive(args->filename);
+    IArchive archive = factory.getArchive(args->filenames);
     
     if (!archive.valid())
     {
-        AiMsgError ( "Cannot read file %s", args->filename.c_str());
+        for(size_t i = 0; i < args->filenames.size(); i++)
+            AiMsgError ( "Cannot read file %s", args->filenames[i].c_str());
         return 0;
     }
     else
     {
-        AiMsgDebug ( "reading file %s", args->filename.c_str());
+        for (size_t i = 0; i < args->filenames.size(); i++)
+            AiMsgDebug ( "reading file %s", args->filenames[i].c_str());
     }
 
     IObject root = archive.getTop();
@@ -870,8 +850,7 @@ procedural_cleanup
         if(args->createdNodes->getNumNodes() > 0)
         {
             caches *g_cache = reinterpret_cast<caches*>(AiNodeGetPluginData(args->proceduralNode));
-
-            std::string fileCacheId = g_cache->g_fileCache->getHash(args->filename, args->shaders, args->displacements, args->attributesRoot, args->frame);
+            std::string fileCacheId = g_cache->g_fileCache->getHash(args->filenames, args->shaders, args->displacements, args->attributesRoot, args->frame);
             g_cache->g_fileCache->addCache(fileCacheId, args->createdNodes);
         }
 
