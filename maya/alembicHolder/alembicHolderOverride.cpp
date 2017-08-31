@@ -15,6 +15,7 @@ License along with this library.*/
 #include "alembicHolderOverride.h"
 
 #include <maya/MHWGeometryUtilities.h>
+#include <maya/MStateManager.h>
 #include <maya/MFnDependencyNode.h>
 #include <maya/MTransformationMatrix.h>
 #include <maya/MUserData.h>
@@ -25,10 +26,10 @@ License along with this library.*/
 // Wireframe line style defines
 #define LINE_STIPPLE_SHORTDASHED    0x0303
 
-class UserData : public MUserData
+class AlembicHolderOverride::UserData : public MUserData
 {
 public:
-    UserData(nozAlembicHolder* node)
+    UserData(const nozAlembicHolder* node)
         : MUserData(false),
           fShapeNode(node),
           fSeconds(0.0),
@@ -52,10 +53,13 @@ public:
         fIsSelected = isSelected;
     }
 
+    void draw(const MHWRender::MDrawContext& context) const;
+    bool setupLightingGL(const MHWRender::MDrawContext& context) const;
+    void unsetLightingGL(const MHWRender::MDrawContext& context) const;
 
-    virtual ~UserData() {}
+    ~UserData() override {}
 
-    nozAlembicHolder* fShapeNode;
+    const nozAlembicHolder* fShapeNode;
     double           fSeconds;
     MGLfloat          fWireframeColor[3];
     bool             fIsSelected;
@@ -69,12 +73,23 @@ MHWRender::MPxDrawOverride* AlembicHolderOverride::Creator(const MObject& obj)
 }
 
 AlembicHolderOverride::AlembicHolderOverride(const MObject& obj) :
-    MHWRender::MPxDrawOverride(obj, draw)
-{
-}
+    MHWRender::MPxDrawOverride(obj, &drawCb)
+{}
 
 AlembicHolderOverride::~AlembicHolderOverride()
+{}
+
+void AlembicHolderOverride::drawCb(
+    const MHWRender::MDrawContext& context,
+    const MUserData* userData)
+
 {
+    // Make sure that the post render callbacks have been properly
+    // initialized. We have to verify at each refresh because there is
+    // no easy way to recieve a callback when a new modelEditor is
+    // created.
+    const UserData* data = dynamic_cast<const UserData*>(userData);
+    if (data) data->draw(context);
 }
 
 MHWRender::DrawAPI AlembicHolderOverride::supportedDrawAPIs() const
@@ -94,26 +109,17 @@ MBoundingBox AlembicHolderOverride::boundingBox(
         const MDagPath& cameraPath) const
 {
     
-	MBoundingBox bbox; 
+    MBoundingBox bbox; 
     MStatus status;
     MFnDependencyNode depNode(objPath.node(), &status);
-    if (status)
-    {
-		bbox.expand(MPoint(
-			depNode.findPlug("MinBoundingBox0").asFloat(),
-			depNode.findPlug("MinBoundingBox1").asFloat(),
-			depNode.findPlug("MinBoundingBox2").asFloat(), 1.0));
 
-		bbox.expand(MPoint(
-			depNode.findPlug("MaxBoundingBox0").asFloat(),
-			depNode.findPlug("MaxBoundingBox1").asFloat(),
-			depNode.findPlug("MaxBoundingBox2").asFloat(), 1.0));
-    }
-	else
-		return MBoundingBox(MPoint(-1.0f, -1.0f, -1.0f), MPoint(1.0f, 1.0f, 1.0f));
+    if (!status) return MBoundingBox();
+
+    const nozAlembicHolder* shapeNode = dynamic_cast<nozAlembicHolder*>(depNode.userNode());
+    if (!shapeNode) return MBoundingBox();
 
 
-    return bbox;
+    return shapeNode->boundingBox();
 
 }
 
@@ -172,10 +178,8 @@ MUserData* AlembicHolderOverride::prepareForDraw(
 }
 
 
-void AlembicHolderOverride::draw(const MHWRender::MDrawContext& context, const MUserData* userData)
+void AlembicHolderOverride::UserData::draw(const MHWRender::MDrawContext& context) const
 {
-    const UserData* data = dynamic_cast<const UserData*>(userData);
-
     // get state data
     MStatus status;
     const MMatrix transform =  context.getMatrix(MHWRender::MDrawContext::kWorldViewMtx, &status);
@@ -200,22 +204,22 @@ void AlembicHolderOverride::draw(const MHWRender::MDrawContext& context, const M
         glPushMatrix();
         glLoadMatrixd(transform.matrix[0]);
 
-        nozAlembicHolder* shapeNode = data->fShapeNode;
-		CAlembicDatas* cache = shapeNode->alembicData();
+        CAlembicDatas* cache = fShapeNode->alembicData();
 
-		bool forceBoundingBox = cache->m_bbextendedmode && data->fIsSelected == false;
-		bool selectionMode = cache->m_currselectionkey.size() != 0; 
+        bool forceBoundingBox = cache->m_bbextendedmode && fIsSelected == false;
+        bool selectionMode = cache->m_currselectionkey.size() != 0; 
 
         // draw bounding box
-		if(forceBoundingBox || selectionMode || displayStyle == MHWRender::MFrameContext::kBoundingBox || cache->abcSceneManager.hasKey(cache->m_currscenekey) == false)
+        if(forceBoundingBox || selectionMode || displayStyle == MHWRender::MFrameContext::kBoundingBox || cache->abcSceneManager.hasKey(cache->m_currscenekey) == false)
         {
-            MBoundingBox box = shapeNode->boundingBox();
+
+            MBoundingBox box = fShapeNode->boundingBox();
             float w = (float) box.width();
             float h = (float) box.height();
             float d = (float) box.depth();
 
             {
-				glColor3fv(data->fWireframeColor);
+                glColor3fv(fWireframeColor);
 
                 // Query current state so it can be restored
                 //
@@ -282,17 +286,17 @@ void AlembicHolderOverride::draw(const MHWRender::MDrawContext& context, const M
 
         }
 
-		if(forceBoundingBox)
-			return;
+        if(forceBoundingBox)
+            return;
 
         if(displayStyle != MHWRender::MFrameContext::kBoundingBox)
         {
-            if(displayStyle & MHWRender::MDrawContext::kWireFrame || data->fIsSelected)
+            if(displayStyle & MHWRender::MDrawContext::kWireFrame || fIsSelected)
             {
-                glColor3fv(data->fWireframeColor);
+                glColor3fv(fWireframeColor);
                 glPolygonMode(GL_FRONT_AND_BACK, MGL_LINE);
                 if (cache->abcSceneManager.hasKey(cache->m_currscenekey))
-					cache->abcSceneManager.getScene(cache->m_currscenekey)->draw(cache->abcSceneState, cache->m_currselectionkey, cache->time, cache->m_params);
+                    cache->abcSceneManager.getScene(cache->m_currscenekey)->draw(cache->abcSceneState, cache->m_currselectionkey, cache->time, cache->m_params);
 
                 glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
             }
@@ -318,11 +322,11 @@ void AlembicHolderOverride::draw(const MHWRender::MDrawContext& context, const M
             glEnable(MGL_CULL_FACE);
             glCullFace(MGL_FRONT);
             if (cache->abcSceneManager.hasKey(cache->m_currscenekey))
-				 cache->abcSceneManager.getScene(cache->m_currscenekey)->draw(cache->abcSceneState, cache->m_currselectionkey, cache->time, cache->m_params, true);
+                 cache->abcSceneManager.getScene(cache->m_currscenekey)->draw(cache->abcSceneState, cache->m_currselectionkey, cache->time, cache->m_params, true);
 
             glCullFace(MGL_BACK);
             if (cache->abcSceneManager.hasKey(cache->m_currscenekey))
-				cache->abcSceneManager.getScene(cache->m_currscenekey)->draw(cache->abcSceneState, cache->m_currselectionkey, cache->time, cache->m_params, false);
+                cache->abcSceneManager.getScene(cache->m_currscenekey)->draw(cache->abcSceneState, cache->m_currselectionkey, cache->time, cache->m_params, false);
 
             glDisable(MGL_CULL_FACE);
 
@@ -337,7 +341,7 @@ void AlembicHolderOverride::draw(const MHWRender::MDrawContext& context, const M
     }
 }
 
-bool AlembicHolderOverride::setupLightingGL(const MHWRender::MDrawContext& context)
+bool AlembicHolderOverride::UserData::setupLightingGL(const MHWRender::MDrawContext& context) const
 {
     MStatus status;
 
@@ -489,8 +493,8 @@ bool AlembicHolderOverride::setupLightingGL(const MHWRender::MDrawContext& conte
 }
 
 
-void AlembicHolderOverride::unsetLightingGL(
-    const MHWRender::MDrawContext& context)
+void AlembicHolderOverride::UserData::unsetLightingGL(
+    const MHWRender::MDrawContext& context) const
 {
     MStatus status;
 

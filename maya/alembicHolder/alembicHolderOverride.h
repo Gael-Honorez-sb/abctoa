@@ -24,34 +24,35 @@ License along with this library.*/
 class AlembicHolderOverride : public MHWRender::MPxDrawOverride
 {
 public:
-    static MHWRender::MPxDrawOverride* Creator(const MObject& obj);
+    static MPxDrawOverride* Creator(const MObject& obj);
 
-    virtual ~AlembicHolderOverride();
-
-    virtual MHWRender::DrawAPI supportedDrawAPIs() const;
-
-    
-    virtual bool disableInternalBoundingBoxDraw() const;
-
-    virtual bool isBounded(
-        const MDagPath& objPath,
-        const MDagPath& cameraPath) const;
-
-    virtual MBoundingBox boundingBox(
-        const MDagPath& objPath,
-        const MDagPath& cameraPath) const;
-
-    virtual MUserData* prepareForDraw(
-        const MDagPath& objPath,
-        const MDagPath& cameraPath,
-        const MHWRender::MFrameContext& frameContext,
-        MUserData* oldData);
-
-    static void draw(const MHWRender::MDrawContext& context, const MUserData* userData);
-    static bool setupLightingGL(const MHWRender::MDrawContext& context);
-    static void unsetLightingGL(const MHWRender::MDrawContext& context);
+    static void drawCb(const MHWRender::MDrawContext& context, const MUserData* userData);
+    //static bool setupLightingGL(const MHWRender::MDrawContext& context);
+    //static void unsetLightingGL(const MHWRender::MDrawContext& context);
 
 
 private:
+
+    class UserData;
+
     AlembicHolderOverride(const MObject& obj);
+    ~AlembicHolderOverride() override;
+
+    MHWRender::DrawAPI supportedDrawAPIs() const override;
+
+    bool isBounded(
+        const MDagPath& objPath,
+        const MDagPath& cameraPath) const override;
+
+    MBoundingBox boundingBox(
+        const MDagPath& objPath,
+        const MDagPath& cameraPath) const override;
+
+    bool disableInternalBoundingBoxDraw() const override;
+
+    MUserData* prepareForDraw(
+        const MDagPath& objPath,
+        const MDagPath& cameraPath,
+        const MHWRender::MFrameContext& frameContext,
+        MUserData* oldData) override;
 };

@@ -69,6 +69,8 @@ License along with this library.*/
 
 //
 static MGLFunctionTable *gGLFT = NULL;
+const char* nozAlembicHolder::selectionMaskName = "alembicHolder";
+
 
 //#include "boost/foreach.hpp"
 
@@ -166,6 +168,7 @@ void nodePreRemovalCallback(MObject& obj, void* data) {
 
 nozAlembicHolder::nozAlembicHolder() 
 {
+    fGeometry = new CAlembicDatas();
 }
 
 nozAlembicHolder::~nozAlembicHolder() {
@@ -214,6 +217,18 @@ MBoundingBox nozAlembicHolder::boundingBox() const
         bbox = geom->bbox;
 
     return bbox;
+}
+
+bool nozAlembicHolder::match(const MSelectionMask & mask,
+    const MObjectArray& componentList) const
+{
+    MSelectionMask gpuCacheMask(nozAlembicHolder::selectionMaskName);
+    return mask.intersects(gpuCacheMask) && componentList.length() == 0;
+}
+
+MSelectionMask nozAlembicHolder::getShapeSelectionMask() const
+{
+    return MSelectionMask(nozAlembicHolder::selectionMaskName);
 }
 
 void* nozAlembicHolder::creator() 
@@ -700,13 +715,13 @@ MStatus nozAlembicHolder::compute(const MPlug& plug, MDataBlock& block)
             }
         }
         
-        fGeometry.m_params->attributes.clear();
+        fGeometry->m_params->attributes.clear();
 
         if( jrootattributes.size() > 0 )
         {
             bool addtoPath = false;
-            fGeometry.m_params->linkAttributes = true;
-            fGeometry.m_params->attributesRoot = jrootattributes;
+            fGeometry->m_params->linkAttributes = true;
+            fGeometry->m_params->attributesRoot = jrootattributes;
             for( Json::ValueIterator itr = jrootattributes.begin() ; itr != jrootattributes.end() ; itr++ )
             {
                 addtoPath = false;
@@ -724,19 +739,19 @@ MStatus nozAlembicHolder::compute(const MPlug& plug, MDataBlock& block)
                     }
                 }
                 if(addtoPath)
-                    fGeometry.m_params->attributes.push_back(path);
+                    fGeometry->m_params->attributes.push_back(path);
 
             }
             
-            std::sort(fGeometry.m_params->attributes.begin(), fGeometry.m_params->attributes.end());
+            std::sort(fGeometry->m_params->attributes.begin(), fGeometry->m_params->attributes.end());
             
         }
         else
         {
-            fGeometry.m_params->linkAttributes = false;
+            fGeometry->m_params->linkAttributes = false;
         }
 
-        fGeometry.m_abcdirty = true;
+        fGeometry->m_abcdirty = true;
         block.outputValue(aForceReload).setBool(false);
 
     }
@@ -759,7 +774,7 @@ MStatus nozAlembicHolder::compute(const MPlug& plug, MDataBlock& block)
                 Json::Reader reader;
                 parsingSuccessful = reader.parse( jsonAssign.asChar(), jroot, false );
                 if(parsingSuccessful)
-                    ParseShaders(jroot, fGeometry.m_params->shaderColors);
+                    ParseShaders(jroot, fGeometry->m_params->shaderColors);
             }
         }
 
@@ -787,31 +802,31 @@ MStatus nozAlembicHolder::compute(const MPlug& plug, MDataBlock& block)
         MString objectPath = block.inputValue(aObjectPath).asString();
         MString selectionPath = block.inputValue(aSelectionPath).asString();
 
-        fGeometry.m_currselectionkey = selectionPath.asChar();
+        fGeometry->m_currselectionkey = selectionPath.asChar();
 
         MTime time = block.inputValue(aTime).asTime() + block.inputValue(aTimeOffset).asTime(); 
 
-        fGeometry.m_bbextendedmode = block.inputValue(aBoundingExtended).asBool();
+        fGeometry->m_bbextendedmode = block.inputValue(aBoundingExtended).asBool();
 
         bool hasToReload = false;
 
-        if (fGeometry.time != time.value())
+        if (fGeometry->time != time.value())
         {
-            fGeometry.m_abcdirty = true;
-            fGeometry.time = time.value();
+            fGeometry->m_abcdirty = true;
+            fGeometry->time = time.value();
             hasToReload = true;
         }
 
         key += objectPath.asChar();
 
-        if ((fGeometry.m_currscenekey != key && key.empty() == false ) || hasToReload)
+        if ((fGeometry->m_currscenekey != key && key.empty() == false ) || hasToReload)
         {
-            if (fGeometry.m_currscenekey != key && key.empty() == false)
+            if (fGeometry->m_currscenekey != key && key.empty() == false)
             {
-                CAlembicDatas::abcSceneManager.removeScene(fGeometry.m_currscenekey);
-                if(CAlembicDatas::abcSceneManager.hasKey(fGeometry.m_currscenekey) == 0)
+                CAlembicDatas::abcSceneManager.removeScene(fGeometry->m_currscenekey);
+                if(CAlembicDatas::abcSceneManager.hasKey(fGeometry->m_currscenekey) == 0)
                 {
-                    NodeCache::iterator J = g_bboxCache.find(fGeometry.m_currscenekey);
+                    NodeCache::iterator J = g_bboxCache.find(fGeometry->m_currscenekey);
                     if (J != g_bboxCache.end())
                     {
                         glDeleteLists((*J).second, 1);
@@ -821,19 +836,19 @@ MStatus nozAlembicHolder::compute(const MPlug& plug, MDataBlock& block)
                 }
 
 
-                fGeometry.m_currscenekey = "";
+                fGeometry->m_currscenekey = "";
                 CAlembicDatas::abcSceneManager.addScene(files, objectPath.asChar());
-                fGeometry.m_currscenekey = key;
+                fGeometry->m_currscenekey = key;
             }
 
             if (CAlembicDatas::abcSceneManager.hasKey(key))
             {
-                fGeometry.bbox = MBoundingBox();
+                fGeometry->bbox = MBoundingBox();
                 AlembicHolder::Box3d bb;
                 setHolderTime();
                 bb = CAlembicDatas::abcSceneManager.getScene(key)->getBounds();
-                fGeometry.bbox.expand(MPoint(bb.min.x, bb.min.y, bb.min.z));
-                fGeometry.bbox.expand(MPoint(bb.max.x, bb.max.y, bb.max.z));
+                fGeometry->bbox.expand(MPoint(bb.min.x, bb.min.y, bb.min.z));
+                fGeometry->bbox.expand(MPoint(bb.max.x, bb.max.y, bb.max.z));
 
 
                 block.outputValue(aBoundMin).set3Float(bb.min.x, bb.min.y, bb.min.z);
@@ -844,9 +859,9 @@ MStatus nozAlembicHolder::compute(const MPlug& plug, MDataBlock& block)
                 MHWRender::MRenderer::setGeometryDrawDirty(thisMObject());
 
             }
-            fGeometry.m_abcdirty = true;
-            if(fGeometry.abcSceneManager.hasKey(fGeometry.m_currscenekey))
-                isConstant = fGeometry.abcSceneManager.getScene(fGeometry.m_currscenekey)->isConstant();
+            fGeometry->m_abcdirty = true;
+            if(fGeometry->abcSceneManager.hasKey(fGeometry->m_currscenekey))
+                isConstant = fGeometry->abcSceneManager.getScene(fGeometry->m_currscenekey)->isConstant();
 
         }
 
@@ -862,20 +877,20 @@ MStatus nozAlembicHolder::compute(const MPlug& plug, MDataBlock& block)
 
 }
 
-bool nozAlembicHolder::GetPlugData()
+void nozAlembicHolder::GetPlugData() const
 {
     int update = 0;
     int updateA = 0;
-    MPlug updatePlug(thisMObject(), aUpdateCache );
-    MPlug updateAssign(thisMObject(), aUpdateAssign );
-    updatePlug.getValue( update );
-    updateAssign.getValue( updateA );
-    
+    MPlug updatePlug(thisMObject(), aUpdateCache);
+    MPlug updateAssign(thisMObject(), aUpdateAssign);
+    updatePlug.getValue(update);
+    updateAssign.getValue(updateA);
 
+    /*
     if (update != dUpdate || updateA != dUpdateA)
     {
-        dUpdateA = updateA;
-        dUpdate = update;
+        //dUpdateA = updateA;
+        //dUpdate = update;
         return true;
     }
     else
@@ -883,15 +898,16 @@ bool nozAlembicHolder::GetPlugData()
         return false;
     }
     return false;
-
+    */
 }
 
-CAlembicDatas* nozAlembicHolder::alembicData()
+
+CAlembicDatas* nozAlembicHolder::alembicData() const
 {
     if (MRenderView::doesRenderEditorExist())
     {
         GetPlugData();
-        return &fGeometry;
+        return fGeometry;
     }
     return NULL;
 }

@@ -81,6 +81,7 @@ public:
 
     virtual void postConstructor();
     virtual MStatus compute( const MPlug& plug, MDataBlock& data );
+    void GetPlugData() const;
 //
 //    virtual bool getInternalValueInContext     (     const MPlug &      plug,
 //            MDataHandle &      dataHandle,
@@ -94,7 +95,11 @@ public:
 
     virtual bool isBounded() const;
     virtual MBoundingBox boundingBox()const ;
-    bool GetPlugData();
+
+    bool match(const MSelectionMask & mask,
+        const MObjectArray& componentList) const override;
+    MSelectionMask getShapeSelectionMask() const override;
+
     MStatus setDependentsDirty(MPlug const & inPlug, MPlugArray  & affectedPlugs);
 
     virtual void copyInternalData( MPxNode* srcNode );
@@ -107,15 +112,15 @@ public:
     std::string getSceneKey() const;
     std::string getSelectionKey() const;
 
-    CAlembicDatas* alembicData();
+    CAlembicDatas* alembicData() const;
 
 
-
+    static const char* selectionMaskName;
 
 
 
 private:
-    CAlembicDatas        fGeometry;
+    CAlembicDatas *fGeometry;
     static    MObject    aAbcFiles;
     static    MObject    aObjectPath;
     static    MObject    aBoundingExtended;
@@ -151,7 +156,7 @@ private:
 public:
     static  MTypeId     id;
 
-protected:
+private:
     int dUpdate;
 	int dUpdateA;
 
@@ -177,17 +182,9 @@ public:
                                               MDrawData& data );
 
 */
+    
+
     static void * creator();
-    // Draw Tokens
-    //
-    enum {
-        kDrawWireframe,
-        kDrawWireframeOnShaded,
-        kDrawSmoothShaded,
-        kDrawFlatShaded,
-        kDrawBoundingBox,
-        kLastToken
-    };
 
 }; // class CArnoldStandInShapeUI
 
