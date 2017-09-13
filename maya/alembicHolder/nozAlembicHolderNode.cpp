@@ -837,8 +837,8 @@ MStatus nozAlembicHolder::compute(const MPlug& plug, MDataBlock& block)
                 fGeometry.bbox.expand(MPoint(bb.max.x, bb.max.y, bb.max.z));
 
 
-				block.outputValue(aBoundMin).set3Float(bb.min.x, bb.min.y, bb.min.z);
-				block.outputValue(aBoundMax).set3Float(bb.max.x, bb.max.y, bb.max.z);
+				block.outputValue(aBoundMin).set3Float(float(bb.min.x), float(bb.min.y), float(bb.min.z));
+				block.outputValue(aBoundMax).set3Float(float(bb.max.x), float(bb.max.y), float(bb.max.z));
 
 
                 // notify viewport 2.0 that we are dirty
@@ -1516,7 +1516,7 @@ public:
                 gGLFT->glBindTexture(MGL_TEXTURE_2D, textureID);
                 MImage image;
                 MStatus stat = image.readFromFile(sample->getTexturePath());
-                short res = state().textRes();
+                unsigned int res = state().textRes();
                 unsigned int width, height;
                 image.getSize(width, height);
                 if (res != 0)
@@ -1803,7 +1803,7 @@ void CAlembicHolderUI::drawShaded(
             gGLFT->glDisable(MGL_LIGHTING);
         }
 
-        const bool depthOffsetWasEnabled = gGLFT->glIsEnabled(MGL_POLYGON_OFFSET_FILL);
+        const bool depthOffsetWasEnabled = (gGLFT->glIsEnabled(MGL_POLYGON_OFFSET_FILL) == MGL_TRUE);
         if (depthOffset && !depthOffsetWasEnabled) {
             // Viewport has set the offset, just enable it
             gGLFT->glEnable(MGL_POLYGON_OFFSET_FILL);
