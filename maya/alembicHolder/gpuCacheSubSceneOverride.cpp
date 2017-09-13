@@ -5718,6 +5718,7 @@ void SubSceneOverride::updateRenderItems(MHWRender::MSubSceneContainer&  contain
     if (instanceCount > fInstanceRenderItems.size()) {
         // Instance Added.
         unsigned int difference = (unsigned int)(instanceCount - fInstanceRenderItems.size());
+        fInstanceRenderItems.reserve(instanceCount);
         for (unsigned int i = 0; i < difference; i++) {
             fInstanceRenderItems.push_back(
                 boost::make_shared<InstanceRenderItems>());
