@@ -108,7 +108,7 @@ void ParseShaders(Json::Value jroot, std::map<std::string, MColor> & shaderColor
 
 
         const Json::Value paths = jroot[itr.key().asString()];
-        for( Json::ValueIterator itr2 = paths.begin() ; itr2 != paths.end() ; itr2++ )
+        for( Json::ValueConstIterator itr2 = paths.begin() ; itr2 != paths.end() ; itr2++ )
         {
             Json::Value val = paths[itr2.key().asUInt()];
             shaderColors[val.asString()] = shaderColor;
