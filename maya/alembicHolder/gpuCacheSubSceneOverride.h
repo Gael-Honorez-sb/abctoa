@@ -135,6 +135,9 @@ private:
 
     boost::posix_time::ptime fUpdateTime;
 
+    int fCacheVersionLastSeen;
+    int fAssignmentVersionLastSeen;
+
     // Callbacks
     MCallbackId fInstanceAddedCallback;
     MCallbackId fInstanceRemovedCallback;

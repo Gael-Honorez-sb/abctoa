@@ -156,6 +156,8 @@ void abcChangedCallback(MNodeMessage::AttributeMessage msg, MPlug & plug,
 }
 
 nozAlembicHolder::nozAlembicHolder()
+    : fCacheVersion(0)
+    , fAssignmentVersion(0)
 {
 }
 
@@ -502,6 +504,8 @@ MStatus nozAlembicHolder::initialize() {
     addAttribute(aBoundMax);
 
     attributeAffects(aAbcFile, aUpdateCache);
+    attributeAffects(aTime, aUpdateCache);
+    attributeAffects(aTimeOffset, aUpdateCache);
 
     // Update assinations
 	attributeAffects(aJsonFile, aUpdateAssign);
@@ -574,6 +578,10 @@ MStatus nozAlembicHolder::compute(const MPlug& plug, MDataBlock& block)
 {
 	if (plug == aUpdateAssign)
 	{
+        // Increment the value of aUpdateAssign which acts as a version number.
+        fAssignmentVersion += 1;
+        block.outputValue(aUpdateAssign).setInt(fAssignmentVersion);
+
 		MStatus status;
         MFnDagNode fn(thisMObject());
 
@@ -745,6 +753,10 @@ MStatus nozAlembicHolder::compute(const MPlug& plug, MDataBlock& block)
 
 	else if (plug == aUpdateCache)
     {
+        // Increment the value of aUpdateCache which acts as a version number.
+        fCacheVersion += 1;
+        block.outputValue(aUpdateCache).setInt(fCacheVersion);
+
         MStatus status;
         MFnDagNode fn(thisMObject());
 
@@ -880,35 +892,10 @@ bool nozAlembicHolder::setInternalValueInContext(const MPlug & plug, MDataHandle
     return MPxNode::setInternalValueInContext(plug, dataHandle, ctx);
 }
 
-bool nozAlembicHolder::GetPlugData()
-{
-    int update = 0;
-	int updateA = 0;
-    MPlug updatePlug(thisMObject(), aUpdateCache );
-	MPlug updateAssign(thisMObject(), aUpdateAssign );
-    updatePlug.getValue( update );
-	updateAssign.getValue( updateA );
-	
-
-    if (update != dUpdate || updateA != dUpdateA)
-    {
-		dUpdateA = updateA;
-        dUpdate = update;
-        return true;
-    }
-    else
-    {
-        return false;
-    }
-    return false;
-
-}
-
 CAlembicDatas* nozAlembicHolder::alembicData()
 {
     if (MRenderView::doesRenderEditorExist())
     {
-        GetPlugData();
         return &fGeometry;
     }
     return NULL;

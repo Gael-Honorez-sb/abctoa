@@ -109,7 +109,8 @@ public:
 
     virtual bool isBounded() const;
     virtual MBoundingBox boundingBox()const ;
-    bool GetPlugData();
+    int cacheVersion() const { return MPlug(thisMObject(), aUpdateCache).asInt(); }
+    int assignmentVersion() const { return MPlug(thisMObject(), aUpdateAssign).asInt(); }
     MStatus setDependentsDirty(MPlug const & inPlug, MPlugArray  & affectedPlugs);
 
     virtual void copyInternalData( MPxNode* srcNode );
@@ -145,6 +146,9 @@ private:
     CAlembicDatas        fGeometry;
     TextureMap           textureMap;
     TextureSet           ownTextures;
+    int fCacheVersion;
+    int fAssignmentVersion;
+
     static    MObject    aAbcFile;
     static    MObject    aObjectPath;
     static    MObject    aBoundingExtended;

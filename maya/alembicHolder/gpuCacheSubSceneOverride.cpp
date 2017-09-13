@@ -3521,8 +3521,6 @@ public:
             MSceneMessage::kMayaExiting, MayaExitingCallback, NULL);
         fSelectionChangedCallback = MModelMessage::addCallback(
             MModelMessage::kActiveListModified, SelectionChangedCallback, this);
-        fTimeChangeCallback = MDGMessage::addTimeChangeCallback(
-            TimeChangeCallback, this);
         fRenderLayerChangeCallback = MEventMessage::addEventCallback(
             "renderLayerChange", RenderLayerChangeCallback, this);
         fRenderLayerManagerChangeCallback = MEventMessage::addEventCallback(
@@ -3536,7 +3534,6 @@ public:
     {
         MMessage::removeCallback(fMayaExitingCallback);
         MMessage::removeCallback(fSelectionChangedCallback);
-        MMessage::removeCallback(fTimeChangeCallback);
         MMessage::removeCallback(fRenderLayerChangeCallback);
         MMessage::removeCallback(fRenderLayerManagerChangeCallback);
     }
@@ -3613,17 +3610,6 @@ public:
         fLastSelection.swap(currentSelection);
     }
 
-    // Detect time change and dirty SubSceneOverride.
-    void timeChanged()
-    {
-        BOOST_FOREACH (ShapeNodeSubSceneMap::value_type& val, fShapeNodes) {
-            val.second->dirtyVisibility();   // visibility animation
-            val.second->dirtyWorldMatrix();  // xform animation
-            val.second->dirtyStreams();      // vertex animation
-            val.second->dirtyMaterials();    // material animation
-        }
-    }
-
     // Detect render layer change and dirty SubSceneOverride.
     void renderLayerChanged()
     {
@@ -3651,12 +3637,6 @@ private:
         static_cast<ModelCallbacks*>(clientData)->selectionChanged();
     }
 
-    static void TimeChangeCallback(MTime& time, void* clientData)
-    {
-        assert(clientData);
-        static_cast<ModelCallbacks*>(clientData)->timeChanged();
-    }
-
     static void RenderLayerChangeCallback(void* clientData)
     {
         assert(clientData);
@@ -3666,7 +3646,6 @@ private:
 private:
     MCallbackId fMayaExitingCallback;
     MCallbackId fSelectionChangedCallback;
-    MCallbackId fTimeChangeCallback;
     MCallbackId fRenderLayerChangeCallback;
     MCallbackId fRenderLayerManagerChangeCallback;
 
@@ -5314,6 +5293,8 @@ SubSceneOverride::SubSceneOverride(const MObject& object)
     : MPxSubSceneOverride(object),
       fObject(object),
       fShapeNode(NULL),
+      fCacheVersionLastSeen(-1),
+      fAssignmentVersionLastSeen(-1),
       fUpdateRenderItemsRequired(true),
       fUpdateVisibilityRequired(true),
       fUpdateWorldMatrixRequired(true),
@@ -5378,13 +5359,18 @@ bool SubSceneOverride::requiresUpdate(const MSubSceneContainer& container,
     MRenderer* renderer = MRenderer::theRenderer();
     if (!renderer) return false;
 
-    fShapeNode->GetPlugData();
-
     // Cache the DAG paths for all instances.
     if (fInstanceDagPaths.length() == 0) {
         SubSceneOverride* nonConstThis = const_cast<SubSceneOverride*>(this);
         MDagPath::getAllPathsTo(fObject, nonConstThis->fInstanceDagPaths);
     }
+
+    const auto cacheVersion = fShapeNode->cacheVersion();
+    const auto assignmentVersion = fShapeNode->assignmentVersion();
+    if (fCacheVersionLastSeen != cacheVersion)
+        return true;
+    if (fAssignmentVersionLastSeen != assignmentVersion)
+        return true;
 
     // Turn on/off hardware instancing.
     const bool hwInstancing = useHardwareInstancing();
@@ -5463,6 +5449,11 @@ void SubSceneOverride::update(MSubSceneContainer&  container,
     assert(fShapeNode);
     if (!fShapeNode) return;
 
+    const bool cacheChanged = (fCacheVersionLastSeen != fShapeNode->cacheVersion());
+    const bool assignmentChanged = (fAssignmentVersionLastSeen != fShapeNode->assignmentVersion());
+    fCacheVersionLastSeen = fShapeNode->cacheVersion();
+    fAssignmentVersionLastSeen = fShapeNode->assignmentVersion();
+
     // Register node dirty callbacks if necessary.
     if (fNodeDirtyCallbacks.length() == 0) {
         registerNodeDirtyCallbacks();
@@ -5494,7 +5485,7 @@ void SubSceneOverride::update(MSubSceneContainer&  container,
     fUpdateTime = boost::date_time::microsec_clock<boost::posix_time::ptime>::local_time();
 
     // Check if the cached geometry or materials have been changed.
-    if (geometry != fGeometry || material != fMaterial) {
+    if (cacheChanged || assignmentChanged) {
         // Set the cached geometry and materials.
         fGeometry = geometry;
         fMaterial = material;
