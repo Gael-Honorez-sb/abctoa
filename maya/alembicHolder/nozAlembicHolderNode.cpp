@@ -177,9 +177,9 @@ nozAlembicHolder::~nozAlembicHolder()
     }
 }
 
-void nozAlembicHolder::setHolderTime() const {
+void nozAlembicHolder::setHolderTime() {
 
-    CAlembicDatas* geom = const_cast<nozAlembicHolder*> (this)->alembicData();
+    CAlembicDatas* geom = alembicData();
 
     if(geom != NULL)
     {
@@ -213,7 +213,7 @@ bool nozAlembicHolder::isBounded() const
 
 MBoundingBox nozAlembicHolder::boundingBox() const
 {
-	CAlembicDatas* geom = const_cast<nozAlembicHolder*> (this)->alembicData();
+	const CAlembicDatas* geom = alembicData();
     MBoundingBox bbox = MBoundingBox(MPoint(-1.0f, -1.0f, -1.0f), MPoint(1.0f, 1.0f, 1.0f));
 
     if(geom != NULL)
@@ -244,7 +244,7 @@ void nozAlembicHolder::copyInternalData(MPxNode* srcNode) {
 
     const nozAlembicHolder& node = *(nozAlembicHolder*)srcNode;
 
-    CAlembicDatas* geom = const_cast<nozAlembicHolder*> (this)->alembicData();
+    CAlembicDatas* geom = alembicData();
 
     MFnDagNode fn(node.thisMObject());
     MString abcfile;

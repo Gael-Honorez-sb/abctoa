@@ -115,7 +115,7 @@ public:
 
     virtual void copyInternalData( MPxNode* srcNode );
 
-    void setHolderTime() const;
+    void setHolderTime();
 
     static  void*       creator();
     static  MStatus     initialize();
