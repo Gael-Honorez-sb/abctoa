@@ -2085,7 +2085,7 @@ private:
     {
         std::size_t operator()(const MString& key) const
         {
-            return boost::hash_value(key.asChar());
+            return boost::hash_value(std::string(key.asChar()));
         }
 
     };
