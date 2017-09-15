@@ -2886,6 +2886,47 @@ public:
         fItemsPendingRemove.erase(data);
     }
 
+    unsigned int instancePathIndex(const MHWRender::MRenderItem& renderItem, int hardwareInstanceIndex)
+    {
+        unsigned int hardwareInstanceID(hardwareInstanceIndex);
+        BOOST_FOREACH (const HardwareInstance& hwInstance, fInstances) {
+            if (hwInstance.master->renderItem()->name() == renderItem.name())
+            {
+                MString renderItemName;
+                bool found = false;
+
+                if (hwInstance.master->instanceId() == hardwareInstanceID)
+                {
+                    renderItemName = hwInstance.master->renderItem()->name();
+                    found = true;
+                }
+                else
+                {
+                    BOOST_FOREACH (HardwareInstanceData* sourceData, hwInstance.sources) {
+                        if (sourceData->instanceId() == hardwareInstanceID)
+                        {
+                            renderItemName = sourceData->renderItem()->name();
+                            found = true;
+                            break;
+                        }
+                    }
+                }
+                if (found)
+                {
+                    MStringArray renderItemParts;
+                    renderItemName.split(':', renderItemParts);
+
+                    if (renderItemParts.length() > 1 && renderItemParts[0].isUnsigned())
+                    {
+                        return renderItemParts[0].asUnsigned();
+                    }
+                }
+            }
+        }
+
+        return -1;
+    }
+
     void dump() const
     {
         using namespace std;
@@ -3725,6 +3766,11 @@ public:
             );
             renderItem->installHardwareInstanceData(data);
         }
+    }
+
+    unsigned int instancePathIndex(const MHWRender::MRenderItem& renderItem, int hardwareInstanceIndex)
+    {
+        return fImpl->instancePathIndex(renderItem, hardwareInstanceIndex);
     }
 
 private:
@@ -5525,23 +5571,47 @@ void SubSceneOverride::update(MSubSceneContainer&  container,
     }
 }
 
-bool SubSceneOverride::getSelectionPath(const MHWRender::MRenderItem& renderItem, MDagPath& dagPath) const
+bool SubSceneOverride::getInstancedSelectionPath(const MHWRender::MRenderItem& renderItem, const MHWRender::MIntersection& intersection, MDagPath& dagPath) const
 {
-    // The path to the instance is encoded in the render item name:
-    MStringArray renderItemParts;
-    renderItem.name().split(':', renderItemParts);
+    unsigned int pathIndex = -1;
 
-    if (renderItemParts.length() > 1 && renderItemParts[0].isUnsigned())
+    // When using hardware accelerated instancing, the InstanceID
+    // information will be found in the intersection:
+    int hardwareInstanceIndex = intersection.instanceID();
+    if (hardwareInstanceIndex >= 0)
     {
-        unsigned int pathIndex = renderItemParts[0].asUnsigned();
-        if (pathIndex < fInstanceDagPaths.length())
+        pathIndex = fHardwareInstanceManager->instancePathIndex(renderItem, hardwareInstanceIndex);
+    }
+    else
+    {
+        // The path to the instance is encoded in the render item name:
+        MStringArray renderItemParts;
+        renderItem.name().split(':', renderItemParts);
+
+        if (renderItemParts.length() > 1 && renderItemParts[0].isUnsigned())
         {
-             dagPath.set(fInstanceDagPaths[pathIndex]);
-             return true;
+            pathIndex = renderItemParts[0].asUnsigned();
         }
     }
 
+    if (pathIndex < fInstanceDagPaths.length())
+    {
+            dagPath.set(fInstanceDagPaths[pathIndex]);
+            if (dagPath.length() > 1)
+                dagPath.pop(); // from shape to xform.
+            return true;
+    }
+
     return false;
+}
+
+void SubSceneOverride::updateSelectionGranularity(const MDagPath& path, MHWRender::MSelectionContext& selectionContext)
+{
+    // We do allow snapping, even though vertex are not selectable as components.
+    if (pointSnappingActive())
+    {
+        selectionContext.setSelectionLevel(MHWRender::MSelectionContext::kComponent);
+    }
 }
 
 void SubSceneOverride::dirtyEverything()

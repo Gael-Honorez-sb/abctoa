@@ -26,6 +26,7 @@
 
 #include <maya/MDagPathArray.h>
 #include <maya/MPxSubSceneOverride.h>
+#include <maya/MSelectionContext.h>
 
 #include <maya/MCallbackIdArray.h>
 #include <maya/MMessage.h>
@@ -71,7 +72,8 @@ public:
     virtual void update(MHWRender::MSubSceneContainer&  container,
                         const MHWRender::MFrameContext& frameContext);
 
-    virtual bool getSelectionPath(const MHWRender::MRenderItem& renderItem, MDagPath& dagPath) const;
+    virtual bool getInstancedSelectionPath(const MHWRender::MRenderItem& renderItem, const MHWRender::MIntersection& intersection, MDagPath& dagPath) const;
+    virtual void updateSelectionGranularity(const MDagPath& path, MHWRender::MSelectionContext& selectionContext);
 
 
     // Dirty methods (called from Callbacks)
