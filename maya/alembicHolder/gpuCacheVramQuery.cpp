@@ -33,7 +33,7 @@
 #elif defined(__APPLE__) || defined(__MACH__)
     #include <ApplicationServices/ApplicationServices.h>
     #include <OpenGL/gl.h>
-#elif defined(linux)
+#elif defined(_LINUX)
     #include <iostream>
     #include <fstream>
     #include <GL/gl.h>
@@ -597,7 +597,7 @@ void VramQuery::queryVramAndDriverMAC(MUint64& vram, int driverVersion[3], MStri
     }
 }
 
-#elif defined(linux)
+#elif defined(_LINUX)
 void VramQuery::queryVramAndDriverXORG(MUint64& vram, int driverVersion[3], MString& manufacturer, MString& model)
 {
     vram = 0;
@@ -790,7 +790,7 @@ VramQuery::VramQuery()
         // Mac OSX, let's query VRAM via Core Graphics and IOKit
         // http://developer.apple.com/library/mac/#qa/qa1168/_index.html
         VramQuery::queryVramAndDriverMAC(vram, driverVersion, manufacturer, model);
-#elif defined(linux)
+#elif defined(_LINUX)
         // Linux, let's parse Xorg.0.log
         VramQuery::queryVramAndDriverXORG(vram, driverVersion, manufacturer, model);
 #endif

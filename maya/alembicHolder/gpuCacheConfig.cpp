@@ -165,7 +165,7 @@ bool getUseVertexArrayWhenVRAMIsLowDefault()
     // On Windows, using a temporary VBO is 3 times faster than
     // using vertex arrays. (Tested with an NVidia Quadro gfx).
     result = false;
-#elif defined(LINUX)
+#elif defined(_LINUX)
     // On Linux, using vertex arrays is 2 times faster than using
     // a temporary VBO. (Tested with an NVidia Quadro gfx).
     //

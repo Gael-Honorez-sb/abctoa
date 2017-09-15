@@ -68,7 +68,7 @@ private:
     static MUint64 queryVramDXGI();
 #elif defined(__APPLE__) || defined(__MACH__)
     static void queryVramAndDriverMAC(MUint64& vram, int driverVersion[3], MString& manufacturer, MString& model);
-#elif defined(linux)
+#elif defined(_LINUX)
     static void queryVramAndDriverXORG(MUint64& vram, int driverVersion[3], MString& manufacturer, MString& model);
 #endif
     static MUint64 queryVramOGL();
