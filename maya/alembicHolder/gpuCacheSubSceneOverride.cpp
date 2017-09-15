@@ -1113,6 +1113,18 @@ MShaderInstance* getDiffuseColorShaderInstance()
     return shaderMgr->getFragmentShader("mayaLambertSurface", "outSurfaceFinal", true);
 }
 
+MShaderInstance* getTexturedShaderInstance()
+{
+    MRenderer* renderer = MRenderer::theRenderer();
+    if (!renderer) return NULL;
+    const MShaderManager* shaderMgr = renderer->getShaderManager();
+    if (!shaderMgr) return NULL;
+
+    auto shader = shaderMgr->getStockShader(MHWRender::MShaderManager::k3dBlinnShader)->clone();
+    shader->addInputFragment("fileTexturePluginFragment", MString("output"), MString("diffuseColor"));
+    return shader;
+}
+
 void releaseShaderInstance(MShaderInstance*& shader)
 {
     MRenderer* renderer = MRenderer::theRenderer();
@@ -1420,6 +1432,38 @@ public:
         // Not found. Get a new shader.
         ShaderTemplatePtr templateShader =
             wrapShaderTemplate(getDiffuseColorShaderInstance());
+        if (templateShader) {
+            // Insert into cache.
+            FragmentAndShaderTemplate entry;
+            entry.fragmentAndOutput = key;
+            entry.shader            = templateShader.get();
+            entry.ptr               = templateShader.getTemplate();
+            fFragmentCache.insert(entry);
+
+            return templateShader.newShaderInstance(deleter);
+        }
+
+        assert(0);
+        return ShaderInstancePtr();
+    }
+
+    ShaderInstancePtr newTextureShader(Deleter deleter)
+    {
+        // Look for a cached shader.
+        MString key = "_reserved_texture_shader_";
+        FragmentAndShaderTemplateCache::nth_index<0>::type::iterator it =
+            fFragmentCache.get<0>().find(key);
+
+        // Found in cache.
+        if (it != fFragmentCache.get<0>().end()) {
+            ShaderTemplatePtr templateShader = it->ptr.lock();
+            assert(templateShader);  // no staled pointer
+            return templateShader.newShaderInstance(deleter);
+        }
+
+        // Not found. Get a new shader.
+        ShaderTemplatePtr templateShader =
+            wrapShaderTemplate(getTexturedShaderInstance());
         if (templateShader) {
             // Insert into cache.
             FragmentAndShaderTemplate entry;
@@ -1964,6 +2008,81 @@ public:
         return ShaderInstancePtr();
     }
 
+    ShaderInstancePtr getTexturedShader(const MColor& color, MString fileTexturePath)
+    {
+        MString key;
+        {
+            const auto quantize = [](double value) {
+                return std::round(value * 255.0);
+            };
+            std::stringstream ss;
+            ss << fileTexturePath
+                << quantize(color.r) << "-"
+                << quantize(color.g) << "-"
+                << quantize(color.b);
+            key = ss.str().c_str();
+        }
+
+        // Look for the cached MShaderInstance.
+        const auto& key_index = fTexturedShaders.get<0>();
+        const auto end_it = key_index.end();
+        const auto it = key_index.find(key);
+
+        // Found in cache.
+        if (it != end_it) {
+            boost::shared_ptr<MShaderInstance> shader = it->ptr.lock();
+            assert(shader);  // no staled pointer.
+            return ShaderInstancePtr(shader, it->source);
+        }
+
+        // Not found. Get a new MShaderInstance.
+        ShaderInstancePtr shader =
+            ShaderCache::getInstance().newTextureShader(shaderInstanceDeleter);
+        assert(shader);
+        if (!shader) {
+            return {};
+        }
+
+        // Set the diffuse color.
+        setDiffuseColor(shader.get(), color);
+
+        // Set the texture.
+        MRenderer* renderer = MRenderer::theRenderer();
+        if (!renderer) {
+            return {};
+        }
+        MHWRender::MTextureManager* textureManager = renderer->getTextureManager();
+        if (!textureManager) {
+            return {};
+        }
+        MHWRender::MTexture* texture = textureManager->acquireTexture(fileTexturePath);
+        MHWRender::MTextureAssignment textureAssignment;
+        textureAssignment.texture = texture;
+        shader.get()->setParameter("map", textureAssignment);
+        textureManager->releaseTexture(texture);
+
+        // Acquire a sampler for the texture.
+        MHWRender::MSamplerStateDesc desc;
+        desc.filter = MHWRender::MSamplerState::kAnisotropic;
+        desc.maxAnisotropy = 16;
+        auto sampler_state = MHWRender::MStateManager::acquireSamplerState(desc);
+        if (sampler_state) {
+            shader.get()->setParameter("textureSampler", *sampler_state);
+        }
+
+        // Insert into cache.
+        ColorAndShaderInstance entry;
+        entry.color  = color;
+        entry.fileTexturePath = fileTexturePath;
+        entry.key    = key;
+        entry.shader = shader.get();
+        entry.ptr    = shader.getShader();
+        entry.source = shader.getTemplate();
+        fTexturedShaders.insert(entry);
+
+        return shader;
+    }
+
     // This method will get a cached MShaderInstance for the given material.
     ShaderInstancePtr getSharedShadedMaterialShader(
         const MaterialGraph::Ptr& material,
@@ -2058,6 +2177,7 @@ private:
         fWireShadersWithCB.get<1>().erase(shader);
         fBoundingBoxPlaceHolderShaders.get<1>().erase(shader);
         fDiffuseColorShaders.get<1>().erase(shader);
+        fTexturedShaders.get<1>().erase(shader);
         fShadedMaterialShaders.get<1>().erase(shader);
     }
 
@@ -2102,6 +2222,8 @@ private:
     // MShaderInstance* cached by MColor as hash key. And as MString
     struct ColorAndShaderInstance {
         MColor                             color;
+        MString                            fileTexturePath;
+        MString                            key;
         MShaderInstance*                   shader;
         boost::weak_ptr<MShaderInstance>   ptr;
         boost::shared_ptr<MShaderInstance> source;
@@ -2118,6 +2240,19 @@ private:
             >
         >
     > ColorAndShaderInstanceCache;
+
+    typedef boost::multi_index_container<
+        ColorAndShaderInstance,
+        boost::multi_index::indexed_by<
+            boost::multi_index::hashed_unique<
+                BOOST_MULTI_INDEX_MEMBER(ColorAndShaderInstance,MString,key),
+                MStringHash
+            >,
+            boost::multi_index::hashed_unique<
+                BOOST_MULTI_INDEX_MEMBER(ColorAndShaderInstance,MShaderInstance*,shader)
+            >
+        >
+    > StringAndShaderInstanceCache;
 
     // MShaderInstance* cached by MaterialGraph as hash key.
     struct MaterialAndShaderInstance {
@@ -2145,6 +2280,7 @@ private:
     ColorAndShaderInstanceCache    fWireShadersWithCB;
     ColorAndShaderInstanceCache    fBoundingBoxPlaceHolderShaders;
     ColorAndShaderInstanceCache    fDiffuseColorShaders;
+    StringAndShaderInstanceCache   fTexturedShaders;
     MaterialAndShaderInstanceCache fShadedMaterialShaders;
 };
 
@@ -4045,6 +4181,10 @@ public:
         // Shaded
         updateShadedItems(subSceneOverride, container, subNodePrefix, shape,
             sample->diffuseColor(), sample->numIndexGroups());
+
+        // Textured
+        updateTexturedItems(subSceneOverride, container, subNodePrefix, shape,
+            sample->diffuseColor(), sample->numIndexGroups(), sample->getTexturePath(), bool(sample->uvs()));
     }
 
     void updateVisibility(SubSceneOverride&   subSceneOverride,
@@ -4066,6 +4206,7 @@ public:
         toggleActiveWireItem();
         updateActiveWireShader(wireColor);
         toggleShadedItems();
+        toggleTexturedItems();
     }
 
     void updateWorldMatrix(SubSceneOverride&   subSceneOverride,
@@ -4092,6 +4233,10 @@ public:
         BOOST_FOREACH (RenderItemWrapper::Ptr& shadedItem, fShadedItems) {
             shadedItem->setWorldMatrix(matrix);
         }
+
+        BOOST_FOREACH (RenderItemWrapper::Ptr& shadedItem, fTexturedItems) {
+            shadedItem->setWorldMatrix(matrix);
+        }
     }
 
     void updateStreams(SubSceneOverride&   subSceneOverride,
@@ -4112,6 +4257,7 @@ public:
         toggleDormantWireItem();
         toggleActiveWireItem();
         toggleShadedItems();
+        toggleTexturedItems();
         if (!fValidPoly) {
             // Nothing to do. Render items are disabled.
             return;
@@ -4156,6 +4302,23 @@ public:
                 sample->boundingBox()
             );
         }
+
+        // Update the textured streams.
+        for (size_t groupId = 0; groupId < sample->numIndexGroups(); groupId++) {
+            if (groupId >= fTexturedItems.size()) break;  // background loading
+
+            assert(fTexturedItems[groupId]);
+            if (!fTexturedItems[groupId]) continue;
+
+            fTexturedItems[groupId]->setBuffers(
+                subSceneOverride,
+                sample->triangleVertIndices(groupId),
+                sample->positions(),
+                sample->normals(),
+                sample->uvs(),
+                sample->boundingBox()
+            );
+        }
     }
 
     void updateMaterials(SubSceneOverride&   subSceneOverride,
@@ -4172,6 +4335,7 @@ public:
             if (groupId >= fShadedItems.size()) break;  // background loading
             if (groupId >= fSharedDiffuseColorShaders.size()) break;
             if (groupId >= fUniqueDiffuseColorShaders.size()) break;
+            if (groupId >= fTexturedShaders.size()) break;
             if (groupId >= fMaterialShaders.size()) break;
 
             assert(fShadedItems[groupId]);
@@ -4182,6 +4346,21 @@ public:
             if (shader) {
                 // Nothing to do.
                 continue;
+            }
+
+            if (view.textureMode()) {
+                shader = ShaderInstanceCache::getInstance().getTexturedShader(
+                    sample->diffuseColor(), sample->getTexturePath());
+                // If the shared shader instance is different from the existing one,
+                // there is diffuse color animation.
+                // We promote the shared shader instance to a unique shader instance.
+                assert(fTexturedShaders[groupId]);  // set in updateRenderItems()
+                if (shader != fTexturedShaders[groupId]) {
+                    shader = ShaderInstanceCache::getInstance().getTexturedShader(
+                        sample->diffuseColor(), sample->getTexturePath());
+
+                    fTexturedItems[groupId]->setShader(shader);
+                }
             }
 
             // Then, check if the shader instance is already unique to the render item.
@@ -4485,6 +4664,108 @@ public:
         toggleShadedItems();
     }
 
+    void updateTexturedItems(SubSceneOverride& subSceneOverride,
+                           MSubSceneContainer& container,
+                           const MString&      subNodePrefix,
+                           const IPolyMeshDrw& shape,
+                           const MColor&       diffuseColor,
+                           const size_t        nbIndexGroups,
+                           MString             fileTexturePath,
+                           bool                haveUVs)
+    {
+        M3dView view = M3dView::active3dView();
+
+        // Shaded render items.
+        if (fIsBoundingBoxPlaceHolder) {
+            // This shape is a bounding box place holder.
+            BOOST_FOREACH (RenderItemWrapper::Ptr& item, fTexturedItems) {
+                item->setEnabled(false);
+            }
+            return;
+        }
+
+        if (fTexturedItems.empty()) {
+            // Create a render item for each index group.
+            fTexturedItems.reserve(nbIndexGroups);
+
+            // Each render item has an associated MShaderInstance.
+            fTexturedShaders.reserve(nbIndexGroups);
+            fMaterialShaders.reserve(nbIndexGroups);
+
+            for (size_t groupId = 0; groupId < nbIndexGroups; groupId++) {
+                const MString texturedItemName = subNodePrefix + ":textured" + (int)groupId;
+                RenderItemWrapper::Ptr renderItem(new RenderItemWrapper(
+                    texturedItemName,
+                    MRenderItem::MaterialSceneItem,
+                    MGeometry::kTriangles
+                ));
+                renderItem->setDrawMode((MGeometry::DrawMode)(MGeometry::kTextured));
+                renderItem->setExcludedFromPostEffects(false);  // SSAO, etc..
+                fTexturedItems.push_back(renderItem);
+
+                // Check if we have any material that is assigned to this index group.
+                ShaderInstancePtr shader;
+                const std::vector<MString>&  materialsAssignment = shape.getMaterialAssignments();
+                const MaterialGraphMap::Ptr& materials = subSceneOverride.getMaterial();
+                if (materials && groupId < materialsAssignment.size()) {
+                    const MaterialGraph::Ptr graph = materials->find(materialsAssignment[groupId]);
+                    if (graph) {
+                        shader = ShaderInstanceCache::getInstance().getSharedShadedMaterialShader(
+                            graph, subSceneOverride.getTime()
+                        );
+                    }
+                }
+
+                if (view.textureMode()) {
+                    if (shader) {
+                        // We have successfully created a material shader.
+                        renderItem->setShader(shader);
+
+                        fMaterialShaders.push_back(shader);
+                        fTexturedShaders.push_back(ShaderInstancePtr());
+                    }
+                    else {
+                        // There is no materials. Fallback to diffuse color.
+
+                        // Let's assume that the diffuse color is not animated at beginning.
+                        // If the diffuse color changes, we will promote the shared shader to
+                        // a unique shader.
+                        ShaderInstancePtr sharedShader =
+                            ShaderInstanceCache::getInstance().getTexturedShader(diffuseColor, fileTexturePath);
+                        if (sharedShader) {
+                            renderItem->setShader(sharedShader);
+                        }
+
+                        fMaterialShaders.push_back(ShaderInstancePtr());
+                        fTexturedShaders.push_back(sharedShader);
+                    }
+
+                    // Add to the container.
+                    renderItem->addToContainer(container);
+                }
+            }
+        }
+
+        // Check if we can cast/receive shadows and hardware instancing.
+        const bool castsShadows   = subSceneOverride.castsShadows();
+        const bool receiveShadows = subSceneOverride.receiveShadows();
+
+        BOOST_FOREACH (RenderItemWrapper::Ptr& renderItem, fTexturedItems) {
+            // Set Casts Shadows and Receives Shadows.
+            renderItem->setCastsShadows(castsShadows);
+            renderItem->setReceivesShadows(receiveShadows);
+
+            // Hardware instancing.
+            boost::shared_ptr<HardwareInstanceManager>& hwInstanceManager =
+                subSceneOverride.hardwareInstanceManager();
+            if (hwInstanceManager && renderItem->shader() && !renderItem->shader()->isTransparent()) {
+                hwInstanceManager->installHardwareInstanceData(renderItem);
+            }
+        }
+
+        toggleTexturedItems();
+    }
+
     // Enable or disable bounding box place holder item.
     void toggleBoundingBoxItem()
     {
@@ -4536,6 +4817,20 @@ public:
         }
     }
 
+    // Enable or disable textured items.
+    void toggleTexturedItems()
+    {
+        M3dView view = M3dView::active3dView();
+        BOOST_FOREACH (RenderItemWrapper::Ptr& shadedItem, fTexturedItems) {
+            if (fIsBoundingBoxPlaceHolder || !view.textureMode()) {
+                shadedItem->setEnabled(false);
+            }
+            else {
+                shadedItem->setEnabled(fVisibility && fValidPoly);
+            }
+        }
+    }
+
     void hideRenderItems()
     {
         // Simply disable all render items.
@@ -4552,6 +4847,10 @@ public:
         }
 
         BOOST_FOREACH (RenderItemWrapper::Ptr& item, fShadedItems) {
+            item->setEnabled(false);
+        }
+
+        BOOST_FOREACH (RenderItemWrapper::Ptr& item, fTexturedItems) {
             item->setEnabled(false);
         }
     }
@@ -4579,6 +4878,12 @@ public:
             item.reset();
         }
         fShadedItems.clear();
+
+        BOOST_FOREACH (RenderItemWrapper::Ptr& item, fTexturedItems) {
+            item->removeFromContainer(container);
+            item.reset();
+        }
+        fTexturedItems.clear();
     }
 
 private:
@@ -4587,6 +4892,7 @@ private:
     RenderItemWrapper::Ptr               fActiveWireItem;
     RenderItemWrapper::Ptr               fDormantWireItem;
     std::vector<RenderItemWrapper::Ptr>  fShadedItems;
+    std::vector<RenderItemWrapper::Ptr>  fTexturedItems;
 
     // The following flags control the enable/disable state of render items.
     bool fIsBoundingBoxPlaceHolder; // The sub-node has not been loaded.
@@ -4597,6 +4903,7 @@ private:
     // Shader instances for shaded render items.
     std::vector<ShaderInstancePtr>  fSharedDiffuseColorShaders;
     std::vector<ShaderInstancePtr>  fUniqueDiffuseColorShaders;
+    std::vector<ShaderInstancePtr>  fTexturedShaders;
     std::vector<ShaderInstancePtr>  fMaterialShaders;
 };
 
@@ -5289,6 +5596,10 @@ MVertexBuffer* SubSceneOverride::lookup(const boost::shared_ptr<const VertexBuff
     return BuffersCache::getInstance().lookup(vertices);
 }
 
+static void textureModeChangedCallback(void * data) {
+    static_cast<SubSceneOverride*>(data)->dirtyEverything();
+}
+
 SubSceneOverride::SubSceneOverride(const MObject& object)
     : MPxSubSceneOverride(object),
       fObject(object),
@@ -5302,7 +5613,8 @@ SubSceneOverride::SubSceneOverride(const MObject& object)
       fUpdateMaterialsRequired(true),
       fOutOfViewFrustum(false),
       fOutOfViewFrustumUpdated(false),
-      fWireOnShadedMode(DisplayPref::kWireframeOnShadedFull)
+      fWireOnShadedMode(DisplayPref::kWireframeOnShadedFull),
+      textureMode(false)
 {
     // Extract the ShapeNode pointer.
     MFnDagNode dagNode(object);
@@ -5324,6 +5636,8 @@ SubSceneOverride::SubSceneOverride(const MObject& object)
         dagPath, InstanceChangedCallback, this);
     fWorldMatrixChangedCallback = MDagMessage::addWorldMatrixModifiedCallback(
         dagPath, WorldMatrixChangedCallback, this);
+    fTextureModeCallback = MEventMessage::addEventCallback("modelEditorChanged", textureModeChangedCallback, this);
+
     registerNodeDirtyCallbacks();
     ModelCallbacks::getInstance().registerSubSceneOverride(fShapeNode, this);
 
@@ -5336,6 +5650,7 @@ SubSceneOverride::~SubSceneOverride()
     MMessage::removeCallback(fInstanceAddedCallback);
     MMessage::removeCallback(fInstanceRemovedCallback);
     MMessage::removeCallback(fWorldMatrixChangedCallback);
+    MMessage::removeCallback(fTextureModeCallback);
     MMessage::removeCallbacks(fNodeDirtyCallbacks);
     ModelCallbacks::getInstance().deregisterSubSceneOverride(fShapeNode);
 
@@ -5348,6 +5663,87 @@ MHWRender::DrawAPI SubSceneOverride::supportedDrawAPIs() const
 {
     // We support both OpenGL and DX11 in VP2.0!
     return MHWRender::kAllDevices;
+}
+
+void SubSceneOverride::initializeFragmentShaders()
+{
+    static const MString sFragmentName("fileTexturePluginFragment");
+    static const char* sFragmentBody =
+        "<fragment uiName=\"fileTexturePluginFragment\" name=\"fileTexturePluginFragment\" type=\"plumbing\" class=\"ShadeFragment\" version=\"1.0\">"
+        " <description><![CDATA[Simple file texture fragment]]></description>"
+        " <properties>"
+        " <float2 name=\"uvCoord\" semantic=\"mayaUvCoordSemantic\" flags=\"varyingInputParam\" />"
+        " <texture2 name=\"map\" />"
+        " <sampler name=\"textureSampler\" />"
+        " </properties>"
+        " <values>"
+        " </values>"
+        " <outputs>"
+        " <float4 name=\"output\" />"
+        " </outputs>"
+        " <implementation>"
+        " <implementation render=\"OGSRenderer\" language=\"Cg\" lang_version=\"2.100000\">"
+        " <function_name val=\"fileTexturePluginFragment\" />"
+        " <source><![CDATA["
+        "float4 fileTexturePluginFragment(float2 uv, texture2D map, sampler2D mapSampler) \n"
+        "{ \n"
+        " uv -= floor(uv); \n"
+        " uv.y = 1.0f - uv.y; \n"
+        " float4 color = tex2D(mapSampler, uv); \n"
+        " color = pow(color, float4(2.2f, 2.2f, 2.2f, 2.2f)); \n"
+        " return color.rgba; \n"
+        "} \n]]>"
+        " </source>"
+        " </implementation>"
+        " <implementation render=\"OGSRenderer\" language=\"HLSL\" lang_version=\"11.000000\">"
+        " <function_name val=\"fileTexturePluginFragment\" />"
+        " <source><![CDATA["
+        "float4 fileTexturePluginFragment(float2 uv, Texture2D map, sampler mapSampler) \n"
+        "{ \n"
+        " uv -= floor(uv); \n"
+        " uv.y = 1.0f - uv.y; \n"
+        " float4 color = map.Sample(mapSampler, uv); \n"
+        " color = pow(color, float4(2.2f, 2.2f, 2.2f, 2.2f)); \n"
+        " return color.rgba; \n"
+        "} \n]]>"
+        " </source>"
+        " </implementation>"
+        " <implementation render=\"OGSRenderer\" language=\"GLSL\" lang_version=\"3.0\">"
+        " <function_name val=\"fileTexturePluginFragment\" />"
+        " <source><![CDATA["
+        "vec4 fileTexturePluginFragment(vec2 uv, sampler2D mapSampler) \n"
+        "{ \n"
+        " uv -= floor(uv); \n"
+        " uv.y = 1.0f - uv.y; \n"
+        " vec4 color = texture(mapSampler, uv); \n"
+        " color = pow(color, vec4(2.2f, 2.2f, 2.2f, 2.2f)); \n"
+        " return color.rgba; \n"
+        "} \n]]>"
+        " </source>"
+        " </implementation>"
+        " </implementation>"
+        "</fragment>";
+    // Register fragments with the manager if needed
+    //
+    MHWRender::MRenderer* theRenderer = MHWRender::MRenderer::theRenderer();
+    if (theRenderer)
+    {
+        MHWRender::MFragmentManager* fragmentMgr =
+            theRenderer->getFragmentManager();
+        if (fragmentMgr)
+        {
+            // Add fragments if needed
+            bool fragAdded = fragmentMgr->hasFragment(sFragmentName);
+            if (!fragAdded)
+            {
+                fragAdded = (sFragmentName == fragmentMgr->addShadeFragmentFromBuffer(sFragmentBody, false));
+            }
+            if (fragAdded)
+            {
+                fFragmentName = sFragmentName;
+            }
+        }
+    }
 }
 
 bool SubSceneOverride::requiresUpdate(const MSubSceneContainer& container,
@@ -5454,6 +5850,10 @@ void SubSceneOverride::update(MSubSceneContainer&  container,
     fCacheVersionLastSeen = fShapeNode->cacheVersion();
     fAssignmentVersionLastSeen = fShapeNode->assignmentVersion();
 
+    if (fFragmentName == "") {
+        initializeFragmentShaders();
+    }
+
     // Register node dirty callbacks if necessary.
     if (fNodeDirtyCallbacks.length() == 0) {
         registerNodeDirtyCallbacks();
@@ -5485,7 +5885,7 @@ void SubSceneOverride::update(MSubSceneContainer&  container,
     fUpdateTime = boost::date_time::microsec_clock<boost::posix_time::ptime>::local_time();
 
     // Check if the cached geometry or materials have been changed.
-    if (cacheChanged || assignmentChanged) {
+    if (cacheChanged || assignmentChanged || (!textureMode && view.textureMode())) {
         // Set the cached geometry and materials.
         fGeometry = geometry;
         fMaterial = material;
@@ -5496,6 +5896,8 @@ void SubSceneOverride::update(MSubSceneContainer&  container,
         fHierarchyStat.reset();
         dirtyEverything();
     }
+
+    textureMode = view.textureMode();
 
     // Update the render items to match the Wireframe on Shaded mode.
     if (fWireOnShadedMode != DisplayPref::wireframeOnShadedMode()) {

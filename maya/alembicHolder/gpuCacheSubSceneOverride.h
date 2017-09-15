@@ -142,6 +142,7 @@ private:
     MCallbackId fInstanceAddedCallback;
     MCallbackId fInstanceRemovedCallback;
     MCallbackId fWorldMatrixChangedCallback;
+    MCallbackId fTextureModeCallback;
     MCallbackIdArray fNodeDirtyCallbacks;
 
     // Dirty flags
@@ -177,6 +178,10 @@ private:
 
     // Manages all hardware instances. NULL if hardware instancing is disabled.
     boost::shared_ptr<HardwareInstanceManager> fHardwareInstanceManager;
+
+    MString fFragmentName;
+
+    bool textureMode;
 };
 
 } // namespace AlembicHolder
