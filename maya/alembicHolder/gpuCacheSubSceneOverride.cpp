@@ -5317,10 +5317,11 @@ public:
     UpdateVisibilityVisitor(SubSceneOverride&      subSceneOverride,
                             MSubSceneContainer&    container,
                             SubNodeRenderItemList& subNodeItems,
+                            const bool             outOfViewFrustum,
                             bool isSelected,
                             const MColor& wireColor)
         : ParentClass(subSceneOverride, container, subNodeItems),
-          fVisibility(true),
+          fVisibility(!outOfViewFrustum),
           fIsSelected(isSelected),
           fWireColor(wireColor)
     {
@@ -5627,7 +5628,8 @@ public:
     }
 
     void updateVisibility(SubSceneOverride&   subSceneOverride,
-                          MSubSceneContainer& container)
+                          MSubSceneContainer& container,
+                          const bool outOfViewFrustum)
     {
         assert(fDagPath.isValid());
         if (!fDagPath.isValid()) return;
@@ -5654,12 +5656,29 @@ public:
                       (displayStatus == kHilite) ||
                       isPathSelected(fDagPath);
 
+        // Disable visibility animation checks so that we turn off all render
+        // items when the geometry goes out of the view frustum. Otherwise,
+        // only visibility-animated render items are updated..
+        // Visibility is updated once when the geometry moves out of the view
+        // frustum. requiresUpdate() should return false for the following
+        // frames so disable the check won't affect performance when the
+        // render items are view-frustum-culled.
+        if (outOfViewFrustum) {
+            fVisibilityValid = false;
+        }
+
         // Update the sub-node visibility.
         const MColor wireColor = MGeometryUtilities::wireframeColor(fDagPath);
-        UpdateVisibilityVisitor visitor(subSceneOverride, container, fSubNodeItems, fIsSelected, wireColor);
+        UpdateVisibilityVisitor visitor(subSceneOverride, container, fSubNodeItems, outOfViewFrustum, fIsSelected, wireColor);
         visitor.setDontPrune(!fVisibilityValid);
         subSceneOverride.getGeometry()->accept(visitor);
         fVisibilityValid = true;
+
+        // Keep the visibility animation checks off so the visibility will be
+        // updated again when the geometry moves into the view frustum.
+        if (outOfViewFrustum) {
+            fVisibilityValid = false;
+        }
     }
 
     void updateWorldMatrix(SubSceneOverride&   subSceneOverride,
@@ -6021,7 +6040,20 @@ bool SubSceneOverride::requiresUpdate(const MSubSceneContainer& container,
         }
 
         SubSceneOverride* nonConstThis = const_cast<SubSceneOverride*>(this);
+        if (fOutOfViewFrustum != outOfViewFrustum) {
+            // Update the visibility of render items when the geometry moves
+            // into the view frustum or when it goes out of the view frustum.
+            nonConstThis->dirtyVisibility();
+        }
         nonConstThis->fOutOfViewFrustum        = outOfViewFrustum;
+        nonConstThis->fOutOfViewFrustumUpdated = false;
+    } else {
+        // Reset view frustum culling flags
+        SubSceneOverride* nonConstThis = const_cast<SubSceneOverride*>(this);
+        if (fOutOfViewFrustum) {
+            nonConstThis->dirtyVisibility();
+        }
+        nonConstThis->fOutOfViewFrustum        = false;
         nonConstThis->fOutOfViewFrustumUpdated = false;
     }
 
@@ -6154,6 +6186,12 @@ void SubSceneOverride::update(MSubSceneContainer&  container,
 
     // We have done update() when the shape is out of view frustum.
     if (fOutOfViewFrustum) {
+        // There is a situation that both the render items and the camera are
+        // animated and the render items are out-of-view-frustum for frames.
+        // We skip update() for performance so we don't have chances to update
+        // the matrix or geometry of the render item. We need to turn off the
+        // render items until the render items appear in the view frustum again.
+        // MRenderItem::enable(false) is called in updateVisibility() method.
         fOutOfViewFrustumUpdated = true;
     }
 }
@@ -6360,7 +6398,7 @@ void SubSceneOverride::updateVisibility(MHWRender::MSubSceneContainer&  containe
 
     // Update the visibility for all instances.
     BOOST_FOREACH (InstanceRenderItems::Ptr& instance, fInstanceRenderItems) {
-        instance->updateVisibility(*this, container);
+        instance->updateVisibility(*this, container, fOutOfViewFrustum);
     }
 }
 
