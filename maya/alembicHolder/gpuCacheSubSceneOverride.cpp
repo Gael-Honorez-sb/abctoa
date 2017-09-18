@@ -88,6 +88,10 @@
 
 namespace AlembicHolder {
 
+// There is an MHWRendere::M3dView and an ::M3dView class.
+// This typedef is needed to disambiguate.
+typedef ::M3dView M3dView;
+
 /*==============================================================================
 * CLASS ShadedModeColor
 *============================================================================*/
