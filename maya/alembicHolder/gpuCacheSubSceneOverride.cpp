@@ -56,6 +56,8 @@
 #include <maya/MUserData.h>
 
 
+#define kPluginId  "alembicHolder"
+
 //==============================================================================
 // Error checking
 //==============================================================================
@@ -442,15 +444,14 @@ public:
         const MBoundingBox&                          boundingBox
     )
     {
-        assert(indices);
-        if (!indices) return;
-
         assert(positions);
         if (!positions) return;
 
         // Unloaded render item! Just count the reference.
         if (!renderItem) {
-            acquireIndexBuffer(indices);
+            if (indices) {
+                acquireIndexBuffer(indices);
+            }
             acquireVertexBuffer(positions);
             if (normals) {
                 acquireVertexBuffer(normals);
@@ -475,10 +476,11 @@ public:
             buffers.addBuffer(sUVs, acquireVertexBuffer(uvs));
         }
 
+        // It the geometry does not require an index buffer, then use an empty one.
         subSceneOverride.setGeometryForRenderItem(
             *renderItem,
             buffers,
-            *acquireIndexBuffer(indices),
+            indices ? *acquireIndexBuffer(indices) : MIndexBuffer(MGeometry::kUnsignedInt32),
             &boundingBox
         );
     }
@@ -1071,6 +1073,16 @@ void WireframePostDrawCallback(MDrawContext& context,
     SetDashLinePattern(shader, Config::kLineStippleShortDashed);
 }
 
+MShaderInstance* getPointShaderInstance()
+{
+    MRenderer* renderer = MRenderer::theRenderer();
+    if (!renderer) return NULL;
+    const MShaderManager* shaderMgr = renderer->getShaderManager();
+    if (!shaderMgr) return NULL;
+
+    return shaderMgr->getStockShader(MShaderManager::k3dFatPointShader);
+}
+
 MShaderInstance* getWireShaderInstance()
 {
     MRenderer* renderer = MRenderer::theRenderer();
@@ -1318,6 +1330,38 @@ public:
     }
 
     typedef void (*Deleter)(MShaderInstance*);
+
+    ShaderInstancePtr newPointShader(Deleter deleter)
+    {
+        // Look for a cached shader.
+        MString key = "_reserved_point_shader_";
+        FragmentAndShaderTemplateCache::nth_index<0>::type::iterator it =
+            fFragmentCache.get<0>().find(key);
+
+        // Found in cache.
+        if (it != fFragmentCache.get<0>().end()) {
+            ShaderTemplatePtr templateShader = it->ptr.lock();
+            assert(templateShader);  // no staled pointer
+            return templateShader.newShaderInstance(deleter);
+        }
+
+        // Not found. Get a new shader.
+        ShaderTemplatePtr templateShader =
+            wrapShaderTemplate(getPointShaderInstance());
+        if (templateShader) {
+            // Insert into cache.
+            FragmentAndShaderTemplate entry;
+            entry.fragmentAndOutput = key;
+            entry.shader            = templateShader.get();
+            entry.ptr               = templateShader.getTemplate();
+            fFragmentCache.insert(entry);
+
+            return templateShader.newShaderInstance(deleter);
+        }
+
+        assert(0);
+        return ShaderInstancePtr();
+    }
 
     ShaderInstancePtr newWireShader(Deleter deleter)
     {
@@ -1840,6 +1884,45 @@ public:
         return sSingleton;
     }
 
+    ShaderInstancePtr getSharedPointShader()
+    {
+        // Not visible in view, so color is not relevant:
+        MColor color(1.0, 0.0, 1.0);
+
+        // Look for the cached MShaderInstance.
+        ColorAndShaderInstanceCache::nth_index<0>::type::iterator it =
+            fPointShaders.get<0>().find(color);
+
+        // Found in cache.
+        if (it != fPointShaders.get<0>().end()) {
+            boost::shared_ptr<MShaderInstance> shader = it->ptr.lock();
+            assert(shader);  // no staled pointer.
+            return ShaderInstancePtr(shader, it->source);
+        }
+
+        // Not found. Get a new MShaderInstance.
+        ShaderInstancePtr shader =
+            ShaderCache::getInstance().newPointShader(shaderInstanceDeleter);
+        if (shader) {
+            // Fat point color.
+            const float solidColor[4] = {color.r, color.g, color.b, 1.0f};
+            shader->setParameter("solidColor", solidColor);
+
+            // Insert into cache.
+            ColorAndShaderInstance entry;
+            entry.color  = color;
+            entry.shader = shader.get();
+            entry.ptr    = shader.getShader();
+            entry.source = shader.getTemplate();
+            fPointShaders.insert(entry);
+
+            return shader;
+        }
+
+        assert(0);
+        return ShaderInstancePtr();
+    }
+
     ShaderInstancePtr getSharedWireShader(const MColor& color)
     {
         // Look for the cached MShaderInstance.
@@ -2173,6 +2256,7 @@ private:
         if (!shader) return;
 
         // Remove the MShaderInstance* from the cache.
+        fPointShaders.get<1>().erase(shader);
         fWireShaders.get<1>().erase(shader);
         fWireShadersWithCB.get<1>().erase(shader);
         fBoundingBoxPlaceHolderShaders.get<1>().erase(shader);
@@ -2276,6 +2360,7 @@ private:
         >
     > MaterialAndShaderInstanceCache;
 
+    ColorAndShaderInstanceCache    fPointShaders;
     ColorAndShaderInstanceCache    fWireShaders;
     ColorAndShaderInstanceCache    fWireShadersWithCB;
     ColorAndShaderInstanceCache    fBoundingBoxPlaceHolderShaders;
@@ -2393,6 +2478,7 @@ public:
           fEnabled(true),
           fDrawMode((MGeometry::DrawMode)0),
           fDepthPriority(MRenderItem::sDormantFilledDepthPriority),
+          fIsPointSnapping(false),
           fExcludedFromPostEffects(true),
           fCastsShadows(false),
           fReceivesShadows(false)
@@ -2571,6 +2657,19 @@ public:
         }
     }
 
+    void setSnappingSelectionMask()
+    {
+        if (!fIsPointSnapping) {
+            if (fRenderItem) {
+                MSelectionMask pointsForGravityMask(MSelectionMask::kSelectPointsForGravity);
+                fRenderItem->setSelectionMask(pointsForGravityMask);
+            }
+            fIsPointSnapping = true;
+
+            notifyInstancingChange();
+        }
+    }
+
     void setDepthPriority(unsigned int depthPriority)
     {
         if (fDepthPriority != depthPriority) {
@@ -2706,6 +2805,13 @@ public:
         fRenderItem->castsShadows(fCastsShadows);
         fRenderItem->receivesShadows(fReceivesShadows);
         fRenderItem->setShader(fShader.get());
+        if (fIsPointSnapping) {
+            MSelectionMask pointsForGravityMask(MSelectionMask::kSelectPointsForGravity);
+            fRenderItem->setSelectionMask(pointsForGravityMask);
+        } else {
+            MSelectionMask gpuCacheMask(kPluginId);
+            fRenderItem->setSelectionMask(gpuCacheMask);
+        }
 
         // Restore buffers.
         BuffersCache::getInstance().updateBuffers(
@@ -2802,6 +2908,7 @@ private:
     MMatrix                                 fWorldMatrix;
     MGeometry::DrawMode                     fDrawMode;
     unsigned int                            fDepthPriority;
+    bool                                    fIsPointSnapping;
     bool                                    fExcludedFromPostEffects;
     bool                                    fCastsShadows;
     bool                                    fReceivesShadows;
@@ -4172,6 +4279,9 @@ public:
         // Bounding box place holder.
         updateBoundingBoxItems(subSceneOverride, container, subNodePrefix, wireColor);
 
+        // Snap points
+        updateSnappingItems(subSceneOverride, container, subNodePrefix);
+
         // Dormant Wireframe
         updateDormantWireItems(subSceneOverride, container, subNodePrefix, wireColor);
 
@@ -4201,6 +4311,7 @@ public:
         // Enable or disable render items.
         toggleBoundingBoxItem();
         updateBoundingBoxShader(wireColor);
+        toggleSnappingItem();
         toggleDormantWireItem();
         updateDormantWireShader(wireColor);
         toggleActiveWireItem();
@@ -4220,6 +4331,10 @@ public:
             const MMatrix worldMatrix =
                 UnitBoundingBox::boundingBoxMatrix(boundingBox) * matrix;
             fBoundingBoxItem->setWorldMatrix(worldMatrix);
+        }
+
+        if (fSnappingItem) {
+            fSnappingItem->setWorldMatrix(matrix);
         }
 
         if (fDormantWireItem) {
@@ -4254,6 +4369,7 @@ public:
                      sample->positions();
         // Enable or disable render items.
         toggleBoundingBoxItem();
+        toggleSnappingItem();
         toggleDormantWireItem();
         toggleActiveWireItem();
         toggleShadedItems();
@@ -4261,6 +4377,19 @@ public:
         if (!fValidPoly) {
             // Nothing to do. Render items are disabled.
             return;
+        }
+
+        if (fSnappingItem) {
+            // The snapping item is fully sequential and does not
+            // require an index buffer.
+            fSnappingItem->setBuffers(
+                subSceneOverride,
+                boost::shared_ptr<const IndexBuffer>(),
+                sample->positions(),
+                boost::shared_ptr<const VertexBuffer>(),
+                boost::shared_ptr<const VertexBuffer>(),
+                sample->boundingBox()
+            );
         }
 
         // Update the wireframe streams.
@@ -4458,6 +4587,49 @@ public:
             ShaderInstanceCache::getInstance().getSharedBoundingBoxPlaceHolderShader(wireColor);
         if (boundingBoxShader) {
             fBoundingBoxItem->setShader(boundingBoxShader);
+        }
+    }
+
+    void updateSnappingItems(SubSceneOverride&   subSceneOverride,
+                                MSubSceneContainer& container,
+                                const MString&      subNodePrefix)
+    {
+        if (fIsBoundingBoxPlaceHolder) {
+            // This shape is a bounding box place holder.
+            if (fSnappingItem) fSnappingItem->setEnabled(false);
+            return;
+        }
+
+        // Update snapping item.
+        if (!fSnappingItem) {
+            // Create the snapping render item.
+            const MString snappingItemName = subNodePrefix + ":snapping";
+            fSnappingItem.reset(new RenderItemWrapper(
+                snappingItemName,
+                MRenderItem::DecorationItem,
+                MGeometry::kPoints
+            ));
+            fSnappingItem->setDrawMode(MHWRender::MGeometry::kSelectionOnly);
+            fSnappingItem->setDepthPriority(MRenderItem::sSelectionDepthPriority);
+            fSnappingItem->setSnappingSelectionMask();
+
+            // Add to the container
+            fSnappingItem->addToContainer(container);
+        }
+
+        // Hardware instancing.
+        boost::shared_ptr<HardwareInstanceManager>& hwInstanceManager =
+            subSceneOverride.hardwareInstanceManager();
+        if (hwInstanceManager) {
+            hwInstanceManager->installHardwareInstanceData(fSnappingItem);
+        }
+
+        toggleSnappingItem();
+
+        // Snapping item is never displayed.
+        ShaderInstancePtr snappingShader = ShaderInstanceCache::getInstance().getSharedPointShader();
+        if (snappingShader) {
+            fSnappingItem->setShader(snappingShader);
         }
     }
 
@@ -4778,6 +4950,18 @@ public:
         }
     }
 
+    // Enable or disable snapping item.
+    void toggleSnappingItem()
+    {
+        if (fSnappingItem) {
+            if (fIsBoundingBoxPlaceHolder) {
+                fSnappingItem->setEnabled(false);
+            } else {
+                fSnappingItem->setEnabled(fVisibility && fValidPoly);
+            }
+        }
+    }
+
     // Enable or disable dormant wireframe item.
     void toggleDormantWireItem()
     {
@@ -4842,6 +5026,10 @@ public:
             fDormantWireItem->setEnabled(false);
         }
 
+        if (fSnappingItem) {
+            fSnappingItem->setEnabled(false);
+        }
+
         if (fBoundingBoxItem) {
             fBoundingBoxItem->setEnabled(false);
         }
@@ -4868,6 +5056,11 @@ public:
             fDormantWireItem.reset();
         }
 
+        if (fSnappingItem) {
+            fSnappingItem->removeFromContainer(container);
+            fSnappingItem.reset();
+        }
+
         if (fBoundingBoxItem) {
             fBoundingBoxItem->removeFromContainer(container);
             fBoundingBoxItem.reset();
@@ -4891,6 +5084,7 @@ private:
     RenderItemWrapper::Ptr               fBoundingBoxItem;
     RenderItemWrapper::Ptr               fActiveWireItem;
     RenderItemWrapper::Ptr               fDormantWireItem;
+    RenderItemWrapper::Ptr               fSnappingItem;
     std::vector<RenderItemWrapper::Ptr>  fShadedItems;
     std::vector<RenderItemWrapper::Ptr>  fTexturedItems;
 
