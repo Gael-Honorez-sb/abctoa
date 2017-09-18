@@ -97,15 +97,8 @@ public:
     virtual void postConstructor();
     virtual MStatus compute( const MPlug& plug, MDataBlock& data );
 
-    virtual bool getInternalValueInContext     (     const MPlug &      plug,
-            MDataHandle &      dataHandle,
-            MDGContext &      ctx
-        )     ;
-
-    virtual bool setInternalValueInContext     (     const MPlug &      plug,
-                MDataHandle &      dataHandle,
-                MDGContext &      ctx
-            )     ;
+    bool getInternalValueInContext(const MPlug& plug, MDataHandle& dataHandle, MDGContext& ctx) override;
+    bool setInternalValueInContext(const MPlug& plug, const MDataHandle& dataHandle, MDGContext& ctx) override;
 
     virtual bool isBounded() const;
     virtual MBoundingBox boundingBox()const ;

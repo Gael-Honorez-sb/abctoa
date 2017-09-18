@@ -873,7 +873,7 @@ bool nozAlembicHolder::getInternalValueInContext(const MPlug & plug, MDataHandle
     return MPxNode::getInternalValueInContext(plug, dataHandle, ctx);
 }
 
-bool nozAlembicHolder::setInternalValueInContext(const MPlug & plug, MDataHandle & dataHandle, MDGContext & ctx)
+bool nozAlembicHolder::setInternalValueInContext(const MPlug & plug, const MDataHandle & dataHandle, MDGContext & ctx)
 {
     if (plug == aTextureResolution) {
         short newRes = dataHandle.asShort();
