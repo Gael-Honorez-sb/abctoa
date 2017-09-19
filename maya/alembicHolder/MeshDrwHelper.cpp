@@ -294,9 +294,12 @@ void MeshDrwHelper::pushNormals()
 
     if(normals != NULL)
     {
+        const auto N = m_meshP->size();
         std::vector<MGLfloat> v;
+        v.reserve(3 * N);
         std::vector<MGLfloat> vflipped;
-        for ( size_t p = 0; p < m_meshP->size(); ++p )
+        vflipped.reserve(3 * N);
+        for ( size_t p = 0; p < N; ++p )
         {
             V3f normal = normals[p];
 
