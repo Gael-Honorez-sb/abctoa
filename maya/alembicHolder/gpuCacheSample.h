@@ -761,6 +761,10 @@ public:
     void setNormals(const boost::shared_ptr<VertexBuffer>& normals);
     void setUVs(const boost::shared_ptr<VertexBuffer>& uvs);
 
+    void setTexture(const MString& texturePath);
+    MString getTexturePath() const { return fTexture; }
+    bool isTextureLoaded() const;
+
     double timeInSeconds() const    { return fTimeInSeconds; }
 
     bool visibility() const { return fVisibility; }
@@ -848,6 +852,8 @@ private:
     // Optional attributes
     boost::shared_ptr<VertexBuffer>                     fNormals;
     boost::shared_ptr<VertexBuffer>                     fUVs;
+
+    MString                                             fTexture;
 
     // Flag that this sample is a bounding box place holder for the real geometry sample
     bool                                                fBoundingBoxPlaceHolder;

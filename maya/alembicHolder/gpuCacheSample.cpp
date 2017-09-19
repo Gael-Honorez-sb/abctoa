@@ -904,3 +904,25 @@ void ShapeSample::setUVs(
 }
 
 }
+
+void ShapeSample::setTexture(const MString& texturePath)
+{
+#ifndef _WINDOWS
+    if (texturePath != MString(""))
+    {
+        //MGlobal::displayInfo(MString("In linux, path was: ") + texturePath);
+        MString cmd = MString("dirmap -cd \"") + texturePath + MString("\"");
+        MString result;
+        MGlobal::executeCommand(cmd, result);
+        //MGlobal::displayInfo(result);
+        fTexture = result;
+        return;
+    }
+#endif
+    fTexture = texturePath;
+}
+
+bool ShapeSample::isTextureLoaded() const
+{
+    return false;
+}

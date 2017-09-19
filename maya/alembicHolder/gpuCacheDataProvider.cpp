@@ -15,6 +15,12 @@
 namespace AlembicHolder {
 namespace CacheReaderAlembicPrivate {
 
+namespace {
+    const std::string kArbGeomParamsName(".arbGeomParams");
+    const std::string kDiffuseColorParamName("diffuse_color_from_attr");
+    const std::string kTexturePathParamName("diffuse_texture_from_attr");
+} // unnamed namespace
+
 #define kPluginId "alembicHolder"
 #define kBadNormalsMsg MStringResourceId(kPluginId, "kBadNormalsMsg",\
                 "Bad normals. The number of normals does not match its scope.")
@@ -336,7 +342,8 @@ Triangulator::Triangulator(
     Alembic::AbcGeom::IPolyMeshSchema& abcMesh,
     const bool needUVs)
     : PolyDataProvider(abcMesh, needUVs),
-    fNormalsScope(Alembic::AbcGeom::kUnknownScope), fUVsScope(Alembic::AbcGeom::kUnknownScope)
+    fNormalsScope(Alembic::AbcGeom::kUnknownScope), fUVsScope(Alembic::AbcGeom::kUnknownScope),
+    fDiffuseColor(0.4, 0.4, 0.4, 1.0)
 {
     // polygon indices
     fFaceIndicesCache.init(abcMesh.getFaceIndicesProperty());
@@ -368,6 +375,40 @@ Triangulator::Triangulator(
                     fUVIndicesCache.init(UVs.getIndexProperty());
                 }
             }
+        }
+    }
+
+    // Get stored diffuse color and texture path if present.
+    // These are assumed to be constant in time.
+    const auto arbGeomParamsHeader = abcMesh.getPropertyHeader(kArbGeomParamsName);
+    if (arbGeomParamsHeader && arbGeomParamsHeader->isCompound()) {
+        const Alembic::Abc::ICompoundProperty arbGeomParamsProperty =
+            Alembic::Abc::ICompoundProperty(abcMesh.getPtr(), kArbGeomParamsName);
+
+        // Diffuse color.
+        Alembic::Abc::IC3fArrayProperty diffuseColorProperty;
+        try {
+            diffuseColorProperty = Alembic::Abc::IC3fArrayProperty(arbGeomParamsProperty.getPtr(), kDiffuseColorParamName);
+        } catch (Alembic::Util::Exception) {
+        }
+        const auto color_sample = diffuseColorProperty.getValue();
+        if (color_sample && color_sample->size() != 0) {
+            auto color = color_sample->get();
+            fDiffuseColor.r = color->x;
+            fDiffuseColor.g = color->y;
+            fDiffuseColor.b = color->z;
+            fDiffuseColor.a = 1.0f;
+        }
+
+        // Texture path.
+        Alembic::Abc::IStringArrayProperty texturePathProperty;
+        try {
+            texturePathProperty = Alembic::Abc::IStringArrayProperty(arbGeomParamsProperty.getPtr(), kTexturePathParamName);
+        } catch (Alembic::Util::Exception) {
+        }
+        const auto string_sample = texturePathProperty.getValue();
+        if (string_sample && string_sample->size() != 0) {
+            fTexturePath = MString(string_sample->get()->c_str());
         }
     }
 }
@@ -416,7 +457,7 @@ Triangulator::getSample(double seconds)
         triangleVertIndices,                               // triangle indices (1 group)
         VertexBuffer::createPositions(fMappedPositions),   // position
         getBoundingBox(),                                  // bounding box
-        Config::kDefaultGrayColor,                         // diffuse color
+        fDiffuseColor,                                     // diffuse color
         isVisible()
     );
 
@@ -429,6 +470,8 @@ Triangulator::getSample(double seconds)
         sample->setUVs(
             VertexBuffer::createUVs(fMappedUVs));
     }
+
+    sample->setTexture(fTexturePath);
 
     return sample;
 }

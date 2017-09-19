@@ -725,6 +725,10 @@ protected:
     ArrayPropertyCache<Alembic::Abc::IV2fArrayProperty>    fUVsCache;
     ArrayPropertyCache<Alembic::Abc::IUInt32ArrayProperty> fUVIndicesCache;
 
+    // Display properties.
+    MColor fDiffuseColor;
+    MString fTexturePath;
+
 private:
     template<size_t SIZE>
     boost::shared_ptr<ReadableArray<float> > convertMultiIndexedStream(
