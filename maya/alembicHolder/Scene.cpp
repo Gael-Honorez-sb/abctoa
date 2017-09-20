@@ -43,7 +43,7 @@
 #include <Alembic/AbcCoreFactory/IFactory.h>
 #include <Alembic/AbcMaterial/IMaterial.h>
 #include "boost/foreach.hpp"
-
+#include "boost/timer.hpp"
 //-*****************************************************************************
 
 namespace AlembicHolder {
@@ -53,7 +53,7 @@ namespace AlembicHolder {
 //-*****************************************************************************
 
 //-*****************************************************************************
-Scene::Scene( const std::string &abcFileName, const std::string &objectPath )
+Scene::Scene(const std::vector<std::string> &abcFileName, const std::string &objectPath )
   : m_fileName( abcFileName )
   , m_objectPath( objectPath )
   , m_minTime( ( chrono_t )FLT_MAX )
@@ -68,7 +68,7 @@ Scene::Scene( const std::string &abcFileName, const std::string &objectPath )
 
 	if (!m_archive.valid())
     {
-        std::cout << "[nozAlembicHolder] ERROR : Can't open file : " << abcFileName << std::endl;
+        //std::cout << "[nozAlembicHolder] ERROR : Can't open file : " << abcFileName << std::endl;
         throw AbcLoadError();
     }
 
@@ -87,7 +87,7 @@ Scene::Scene( const std::string &abcFileName, const std::string &objectPath )
 
 
     ABCA_ASSERT( m_drawable->valid(),
-                 "Invalid drawable for archive: " << abcFileName );
+                 "Invalid drawable for archive");
 
 
     m_minTime = m_drawable->getMinTime();
@@ -112,7 +112,7 @@ Scene::Scene( const std::string &abcFileName, const std::string &objectPath )
     m_bounds = m_drawable->getBounds();
 
 
-    std::cout << "[nozAlembicHolder] Opened archive: " << abcFileName << "|" << objectPath << std::endl;
+    //std::cout << "[nozAlembicHolder] Opened archive: " << abcFileName << "|" << objectPath << std::endl;
 
 }
 
@@ -121,7 +121,7 @@ void Scene::setTime( chrono_t iSeconds )
 {
     ABCA_ASSERT( m_archive && m_topObject &&
                  m_drawable && m_drawable->valid(),
-                 "Invalid Scene: " << m_fileName );
+                 "Invalid Scene ");
 
     if ( m_minTime <= m_maxTime && m_curtime != iSeconds)
     {
@@ -159,7 +159,7 @@ void Scene::draw( SceneState &s_state, std::string selection, chrono_t iSeconds,
 
    ABCA_ASSERT( m_archive && m_topObject &&
                  m_drawable && m_drawable->valid(),
-                 "Invalid Scene: " << m_fileName );
+                 "Invalid Scene" );
 
    // Check if the holder is still at the right frame.
    if (iSeconds != m_curtime)

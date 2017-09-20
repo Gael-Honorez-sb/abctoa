@@ -142,7 +142,7 @@ private:
     int fCacheVersion;
     int fAssignmentVersion;
 
-    static    MObject    aAbcFile;
+    static    MObject    aAbcFiles;
     static    MObject    aObjectPath;
     static    MObject    aBoundingExtended;
 //    static  MObject    aBooleanAttr; // example boolean attribute

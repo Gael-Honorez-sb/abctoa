@@ -84,7 +84,7 @@ NodeCache g_bboxCache;
 // The id is a 32bit value used to identify this type of node in the binary file format.
 MTypeId nozAlembicHolder::id(0x00114956);
 
-MObject nozAlembicHolder::aAbcFile;
+MObject nozAlembicHolder::aAbcFiles;
 MObject nozAlembicHolder::aObjectPath;
 MObject nozAlembicHolder::aSelectionPath;
 MObject nozAlembicHolder::aBoundingExtended;
@@ -247,10 +247,19 @@ void nozAlembicHolder::copyInternalData(MPxNode* srcNode) {
     CAlembicDatas* geom = alembicData();
 
     MFnDagNode fn(node.thisMObject());
-    MString abcfile;
-    MPlug plug = fn.findPlug(aAbcFile);
-    plug.getValue(abcfile);
-    abcfile = abcfile.expandFilePath();
+    MStringArray abcfiles;
+    MPlug plug = fn.findPlug(aAbcFiles);
+
+    std::vector<std::string> fileNames;
+
+    for (unsigned int i = 0; i <plug.numElements(); i++)
+    {
+        MPlug fileName = plug[i];
+        MString filename;
+        fileName.getValue(filename);
+        fileNames.push_back(filename.asChar());
+    }
+
     MString objectPath;
     plug = fn.findPlug(aObjectPath);
     plug.getValue(objectPath);
@@ -265,7 +274,7 @@ void nozAlembicHolder::copyInternalData(MPxNode* srcNode) {
 
     if(geom != NULL)
     {
-        geom->abcSceneManager.addScene(abcfile.asChar(), objectPath.asChar());
+        geom->abcSceneManager.addScene(fileNames, objectPath.asChar());
         geom->m_currscenekey = getSceneKey();
 		geom->m_currselectionkey = getSelectionKey();
         geom->m_bbextendedmode = extendedMode;
@@ -282,12 +291,13 @@ MStatus nozAlembicHolder::initialize() {
     MFnUnitAttribute uAttr;
     MStatus stat;
 
-    aAbcFile = tAttr.create("cacheFileName", "cfn", MFnStringData::kString, MObject::kNullObj);
+    aAbcFiles = tAttr.create("cacheFileNames", "cfn", MFnData::kString);
     tAttr.setWritable(true);
     tAttr.setReadable(true);
     tAttr.setHidden(false);
     tAttr.setStorable(true);
     tAttr.setKeyable(true);
+    tAttr.setArray(true);
 
     aObjectPath = tAttr.create("cacheGeomPath", "cmp", MFnStringData::kString);
     tAttr.setWritable(true);
@@ -473,7 +483,7 @@ MStatus nozAlembicHolder::initialize() {
 
     // Add the attributes we have created to the node
     //
-    addAttribute(aAbcFile);
+    addAttribute(aAbcFiles);
     addAttribute(aObjectPath);
     addAttribute(aSelectionPath);
     addAttribute(aBoundingExtended);
@@ -503,7 +513,7 @@ MStatus nozAlembicHolder::initialize() {
     addAttribute(aBoundMin);
     addAttribute(aBoundMax);
 
-    attributeAffects(aAbcFile, aUpdateCache);
+    attributeAffects(aAbcFiles, aUpdateCache);
     attributeAffects(aTime, aUpdateCache);
     attributeAffects(aTimeOffset, aUpdateCache);
 
@@ -559,21 +569,29 @@ std::string nozAlembicHolder::getSelectionKey() const {
 
 std::string nozAlembicHolder::getSceneKey() const {
     MFnDagNode fn(thisMObject());
-    MString abcfile;
-    MPlug plug = fn.findPlug(aAbcFile);
-    plug.getValue(abcfile);
 
-    MFileObject fileObject;
-    fileObject.setRawFullName(abcfile.expandFilePath());
-    fileObject.setResolveMethod(MFileObject::kInputFile);
-    abcfile = fileObject.resolvedFullName();
+    MPlug plug = fn.findPlug(aAbcFiles);
+    std::string key;
+    for (unsigned int i = 0; i <plug.numElements(); i++)
+    {
+        MPlug fileName = plug[i];
+        MString filename;
+        fileName.getValue(filename);
+        MFileObject fileObject;
+        fileObject.setRawFullName(filename.expandFilePath());
+        fileObject.setResolveMethod(MFileObject::kInputFile);
+        std::string abcFile = fileObject.resolvedFullName().asChar();
+        key += abcFile + "|";
+    }
 
     MString objectPath;
     plug = fn.findPlug(aObjectPath);
     plug.getValue(objectPath);
-    return std::string((abcfile + "|" + objectPath).asChar());
-}
 
+    key += std::string(objectPath.asChar());
+
+    return key;
+}
 MStatus nozAlembicHolder::compute(const MPlug& plug, MDataBlock& block)
 {
 	if (plug == aUpdateAssign)
@@ -777,11 +795,24 @@ MStatus nozAlembicHolder::compute(const MPlug& plug, MDataBlock& block)
             }
         }
 
-        MString file = block.inputValue(aAbcFile).asString();
-        MFileObject fileObject;
-        fileObject.setRawFullName(file.expandFilePath());
-        fileObject.setResolveMethod(MFileObject::kInputFile);
-        file = fileObject.resolvedFullName();
+        unsigned count = block.inputArrayValue(aAbcFiles).elementCount();;
+
+        MArrayDataHandle fileArrayHandle = block.inputArrayValue(aAbcFiles);
+
+        std::string key;
+        std::vector <std::string> files;
+        for (unsigned i = 0; i < count; i++)
+        {
+            fileArrayHandle.jumpToArrayElement(i);
+            MDataHandle InputElement = fileArrayHandle.inputValue(&status);
+
+            MFileObject fileObject;
+            fileObject.setRawFullName(InputElement.asString().expandFilePath());
+            fileObject.setResolveMethod(MFileObject::kInputFile);
+            std::string nameResolved = std::string(fileObject.resolvedFullName().asChar());
+            files.push_back(nameResolved);
+            key += nameResolved + "|";
+        }
 
         MString objectPath = block.inputValue(aObjectPath).asString();
         MString selectionPath = block.inputValue(aSelectionPath).asString();
@@ -801,9 +832,7 @@ MStatus nozAlembicHolder::compute(const MPlug& plug, MDataBlock& block)
             hasToReload = true;
         }
 
-        MString mkey = file + "|" + objectPath;
-
-        std::string key = mkey.asChar();
+        key += objectPath.asChar();
 
         if (fGeometry.m_currscenekey != key || hasToReload)
         {
@@ -823,7 +852,7 @@ MStatus nozAlembicHolder::compute(const MPlug& plug, MDataBlock& block)
 
 
                 fGeometry.m_currscenekey = "";
-                CAlembicDatas::abcSceneManager.addScene(file.asChar(), objectPath.asChar());
+                CAlembicDatas::abcSceneManager.addScene(files, objectPath.asChar());
                 fGeometry.m_currscenekey = key;
             }
 

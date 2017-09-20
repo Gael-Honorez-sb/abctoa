@@ -13,7 +13,7 @@
 //+
 
 #include "gpuCacheSample.h"
-#include <OpenEXR/IMathBox.h>
+#include <IMathBox.h>
 
 
 namespace AlembicHolder {
