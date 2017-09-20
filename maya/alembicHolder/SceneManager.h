@@ -83,7 +83,7 @@ class SceneManager
             }
         }
 
-        unsigned int hasKey(std::string key) { return m_scenes.count(key); }
+        bool hasKey(std::string key) { return m_scenes.count(key) > 0; }
 
     private:
         std::map<std::string, CountedScene> m_scenes;

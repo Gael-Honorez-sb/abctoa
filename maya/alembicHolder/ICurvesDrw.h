@@ -53,13 +53,15 @@ public:
 
     virtual ~ICurvesDrw();
 
-    virtual bool valid();
+    virtual bool valid() const;
 
     virtual void setTime( chrono_t iSeconds );
-    virtual Box3d getBounds();
+    virtual Box3d getBounds() const;
     virtual void updateData();
 
     virtual void draw( const DrawContext & iCtx );
+
+    virtual void accept(DrawableVisitor& visitor) const { visitor.visit(*this); }
 
 protected:
     ICurves m_curves;
@@ -68,13 +70,11 @@ protected:
 
 	double m_alpha;
 
-	std::map<chrono_t, CurvesDrwHelper> m_drwHelpers;
+	CurvesDrwHelper m_drwHelper;
 
 	Alembic::AbcCoreAbstract::index_t m_index, m_ceilIndex;
 
     bool m_needtoupdate;
-
-
 };
 
 } // End namespace AlembicHolder

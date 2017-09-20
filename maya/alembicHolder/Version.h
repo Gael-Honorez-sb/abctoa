@@ -22,5 +22,5 @@ License along with this library.*/
 #define ARCH_VERSION         H_TOSTRING(HOLDER_VERSION_NUM) 
 
 #ifndef MAYA_VERSION
-   #define MAYA_VERSION 2015
+   #define MAYA_VERSION 2017
 #endif

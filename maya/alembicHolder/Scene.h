@@ -41,6 +41,7 @@
 //#include "GLCamera.h"
 #include "Drawable.h"
 #include "parseJson.h"
+#include "gpuCacheMaterial.h"
 
 #include <maya/MAnimControl.h>
 
@@ -52,6 +53,8 @@ struct SceneState
 //    GLCamera cam;
     float pointSize;
 };
+
+struct AbcLoadError {};
 
 //-*****************************************************************************
 class Scene
@@ -94,6 +97,9 @@ public:
     // for infos
     int getNumTriangles() const;
 
+    DrawablePtr getDrawable() { return m_drawable; }
+    MaterialGraphMap::Ptr getMaterials() const { return m_materials; }
+
 protected:
     std::vector<std::string> m_fileName;
     std::string m_objectPath;
@@ -110,6 +116,9 @@ protected:
     Box3d m_bounds;
 
     DrawablePtr m_drawable;
+
+    AlembicHolder::MaterialGraphMap::Ptr m_materials;
+    void readMaterials(const IObject& topObject);
 };
 
 typedef std::shared_ptr<Scene> ScenePtr;

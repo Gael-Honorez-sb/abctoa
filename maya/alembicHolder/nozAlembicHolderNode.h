@@ -12,10 +12,10 @@ You should have received a copy of the GNU Lesser General Public
 License along with this library.*/
 
 
-
 #ifndef _nozAlembicHolderNode
 #define _nozAlembicHolderNode
 
+#include "Drawable.h"
 #include "Foundation.h"
 #include "Scene.h"
 #include "SceneManager.h"
@@ -34,7 +34,6 @@ License along with this library.*/
 #include <maya/MBoundingBox.h>
 #include <maya/MString.h>
 #include <maya/MStringArray.h>
-#include <maya/MFnStringArrayData.h>
 #include <maya/MIntArray.h>
 #include <maya/MDoubleArray.h>
 #include <maya/MFnStringData.h>
@@ -73,6 +72,22 @@ public:
 };
 
 
+struct MStringComp
+{
+    bool operator() (MString lhs, MString rhs) const
+    {
+        int res = strcmp(lhs.asChar(), rhs.asChar());
+        if (res < 0) {
+            return true;
+        }
+        else {
+            return false;
+        }
+        return strcmp(lhs.asChar(), rhs.asChar()) <= 0;
+    }
+};
+
+
 class nozAlembicHolder : public MPxSurfaceShape
 {
 public:
@@ -81,30 +96,19 @@ public:
 
     virtual void postConstructor();
     virtual MStatus compute( const MPlug& plug, MDataBlock& data );
-    void GetPlugData() const;
-//
-//    virtual bool getInternalValueInContext     (     const MPlug &      plug,
-//            MDataHandle &      dataHandle,
-//            MDGContext &      ctx
-//        )     ;
-//
-//    virtual bool setInternalValueInContext     (     const MPlug &      plug,
-//                MDataHandle &      dataHandle,
-//                MDGContext &      ctx
-//            )     ;
+
+    bool getInternalValueInContext(const MPlug& plug, MDataHandle& dataHandle, MDGContext& ctx) override;
+    bool setInternalValueInContext(const MPlug& plug, const MDataHandle& dataHandle, MDGContext& ctx) override;
 
     virtual bool isBounded() const;
     virtual MBoundingBox boundingBox()const ;
-
-    bool match(const MSelectionMask & mask,
-        const MObjectArray& componentList) const override;
-    MSelectionMask getShapeSelectionMask() const override;
-
+    int cacheVersion() const { return MPlug(thisMObject(), aUpdateCache).asInt(); }
+    int assignmentVersion() const { return MPlug(thisMObject(), aUpdateAssign).asInt(); }
     MStatus setDependentsDirty(MPlug const & inPlug, MPlugArray  & affectedPlugs);
 
     virtual void copyInternalData( MPxNode* srcNode );
 
-    void setHolderTime() const;
+    void setHolderTime();
 
     static  void*       creator();
     static  MStatus     initialize();
@@ -112,16 +116,33 @@ public:
     std::string getSceneKey() const;
     std::string getSelectionKey() const;
 
-    CAlembicDatas* alembicData() const;
+    CAlembicDatas* alembicData();
+    const CAlembicDatas* alembicData() const { return &fGeometry; }
+    AlembicHolder::DrawablePtr getGeometry() const;
+    AlembicHolder::MaterialGraphMap::Ptr getMaterial() const;
 
 
-    static const char* selectionMaskName;
 
 
+
+    MTime getTimeOffset() const { return MPlug(thisMObject(), aTimeOffset).asMTime(); }
+
+    typedef std::map<MString, MGLuint, MStringComp> TextureMap;
+    TextureMap* getTextureMap() { return &textureMap; }
+
+    typedef std::set<MString, MStringComp> TextureSet;
+    TextureSet* getOwnTextures() { return &ownTextures; }
+
+    short getTextRes() const { return textRes; }
 
 private:
-    CAlembicDatas *fGeometry;
-    static    MObject    aAbcFiles;
+    CAlembicDatas        fGeometry;
+    TextureMap           textureMap;
+    TextureSet           ownTextures;
+    int fCacheVersion;
+    int fAssignmentVersion;
+
+    static    MObject    aAbcFile;
     static    MObject    aObjectPath;
     static    MObject    aBoundingExtended;
 //    static  MObject    aBooleanAttr; // example boolean attribute
@@ -136,6 +157,7 @@ private:
 	static    MObject    aShadersNamespace;
 	static    MObject    aShadersAttribute;
 	static    MObject    aAbcShaders;
+	static    MObject	 aUvsArchive;
 	static    MObject	 aShadersAssignation;
 	static    MObject	 aAttributes;
 	static    MObject	 aDisplacementsAssignation;
@@ -153,44 +175,92 @@ private:
     static    MObject    aBoundMax;
     bool isConstant;
 
+    static MObject       aTextureResolution;
+    short textRes;
+
 public:
     static  MTypeId     id;
 
-private:
+protected:
     int dUpdate;
 	int dUpdateA;
 
 };
-// UI class    - defines the UI part of a shape node
-class CAlembicHolderUI: public MPxSurfaceShapeUI {
+
+class CAlembicHolderUI : public MPxSurfaceShapeUI {
 public:
-    CAlembicHolderUI();
-    virtual ~CAlembicHolderUI();
-    /*virtual void getDrawRequests(const MDrawInfo & info,
-            bool objectAndActiveOnly, MDrawRequestQueue & requests);
+
+    static void* creator();
+
+    CAlembicHolderUI ();
+    ~CAlembicHolderUI ();
+
+    virtual void getDrawRequests(const MDrawInfo & info,
+        bool objectAndActiveOnly,
+        MDrawRequestQueue & queue);
+
+    // Viewport 1.0 draw
     virtual void draw(const MDrawRequest & request, M3dView & view) const;
 
-    void drawBoundingBox( const MDrawRequest & request, M3dView & view ) const;
-    void drawingMeshes( std::string sceneKey, CAlembicDatas * cache, std::string selectionKey) const;
+    virtual bool snap(MSelectInfo &snapInfo) const;
+    virtual bool select(MSelectInfo &selectInfo, MSelectionList &selectionList,
+        MPointArray &worldSpaceSelectPts) const;
 
 
-    void getDrawRequestsWireFrame(MDrawRequest&, const MDrawInfo&);
-    void getDrawRequestsBoundingBox(MDrawRequest&, const MDrawInfo&);
-    void            getDrawRequestsShaded(      MDrawRequest&,
-                                              const MDrawInfo&,
-                                              MDrawRequestQueue&,
-                                              MDrawData& data );
+private:
+    // Prohibited and not implemented.
+    CAlembicHolderUI(const CAlembicHolderUI& obj);
+    const CAlembicHolderUI& operator=(const CAlembicHolderUI& obj);
 
-*/
-    
+    static MPoint getPointAtDepth(MSelectInfo &selectInfo, double depth);
 
-    static void * creator();
+    // Helper functions for the viewport 1.0 drawing purposes.
+    void drawBoundingBox(const MDrawRequest & request, M3dView & view) const;
+    void drawWireframe(const MDrawRequest & request, M3dView & view) const;
+    void drawShaded(const MDrawRequest & request, M3dView & view, bool depthOffset) const;
 
-}; // class CArnoldStandInShapeUI
+    // Draw Tokens
+    enum DrawToken {
+        kBoundingBox,
+        kDrawWireframe,
+        kDrawWireframeOnShaded,
+        kDrawSmoothShaded,
+        kDrawSmoothShadedDepthOffset
+    };
+};
 
 
+namespace AlembicHolder {
+
+///////////////////////////////////////////////////////////////////////////////
+//
+// DisplayPref
+//
+// Keeps track of the display preference.
+//
+////////////////////////////////////////////////////////////////////////////////
+
+class DisplayPref {
+public:
+    enum WireframeOnShadedMode {
+        kWireframeOnShadedFull,
+        kWireframeOnShadedReduced,
+        kWireframeOnShadedNone
+    };
+
+    static WireframeOnShadedMode wireframeOnShadedMode();
+
+    static MStatus initCallback();
+    static MStatus removeCallback();
+
+private:
+    static void displayPrefChanged(void*);
+
+    static WireframeOnShadedMode fsWireframeOnShadedMode;
+    static MCallbackId fsDisplayPrefChangedCallbackId;
+};
+
+} // namespace AlembicHolder
 
 
-#endif
-
-
+#endif // header guard

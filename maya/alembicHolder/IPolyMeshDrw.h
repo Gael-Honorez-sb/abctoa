@@ -37,6 +37,7 @@
 #ifndef _AlembicHolder_IPolyMeshDrw_h_
 #define _AlembicHolder_IPolyMeshDrw_h_
 
+#include "gpuCacheDataProvider.h"
 #include "Foundation.h"
 #include "IObjectDrw.h"
 #include "MeshDrwHelper.h"
@@ -53,22 +54,36 @@ public:
 
     virtual ~IPolyMeshDrw();
 
-    virtual bool valid();
+    virtual bool valid() const;
     virtual void setTime( chrono_t iSeconds );
     virtual void updateData();
-    virtual Box3d getBounds();
+    virtual Box3d getBounds() const;
+    virtual int getNumTriangles() const;
+
+    const IPolyMeshSchema::Sample& getSample() const { return m_samp; }
+
     virtual void draw( const DrawContext & iCtx );
-    virtual int getNumTriangles();
+
+    virtual void accept(DrawableVisitor& visitor) const { visitor.visit(*this); }
+
+    boost::shared_ptr<const AlembicHolder::ShapeSample> getSample(double seconds) const { return m_shapeSample; }
+    const std::vector<MString>& getMaterialAssignments() const { return m_materialAssignments; }
 
 protected:
     IPolyMesh m_polyMesh;
     IPolyMeshSchema::Sample m_samp;
     IN3fGeomParam::Sample m_normal_samp;
     IBox3dProperty m_boundsProp;
-    std::map<chrono_t, MeshDrwHelper> m_drwHelpers;
+    MeshDrwHelper m_drwHelper;
     bool m_needtoupdate;
     double m_alpha;
     Alembic::AbcCoreAbstract::index_t m_index, m_ceilIndex;
+
+    AlembicHolder::CacheReaderAlembicPrivate::Triangulator m_triangulator;
+    AlembicHolder::ShapeSample::CPtr m_shapeSample;
+    std::vector<MString> m_materialAssignments;
+
+    void updateSample(chrono_t iSeconds);
 };
 
 } // End namespace AlembicHolder

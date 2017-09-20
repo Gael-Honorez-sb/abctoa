@@ -13,7 +13,7 @@ License along with this library.*/
 
 
 #include "nozAlembicHolderNode.h"
-#include "alembicHolderOverride.h"
+#include "gpuCacheSubsceneOverride.h"
 #include "version.h"
 
 #include "cmds/ABCGetTags.h"
@@ -32,10 +32,8 @@ License along with this library.*/
 #define kPluginId  "alembicHolder"
 #define kSelectionMenuItemLabel MStringResourceId( kPluginId, "kSelectionMenuItemLabel", "Alembic Holder")
 #define kOutlinerMenuItemLabel MStringResourceId( kPluginId, "kOutlinerMenuItemLabel", "Alembic Holder")
-#define kDisplayFilterLabel MStringResourceId(kPluginId, "kDisplayFilterLabel", "Alembic Holder")
 
-
-MString    drawDbClassificationGeometry("drawdb/geometry/alembicHolder");
+MString    drawDbClassification("drawdb/subscene/alembicHolder");
 MString    drawRegistrantId("alembicHolder");
 
 #ifdef _WIN32
@@ -50,30 +48,24 @@ DLLEXPORT MStatus initializePlugin( MObject obj )
     MStatus   status;
     MFnPlugin plugin( obj, HOLDER_VENDOR, ARCH_VERSION, H_TOSTRING(MAYA_VERSION));
 
-    MString UserClassify = MString("cache:");
-    UserClassify += drawDbClassificationGeometry;
-
 
     status = plugin.registerShape( kPluginId,
                 nozAlembicHolder::id,
                 &nozAlembicHolder::creator,
                 &nozAlembicHolder::initialize,
                 &CAlembicHolderUI::creator,
-                &UserClassify);
+                &drawDbClassification);
 
     if (!status) {
         status.perror("registerNode");
         return status;
     }
 
-
-    MHWRender::MDrawRegistry::registerDrawOverrideCreator(
-        drawDbClassificationGeometry,
-        drawRegistrantId,
-        AlembicHolderOverride::Creator);
-
+    status = MHWRender::MDrawRegistry::registerSubSceneOverrideCreator(
+        drawDbClassification, drawRegistrantId, AlembicHolder::SubSceneOverride::creator
+    );
     if (!status) {
-        status.perror("registerNodeDrawOverride");
+        status.perror("registerSubSceneOverride");
         return status;
     }
 
@@ -117,20 +109,14 @@ DLLEXPORT MStatus initializePlugin( MObject obj )
             return status;
         }
 
-        // Register plugin display filter.
-        // The filter is registered in both interactive and match mode (Hardware 2.0)
-        MString displayFilterLabel = MStringResource::getString(kDisplayFilterLabel, status);
-        plugin.registerDisplayFilter("alembicHolderDisplayFilter",
-            displayFilterLabel,
-            drawDbClassificationGeometry);
 
 
-        /*status = MGlobal::executePythonCommandOnIdle(MString("import alembicHolder.cmds.registerAlembicHolder;alembicHolder.cmds.registerAlembicHolder.registerAlembicHolder()"), false);
+        status = MGlobal::executePythonCommandOnIdle(MString("import alembicHolder.cmds.registerAlembicHolder;alembicHolder.cmds.registerAlembicHolder.registerAlembicHolder()"), false);
         if (!status) 
 		{
             status.perror("registerMenu");
             return status;
-        }*/
+        }
     }
 
     return status;
@@ -141,11 +127,11 @@ DLLEXPORT MStatus uninitializePlugin( MObject obj)
     MStatus   status;
     MFnPlugin plugin( obj );
 
-    status = MHWRender::MDrawRegistry::deregisterDrawOverrideCreator(
-        drawDbClassificationGeometry,
+    status = MHWRender::MDrawRegistry::deregisterSubSceneOverrideCreator(
+        drawDbClassification,
         drawRegistrantId);
     if (!status) {
-        status.perror("deregisterDrawOverrideCreator");
+        status.perror("deregisterSubSceneOverrideCreator");
         return status;
     }
 
@@ -184,13 +170,12 @@ DLLEXPORT MStatus uninitializePlugin( MObject obj)
             return MS::kFailure;
         }
 
-        plugin.deregisterDisplayFilter("alembicHolderDisplayFilter");
 
-        /*status = MGlobal::executePythonCommandOnIdle(MString("import alembicHolder.cmds.unregisterAlembicHolder;alembicHolder.cmds.unregisterAlembicHolder.unregisterAlembicHolder()"), false);
+        status = MGlobal::executePythonCommandOnIdle(MString("import alembicHolder.cmds.unregisterAlembicHolder;alembicHolder.cmds.unregisterAlembicHolder.unregisterAlembicHolder()"), false);
         if (!status) {
             status.perror("unregisterMenu");
             return status;
-        }*/
+        }
     }
 
     return status;

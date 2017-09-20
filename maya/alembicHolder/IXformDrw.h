@@ -40,6 +40,9 @@
 #include "Foundation.h"
 #include "IObjectDrw.h"
 
+#include <maya/MBoundingBox.h>
+#include <maya/MMatrix.h>
+
 namespace AlembicHolder {
 
 //-*****************************************************************************
@@ -54,17 +57,33 @@ public:
 
     virtual ~IXformDrw();
 
-    virtual bool valid();
-
+    virtual bool valid() const;
     virtual void setTime( chrono_t iSeconds );
+    virtual Box3d getBounds() const;
+    virtual int getNumTriangles() const;
 
-	virtual Box3d getBounds();
     virtual void draw( const DrawContext & iCtx );
 
-    virtual int getNumTriangles();
+    virtual void accept(DrawableVisitor& visitor) const { visitor.visit(*this); }
+
+    const IXform& getXform() const { return m_xform; }
+    const MMatrix getMMatrix() const { return MMatrix(m_localToParent.x); }
+    bool isReflection() const { return m_is_reflection; }
+
+    /*
+    boost::shared_ptr<AlembicHolder::XformSample> getSample(double seconds) const {
+        return AlembicHolder::XformSample::create(
+            seconds,
+            MMatrix(m_localToParent),
+            getBoundsMaya(),
+            isVisible()
+        );
+    }
+    */
 
 protected:
     IXform m_xform;
+    bool m_is_reflection;
     M44d m_localToParent;
 };
 

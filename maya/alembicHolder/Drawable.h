@@ -42,6 +42,26 @@
 
 namespace AlembicHolder {
 
+class IXformDrw;
+class IPolyMeshDrw;
+class IPointsDrw;
+class ICurvesDrw;
+
+// The visitor dispatches on the sub node data type, i.e. transform vs
+// shape. It is up to the visitor to recurse into the children of the
+// sub node. This allows the visitor to control the traversal of the
+// sub nodes. Note that this is somewhat different from the canonical
+// visitor design pattern.
+class DrawableVisitor {
+public:
+    virtual void visit(const IXformDrw& curves) { assert(false); }
+    virtual void visit(const IPolyMeshDrw& curves) { assert(false); }
+    virtual void visit(const IPointsDrw& curves) { assert(false); }
+    virtual void visit(const ICurvesDrw& curves) { assert(false); }
+
+    virtual ~DrawableVisitor() {}
+};
+
 //-*****************************************************************************
 //! What can a drawable do?
 //! Obviously, it can draw!
@@ -60,16 +80,16 @@ public:
 
     //! Get the min time.
     //! ...
-    virtual chrono_t getMinTime() = 0;
+    virtual chrono_t getMinTime() const = 0;
 
     //! Get the max time.
     //! ...
-    virtual chrono_t getMaxTime() = 0;
+    virtual chrono_t getMaxTime() const = 0;
 
     //! This function returns whether or not the
     //! drawable is in a valid state. As we read frames into
     //! the drawables, it's possible for some drawables to become invalid.
-    virtual bool valid() = 0;
+    virtual bool valid() const = 0;
 
     //! This functions sets the drawable and all its children
     //! to a new time, in seconds.
@@ -77,14 +97,16 @@ public:
 
     //! This function gets the bounding box at the
     //! currently set time.
-    virtual Box3d getBounds() = 0;
+    virtual Box3d getBounds() const = 0;
 
     // This function return the number of triangles in the scene
-    virtual int getNumTriangles() = 0;
+    virtual int getNumTriangles() const = 0;
 
     //! Draw the object (and its children) at the current frame.
     //! ...
     virtual void draw( const DrawContext & iCtx ) = 0;
+
+    virtual void accept(DrawableVisitor& visitor) const = 0;
 };
 
 //-*****************************************************************************

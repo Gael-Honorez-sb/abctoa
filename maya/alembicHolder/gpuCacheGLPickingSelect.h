@@ -13,6 +13,7 @@
 //+
 
 #include "gpuCacheSelect.h"
+#include "Drawable.h"
 
 #include <maya/MSelectInfo.h>
 #include "nozAlembicHolderNode.h"
@@ -44,6 +45,9 @@ public:
     virtual void processTriangles(CAlembicDatas* geom,
                                     std::string scenekey,
                                   size_t numTriangles);
+
+    virtual void processBoundingBox(const AlembicHolder::DrawablePtr& rootNode,
+                                    double seconds);
     
     virtual void end();
     virtual bool isSelected() const;

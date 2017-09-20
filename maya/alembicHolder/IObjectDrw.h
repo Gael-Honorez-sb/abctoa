@@ -40,6 +40,7 @@
 //#include "Foundation.h"
 #include "Drawable.h"
 #include <maya/MAnimControl.h>
+#include <maya/MBoundingBox.h>
 #include "cmds/ArchiveHelper.h"
 
 namespace AlembicHolder {
@@ -56,18 +57,34 @@ public:
 
     virtual ~IObjectDrw();
 
-    virtual chrono_t getMinTime();
-    virtual chrono_t getMaxTime();
+    virtual chrono_t getMinTime() const;
+    virtual chrono_t getMaxTime() const;
 
-    virtual bool valid();
+    virtual bool valid() const;
 
     virtual void setTime( chrono_t iSeconds );
 
-    virtual Box3d getBounds();
+    virtual Box3d getBounds() const;
+    MBoundingBox getBoundsMaya() const
+    {
+        const auto toMPoint = [](const Imath::V3d& v) { return MPoint(v.x, v.y, v.z); };
+        const auto& bounds = getBounds();
+        return MBoundingBox(toMPoint(bounds.min), toMPoint(bounds.max));
+    }
 
-    virtual int getNumTriangles();
+    virtual int getNumTriangles() const;
 
     virtual void draw( const DrawContext & iCtx );
+
+    void accept(DrawableVisitor& visitor) const override
+    {
+        for (auto& child : m_children)
+            child->accept(visitor);
+    }
+
+    const DrawablePtrVec& getChildren() const { return m_children; }
+    const IObject& getIObject() const { return m_object; }
+    bool isVisible() const { return m_visible; }
 
 protected:
     IObject m_object;
@@ -84,7 +101,7 @@ protected:
     DrawablePtrVec m_children;
     IBox3dProperty m_boundsProp;
     ISampleSelector m_ss;
-    std::map<double,Box3d> m_bounds;
+    Box3d m_bounds;
 };
 
 } // End namespace AlembicHolder

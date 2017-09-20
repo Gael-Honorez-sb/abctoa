@@ -64,6 +64,8 @@ public:
                                     std::string sceneKey,
                                   size_t numTriangles);
     
+    virtual void processBoundingBox(const AlembicHolder::DrawablePtr& rootNode, double seconds) { assert(0); }
+
     virtual void end();
     virtual bool isSelected() const;
     virtual float minZ() const;
