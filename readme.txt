@@ -1,5 +1,5 @@
 #-------------------------------------------------------------------------------
-# Copyright (c) 2014, Gaël Honorez, All rights reserved.
+# Copyright (c) 2017, Gaël Honorez, All rights reserved.
 # This library is free software; you can redistribute it and/or
 # modify it under the terms of the GNU Lesser General Public
 # License as published by the Free Software Foundation; either
@@ -19,15 +19,13 @@ This is the source code for the Maya Alembic Holder plugin & scripts.
 
 Pre-requisites are :
 
-- Maya > 2013
-- For maya 2013 only : PySide for maya (ie. http://3devartist.blogspot.com.tr/2012/11/pyside-113-for-autodesk-maya-2013-x64.html).
+- Maya >= 2017
+
 - Alembic libraries 
-- Arnold > 4.2.x.x
-- MtoA > 1.x.x.x
+- Arnold > 5.0.x.x
+- MtoA > 2.x.x.x
 - Python > 2.6
-- Boost > 1.4
-- pystring (https://code.google.com/p/pystring)
-- jsoncpp (https://github.com/open-source-parsers/jsoncpp)
+- Boost > 1.6
 
 If you want to contribute back to the project, please make a fork and create pull-Requests of your changes.
 
@@ -35,15 +33,16 @@ Contributors (in alphabetical order)
 -------------------------------------
 Kjelle Apers
 Chad Dombrova
+Zoltan Gilian
+Alf Kraus 
 Pal Mezei
+Ian Thompson
+
 
 Thanks to all testers for their feedback and bug reports !
 
 Alembic Code:
-© 2009-2013 Lucasfilm Entertainment Company Ltd. or Lucasfilm Ltd.
-© 2009-2013 Sony Pictures Imageworks Inc.  All rights reserved.
-
-Render Modules:
-Copyright (c) 2012-2013 DreamWorks Animation LLC
+© 2009-2017 Lucasfilm Entertainment Company Ltd. or Lucasfilm Ltd.
+© 2009-2017 Sony Pictures Imageworks Inc.  All rights reserved.
 
 Check license.txt for more informations.

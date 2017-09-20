@@ -1,29 +1,6 @@
 {
-    "box": {
+    "alembicProcedural": {
         "params": [
-            {
-                "name": "min", 
-                "type": 8, 
-                "value": [
-                    -0.5, 
-                    -0.5, 
-                    -0.5
-                ]
-            }, 
-            {
-                "name": "max", 
-                "type": 8, 
-                "value": [
-                    0.5, 
-                    0.5, 
-                    0.5
-                ]
-            }, 
-            {
-                "name": "step_size", 
-                "type": 4, 
-                "value": 0.0
-            }, 
             {
                 "name": "visibility", 
                 "type": 0, 
@@ -58,6 +35,18 @@
                 "name": "matrix", 
                 "type": 13, 
                 "value": 0
+            }, 
+            {
+                "name": "transform_type", 
+                "type": 15, 
+                "value": {
+                    "default": 2, 
+                    "values": [
+                        "linear", 
+                        "rotate_about_origin", 
+                        "rotate_about_center"
+                    ]
+                }
             }, 
             {
                 "name": "shader", 
@@ -100,19 +89,386 @@
                 "value": 0
             }, 
             {
-                "name": "transform_time_samples", 
-                "type": 13, 
-                "value": 2
+                "name": "motion_start", 
+                "type": 4, 
+                "value": 0.0
             }, 
             {
-                "name": "deform_time_samples", 
-                "type": 13, 
-                "value": 2
+                "name": "motion_end", 
+                "type": 4, 
+                "value": 1.0
             }, 
             {
                 "name": "id", 
-                "type": 1, 
+                "type": 2, 
                 "value": 0
+            }, 
+            {
+                "name": "override_nodes", 
+                "type": 3, 
+                "value": false
+            }, 
+            {
+                "name": "fileNames", 
+                "type": 13, 
+                "value": 0
+            }, 
+            {
+                "name": "objectPath", 
+                "type": 10, 
+                "value": "/"
+            }, 
+            {
+                "name": "namePrefix", 
+                "type": 10, 
+                "value": ""
+            }, 
+            {
+                "name": "frame", 
+                "type": 4, 
+                "value": 0.0
+            }, 
+            {
+                "name": "fps", 
+                "type": 4, 
+                "value": 25.0
+            }, 
+            {
+                "name": "jsonFile", 
+                "type": 10, 
+                "value": ""
+            }, 
+            {
+                "name": "secondaryJsonFile", 
+                "type": 10, 
+                "value": ""
+            }, 
+            {
+                "name": "shadersNamespace", 
+                "type": 10, 
+                "value": ""
+            }, 
+            {
+                "name": "shadersAttribute", 
+                "type": 10, 
+                "value": ""
+            }, 
+            {
+                "name": "abcShaders", 
+                "type": 10, 
+                "value": ""
+            }, 
+            {
+                "name": "shadersAssignation", 
+                "type": 10, 
+                "value": ""
+            }, 
+            {
+                "name": "attributes", 
+                "type": 10, 
+                "value": ""
+            }, 
+            {
+                "name": "displacementsAssignation", 
+                "type": 10, 
+                "value": ""
+            }, 
+            {
+                "name": "layersOverride", 
+                "type": 10, 
+                "value": ""
+            }, 
+            {
+                "name": "instancerArchive", 
+                "type": 10, 
+                "value": ""
+            }, 
+            {
+                "name": "skipJsonFile", 
+                "type": 3, 
+                "value": false
+            }, 
+            {
+                "name": "skipShaders", 
+                "type": 3, 
+                "value": false
+            }, 
+            {
+                "name": "skipAttributes", 
+                "type": 3, 
+                "value": false
+            }, 
+            {
+                "name": "skipLayers", 
+                "type": 3, 
+                "value": false
+            }, 
+            {
+                "name": "skipDisplacements", 
+                "type": 3, 
+                "value": false
+            }, 
+            {
+                "name": "name", 
+                "type": 10, 
+                "value": ""
+            }
+        ], 
+        "type": "shape"
+    }, 
+    "bakerPrepare": {
+        "params": [
+            {
+                "name": "visibility", 
+                "type": 0, 
+                "value": 255
+            }, 
+            {
+                "name": "sidedness", 
+                "type": 0, 
+                "value": 255
+            }, 
+            {
+                "name": "receive_shadows", 
+                "type": 3, 
+                "value": true
+            }, 
+            {
+                "name": "self_shadows", 
+                "type": 3, 
+                "value": true
+            }, 
+            {
+                "name": "invert_normals", 
+                "type": 3, 
+                "value": false
+            }, 
+            {
+                "name": "ray_bias", 
+                "type": 4, 
+                "value": 9.999999974752427e-07
+            }, 
+            {
+                "name": "matrix", 
+                "type": 13, 
+                "value": 0
+            }, 
+            {
+                "name": "transform_type", 
+                "type": 15, 
+                "value": {
+                    "default": 2, 
+                    "values": [
+                        "linear", 
+                        "rotate_about_origin", 
+                        "rotate_about_center"
+                    ]
+                }
+            }, 
+            {
+                "name": "shader", 
+                "type": 13, 
+                "value": 0
+            }, 
+            {
+                "name": "opaque", 
+                "type": 3, 
+                "value": true
+            }, 
+            {
+                "name": "matte", 
+                "type": 3, 
+                "value": false
+            }, 
+            {
+                "name": "use_light_group", 
+                "type": 3, 
+                "value": false
+            }, 
+            {
+                "name": "light_group", 
+                "type": 13, 
+                "value": 0
+            }, 
+            {
+                "name": "use_shadow_group", 
+                "type": 3, 
+                "value": false
+            }, 
+            {
+                "name": "shadow_group", 
+                "type": 13, 
+                "value": 0
+            }, 
+            {
+                "name": "trace_sets", 
+                "type": 13, 
+                "value": 0
+            }, 
+            {
+                "name": "motion_start", 
+                "type": 4, 
+                "value": 0.0
+            }, 
+            {
+                "name": "motion_end", 
+                "type": 4, 
+                "value": 1.0
+            }, 
+            {
+                "name": "id", 
+                "type": 2, 
+                "value": 0
+            }, 
+            {
+                "name": "override_nodes", 
+                "type": 3, 
+                "value": false
+            }, 
+            {
+                "name": "data", 
+                "type": 10, 
+                "value": ""
+            }, 
+            {
+                "name": "name", 
+                "type": 10, 
+                "value": ""
+            }
+        ], 
+        "type": "shape"
+    }, 
+    "box": {
+        "params": [
+            {
+                "name": "visibility", 
+                "type": 0, 
+                "value": 255
+            }, 
+            {
+                "name": "sidedness", 
+                "type": 0, 
+                "value": 255
+            }, 
+            {
+                "name": "receive_shadows", 
+                "type": 3, 
+                "value": true
+            }, 
+            {
+                "name": "self_shadows", 
+                "type": 3, 
+                "value": true
+            }, 
+            {
+                "name": "invert_normals", 
+                "type": 3, 
+                "value": false
+            }, 
+            {
+                "name": "ray_bias", 
+                "type": 4, 
+                "value": 9.999999974752427e-07
+            }, 
+            {
+                "name": "matrix", 
+                "type": 13, 
+                "value": 0
+            }, 
+            {
+                "name": "transform_type", 
+                "type": 15, 
+                "value": {
+                    "default": 2, 
+                    "values": [
+                        "linear", 
+                        "rotate_about_origin", 
+                        "rotate_about_center"
+                    ]
+                }
+            }, 
+            {
+                "name": "shader", 
+                "type": 13, 
+                "value": 0
+            }, 
+            {
+                "name": "opaque", 
+                "type": 3, 
+                "value": true
+            }, 
+            {
+                "name": "matte", 
+                "type": 3, 
+                "value": false
+            }, 
+            {
+                "name": "use_light_group", 
+                "type": 3, 
+                "value": false
+            }, 
+            {
+                "name": "light_group", 
+                "type": 13, 
+                "value": 0
+            }, 
+            {
+                "name": "use_shadow_group", 
+                "type": 3, 
+                "value": false
+            }, 
+            {
+                "name": "shadow_group", 
+                "type": 13, 
+                "value": 0
+            }, 
+            {
+                "name": "trace_sets", 
+                "type": 13, 
+                "value": 0
+            }, 
+            {
+                "name": "motion_start", 
+                "type": 4, 
+                "value": 0.0
+            }, 
+            {
+                "name": "motion_end", 
+                "type": 4, 
+                "value": 1.0
+            }, 
+            {
+                "name": "id", 
+                "type": 2, 
+                "value": 0
+            }, 
+            {
+                "name": "min", 
+                "type": 7, 
+                "value": [
+                    -0.5, 
+                    -0.5, 
+                    -0.5
+                ]
+            }, 
+            {
+                "name": "max", 
+                "type": 7, 
+                "value": [
+                    0.5, 
+                    0.5, 
+                    0.5
+                ]
+            }, 
+            {
+                "name": "step_size", 
+                "type": 4, 
+                "value": 0.0
+            }, 
+            {
+                "name": "volume_padding", 
+                "type": 4, 
+                "value": 0.0
             }, 
             {
                 "name": "name", 
@@ -125,8 +481,110 @@
     "cone": {
         "params": [
             {
+                "name": "visibility", 
+                "type": 0, 
+                "value": 255
+            }, 
+            {
+                "name": "sidedness", 
+                "type": 0, 
+                "value": 255
+            }, 
+            {
+                "name": "receive_shadows", 
+                "type": 3, 
+                "value": true
+            }, 
+            {
+                "name": "self_shadows", 
+                "type": 3, 
+                "value": true
+            }, 
+            {
+                "name": "invert_normals", 
+                "type": 3, 
+                "value": false
+            }, 
+            {
+                "name": "ray_bias", 
+                "type": 4, 
+                "value": 9.999999974752427e-07
+            }, 
+            {
+                "name": "matrix", 
+                "type": 13, 
+                "value": 0
+            }, 
+            {
+                "name": "transform_type", 
+                "type": 15, 
+                "value": {
+                    "default": 2, 
+                    "values": [
+                        "linear", 
+                        "rotate_about_origin", 
+                        "rotate_about_center"
+                    ]
+                }
+            }, 
+            {
+                "name": "shader", 
+                "type": 13, 
+                "value": 0
+            }, 
+            {
+                "name": "opaque", 
+                "type": 3, 
+                "value": true
+            }, 
+            {
+                "name": "matte", 
+                "type": 3, 
+                "value": false
+            }, 
+            {
+                "name": "use_light_group", 
+                "type": 3, 
+                "value": false
+            }, 
+            {
+                "name": "light_group", 
+                "type": 13, 
+                "value": 0
+            }, 
+            {
+                "name": "use_shadow_group", 
+                "type": 3, 
+                "value": false
+            }, 
+            {
+                "name": "shadow_group", 
+                "type": 13, 
+                "value": 0
+            }, 
+            {
+                "name": "trace_sets", 
+                "type": 13, 
+                "value": 0
+            }, 
+            {
+                "name": "motion_start", 
+                "type": 4, 
+                "value": 0.0
+            }, 
+            {
+                "name": "motion_end", 
+                "type": 4, 
+                "value": 1.0
+            }, 
+            {
+                "name": "id", 
+                "type": 2, 
+                "value": 0
+            }, 
+            {
                 "name": "bottom", 
-                "type": 8, 
+                "type": 7, 
                 "value": [
                     0.0, 
                     0.0, 
@@ -135,7 +593,7 @@
             }, 
             {
                 "name": "top", 
-                "type": 8, 
+                "type": 7, 
                 "value": [
                     0.0, 
                     0.0, 
@@ -153,6 +611,16 @@
                 "value": 0.0
             }, 
             {
+                "name": "name", 
+                "type": 10, 
+                "value": ""
+            }
+        ], 
+        "type": "shape"
+    }, 
+    "curves": {
+        "params": [
+            {
                 "name": "visibility", 
                 "type": 0, 
                 "value": 255
@@ -186,6 +654,18 @@
                 "name": "matrix", 
                 "type": 13, 
                 "value": 0
+            }, 
+            {
+                "name": "transform_type", 
+                "type": 15, 
+                "value": {
+                    "default": 2, 
+                    "values": [
+                        "linear", 
+                        "rotate_about_origin", 
+                        "rotate_about_center"
+                    ]
+                }
             }, 
             {
                 "name": "shader", 
@@ -228,30 +708,20 @@
                 "value": 0
             }, 
             {
-                "name": "transform_time_samples", 
-                "type": 13, 
-                "value": 2
+                "name": "motion_start", 
+                "type": 4, 
+                "value": 0.0
             }, 
             {
-                "name": "deform_time_samples", 
-                "type": 13, 
-                "value": 2
+                "name": "motion_end", 
+                "type": 4, 
+                "value": 1.0
             }, 
             {
                 "name": "id", 
-                "type": 1, 
+                "type": 2, 
                 "value": 0
             }, 
-            {
-                "name": "name", 
-                "type": 10, 
-                "value": ""
-            }
-        ], 
-        "type": "shape"
-    }, 
-    "curves": {
-        "params": [
             {
                 "name": "num_points", 
                 "type": 13, 
@@ -308,6 +778,21 @@
                 "value": 0
             }, 
             {
+                "name": "uvs", 
+                "type": 13, 
+                "value": 0
+            }, 
+            {
+                "name": "name", 
+                "type": 10, 
+                "value": ""
+            }
+        ], 
+        "type": "shape"
+    }, 
+    "cylinder": {
+        "params": [
+            {
                 "name": "visibility", 
                 "type": 0, 
                 "value": 255
@@ -341,6 +826,18 @@
                 "name": "matrix", 
                 "type": 13, 
                 "value": 0
+            }, 
+            {
+                "name": "transform_type", 
+                "type": 15, 
+                "value": {
+                    "default": 2, 
+                    "values": [
+                        "linear", 
+                        "rotate_about_origin", 
+                        "rotate_about_center"
+                    ]
+                }
             }, 
             {
                 "name": "shader", 
@@ -383,33 +880,23 @@
                 "value": 0
             }, 
             {
-                "name": "transform_time_samples", 
-                "type": 13, 
-                "value": 2
+                "name": "motion_start", 
+                "type": 4, 
+                "value": 0.0
             }, 
             {
-                "name": "deform_time_samples", 
-                "type": 13, 
-                "value": 2
+                "name": "motion_end", 
+                "type": 4, 
+                "value": 1.0
             }, 
             {
                 "name": "id", 
-                "type": 1, 
+                "type": 2, 
                 "value": 0
             }, 
             {
-                "name": "name", 
-                "type": 10, 
-                "value": ""
-            }
-        ], 
-        "type": "shape"
-    }, 
-    "cylinder": {
-        "params": [
-            {
                 "name": "bottom", 
-                "type": 8, 
+                "type": 7, 
                 "value": [
                     0.0, 
                     0.0, 
@@ -418,7 +905,7 @@
             }, 
             {
                 "name": "top", 
-                "type": 8, 
+                "type": 7, 
                 "value": [
                     0.0, 
                     0.0, 
@@ -441,96 +928,6 @@
                 "value": 0.5
             }, 
             {
-                "name": "visibility", 
-                "type": 0, 
-                "value": 255
-            }, 
-            {
-                "name": "sidedness", 
-                "type": 0, 
-                "value": 255
-            }, 
-            {
-                "name": "receive_shadows", 
-                "type": 3, 
-                "value": true
-            }, 
-            {
-                "name": "self_shadows", 
-                "type": 3, 
-                "value": true
-            }, 
-            {
-                "name": "invert_normals", 
-                "type": 3, 
-                "value": false
-            }, 
-            {
-                "name": "ray_bias", 
-                "type": 4, 
-                "value": 9.999999974752427e-07
-            }, 
-            {
-                "name": "matrix", 
-                "type": 13, 
-                "value": 0
-            }, 
-            {
-                "name": "shader", 
-                "type": 13, 
-                "value": 0
-            }, 
-            {
-                "name": "opaque", 
-                "type": 3, 
-                "value": true
-            }, 
-            {
-                "name": "matte", 
-                "type": 3, 
-                "value": false
-            }, 
-            {
-                "name": "use_light_group", 
-                "type": 3, 
-                "value": false
-            }, 
-            {
-                "name": "light_group", 
-                "type": 13, 
-                "value": 0
-            }, 
-            {
-                "name": "use_shadow_group", 
-                "type": 3, 
-                "value": false
-            }, 
-            {
-                "name": "shadow_group", 
-                "type": 13, 
-                "value": 0
-            }, 
-            {
-                "name": "trace_sets", 
-                "type": 13, 
-                "value": 0
-            }, 
-            {
-                "name": "transform_time_samples", 
-                "type": 13, 
-                "value": 2
-            }, 
-            {
-                "name": "deform_time_samples", 
-                "type": 13, 
-                "value": 2
-            }, 
-            {
-                "name": "id", 
-                "type": 1, 
-                "value": 0
-            }, 
-            {
                 "name": "name", 
                 "type": 10, 
                 "value": ""
@@ -540,32 +937,6 @@
     }, 
     "cylinder_light": {
         "params": [
-            {
-                "name": "bottom", 
-                "type": 13, 
-                "value": "0, -1, 0"
-            }, 
-            {
-                "name": "top", 
-                "type": 13, 
-                "value": "0, 1, 0"
-            }, 
-            {
-                "name": "radius", 
-                "type": 4, 
-                "value": 1.0
-            }, 
-            {
-                "name": "decay_type", 
-                "type": 15, 
-                "value": {
-                    "default": 1, 
-                    "values": [
-                        "constant", 
-                        "quadratic"
-                    ]
-                }
-            }, 
             {
                 "name": "matrix", 
                 "type": 13, 
@@ -625,21 +996,6 @@
                 "value": true
             }, 
             {
-                "name": "affect_diffuse", 
-                "type": 3, 
-                "value": true
-            }, 
-            {
-                "name": "affect_specular", 
-                "type": 3, 
-                "value": true
-            }, 
-            {
-                "name": "affect_volumetrics", 
-                "type": 3, 
-                "value": true
-            }, 
-            {
                 "name": "diffuse", 
                 "type": 4, 
                 "value": 1.0
@@ -665,24 +1021,49 @@
                 "value": 999
             }, 
             {
-                "name": "volume_density", 
-                "type": 12, 
-                "value": "None"
-            }, 
-            {
                 "name": "filters", 
                 "type": 13, 
                 "value": 0
             }, 
             {
-                "name": "time_samples", 
-                "type": 13, 
-                "value": 2
+                "name": "motion_start", 
+                "type": 4, 
+                "value": 0.0
+            }, 
+            {
+                "name": "motion_end", 
+                "type": 4, 
+                "value": 1.0
             }, 
             {
                 "name": "volume_samples", 
                 "type": 1, 
                 "value": 2
+            }, 
+            {
+                "name": "volume", 
+                "type": 4, 
+                "value": 1.0
+            }, 
+            {
+                "name": "aov", 
+                "type": 10, 
+                "value": "default"
+            }, 
+            {
+                "name": "bottom", 
+                "type": 13, 
+                "value": "0, -1, 0"
+            }, 
+            {
+                "name": "top", 
+                "type": 13, 
+                "value": "0, 1, 0"
+            }, 
+            {
+                "name": "radius", 
+                "type": 4, 
+                "value": 1.0
             }, 
             {
                 "name": "name", 
@@ -695,8 +1076,110 @@
     "disk": {
         "params": [
             {
+                "name": "visibility", 
+                "type": 0, 
+                "value": 255
+            }, 
+            {
+                "name": "sidedness", 
+                "type": 0, 
+                "value": 255
+            }, 
+            {
+                "name": "receive_shadows", 
+                "type": 3, 
+                "value": true
+            }, 
+            {
+                "name": "self_shadows", 
+                "type": 3, 
+                "value": true
+            }, 
+            {
+                "name": "invert_normals", 
+                "type": 3, 
+                "value": false
+            }, 
+            {
+                "name": "ray_bias", 
+                "type": 4, 
+                "value": 9.999999974752427e-07
+            }, 
+            {
+                "name": "matrix", 
+                "type": 13, 
+                "value": 0
+            }, 
+            {
+                "name": "transform_type", 
+                "type": 15, 
+                "value": {
+                    "default": 2, 
+                    "values": [
+                        "linear", 
+                        "rotate_about_origin", 
+                        "rotate_about_center"
+                    ]
+                }
+            }, 
+            {
+                "name": "shader", 
+                "type": 13, 
+                "value": 0
+            }, 
+            {
+                "name": "opaque", 
+                "type": 3, 
+                "value": true
+            }, 
+            {
+                "name": "matte", 
+                "type": 3, 
+                "value": false
+            }, 
+            {
+                "name": "use_light_group", 
+                "type": 3, 
+                "value": false
+            }, 
+            {
+                "name": "light_group", 
+                "type": 13, 
+                "value": 0
+            }, 
+            {
+                "name": "use_shadow_group", 
+                "type": 3, 
+                "value": false
+            }, 
+            {
+                "name": "shadow_group", 
+                "type": 13, 
+                "value": 0
+            }, 
+            {
+                "name": "trace_sets", 
+                "type": 13, 
+                "value": 0
+            }, 
+            {
+                "name": "motion_start", 
+                "type": 4, 
+                "value": 0.0
+            }, 
+            {
+                "name": "motion_end", 
+                "type": 4, 
+                "value": 1.0
+            }, 
+            {
+                "name": "id", 
+                "type": 2, 
+                "value": 0
+            }, 
+            {
                 "name": "center", 
-                "type": 8, 
+                "type": 7, 
                 "value": [
                     0.0, 
                     0.0, 
@@ -733,96 +1216,6 @@
                 "value": 0.5
             }, 
             {
-                "name": "visibility", 
-                "type": 0, 
-                "value": 255
-            }, 
-            {
-                "name": "sidedness", 
-                "type": 0, 
-                "value": 255
-            }, 
-            {
-                "name": "receive_shadows", 
-                "type": 3, 
-                "value": true
-            }, 
-            {
-                "name": "self_shadows", 
-                "type": 3, 
-                "value": true
-            }, 
-            {
-                "name": "invert_normals", 
-                "type": 3, 
-                "value": false
-            }, 
-            {
-                "name": "ray_bias", 
-                "type": 4, 
-                "value": 9.999999974752427e-07
-            }, 
-            {
-                "name": "matrix", 
-                "type": 13, 
-                "value": 0
-            }, 
-            {
-                "name": "shader", 
-                "type": 13, 
-                "value": 0
-            }, 
-            {
-                "name": "opaque", 
-                "type": 3, 
-                "value": true
-            }, 
-            {
-                "name": "matte", 
-                "type": 3, 
-                "value": false
-            }, 
-            {
-                "name": "use_light_group", 
-                "type": 3, 
-                "value": false
-            }, 
-            {
-                "name": "light_group", 
-                "type": 13, 
-                "value": 0
-            }, 
-            {
-                "name": "use_shadow_group", 
-                "type": 3, 
-                "value": false
-            }, 
-            {
-                "name": "shadow_group", 
-                "type": 13, 
-                "value": 0
-            }, 
-            {
-                "name": "trace_sets", 
-                "type": 13, 
-                "value": 0
-            }, 
-            {
-                "name": "transform_time_samples", 
-                "type": 13, 
-                "value": 2
-            }, 
-            {
-                "name": "deform_time_samples", 
-                "type": 13, 
-                "value": 2
-            }, 
-            {
-                "name": "id", 
-                "type": 1, 
-                "value": 0
-            }, 
-            {
                 "name": "name", 
                 "type": 10, 
                 "value": ""
@@ -832,6 +1225,119 @@
     }, 
     "disk_light": {
         "params": [
+            {
+                "name": "matrix", 
+                "type": 13, 
+                "value": ""
+            }, 
+            {
+                "name": "color", 
+                "type": 5, 
+                "value": [
+                    1.0, 
+                    1.0, 
+                    1.0
+                ]
+            }, 
+            {
+                "name": "intensity", 
+                "type": 4, 
+                "value": 1.0
+            }, 
+            {
+                "name": "exposure", 
+                "type": 4, 
+                "value": 0.0
+            }, 
+            {
+                "name": "cast_shadows", 
+                "type": 3, 
+                "value": true
+            }, 
+            {
+                "name": "cast_volumetric_shadows", 
+                "type": 3, 
+                "value": true
+            }, 
+            {
+                "name": "shadow_density", 
+                "type": 4, 
+                "value": 1.0
+            }, 
+            {
+                "name": "shadow_color", 
+                "type": 5, 
+                "value": [
+                    0.0, 
+                    0.0, 
+                    0.0
+                ]
+            }, 
+            {
+                "name": "samples", 
+                "type": 1, 
+                "value": 1
+            }, 
+            {
+                "name": "normalize", 
+                "type": 3, 
+                "value": true
+            }, 
+            {
+                "name": "diffuse", 
+                "type": 4, 
+                "value": 1.0
+            }, 
+            {
+                "name": "specular", 
+                "type": 4, 
+                "value": 1.0
+            }, 
+            {
+                "name": "sss", 
+                "type": 4, 
+                "value": 1.0
+            }, 
+            {
+                "name": "indirect", 
+                "type": 4, 
+                "value": 1.0
+            }, 
+            {
+                "name": "max_bounces", 
+                "type": 1, 
+                "value": 999
+            }, 
+            {
+                "name": "filters", 
+                "type": 13, 
+                "value": 0
+            }, 
+            {
+                "name": "motion_start", 
+                "type": 4, 
+                "value": 0.0
+            }, 
+            {
+                "name": "motion_end", 
+                "type": 4, 
+                "value": 1.0
+            }, 
+            {
+                "name": "volume_samples", 
+                "type": 1, 
+                "value": 2
+            }, 
+            {
+                "name": "volume", 
+                "type": 4, 
+                "value": 1.0
+            }, 
+            {
+                "name": "aov", 
+                "type": 10, 
+                "value": "default"
+            }, 
             {
                 "name": "position", 
                 "type": 13, 
@@ -848,16 +1354,20 @@
                 "value": 0.5
             }, 
             {
-                "name": "decay_type", 
-                "type": 15, 
-                "value": {
-                    "default": 1, 
-                    "values": [
-                        "constant", 
-                        "quadratic"
-                    ]
-                }
+                "name": "spread", 
+                "type": 4, 
+                "value": 1.0
             }, 
+            {
+                "name": "name", 
+                "type": 10, 
+                "value": ""
+            }
+        ], 
+        "type": "light"
+    }, 
+    "distant_light": {
+        "params": [
             {
                 "name": "matrix", 
                 "type": 13, 
@@ -917,21 +1427,6 @@
                 "value": true
             }, 
             {
-                "name": "affect_diffuse", 
-                "type": 3, 
-                "value": true
-            }, 
-            {
-                "name": "affect_specular", 
-                "type": 3, 
-                "value": true
-            }, 
-            {
-                "name": "affect_volumetrics", 
-                "type": 3, 
-                "value": true
-            }, 
-            {
                 "name": "diffuse", 
                 "type": 4, 
                 "value": 1.0
@@ -957,19 +1452,19 @@
                 "value": 999
             }, 
             {
-                "name": "volume_density", 
-                "type": 12, 
-                "value": "None"
-            }, 
-            {
                 "name": "filters", 
                 "type": 13, 
                 "value": 0
             }, 
             {
-                "name": "time_samples", 
-                "type": 13, 
-                "value": 2
+                "name": "motion_start", 
+                "type": 4, 
+                "value": 0.0
+            }, 
+            {
+                "name": "motion_end", 
+                "type": 4, 
+                "value": 1.0
             }, 
             {
                 "name": "volume_samples", 
@@ -977,15 +1472,15 @@
                 "value": 2
             }, 
             {
-                "name": "name", 
+                "name": "volume", 
+                "type": 4, 
+                "value": 1.0
+            }, 
+            {
+                "name": "aov", 
                 "type": 10, 
-                "value": ""
-            }
-        ], 
-        "type": "light"
-    }, 
-    "distant_light": {
-        "params": [
+                "value": "default"
+            }, 
             {
                 "name": "direction", 
                 "type": 7, 
@@ -1001,124 +1496,6 @@
                 "value": 0.0
             }, 
             {
-                "name": "matrix", 
-                "type": 13, 
-                "value": ""
-            }, 
-            {
-                "name": "color", 
-                "type": 5, 
-                "value": [
-                    1.0, 
-                    1.0, 
-                    1.0
-                ]
-            }, 
-            {
-                "name": "intensity", 
-                "type": 4, 
-                "value": 1.0
-            }, 
-            {
-                "name": "exposure", 
-                "type": 4, 
-                "value": 0.0
-            }, 
-            {
-                "name": "cast_shadows", 
-                "type": 3, 
-                "value": true
-            }, 
-            {
-                "name": "cast_volumetric_shadows", 
-                "type": 3, 
-                "value": true
-            }, 
-            {
-                "name": "shadow_density", 
-                "type": 4, 
-                "value": 1.0
-            }, 
-            {
-                "name": "shadow_color", 
-                "type": 5, 
-                "value": [
-                    0.0, 
-                    0.0, 
-                    0.0
-                ]
-            }, 
-            {
-                "name": "samples", 
-                "type": 1, 
-                "value": 1
-            }, 
-            {
-                "name": "normalize", 
-                "type": 3, 
-                "value": true
-            }, 
-            {
-                "name": "affect_diffuse", 
-                "type": 3, 
-                "value": true
-            }, 
-            {
-                "name": "affect_specular", 
-                "type": 3, 
-                "value": true
-            }, 
-            {
-                "name": "affect_volumetrics", 
-                "type": 3, 
-                "value": true
-            }, 
-            {
-                "name": "diffuse", 
-                "type": 4, 
-                "value": 1.0
-            }, 
-            {
-                "name": "specular", 
-                "type": 4, 
-                "value": 1.0
-            }, 
-            {
-                "name": "sss", 
-                "type": 4, 
-                "value": 1.0
-            }, 
-            {
-                "name": "indirect", 
-                "type": 4, 
-                "value": 1.0
-            }, 
-            {
-                "name": "max_bounces", 
-                "type": 1, 
-                "value": 999
-            }, 
-            {
-                "name": "volume_density", 
-                "type": 12, 
-                "value": "None"
-            }, 
-            {
-                "name": "filters", 
-                "type": 13, 
-                "value": 0
-            }, 
-            {
-                "name": "time_samples", 
-                "type": 13, 
-                "value": 2
-            }, 
-            {
-                "name": "volume_samples", 
-                "type": 1, 
-                "value": 2
-            }, 
-            {
                 "name": "name", 
                 "type": 10, 
                 "value": ""
@@ -1128,16 +1505,6 @@
     }, 
     "ginstance": {
         "params": [
-            {
-                "name": "node", 
-                "type": 12, 
-                "value": "None"
-            }, 
-            {
-                "name": "inherit_xform", 
-                "type": 3, 
-                "value": true
-            }, 
             {
                 "name": "visibility", 
                 "type": 0, 
@@ -1172,6 +1539,18 @@
                 "name": "matrix", 
                 "type": 13, 
                 "value": 0
+            }, 
+            {
+                "name": "transform_type", 
+                "type": 15, 
+                "value": {
+                    "default": 2, 
+                    "values": [
+                        "linear", 
+                        "rotate_about_origin", 
+                        "rotate_about_center"
+                    ]
+                }
             }, 
             {
                 "name": "shader", 
@@ -1214,19 +1593,29 @@
                 "value": 0
             }, 
             {
-                "name": "transform_time_samples", 
-                "type": 13, 
-                "value": 2
+                "name": "motion_start", 
+                "type": 4, 
+                "value": 0.0
             }, 
             {
-                "name": "deform_time_samples", 
-                "type": 13, 
-                "value": 2
+                "name": "motion_end", 
+                "type": 4, 
+                "value": 1.0
             }, 
             {
                 "name": "id", 
-                "type": 1, 
+                "type": 2, 
                 "value": 0
+            }, 
+            {
+                "name": "node", 
+                "type": 12, 
+                "value": "None"
+            }, 
+            {
+                "name": "inherit_xform", 
+                "type": 3, 
+                "value": true
             }, 
             {
                 "name": "name", 
@@ -1238,6 +1627,108 @@
     }, 
     "implicit": {
         "params": [
+            {
+                "name": "visibility", 
+                "type": 0, 
+                "value": 255
+            }, 
+            {
+                "name": "sidedness", 
+                "type": 0, 
+                "value": 255
+            }, 
+            {
+                "name": "receive_shadows", 
+                "type": 3, 
+                "value": true
+            }, 
+            {
+                "name": "self_shadows", 
+                "type": 3, 
+                "value": true
+            }, 
+            {
+                "name": "invert_normals", 
+                "type": 3, 
+                "value": false
+            }, 
+            {
+                "name": "ray_bias", 
+                "type": 4, 
+                "value": 9.999999974752427e-07
+            }, 
+            {
+                "name": "matrix", 
+                "type": 13, 
+                "value": 0
+            }, 
+            {
+                "name": "transform_type", 
+                "type": 15, 
+                "value": {
+                    "default": 2, 
+                    "values": [
+                        "linear", 
+                        "rotate_about_origin", 
+                        "rotate_about_center"
+                    ]
+                }
+            }, 
+            {
+                "name": "shader", 
+                "type": 13, 
+                "value": 0
+            }, 
+            {
+                "name": "opaque", 
+                "type": 3, 
+                "value": true
+            }, 
+            {
+                "name": "matte", 
+                "type": 3, 
+                "value": false
+            }, 
+            {
+                "name": "use_light_group", 
+                "type": 3, 
+                "value": false
+            }, 
+            {
+                "name": "light_group", 
+                "type": 13, 
+                "value": 0
+            }, 
+            {
+                "name": "use_shadow_group", 
+                "type": 3, 
+                "value": false
+            }, 
+            {
+                "name": "shadow_group", 
+                "type": 13, 
+                "value": 0
+            }, 
+            {
+                "name": "trace_sets", 
+                "type": 13, 
+                "value": 0
+            }, 
+            {
+                "name": "motion_start", 
+                "type": 4, 
+                "value": 0.0
+            }, 
+            {
+                "name": "motion_end", 
+                "type": 4, 
+                "value": 1.0
+            }, 
+            {
+                "name": "id", 
+                "type": 2, 
+                "value": 0
+            }, 
             {
                 "name": "field", 
                 "type": 12, 
@@ -1266,22 +1757,42 @@
             }, 
             {
                 "name": "min", 
-                "type": 8, 
+                "type": 7, 
                 "value": [
-                    -0.5, 
-                    -0.5, 
-                    -0.5
+                    0.0, 
+                    0.0, 
+                    0.0
                 ]
             }, 
             {
                 "name": "max", 
-                "type": 8, 
+                "type": 7, 
                 "value": [
-                    0.5, 
-                    0.5, 
-                    0.5
+                    0.0, 
+                    0.0, 
+                    0.0
                 ]
             }, 
+            {
+                "name": "step_size", 
+                "type": 4, 
+                "value": 0.0
+            }, 
+            {
+                "name": "field_channel", 
+                "type": 10, 
+                "value": "field"
+            }, 
+            {
+                "name": "name", 
+                "type": 10, 
+                "value": ""
+            }
+        ], 
+        "type": "shape"
+    }, 
+    "implicit_particle": {
+        "params": [
             {
                 "name": "visibility", 
                 "type": 0, 
@@ -1316,6 +1827,18 @@
                 "name": "matrix", 
                 "type": 13, 
                 "value": 0
+            }, 
+            {
+                "name": "transform_type", 
+                "type": 15, 
+                "value": {
+                    "default": 2, 
+                    "values": [
+                        "linear", 
+                        "rotate_about_origin", 
+                        "rotate_about_center"
+                    ]
+                }
             }, 
             {
                 "name": "shader", 
@@ -1358,19 +1881,98 @@
                 "value": 0
             }, 
             {
-                "name": "transform_time_samples", 
-                "type": 13, 
-                "value": 2
+                "name": "motion_start", 
+                "type": 4, 
+                "value": 0.0
             }, 
             {
-                "name": "deform_time_samples", 
-                "type": 13, 
-                "value": 2
+                "name": "motion_end", 
+                "type": 4, 
+                "value": 1.0
             }, 
             {
                 "name": "id", 
-                "type": 1, 
+                "type": 2, 
                 "value": 0
+            }, 
+            {
+                "name": "field", 
+                "type": 12, 
+                "value": "None"
+            }, 
+            {
+                "name": "threshold", 
+                "type": 4, 
+                "value": 0.0
+            }, 
+            {
+                "name": "samples", 
+                "type": 2, 
+                "value": 10
+            }, 
+            {
+                "name": "solver", 
+                "type": 15, 
+                "value": {
+                    "default": 0, 
+                    "values": [
+                        "uniform", 
+                        "levelset"
+                    ]
+                }
+            }, 
+            {
+                "name": "min", 
+                "type": 7, 
+                "value": [
+                    0.0, 
+                    0.0, 
+                    0.0
+                ]
+            }, 
+            {
+                "name": "max", 
+                "type": 7, 
+                "value": [
+                    0.0, 
+                    0.0, 
+                    0.0
+                ]
+            }, 
+            {
+                "name": "step_size", 
+                "type": 4, 
+                "value": 0.0
+            }, 
+            {
+                "name": "field_channel", 
+                "type": 10, 
+                "value": "field"
+            }, 
+            {
+                "name": "points", 
+                "type": 13, 
+                "value": 0
+            }, 
+            {
+                "name": "radius", 
+                "type": 13, 
+                "value": 0
+            }, 
+            {
+                "name": "smooth_step", 
+                "type": 3, 
+                "value": true
+            }, 
+            {
+                "name": "falloff_exponent", 
+                "type": 4, 
+                "value": 0.0
+            }, 
+            {
+                "name": "step_scale", 
+                "type": 4, 
+                "value": 1.0
             }, 
             {
                 "name": "name", 
@@ -1418,6 +2020,18 @@
                 "value": 0
             }, 
             {
+                "name": "transform_type", 
+                "type": 15, 
+                "value": {
+                    "default": 2, 
+                    "values": [
+                        "linear", 
+                        "rotate_about_origin", 
+                        "rotate_about_center"
+                    ]
+                }
+            }, 
+            {
                 "name": "shader", 
                 "type": 13, 
                 "value": 0
@@ -1458,18 +2072,18 @@
                 "value": 0
             }, 
             {
-                "name": "transform_time_samples", 
-                "type": 13, 
-                "value": 2
+                "name": "motion_start", 
+                "type": 4, 
+                "value": 0.0
             }, 
             {
-                "name": "deform_time_samples", 
-                "type": 13, 
-                "value": 2
+                "name": "motion_end", 
+                "type": 4, 
+                "value": 1.0
             }, 
             {
                 "name": "id", 
-                "type": 1, 
+                "type": 2, 
                 "value": 0
             }, 
             {
@@ -1482,22 +2096,6 @@
     }, 
     "mesh_light": {
         "params": [
-            {
-                "name": "mesh", 
-                "type": 12, 
-                "value": "None"
-            }, 
-            {
-                "name": "decay_type", 
-                "type": 15, 
-                "value": {
-                    "default": 1, 
-                    "values": [
-                        "constant", 
-                        "quadratic"
-                    ]
-                }
-            }, 
             {
                 "name": "matrix", 
                 "type": 13, 
@@ -1557,21 +2155,6 @@
                 "value": true
             }, 
             {
-                "name": "affect_diffuse", 
-                "type": 3, 
-                "value": true
-            }, 
-            {
-                "name": "affect_specular", 
-                "type": 3, 
-                "value": true
-            }, 
-            {
-                "name": "affect_volumetrics", 
-                "type": 3, 
-                "value": true
-            }, 
-            {
                 "name": "diffuse", 
                 "type": 4, 
                 "value": 1.0
@@ -1597,24 +2180,39 @@
                 "value": 999
             }, 
             {
-                "name": "volume_density", 
-                "type": 12, 
-                "value": "None"
-            }, 
-            {
                 "name": "filters", 
                 "type": 13, 
                 "value": 0
             }, 
             {
-                "name": "time_samples", 
-                "type": 13, 
-                "value": 2
+                "name": "motion_start", 
+                "type": 4, 
+                "value": 0.0
+            }, 
+            {
+                "name": "motion_end", 
+                "type": 4, 
+                "value": 1.0
             }, 
             {
                 "name": "volume_samples", 
                 "type": 1, 
                 "value": 2
+            }, 
+            {
+                "name": "volume", 
+                "type": 4, 
+                "value": 1.0
+            }, 
+            {
+                "name": "aov", 
+                "type": 10, 
+                "value": "default"
+            }, 
+            {
+                "name": "mesh", 
+                "type": 12, 
+                "value": "None"
             }, 
             {
                 "name": "name", 
@@ -1626,6 +2224,108 @@
     }, 
     "nurbs": {
         "params": [
+            {
+                "name": "visibility", 
+                "type": 0, 
+                "value": 255
+            }, 
+            {
+                "name": "sidedness", 
+                "type": 0, 
+                "value": 255
+            }, 
+            {
+                "name": "receive_shadows", 
+                "type": 3, 
+                "value": true
+            }, 
+            {
+                "name": "self_shadows", 
+                "type": 3, 
+                "value": true
+            }, 
+            {
+                "name": "invert_normals", 
+                "type": 3, 
+                "value": false
+            }, 
+            {
+                "name": "ray_bias", 
+                "type": 4, 
+                "value": 9.999999974752427e-07
+            }, 
+            {
+                "name": "matrix", 
+                "type": 13, 
+                "value": 0
+            }, 
+            {
+                "name": "transform_type", 
+                "type": 15, 
+                "value": {
+                    "default": 2, 
+                    "values": [
+                        "linear", 
+                        "rotate_about_origin", 
+                        "rotate_about_center"
+                    ]
+                }
+            }, 
+            {
+                "name": "shader", 
+                "type": 13, 
+                "value": 0
+            }, 
+            {
+                "name": "opaque", 
+                "type": 3, 
+                "value": true
+            }, 
+            {
+                "name": "matte", 
+                "type": 3, 
+                "value": false
+            }, 
+            {
+                "name": "use_light_group", 
+                "type": 3, 
+                "value": false
+            }, 
+            {
+                "name": "light_group", 
+                "type": 13, 
+                "value": 0
+            }, 
+            {
+                "name": "use_shadow_group", 
+                "type": 3, 
+                "value": false
+            }, 
+            {
+                "name": "shadow_group", 
+                "type": 13, 
+                "value": 0
+            }, 
+            {
+                "name": "trace_sets", 
+                "type": 13, 
+                "value": 0
+            }, 
+            {
+                "name": "motion_start", 
+                "type": 4, 
+                "value": 0.0
+            }, 
+            {
+                "name": "motion_end", 
+                "type": 4, 
+                "value": 1.0
+            }, 
+            {
+                "name": "id", 
+                "type": 2, 
+                "value": 0
+            }, 
             {
                 "name": "degree_u", 
                 "type": 1, 
@@ -1684,8 +2384,18 @@
             {
                 "name": "smoothing", 
                 "type": 3, 
-                "value": true
+                "value": false
             }, 
+            {
+                "name": "name", 
+                "type": 10, 
+                "value": ""
+            }
+        ], 
+        "type": "shape"
+    }, 
+    "particleInstancer": {
+        "params": [
             {
                 "name": "visibility", 
                 "type": 0, 
@@ -1720,6 +2430,18 @@
                 "name": "matrix", 
                 "type": 13, 
                 "value": 0
+            }, 
+            {
+                "name": "transform_type", 
+                "type": 15, 
+                "value": {
+                    "default": 2, 
+                    "values": [
+                        "linear", 
+                        "rotate_about_origin", 
+                        "rotate_about_center"
+                    ]
+                }
             }, 
             {
                 "name": "shader", 
@@ -1762,19 +2484,24 @@
                 "value": 0
             }, 
             {
-                "name": "transform_time_samples", 
-                "type": 13, 
-                "value": 2
+                "name": "motion_start", 
+                "type": 4, 
+                "value": 0.0
             }, 
             {
-                "name": "deform_time_samples", 
-                "type": 13, 
-                "value": 2
+                "name": "motion_end", 
+                "type": 4, 
+                "value": 1.0
             }, 
             {
                 "name": "id", 
-                "type": 1, 
+                "type": 2, 
                 "value": 0
+            }, 
+            {
+                "name": "override_nodes", 
+                "type": 3, 
+                "value": false
             }, 
             {
                 "name": "name", 
@@ -1786,11 +2513,6 @@
     }, 
     "photometric_light": {
         "params": [
-            {
-                "name": "filename", 
-                "type": 10, 
-                "value": ""
-            }, 
             {
                 "name": "matrix", 
                 "type": 13, 
@@ -1850,21 +2572,6 @@
                 "value": true
             }, 
             {
-                "name": "affect_diffuse", 
-                "type": 3, 
-                "value": true
-            }, 
-            {
-                "name": "affect_specular", 
-                "type": 3, 
-                "value": true
-            }, 
-            {
-                "name": "affect_volumetrics", 
-                "type": 3, 
-                "value": true
-            }, 
-            {
                 "name": "diffuse", 
                 "type": 4, 
                 "value": 1.0
@@ -1890,24 +2597,44 @@
                 "value": 999
             }, 
             {
-                "name": "volume_density", 
-                "type": 12, 
-                "value": "None"
-            }, 
-            {
                 "name": "filters", 
                 "type": 13, 
                 "value": 0
             }, 
             {
-                "name": "time_samples", 
-                "type": 13, 
-                "value": 2
+                "name": "motion_start", 
+                "type": 4, 
+                "value": 0.0
+            }, 
+            {
+                "name": "motion_end", 
+                "type": 4, 
+                "value": 1.0
             }, 
             {
                 "name": "volume_samples", 
                 "type": 1, 
                 "value": 2
+            }, 
+            {
+                "name": "volume", 
+                "type": 4, 
+                "value": 1.0
+            }, 
+            {
+                "name": "aov", 
+                "type": 10, 
+                "value": "default"
+            }, 
+            {
+                "name": "filename", 
+                "type": 10, 
+                "value": ""
+            }, 
+            {
+                "name": "radius", 
+                "type": 4, 
+                "value": 0.0
             }, 
             {
                 "name": "name", 
@@ -1920,8 +2647,110 @@
     "plane": {
         "params": [
             {
+                "name": "visibility", 
+                "type": 0, 
+                "value": 255
+            }, 
+            {
+                "name": "sidedness", 
+                "type": 0, 
+                "value": 255
+            }, 
+            {
+                "name": "receive_shadows", 
+                "type": 3, 
+                "value": true
+            }, 
+            {
+                "name": "self_shadows", 
+                "type": 3, 
+                "value": true
+            }, 
+            {
+                "name": "invert_normals", 
+                "type": 3, 
+                "value": false
+            }, 
+            {
+                "name": "ray_bias", 
+                "type": 4, 
+                "value": 9.999999974752427e-07
+            }, 
+            {
+                "name": "matrix", 
+                "type": 13, 
+                "value": 0
+            }, 
+            {
+                "name": "transform_type", 
+                "type": 15, 
+                "value": {
+                    "default": 2, 
+                    "values": [
+                        "linear", 
+                        "rotate_about_origin", 
+                        "rotate_about_center"
+                    ]
+                }
+            }, 
+            {
+                "name": "shader", 
+                "type": 13, 
+                "value": 0
+            }, 
+            {
+                "name": "opaque", 
+                "type": 3, 
+                "value": true
+            }, 
+            {
+                "name": "matte", 
+                "type": 3, 
+                "value": false
+            }, 
+            {
+                "name": "use_light_group", 
+                "type": 3, 
+                "value": false
+            }, 
+            {
+                "name": "light_group", 
+                "type": 13, 
+                "value": 0
+            }, 
+            {
+                "name": "use_shadow_group", 
+                "type": 3, 
+                "value": false
+            }, 
+            {
+                "name": "shadow_group", 
+                "type": 13, 
+                "value": 0
+            }, 
+            {
+                "name": "trace_sets", 
+                "type": 13, 
+                "value": 0
+            }, 
+            {
+                "name": "motion_start", 
+                "type": 4, 
+                "value": 0.0
+            }, 
+            {
+                "name": "motion_end", 
+                "type": 4, 
+                "value": 1.0
+            }, 
+            {
+                "name": "id", 
+                "type": 2, 
+                "value": 0
+            }, 
+            {
                 "name": "point", 
-                "type": 8, 
+                "type": 7, 
                 "value": [
                     0.0, 
                     0.0, 
@@ -1938,96 +2767,6 @@
                 ]
             }, 
             {
-                "name": "visibility", 
-                "type": 0, 
-                "value": 255
-            }, 
-            {
-                "name": "sidedness", 
-                "type": 0, 
-                "value": 255
-            }, 
-            {
-                "name": "receive_shadows", 
-                "type": 3, 
-                "value": true
-            }, 
-            {
-                "name": "self_shadows", 
-                "type": 3, 
-                "value": true
-            }, 
-            {
-                "name": "invert_normals", 
-                "type": 3, 
-                "value": false
-            }, 
-            {
-                "name": "ray_bias", 
-                "type": 4, 
-                "value": 9.999999974752427e-07
-            }, 
-            {
-                "name": "matrix", 
-                "type": 13, 
-                "value": 0
-            }, 
-            {
-                "name": "shader", 
-                "type": 13, 
-                "value": 0
-            }, 
-            {
-                "name": "opaque", 
-                "type": 3, 
-                "value": true
-            }, 
-            {
-                "name": "matte", 
-                "type": 3, 
-                "value": false
-            }, 
-            {
-                "name": "use_light_group", 
-                "type": 3, 
-                "value": false
-            }, 
-            {
-                "name": "light_group", 
-                "type": 13, 
-                "value": 0
-            }, 
-            {
-                "name": "use_shadow_group", 
-                "type": 3, 
-                "value": false
-            }, 
-            {
-                "name": "shadow_group", 
-                "type": 13, 
-                "value": 0
-            }, 
-            {
-                "name": "trace_sets", 
-                "type": 13, 
-                "value": 0
-            }, 
-            {
-                "name": "transform_time_samples", 
-                "type": 13, 
-                "value": 2
-            }, 
-            {
-                "name": "deform_time_samples", 
-                "type": 13, 
-                "value": 2
-            }, 
-            {
-                "name": "id", 
-                "type": 1, 
-                "value": 0
-            }, 
-            {
                 "name": "name", 
                 "type": 10, 
                 "value": ""
@@ -2037,27 +2776,6 @@
     }, 
     "point_light": {
         "params": [
-            {
-                "name": "position", 
-                "type": 13, 
-                "value": "0, 0, 0"
-            }, 
-            {
-                "name": "radius", 
-                "type": 4, 
-                "value": 0.0
-            }, 
-            {
-                "name": "decay_type", 
-                "type": 15, 
-                "value": {
-                    "default": 1, 
-                    "values": [
-                        "constant", 
-                        "quadratic"
-                    ]
-                }
-            }, 
             {
                 "name": "matrix", 
                 "type": 13, 
@@ -2117,21 +2835,6 @@
                 "value": true
             }, 
             {
-                "name": "affect_diffuse", 
-                "type": 3, 
-                "value": true
-            }, 
-            {
-                "name": "affect_specular", 
-                "type": 3, 
-                "value": true
-            }, 
-            {
-                "name": "affect_volumetrics", 
-                "type": 3, 
-                "value": true
-            }, 
-            {
                 "name": "diffuse", 
                 "type": 4, 
                 "value": 1.0
@@ -2157,24 +2860,44 @@
                 "value": 999
             }, 
             {
-                "name": "volume_density", 
-                "type": 12, 
-                "value": "None"
-            }, 
-            {
                 "name": "filters", 
                 "type": 13, 
                 "value": 0
             }, 
             {
-                "name": "time_samples", 
-                "type": 13, 
-                "value": 2
+                "name": "motion_start", 
+                "type": 4, 
+                "value": 0.0
+            }, 
+            {
+                "name": "motion_end", 
+                "type": 4, 
+                "value": 1.0
             }, 
             {
                 "name": "volume_samples", 
                 "type": 1, 
                 "value": 2
+            }, 
+            {
+                "name": "volume", 
+                "type": 4, 
+                "value": 1.0
+            }, 
+            {
+                "name": "aov", 
+                "type": 10, 
+                "value": "default"
+            }, 
+            {
+                "name": "position", 
+                "type": 13, 
+                "value": "0, 0, 0"
+            }, 
+            {
+                "name": "radius", 
+                "type": 4, 
+                "value": 0.0
             }, 
             {
                 "name": "name", 
@@ -2186,6 +2909,108 @@
     }, 
     "points": {
         "params": [
+            {
+                "name": "visibility", 
+                "type": 0, 
+                "value": 255
+            }, 
+            {
+                "name": "sidedness", 
+                "type": 0, 
+                "value": 255
+            }, 
+            {
+                "name": "receive_shadows", 
+                "type": 3, 
+                "value": true
+            }, 
+            {
+                "name": "self_shadows", 
+                "type": 3, 
+                "value": true
+            }, 
+            {
+                "name": "invert_normals", 
+                "type": 3, 
+                "value": false
+            }, 
+            {
+                "name": "ray_bias", 
+                "type": 4, 
+                "value": 9.999999974752427e-07
+            }, 
+            {
+                "name": "matrix", 
+                "type": 13, 
+                "value": 0
+            }, 
+            {
+                "name": "transform_type", 
+                "type": 15, 
+                "value": {
+                    "default": 2, 
+                    "values": [
+                        "linear", 
+                        "rotate_about_origin", 
+                        "rotate_about_center"
+                    ]
+                }
+            }, 
+            {
+                "name": "shader", 
+                "type": 13, 
+                "value": 0
+            }, 
+            {
+                "name": "opaque", 
+                "type": 3, 
+                "value": true
+            }, 
+            {
+                "name": "matte", 
+                "type": 3, 
+                "value": false
+            }, 
+            {
+                "name": "use_light_group", 
+                "type": 3, 
+                "value": false
+            }, 
+            {
+                "name": "light_group", 
+                "type": 13, 
+                "value": 0
+            }, 
+            {
+                "name": "use_shadow_group", 
+                "type": 3, 
+                "value": false
+            }, 
+            {
+                "name": "shadow_group", 
+                "type": 13, 
+                "value": 0
+            }, 
+            {
+                "name": "trace_sets", 
+                "type": 13, 
+                "value": 0
+            }, 
+            {
+                "name": "motion_start", 
+                "type": 4, 
+                "value": 0.0
+            }, 
+            {
+                "name": "motion_end", 
+                "type": 4, 
+                "value": 1.0
+            }, 
+            {
+                "name": "id", 
+                "type": 2, 
+                "value": 0
+            }, 
             {
                 "name": "points", 
                 "type": 13, 
@@ -2229,6 +3054,21 @@
                 "value": 0.0
             }, 
             {
+                "name": "volume_padding", 
+                "type": 4, 
+                "value": 0.0
+            }, 
+            {
+                "name": "name", 
+                "type": 10, 
+                "value": ""
+            }
+        ], 
+        "type": "shape"
+    }, 
+    "polymesh": {
+        "params": [
+            {
                 "name": "visibility", 
                 "type": 0, 
                 "value": 255
@@ -2262,6 +3102,18 @@
                 "name": "matrix", 
                 "type": 13, 
                 "value": 0
+            }, 
+            {
+                "name": "transform_type", 
+                "type": 15, 
+                "value": {
+                    "default": 2, 
+                    "values": [
+                        "linear", 
+                        "rotate_about_origin", 
+                        "rotate_about_center"
+                    ]
+                }
             }, 
             {
                 "name": "shader", 
@@ -2304,30 +3156,20 @@
                 "value": 0
             }, 
             {
-                "name": "transform_time_samples", 
-                "type": 13, 
-                "value": 2
+                "name": "motion_start", 
+                "type": 4, 
+                "value": 0.0
             }, 
             {
-                "name": "deform_time_samples", 
-                "type": 13, 
-                "value": 2
+                "name": "motion_end", 
+                "type": 4, 
+                "value": 1.0
             }, 
             {
                 "name": "id", 
-                "type": 1, 
+                "type": 2, 
                 "value": 0
             }, 
-            {
-                "name": "name", 
-                "type": 10, 
-                "value": ""
-            }
-        ], 
-        "type": "shape"
-    }, 
-    "polymesh": {
-        "params": [
             {
                 "name": "nsides", 
                 "type": 13, 
@@ -2335,6 +3177,11 @@
             }, 
             {
                 "name": "vidxs", 
+                "type": 13, 
+                "value": 0
+            }, 
+            {
+                "name": "polygon_holes", 
                 "type": 13, 
                 "value": 0
             }, 
@@ -2401,14 +3248,9 @@
                 "value": 1
             }, 
             {
-                "name": "subdiv_pixel_error", 
+                "name": "subdiv_adaptive_error", 
                 "type": 4, 
                 "value": 0.0
-            }, 
-            {
-                "name": "subdiv_dicing_camera", 
-                "type": 12, 
-                "value": "None"
             }, 
             {
                 "name": "subdiv_adaptive_metric", 
@@ -2419,6 +3261,17 @@
                         "auto", 
                         "edge_length", 
                         "flatness"
+                    ]
+                }
+            }, 
+            {
+                "name": "subdiv_adaptive_space", 
+                "type": 15, 
+                "value": {
+                    "default": 0, 
+                    "values": [
+                        "raster", 
+                        "object"
                     ]
                 }
             }, 
@@ -2468,97 +3321,17 @@
             {
                 "name": "autobump_visibility", 
                 "type": 0, 
-                "value": 159
+                "value": 1
             }, 
             {
-                "name": "visibility", 
-                "type": 0, 
-                "value": 255
-            }, 
-            {
-                "name": "sidedness", 
-                "type": 0, 
-                "value": 255
-            }, 
-            {
-                "name": "receive_shadows", 
-                "type": 3, 
-                "value": true
-            }, 
-            {
-                "name": "self_shadows", 
-                "type": 3, 
-                "value": true
-            }, 
-            {
-                "name": "invert_normals", 
-                "type": 3, 
-                "value": false
-            }, 
-            {
-                "name": "ray_bias", 
+                "name": "step_size", 
                 "type": 4, 
-                "value": 9.999999974752427e-07
+                "value": 0.0
             }, 
             {
-                "name": "matrix", 
-                "type": 13, 
-                "value": 0
-            }, 
-            {
-                "name": "shader", 
-                "type": 13, 
-                "value": 0
-            }, 
-            {
-                "name": "opaque", 
-                "type": 3, 
-                "value": true
-            }, 
-            {
-                "name": "matte", 
-                "type": 3, 
-                "value": false
-            }, 
-            {
-                "name": "use_light_group", 
-                "type": 3, 
-                "value": false
-            }, 
-            {
-                "name": "light_group", 
-                "type": 13, 
-                "value": 0
-            }, 
-            {
-                "name": "use_shadow_group", 
-                "type": 3, 
-                "value": false
-            }, 
-            {
-                "name": "shadow_group", 
-                "type": 13, 
-                "value": 0
-            }, 
-            {
-                "name": "trace_sets", 
-                "type": 13, 
-                "value": 0
-            }, 
-            {
-                "name": "transform_time_samples", 
-                "type": 13, 
-                "value": 2
-            }, 
-            {
-                "name": "deform_time_samples", 
-                "type": 13, 
-                "value": 2
-            }, 
-            {
-                "name": "id", 
-                "type": 1, 
-                "value": 0
+                "name": "volume_padding", 
+                "type": 4, 
+                "value": 0.0
             }, 
             {
                 "name": "name", 
@@ -2571,39 +3344,6 @@
     "procedural": {
         "params": [
             {
-                "name": "dso", 
-                "type": 10, 
-                "value": ""
-            }, 
-            {
-                "name": "data", 
-                "type": 10, 
-                "value": ""
-            }, 
-            {
-                "name": "load_at_init", 
-                "type": 3, 
-                "value": false
-            }, 
-            {
-                "name": "min", 
-                "type": 8, 
-                "value": [
-                    0.0, 
-                    0.0, 
-                    0.0
-                ]
-            }, 
-            {
-                "name": "max", 
-                "type": 8, 
-                "value": [
-                    0.0, 
-                    0.0, 
-                    0.0
-                ]
-            }, 
-            {
                 "name": "visibility", 
                 "type": 0, 
                 "value": 255
@@ -2637,6 +3377,18 @@
                 "name": "matrix", 
                 "type": 13, 
                 "value": 0
+            }, 
+            {
+                "name": "transform_type", 
+                "type": 15, 
+                "value": {
+                    "default": 2, 
+                    "values": [
+                        "linear", 
+                        "rotate_about_origin", 
+                        "rotate_about_center"
+                    ]
+                }
             }, 
             {
                 "name": "shader", 
@@ -2679,19 +3431,34 @@
                 "value": 0
             }, 
             {
-                "name": "transform_time_samples", 
-                "type": 13, 
-                "value": 2
+                "name": "motion_start", 
+                "type": 4, 
+                "value": 0.0
             }, 
             {
-                "name": "deform_time_samples", 
-                "type": 13, 
-                "value": 2
+                "name": "motion_end", 
+                "type": 4, 
+                "value": 1.0
             }, 
             {
                 "name": "id", 
-                "type": 1, 
+                "type": 2, 
                 "value": 0
+            }, 
+            {
+                "name": "override_nodes", 
+                "type": 3, 
+                "value": false
+            }, 
+            {
+                "name": "filename", 
+                "type": 10, 
+                "value": ""
+            }, 
+            {
+                "name": "data", 
+                "type": 10, 
+                "value": ""
             }, 
             {
                 "name": "name", 
@@ -2703,27 +3470,6 @@
     }, 
     "quad_light": {
         "params": [
-            {
-                "name": "vertices", 
-                "type": 13, 
-                "value": 4
-            }, 
-            {
-                "name": "decay_type", 
-                "type": 15, 
-                "value": {
-                    "default": 1, 
-                    "values": [
-                        "constant", 
-                        "quadratic"
-                    ]
-                }
-            }, 
-            {
-                "name": "resolution", 
-                "type": 1, 
-                "value": 512
-            }, 
             {
                 "name": "matrix", 
                 "type": 13, 
@@ -2783,21 +3529,6 @@
                 "value": true
             }, 
             {
-                "name": "affect_diffuse", 
-                "type": 3, 
-                "value": true
-            }, 
-            {
-                "name": "affect_specular", 
-                "type": 3, 
-                "value": true
-            }, 
-            {
-                "name": "affect_volumetrics", 
-                "type": 3, 
-                "value": true
-            }, 
-            {
                 "name": "diffuse", 
                 "type": 4, 
                 "value": 1.0
@@ -2823,24 +3554,64 @@
                 "value": 999
             }, 
             {
-                "name": "volume_density", 
-                "type": 12, 
-                "value": "None"
-            }, 
-            {
                 "name": "filters", 
                 "type": 13, 
                 "value": 0
             }, 
             {
-                "name": "time_samples", 
-                "type": 13, 
-                "value": 2
+                "name": "motion_start", 
+                "type": 4, 
+                "value": 0.0
+            }, 
+            {
+                "name": "motion_end", 
+                "type": 4, 
+                "value": 1.0
             }, 
             {
                 "name": "volume_samples", 
                 "type": 1, 
                 "value": 2
+            }, 
+            {
+                "name": "volume", 
+                "type": 4, 
+                "value": 1.0
+            }, 
+            {
+                "name": "aov", 
+                "type": 10, 
+                "value": "default"
+            }, 
+            {
+                "name": "vertices", 
+                "type": 13, 
+                "value": 4
+            }, 
+            {
+                "name": "resolution", 
+                "type": 1, 
+                "value": 512
+            }, 
+            {
+                "name": "roundness", 
+                "type": 4, 
+                "value": 0.0
+            }, 
+            {
+                "name": "soft_edge", 
+                "type": 4, 
+                "value": 0.0
+            }, 
+            {
+                "name": "spread", 
+                "type": 4, 
+                "value": 1.0
+            }, 
+            {
+                "name": "portal", 
+                "type": 3, 
+                "value": false
             }, 
             {
                 "name": "name", 
@@ -2852,6 +3623,134 @@
     }, 
     "skydome_light": {
         "params": [
+            {
+                "name": "matrix", 
+                "type": 13, 
+                "value": ""
+            }, 
+            {
+                "name": "color", 
+                "type": 5, 
+                "value": [
+                    1.0, 
+                    1.0, 
+                    1.0
+                ]
+            }, 
+            {
+                "name": "intensity", 
+                "type": 4, 
+                "value": 1.0
+            }, 
+            {
+                "name": "exposure", 
+                "type": 4, 
+                "value": 0.0
+            }, 
+            {
+                "name": "cast_shadows", 
+                "type": 3, 
+                "value": true
+            }, 
+            {
+                "name": "cast_volumetric_shadows", 
+                "type": 3, 
+                "value": true
+            }, 
+            {
+                "name": "shadow_density", 
+                "type": 4, 
+                "value": 1.0
+            }, 
+            {
+                "name": "shadow_color", 
+                "type": 5, 
+                "value": [
+                    0.0, 
+                    0.0, 
+                    0.0
+                ]
+            }, 
+            {
+                "name": "samples", 
+                "type": 1, 
+                "value": 1
+            }, 
+            {
+                "name": "normalize", 
+                "type": 3, 
+                "value": true
+            }, 
+            {
+                "name": "camera", 
+                "type": 4, 
+                "value": 1.0
+            }, 
+            {
+                "name": "diffuse", 
+                "type": 4, 
+                "value": 1.0
+            }, 
+            {
+                "name": "specular", 
+                "type": 4, 
+                "value": 1.0
+            }, 
+            {
+                "name": "transmission", 
+                "type": 4, 
+                "value": 1.0
+            }, 
+            {
+                "name": "sss", 
+                "type": 4, 
+                "value": 1.0
+            }, 
+            {
+                "name": "indirect", 
+                "type": 4, 
+                "value": 1.0
+            }, 
+            {
+                "name": "max_bounces", 
+                "type": 1, 
+                "value": 999
+            }, 
+            {
+                "name": "filters", 
+                "type": 13, 
+                "value": 0
+            }, 
+            {
+                "name": "motion_start", 
+                "type": 4, 
+                "value": 0.0
+            }, 
+            {
+                "name": "motion_end", 
+                "type": 4, 
+                "value": 1.0
+            }, 
+            {
+                "name": "volume_samples", 
+                "type": 1, 
+                "value": 2
+            }, 
+            {
+                "name": "volume", 
+                "type": 4, 
+                "value": 1.0
+            }, 
+            {
+                "name": "aov", 
+                "type": 10, 
+                "value": "default"
+            }, 
+            {
+                "name": "shader", 
+                "type": 12, 
+                "value": "None"
+            }, 
             {
                 "name": "resolution", 
                 "type": 1, 
@@ -2870,6 +3769,165 @@
                 }
             }, 
             {
+                "name": "portal_mode", 
+                "type": 15, 
+                "value": {
+                    "default": 1, 
+                    "values": [
+                        "off", 
+                        "interior_only", 
+                        "interior_exterior"
+                    ]
+                }
+            }, 
+            {
+                "name": "aov_indirect", 
+                "type": 3, 
+                "value": false
+            }, 
+            {
+                "name": "name", 
+                "type": 10, 
+                "value": ""
+            }
+        ], 
+        "type": "light"
+    }, 
+    "sphere": {
+        "params": [
+            {
+                "name": "visibility", 
+                "type": 0, 
+                "value": 255
+            }, 
+            {
+                "name": "sidedness", 
+                "type": 0, 
+                "value": 255
+            }, 
+            {
+                "name": "receive_shadows", 
+                "type": 3, 
+                "value": true
+            }, 
+            {
+                "name": "self_shadows", 
+                "type": 3, 
+                "value": true
+            }, 
+            {
+                "name": "invert_normals", 
+                "type": 3, 
+                "value": false
+            }, 
+            {
+                "name": "ray_bias", 
+                "type": 4, 
+                "value": 9.999999974752427e-07
+            }, 
+            {
+                "name": "matrix", 
+                "type": 13, 
+                "value": 0
+            }, 
+            {
+                "name": "transform_type", 
+                "type": 15, 
+                "value": {
+                    "default": 2, 
+                    "values": [
+                        "linear", 
+                        "rotate_about_origin", 
+                        "rotate_about_center"
+                    ]
+                }
+            }, 
+            {
+                "name": "shader", 
+                "type": 13, 
+                "value": 0
+            }, 
+            {
+                "name": "opaque", 
+                "type": 3, 
+                "value": true
+            }, 
+            {
+                "name": "matte", 
+                "type": 3, 
+                "value": false
+            }, 
+            {
+                "name": "use_light_group", 
+                "type": 3, 
+                "value": false
+            }, 
+            {
+                "name": "light_group", 
+                "type": 13, 
+                "value": 0
+            }, 
+            {
+                "name": "use_shadow_group", 
+                "type": 3, 
+                "value": false
+            }, 
+            {
+                "name": "shadow_group", 
+                "type": 13, 
+                "value": 0
+            }, 
+            {
+                "name": "trace_sets", 
+                "type": 13, 
+                "value": 0
+            }, 
+            {
+                "name": "motion_start", 
+                "type": 4, 
+                "value": 0.0
+            }, 
+            {
+                "name": "motion_end", 
+                "type": 4, 
+                "value": 1.0
+            }, 
+            {
+                "name": "id", 
+                "type": 2, 
+                "value": 0
+            }, 
+            {
+                "name": "center", 
+                "type": 13, 
+                "value": "0, 0, 0"
+            }, 
+            {
+                "name": "radius", 
+                "type": 13, 
+                "value": "0.5"
+            }, 
+            {
+                "name": "step_size", 
+                "type": 4, 
+                "value": 0.0
+            }, 
+            {
+                "name": "volume_padding", 
+                "type": 4, 
+                "value": 0.0
+            }, 
+            {
+                "name": "name", 
+                "type": 10, 
+                "value": ""
+            }
+        ], 
+        "type": "shape"
+    }, 
+    "spot_light": {
+        "params": [
+            {
                 "name": "matrix", 
                 "type": 13, 
                 "value": ""
@@ -2928,21 +3986,6 @@
                 "value": true
             }, 
             {
-                "name": "affect_diffuse", 
-                "type": 3, 
-                "value": true
-            }, 
-            {
-                "name": "affect_specular", 
-                "type": 3, 
-                "value": true
-            }, 
-            {
-                "name": "affect_volumetrics", 
-                "type": 3, 
-                "value": true
-            }, 
-            {
                 "name": "diffuse", 
                 "type": 4, 
                 "value": 1.0
@@ -2968,19 +4011,19 @@
                 "value": 999
             }, 
             {
-                "name": "volume_density", 
-                "type": 12, 
-                "value": "None"
-            }, 
-            {
                 "name": "filters", 
                 "type": 13, 
                 "value": 0
             }, 
             {
-                "name": "time_samples", 
-                "type": 13, 
-                "value": 2
+                "name": "motion_start", 
+                "type": 4, 
+                "value": 0.0
+            }, 
+            {
+                "name": "motion_end", 
+                "type": 4, 
+                "value": 1.0
             }, 
             {
                 "name": "volume_samples", 
@@ -2988,130 +4031,15 @@
                 "value": 2
             }, 
             {
-                "name": "name", 
-                "type": 10, 
-                "value": ""
-            }
-        ], 
-        "type": "light"
-    }, 
-    "sphere": {
-        "params": [
-            {
-                "name": "center", 
-                "type": 13, 
-                "value": "0, 0, 0"
-            }, 
-            {
-                "name": "radius", 
-                "type": 13, 
-                "value": "0.5"
-            }, 
-            {
-                "name": "step_size", 
+                "name": "volume", 
                 "type": 4, 
-                "value": 0.0
+                "value": 1.0
             }, 
             {
-                "name": "visibility", 
-                "type": 0, 
-                "value": 255
-            }, 
-            {
-                "name": "sidedness", 
-                "type": 0, 
-                "value": 255
-            }, 
-            {
-                "name": "receive_shadows", 
-                "type": 3, 
-                "value": true
-            }, 
-            {
-                "name": "self_shadows", 
-                "type": 3, 
-                "value": true
-            }, 
-            {
-                "name": "invert_normals", 
-                "type": 3, 
-                "value": false
-            }, 
-            {
-                "name": "ray_bias", 
-                "type": 4, 
-                "value": 9.999999974752427e-07
-            }, 
-            {
-                "name": "matrix", 
-                "type": 13, 
-                "value": 0
-            }, 
-            {
-                "name": "shader", 
-                "type": 13, 
-                "value": 0
-            }, 
-            {
-                "name": "opaque", 
-                "type": 3, 
-                "value": true
-            }, 
-            {
-                "name": "matte", 
-                "type": 3, 
-                "value": false
-            }, 
-            {
-                "name": "use_light_group", 
-                "type": 3, 
-                "value": false
-            }, 
-            {
-                "name": "light_group", 
-                "type": 13, 
-                "value": 0
-            }, 
-            {
-                "name": "use_shadow_group", 
-                "type": 3, 
-                "value": false
-            }, 
-            {
-                "name": "shadow_group", 
-                "type": 13, 
-                "value": 0
-            }, 
-            {
-                "name": "trace_sets", 
-                "type": 13, 
-                "value": 0
-            }, 
-            {
-                "name": "transform_time_samples", 
-                "type": 13, 
-                "value": 2
-            }, 
-            {
-                "name": "deform_time_samples", 
-                "type": 13, 
-                "value": 2
-            }, 
-            {
-                "name": "id", 
-                "type": 1, 
-                "value": 0
-            }, 
-            {
-                "name": "name", 
+                "name": "aov", 
                 "type": 10, 
-                "value": ""
-            }
-        ], 
-        "type": "shape"
-    }, 
-    "spot_light": {
-        "params": [
+                "value": "default"
+            }, 
             {
                 "name": "position", 
                 "type": 13, 
@@ -3158,133 +4086,9 @@
                 "value": 1.0
             }, 
             {
-                "name": "decay_type", 
-                "type": 15, 
-                "value": {
-                    "default": 1, 
-                    "values": [
-                        "constant", 
-                        "quadratic"
-                    ]
-                }
-            }, 
-            {
-                "name": "matrix", 
-                "type": 13, 
-                "value": ""
-            }, 
-            {
-                "name": "color", 
-                "type": 5, 
-                "value": [
-                    1.0, 
-                    1.0, 
-                    1.0
-                ]
-            }, 
-            {
-                "name": "intensity", 
+                "name": "roundness", 
                 "type": 4, 
                 "value": 1.0
-            }, 
-            {
-                "name": "exposure", 
-                "type": 4, 
-                "value": 0.0
-            }, 
-            {
-                "name": "cast_shadows", 
-                "type": 3, 
-                "value": true
-            }, 
-            {
-                "name": "cast_volumetric_shadows", 
-                "type": 3, 
-                "value": true
-            }, 
-            {
-                "name": "shadow_density", 
-                "type": 4, 
-                "value": 1.0
-            }, 
-            {
-                "name": "shadow_color", 
-                "type": 5, 
-                "value": [
-                    0.0, 
-                    0.0, 
-                    0.0
-                ]
-            }, 
-            {
-                "name": "samples", 
-                "type": 1, 
-                "value": 1
-            }, 
-            {
-                "name": "normalize", 
-                "type": 3, 
-                "value": true
-            }, 
-            {
-                "name": "affect_diffuse", 
-                "type": 3, 
-                "value": true
-            }, 
-            {
-                "name": "affect_specular", 
-                "type": 3, 
-                "value": true
-            }, 
-            {
-                "name": "affect_volumetrics", 
-                "type": 3, 
-                "value": true
-            }, 
-            {
-                "name": "diffuse", 
-                "type": 4, 
-                "value": 1.0
-            }, 
-            {
-                "name": "specular", 
-                "type": 4, 
-                "value": 1.0
-            }, 
-            {
-                "name": "sss", 
-                "type": 4, 
-                "value": 1.0
-            }, 
-            {
-                "name": "indirect", 
-                "type": 4, 
-                "value": 1.0
-            }, 
-            {
-                "name": "max_bounces", 
-                "type": 1, 
-                "value": 999
-            }, 
-            {
-                "name": "volume_density", 
-                "type": 12, 
-                "value": "None"
-            }, 
-            {
-                "name": "filters", 
-                "type": 13, 
-                "value": 0
-            }, 
-            {
-                "name": "time_samples", 
-                "type": 13, 
-                "value": 2
-            }, 
-            {
-                "name": "volume_samples", 
-                "type": 1, 
-                "value": 2
             }, 
             {
                 "name": "name", 
@@ -3296,44 +4100,6 @@
     }, 
     "volume": {
         "params": [
-            {
-                "name": "dso", 
-                "type": 10, 
-                "value": ""
-            }, 
-            {
-                "name": "data", 
-                "type": 10, 
-                "value": ""
-            }, 
-            {
-                "name": "load_at_init", 
-                "type": 3, 
-                "value": false
-            }, 
-            {
-                "name": "min", 
-                "type": 8, 
-                "value": [
-                    0.0, 
-                    0.0, 
-                    0.0
-                ]
-            }, 
-            {
-                "name": "max", 
-                "type": 8, 
-                "value": [
-                    0.0, 
-                    0.0, 
-                    0.0
-                ]
-            }, 
-            {
-                "name": "step_size", 
-                "type": 4, 
-                "value": 0.0
-            }, 
             {
                 "name": "visibility", 
                 "type": 0, 
@@ -3368,6 +4134,18 @@
                 "name": "matrix", 
                 "type": 13, 
                 "value": 0
+            }, 
+            {
+                "name": "transform_type", 
+                "type": 15, 
+                "value": {
+                    "default": 2, 
+                    "values": [
+                        "linear", 
+                        "rotate_about_origin", 
+                        "rotate_about_center"
+                    ]
+                }
             }, 
             {
                 "name": "shader", 
@@ -3410,19 +4188,671 @@
                 "value": 0
             }, 
             {
-                "name": "transform_time_samples", 
-                "type": 13, 
-                "value": 2
+                "name": "motion_start", 
+                "type": 4, 
+                "value": 0.0
             }, 
             {
-                "name": "deform_time_samples", 
-                "type": 13, 
-                "value": 2
+                "name": "motion_end", 
+                "type": 4, 
+                "value": 1.0
             }, 
             {
                 "name": "id", 
-                "type": 1, 
+                "type": 2, 
                 "value": 0
+            }, 
+            {
+                "name": "volume_padding", 
+                "type": 4, 
+                "value": 0.0
+            }, 
+            {
+                "name": "step_size", 
+                "type": 4, 
+                "value": 0.0
+            }, 
+            {
+                "name": "filename", 
+                "type": 10, 
+                "value": ""
+            }, 
+            {
+                "name": "filedata", 
+                "type": 13, 
+                "value": 0
+            }, 
+            {
+                "name": "step_scale", 
+                "type": 4, 
+                "value": 1.0
+            }, 
+            {
+                "name": "compress", 
+                "type": 3, 
+                "value": true
+            }, 
+            {
+                "name": "grids", 
+                "type": 13, 
+                "value": 0
+            }, 
+            {
+                "name": "velocity_grids", 
+                "type": 13, 
+                "value": 0
+            }, 
+            {
+                "name": "velocity_scale", 
+                "type": 4, 
+                "value": 1.0
+            }, 
+            {
+                "name": "velocity_fps", 
+                "type": 4, 
+                "value": 24.0
+            }, 
+            {
+                "name": "velocity_outlier_threshold", 
+                "type": 4, 
+                "value": 0.0010000000474974513
+            }, 
+            {
+                "name": "name", 
+                "type": 10, 
+                "value": ""
+            }
+        ], 
+        "type": "shape"
+    }, 
+    "volume_implicit": {
+        "params": [
+            {
+                "name": "visibility", 
+                "type": 0, 
+                "value": 255
+            }, 
+            {
+                "name": "sidedness", 
+                "type": 0, 
+                "value": 255
+            }, 
+            {
+                "name": "receive_shadows", 
+                "type": 3, 
+                "value": true
+            }, 
+            {
+                "name": "self_shadows", 
+                "type": 3, 
+                "value": true
+            }, 
+            {
+                "name": "invert_normals", 
+                "type": 3, 
+                "value": false
+            }, 
+            {
+                "name": "ray_bias", 
+                "type": 4, 
+                "value": 9.999999974752427e-07
+            }, 
+            {
+                "name": "matrix", 
+                "type": 13, 
+                "value": 0
+            }, 
+            {
+                "name": "transform_type", 
+                "type": 15, 
+                "value": {
+                    "default": 2, 
+                    "values": [
+                        "linear", 
+                        "rotate_about_origin", 
+                        "rotate_about_center"
+                    ]
+                }
+            }, 
+            {
+                "name": "shader", 
+                "type": 13, 
+                "value": 0
+            }, 
+            {
+                "name": "opaque", 
+                "type": 3, 
+                "value": true
+            }, 
+            {
+                "name": "matte", 
+                "type": 3, 
+                "value": false
+            }, 
+            {
+                "name": "use_light_group", 
+                "type": 3, 
+                "value": false
+            }, 
+            {
+                "name": "light_group", 
+                "type": 13, 
+                "value": 0
+            }, 
+            {
+                "name": "use_shadow_group", 
+                "type": 3, 
+                "value": false
+            }, 
+            {
+                "name": "shadow_group", 
+                "type": 13, 
+                "value": 0
+            }, 
+            {
+                "name": "trace_sets", 
+                "type": 13, 
+                "value": 0
+            }, 
+            {
+                "name": "motion_start", 
+                "type": 4, 
+                "value": 0.0
+            }, 
+            {
+                "name": "motion_end", 
+                "type": 4, 
+                "value": 1.0
+            }, 
+            {
+                "name": "id", 
+                "type": 2, 
+                "value": 0
+            }, 
+            {
+                "name": "field", 
+                "type": 12, 
+                "value": "None"
+            }, 
+            {
+                "name": "threshold", 
+                "type": 4, 
+                "value": 0.0
+            }, 
+            {
+                "name": "samples", 
+                "type": 2, 
+                "value": 10
+            }, 
+            {
+                "name": "solver", 
+                "type": 15, 
+                "value": {
+                    "default": 0, 
+                    "values": [
+                        "uniform", 
+                        "levelset"
+                    ]
+                }
+            }, 
+            {
+                "name": "min", 
+                "type": 7, 
+                "value": [
+                    0.0, 
+                    0.0, 
+                    0.0
+                ]
+            }, 
+            {
+                "name": "max", 
+                "type": 7, 
+                "value": [
+                    0.0, 
+                    0.0, 
+                    0.0
+                ]
+            }, 
+            {
+                "name": "step_size", 
+                "type": 4, 
+                "value": 0.0
+            }, 
+            {
+                "name": "field_channel", 
+                "type": 10, 
+                "value": "field"
+            }, 
+            {
+                "name": "filename", 
+                "type": 10, 
+                "value": ""
+            }, 
+            {
+                "name": "filedata", 
+                "type": 13, 
+                "value": 0
+            }, 
+            {
+                "name": "step_scale", 
+                "type": 4, 
+                "value": 1.0
+            }, 
+            {
+                "name": "compress", 
+                "type": 3, 
+                "value": true
+            }, 
+            {
+                "name": "grids", 
+                "type": 13, 
+                "value": 0
+            }, 
+            {
+                "name": "velocity_grids", 
+                "type": 13, 
+                "value": 0
+            }, 
+            {
+                "name": "velocity_scale", 
+                "type": 4, 
+                "value": 1.0
+            }, 
+            {
+                "name": "velocity_fps", 
+                "type": 4, 
+                "value": 24.0
+            }, 
+            {
+                "name": "velocity_outlier_threshold", 
+                "type": 4, 
+                "value": 0.0010000000474974513
+            }, 
+            {
+                "name": "name", 
+                "type": 10, 
+                "value": ""
+            }
+        ], 
+        "type": "shape"
+    }, 
+    "volume_particle": {
+        "params": [
+            {
+                "name": "visibility", 
+                "type": 0, 
+                "value": 255
+            }, 
+            {
+                "name": "sidedness", 
+                "type": 0, 
+                "value": 255
+            }, 
+            {
+                "name": "receive_shadows", 
+                "type": 3, 
+                "value": true
+            }, 
+            {
+                "name": "self_shadows", 
+                "type": 3, 
+                "value": true
+            }, 
+            {
+                "name": "invert_normals", 
+                "type": 3, 
+                "value": false
+            }, 
+            {
+                "name": "ray_bias", 
+                "type": 4, 
+                "value": 9.999999974752427e-07
+            }, 
+            {
+                "name": "matrix", 
+                "type": 13, 
+                "value": 0
+            }, 
+            {
+                "name": "transform_type", 
+                "type": 15, 
+                "value": {
+                    "default": 2, 
+                    "values": [
+                        "linear", 
+                        "rotate_about_origin", 
+                        "rotate_about_center"
+                    ]
+                }
+            }, 
+            {
+                "name": "shader", 
+                "type": 13, 
+                "value": 0
+            }, 
+            {
+                "name": "opaque", 
+                "type": 3, 
+                "value": true
+            }, 
+            {
+                "name": "matte", 
+                "type": 3, 
+                "value": false
+            }, 
+            {
+                "name": "use_light_group", 
+                "type": 3, 
+                "value": false
+            }, 
+            {
+                "name": "light_group", 
+                "type": 13, 
+                "value": 0
+            }, 
+            {
+                "name": "use_shadow_group", 
+                "type": 3, 
+                "value": false
+            }, 
+            {
+                "name": "shadow_group", 
+                "type": 13, 
+                "value": 0
+            }, 
+            {
+                "name": "trace_sets", 
+                "type": 13, 
+                "value": 0
+            }, 
+            {
+                "name": "motion_start", 
+                "type": 4, 
+                "value": 0.0
+            }, 
+            {
+                "name": "motion_end", 
+                "type": 4, 
+                "value": 1.0
+            }, 
+            {
+                "name": "id", 
+                "type": 2, 
+                "value": 0
+            }, 
+            {
+                "name": "volume_padding", 
+                "type": 4, 
+                "value": 0.0
+            }, 
+            {
+                "name": "step_size", 
+                "type": 4, 
+                "value": 0.0
+            }, 
+            {
+                "name": "points", 
+                "type": 13, 
+                "value": 0
+            }, 
+            {
+                "name": "radius", 
+                "type": 13, 
+                "value": 0
+            }, 
+            {
+                "name": "smooth_step", 
+                "type": 3, 
+                "value": true
+            }, 
+            {
+                "name": "falloff_exponent", 
+                "type": 4, 
+                "value": 0.0
+            }, 
+            {
+                "name": "step_scale", 
+                "type": 4, 
+                "value": 1.0
+            }, 
+            {
+                "name": "name", 
+                "type": 10, 
+                "value": ""
+            }
+        ], 
+        "type": "shape"
+    }, 
+    "xgenProcedural": {
+        "params": [
+            {
+                "name": "visibility", 
+                "type": 0, 
+                "value": 255
+            }, 
+            {
+                "name": "sidedness", 
+                "type": 0, 
+                "value": 255
+            }, 
+            {
+                "name": "receive_shadows", 
+                "type": 3, 
+                "value": true
+            }, 
+            {
+                "name": "self_shadows", 
+                "type": 3, 
+                "value": true
+            }, 
+            {
+                "name": "invert_normals", 
+                "type": 3, 
+                "value": false
+            }, 
+            {
+                "name": "ray_bias", 
+                "type": 4, 
+                "value": 9.999999974752427e-07
+            }, 
+            {
+                "name": "matrix", 
+                "type": 13, 
+                "value": 0
+            }, 
+            {
+                "name": "transform_type", 
+                "type": 15, 
+                "value": {
+                    "default": 2, 
+                    "values": [
+                        "linear", 
+                        "rotate_about_origin", 
+                        "rotate_about_center"
+                    ]
+                }
+            }, 
+            {
+                "name": "shader", 
+                "type": 13, 
+                "value": 0
+            }, 
+            {
+                "name": "opaque", 
+                "type": 3, 
+                "value": true
+            }, 
+            {
+                "name": "matte", 
+                "type": 3, 
+                "value": false
+            }, 
+            {
+                "name": "use_light_group", 
+                "type": 3, 
+                "value": false
+            }, 
+            {
+                "name": "light_group", 
+                "type": 13, 
+                "value": 0
+            }, 
+            {
+                "name": "use_shadow_group", 
+                "type": 3, 
+                "value": false
+            }, 
+            {
+                "name": "shadow_group", 
+                "type": 13, 
+                "value": 0
+            }, 
+            {
+                "name": "trace_sets", 
+                "type": 13, 
+                "value": 0
+            }, 
+            {
+                "name": "motion_start", 
+                "type": 4, 
+                "value": 0.0
+            }, 
+            {
+                "name": "motion_end", 
+                "type": 4, 
+                "value": 1.0
+            }, 
+            {
+                "name": "id", 
+                "type": 2, 
+                "value": 0
+            }, 
+            {
+                "name": "override_nodes", 
+                "type": 3, 
+                "value": false
+            }, 
+            {
+                "name": "name", 
+                "type": 10, 
+                "value": ""
+            }
+        ], 
+        "type": "shape"
+    }, 
+    "xgen_procedural": {
+        "params": [
+            {
+                "name": "visibility", 
+                "type": 0, 
+                "value": 255
+            }, 
+            {
+                "name": "sidedness", 
+                "type": 0, 
+                "value": 255
+            }, 
+            {
+                "name": "receive_shadows", 
+                "type": 3, 
+                "value": true
+            }, 
+            {
+                "name": "self_shadows", 
+                "type": 3, 
+                "value": true
+            }, 
+            {
+                "name": "invert_normals", 
+                "type": 3, 
+                "value": false
+            }, 
+            {
+                "name": "ray_bias", 
+                "type": 4, 
+                "value": 9.999999974752427e-07
+            }, 
+            {
+                "name": "matrix", 
+                "type": 13, 
+                "value": 0
+            }, 
+            {
+                "name": "transform_type", 
+                "type": 15, 
+                "value": {
+                    "default": 2, 
+                    "values": [
+                        "linear", 
+                        "rotate_about_origin", 
+                        "rotate_about_center"
+                    ]
+                }
+            }, 
+            {
+                "name": "shader", 
+                "type": 13, 
+                "value": 0
+            }, 
+            {
+                "name": "opaque", 
+                "type": 3, 
+                "value": true
+            }, 
+            {
+                "name": "matte", 
+                "type": 3, 
+                "value": false
+            }, 
+            {
+                "name": "use_light_group", 
+                "type": 3, 
+                "value": false
+            }, 
+            {
+                "name": "light_group", 
+                "type": 13, 
+                "value": 0
+            }, 
+            {
+                "name": "use_shadow_group", 
+                "type": 3, 
+                "value": false
+            }, 
+            {
+                "name": "shadow_group", 
+                "type": 13, 
+                "value": 0
+            }, 
+            {
+                "name": "trace_sets", 
+                "type": 13, 
+                "value": 0
+            }, 
+            {
+                "name": "motion_start", 
+                "type": 4, 
+                "value": 0.0
+            }, 
+            {
+                "name": "motion_end", 
+                "type": 4, 
+                "value": 1.0
+            }, 
+            {
+                "name": "id", 
+                "type": 2, 
+                "value": 0
+            }, 
+            {
+                "name": "override_nodes", 
+                "type": 3, 
+                "value": false
+            }, 
+            {
+                "name": "data", 
+                "type": 10, 
+                "value": ""
             }, 
             {
                 "name": "name", 

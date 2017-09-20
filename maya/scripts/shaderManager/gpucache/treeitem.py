@@ -11,7 +11,9 @@
 # You should have received a copy of the GNU Lesser General Public
 # License along with this library.
 
-from PySide import QtGui, QtCore
+from PySide2 import QtWidgets
+from PySide2 import QtGui
+from PySide2 import QtCore
 import os
 import functools
 
@@ -35,9 +37,9 @@ POINTS = 7
 LIGHT = 8
 CURVES = 9
 
-class abcTreeItem(QtGui.QTreeWidgetItem):
+class abcTreeItem(QtWidgets.QTreeWidgetItem):
     def __init__(self, cache, path, itemType, parent=None, *args, **kwargs):
-        QtGui.QTreeWidgetItem.__init__(self, *args, **kwargs)
+        QtWidgets.QTreeWidgetItem.__init__(self, *args, **kwargs)
         self.interface = parent
         self.cache = cache
         self.path = path

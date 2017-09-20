@@ -14,8 +14,9 @@
 import maya.cmds as cmds
 
 import maya.OpenMayaUI as apiUI
-import shiboken
-from PySide import QtGui
+import shiboken2
+from PySide2 import QtWidgets
+
 
 global _shadermanager
 _shadermanager = None
@@ -27,7 +28,7 @@ def getMayaWindow():
     """
     ptr = apiUI.MQtUtil.mainWindow()
     if ptr is not None:
-        return shiboken.wrapInstance(long(ptr), QtGui.QMainWindow)
+        return shiboken2.wrapInstance(long(ptr), QtWidgets.QMainWindow)
 
 def alembicShaderManager(mayaWindow):
     global _shadermanager
@@ -118,5 +119,5 @@ def registerAlembicHolder():
         cmds.menuItem( divider=True )
         cmds.menuItem('ReloadAlembicShaderManager', label='Reload Shader Manager(coding)', parent='AlembicHolderMenu', c=lambda *args: reloadShaderManager(mayaWindow))
         cmds.menuItem( divider=True )
-        cmds.menuItem('OnlineDocumentation', label='Online Documentation', parent='AlembicHolderMenu', c=lambda *args: cmds.launch(webPage='http://bitbucket.org/thepilot/abctoarnold/wiki/Home'))
+        cmds.menuItem('OnlineDocumentation', label='Online Documentation', parent='AlembicHolderMenu', c=lambda *args: cmds.launch(webPage='https://github.com/Gael-Honorez-sb/abctoa/wiki'))
 
