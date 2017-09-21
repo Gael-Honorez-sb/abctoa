@@ -761,7 +761,7 @@ AtNode* writeMesh(
         }
     }
 
-    if ( sampleTimes.size() > 1 )
+    /*if ( sampleTimes.size() > 1 )
     {
         std::vector<float> relativeSampleTimes;
         relativeSampleTimes.reserve( sampleTimes.size() );
@@ -783,7 +783,7 @@ AtNode* writeMesh(
     {
         AiNodeSetArray( meshNode, "deform_time_samples",
                 AiArray(2, 1, AI_TYPE_FLOAT, 0.f, 1.f));
-    }
+    }*/
 
     
     // NORMALS   

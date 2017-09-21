@@ -495,7 +495,7 @@ AtNode* writeCurves(
                                 ));
 
 
-        if ( sampleTimes.size() > 1 )
+        /*if ( sampleTimes.size() > 1 )
         {
             std::vector<float> relativeSampleTimes;
             relativeSampleTimes.reserve( sampleTimes.size() );
@@ -512,7 +512,7 @@ AtNode* writeCurves(
             AiNodeSetArray( curvesNode, "deform_time_samples",
                     AiArrayConvert(relativeSampleTimes.size(), 1,
                             AI_TYPE_FLOAT, &relativeSampleTimes[0]));
-        }
+        }*/
     }
     else
     {
@@ -521,8 +521,8 @@ AtNode* writeCurves(
                         2, AI_TYPE_VECTOR, (void*)(&(vlist[0]))
                                 ));
 
-        AiNodeSetArray( curvesNode, "deform_time_samples",
-                    AiArray(2, 1, AI_TYPE_FLOAT, 0.f, 1.f));
+        /*AiNodeSetArray( curvesNode, "deform_time_samples",
+                    AiArray(2, 1, AI_TYPE_FLOAT, 0.f, 1.f));*/
 
     }
 

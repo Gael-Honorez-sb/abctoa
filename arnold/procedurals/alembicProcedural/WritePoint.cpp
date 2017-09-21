@@ -420,7 +420,7 @@ AtNode* writePoints(
                         sampleTimes.size(), AI_TYPE_FLOAT, (void*)(&(radius[0]))
                                 ));
 
-        if ( sampleTimes.size() > 1 )
+        /*if ( sampleTimes.size() > 1 )
         {
             std::vector<float> relativeSampleTimes;
             relativeSampleTimes.reserve( sampleTimes.size() );
@@ -437,7 +437,7 @@ AtNode* writePoints(
             AiNodeSetArray( pointsNode, "deform_time_samples",
                     AiArrayConvert(relativeSampleTimes.size(), 1,
                             AI_TYPE_FLOAT, &relativeSampleTimes[0]));
-        }
+        }*/
     }
     else
     {
@@ -450,8 +450,8 @@ AtNode* writePoints(
                         sampleTimes.size(), AI_TYPE_FLOAT, (void*)(&(radius[0]))
                                 ));
 
-        AiNodeSetArray( pointsNode, "deform_time_samples",
-                    AiArray(2, 1, AI_TYPE_FLOAT, 0.f, 1.f));
+        /*AiNodeSetArray( pointsNode, "deform_time_samples",
+                    AiArray(2, 1, AI_TYPE_FLOAT, 0.f, 1.f));*/
 
     }
 

@@ -680,6 +680,8 @@ procedural_init
                 
                 // Now copy original properties
                 AiNodeSetByte(instance, "visibility", AiNodeGetByte(obj, "visibility"));
+                AiNodeSetFlt(instance, "motion_start", AiNodeGetFlt(obj, "motion_start"));
+                AiNodeSetFlt(instance, "motion_end", AiNodeGetFlt(obj, "motion_end"));
                 AiNodeSetByte(instance, "sidedness", AiNodeGetByte(obj, "sidedness"));
                 AiNodeSetBool(instance, "receive_shadows", AiNodeGetBool(obj, "receive_shadows"));
                 AiNodeSetBool(instance, "self_shadows", AiNodeGetBool(obj, "self_shadows"));
@@ -690,8 +692,6 @@ procedural_init
 
                 AiNodeSetArray(instance, "light_group", AiArrayCopy(AiNodeGetArray(obj, "light_group")));
                 AiNodeSetArray(instance, "shadow_group", AiArrayCopy(AiNodeGetArray(obj, "shadow_group")));
-                AiNodeSetArray(instance, "transform_time_samples", AiArrayCopy(AiNodeGetArray(obj, "transform_time_samples")));
-                AiNodeSetArray(instance, "deform_time_samples", AiArrayCopy(AiNodeGetArray(obj, "deform_time_samples")));
                 AiNodeSetArray(instance, "light_group", AiArrayCopy(AiNodeGetArray(obj, "light_group")));
 
                 args->createdNodes->addNode(instance);
