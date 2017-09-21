@@ -199,7 +199,7 @@ void nozAlembicHolder::setHolderTime() {
 
         std::string sceneKey = getSceneKey();
         if (geom->abcSceneManager.hasKey(sceneKey))
-			geom->abcSceneManager.getScene(sceneKey)->setTime(dtime );
+            geom->abcSceneManager.getScene(sceneKey)->setTime(dtime );
     }
 }
 

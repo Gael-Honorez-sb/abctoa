@@ -42,8 +42,12 @@
 #include "IObjectDrw.h"
 #include "MeshDrwHelper.h"
 #include "../../common/PathUtil.h"
+#include <thread>
+#include <mutex>
 
 namespace AlembicHolder {
+
+    using namespace CacheReaderAlembicPrivate;
 
 //-*****************************************************************************
 //! Draw a poly mesh!
@@ -74,16 +78,20 @@ protected:
     IPolyMeshSchema::Sample m_samp;
     IN3fGeomParam::Sample m_normal_samp;
     IBox3dProperty m_boundsProp;
-    MeshDrwHelper m_drwHelper;
+    std::map<chrono_t, MeshDrwHelper> m_drwHelpers;
     bool m_needtoupdate;
     double m_alpha;
     Alembic::AbcCoreAbstract::index_t m_index, m_ceilIndex;
 
-    AlembicHolder::CacheReaderAlembicPrivate::Triangulator m_triangulator;
+    Triangulator m_triangulator;
     AlembicHolder::ShapeSample::CPtr m_shapeSample;
     std::vector<MString> m_materialAssignments;
 
     void updateSample(chrono_t iSeconds);
+
+    std::mutex m_mutex;
+
+
 };
 
 } // End namespace AlembicHolder
