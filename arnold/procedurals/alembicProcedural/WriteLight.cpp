@@ -328,14 +328,16 @@ void ProcessLight( ILight &light, ProcArgs &args,
                         lightNode = AiNode("spot_light");
                         break;
                     case 3:
-                        lightNode = AiNode("quad_light");
-                        AtVector vertices[4];
-                        vertices[3]= AtVector(1, 1, 0);
-                        vertices[0] = AtVector(1, -1, 0);
-                        vertices[1] = AtVector(-1, -1, 0);
-                        vertices[2] = AtVector(-1, 1, 0);
-                        AiNodeSetArray(lightNode, "vertices", AiArrayConvert(4, 1, AI_TYPE_VECTOR, vertices));
-                        break;
+					{
+						lightNode = AiNode("quad_light");
+						AtVector vertices[4];
+						vertices[3] = AtVector(1, 1, 0);
+						vertices[0] = AtVector(1, -1, 0);
+						vertices[1] = AtVector(-1, -1, 0);
+						vertices[2] = AtVector(-1, 1, 0);
+						AiNodeSetArray(lightNode, "vertices", AiArrayConvert(4, 1, AI_TYPE_VECTOR, vertices));
+						break;
+					}
                     case 4:
                         lightNode = AiNode("photometric_light");
                         break;
