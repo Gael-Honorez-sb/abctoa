@@ -378,7 +378,7 @@ inline void doNormals<IPolyMesh>(IPolyMesh& prim, AtNode *meshNode, const Sample
                 for (size_t i = 0; i < numValidNormals; ++i)
                 {
                     const size_t id = i * 3;
-                    AtVector v = {nlist[id], nlist[id + 1], nlist[id + 2]};
+                    AtVector v = AtVector(nlist[id], nlist[id + 1], nlist[id + 2]);
                     AiArraySetVec(narr, i, v);
                 }
 
@@ -390,7 +390,7 @@ inline void doNormals<IPolyMesh>(IPolyMesh& prim, AtNode *meshNode, const Sample
                     for (size_t j = 0; j < numNormals; ++j)
                     {
                         const size_t id = validNormalSource + j * 3;
-                        AtVector v = {nlist[id], nlist[id + 1], nlist[id + 2]};
+                        AtVector v = AtVector(nlist[id], nlist[id + 1], nlist[id + 2]);
                         AiArraySetVec(narr, normalTarget + j, v);
                     }
                 }
