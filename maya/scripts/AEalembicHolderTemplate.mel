@@ -69,7 +69,7 @@ global proc AEalembicHolderTemplate(string $nodeName)
     editorTemplate -beginScrollLayout;
     
     editorTemplate -beginLayout "Cache File" -collapse false;
-        editorTemplate -callCustom "alembicABCPathNew" "alembicABCPathReplace" "cacheFileName";
+        editorTemplate -label "Caches Paths" -addControl "cacheFileNames";
         editorTemplate -label "Geometry Path" -addControl "cacheGeomPath";
         editorTemplate -label "Selection Path" -addControl "cacheSelectionPath";
 		editorTemplate -label "Attribute for shaders assignation" -addControl "shadersAttribute";
