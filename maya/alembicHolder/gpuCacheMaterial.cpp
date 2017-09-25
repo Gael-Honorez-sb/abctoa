@@ -80,7 +80,7 @@ MaterialProperty::MPtr MaterialProperty::create(
     MaterialProperty::Type type
 )
 {
-    return boost::make_shared<MaterialProperty>(boost::ref(name), type);
+    return std::make_shared<MaterialProperty>(boost::ref(name), type);
 }
 
 MaterialProperty::MaterialProperty(const MString& name, Type type)
@@ -101,7 +101,7 @@ bool MaterialProperty::asBool(double seconds) const
 void MaterialProperty::setBool(double seconds, bool value)
 {
     assert(fType == kBool);
-    setValue(seconds, boost::make_shared<BoolPropertyData>(value));
+    setValue(seconds, std::make_shared<BoolPropertyData>(value));
 }
 
 int MaterialProperty::asInt32(double seconds) const
@@ -113,7 +113,7 @@ int MaterialProperty::asInt32(double seconds) const
 void MaterialProperty::setInt32(double seconds, int value)
 {
     assert(fType == kInt32);
-    setValue(seconds, boost::make_shared<Int32PropertyData>(value));
+    setValue(seconds, std::make_shared<Int32PropertyData>(value));
 }
 
 float MaterialProperty::asFloat(double seconds) const
@@ -125,7 +125,7 @@ float MaterialProperty::asFloat(double seconds) const
 void MaterialProperty::setFloat(double seconds, float value)
 {
     assert(fType == kFloat);
-    setValue(seconds, boost::make_shared<FloatPropertyData>(value));
+    setValue(seconds, std::make_shared<FloatPropertyData>(value));
 }
 
 void MaterialProperty::asFloat2(double seconds, float& x, float& y) const
@@ -139,7 +139,7 @@ void MaterialProperty::asFloat2(double seconds, float& x, float& y) const
 void MaterialProperty::setFloat2(double seconds, float x, float y)
 {
     assert(fType == kFloat2);
-    setValue(seconds, boost::make_shared<Float2PropertyData>(x, y));
+    setValue(seconds, std::make_shared<Float2PropertyData>(x, y));
 }
 
 void MaterialProperty::asFloat3(double seconds, float& x, float& y, float& z) const
@@ -154,7 +154,7 @@ void MaterialProperty::asFloat3(double seconds, float& x, float& y, float& z) co
 void MaterialProperty::setFloat3(double seconds, float x, float y, float z)
 {
     assert(fType == kFloat3);
-    setValue(seconds, boost::make_shared<Float3PropertyData>(x, y, z));
+    setValue(seconds, std::make_shared<Float3PropertyData>(x, y, z));
 }
 
 const MColor& MaterialProperty::asColor(double seconds) const
@@ -166,7 +166,7 @@ const MColor& MaterialProperty::asColor(double seconds) const
 void MaterialProperty::setColor(double seconds, const MColor& value)
 {
     assert(fType == kRGB);
-    setValue(seconds, boost::make_shared<ColorPropertyData>(boost::ref(value)));
+    setValue(seconds, std::make_shared<ColorPropertyData>(boost::ref(value)));
 }
 
 const MString& MaterialProperty::asString(double seconds) const
@@ -178,42 +178,42 @@ const MString& MaterialProperty::asString(double seconds) const
 void MaterialProperty::setString(double seconds, const MString& value)
 {
     assert(fType == kString);
-    setValue(seconds, boost::make_shared<StringPropertyData>(boost::ref(value)));
+    setValue(seconds, std::make_shared<StringPropertyData>(boost::ref(value)));
 }
 
 void MaterialProperty::setDefault(bool value)
 {
-    fDefaultValue = boost::make_shared<BoolPropertyData>(value);
+    fDefaultValue = std::make_shared<BoolPropertyData>(value);
 }
 
 void MaterialProperty::setDefault(int value)
 {
-    fDefaultValue = boost::make_shared<Int32PropertyData>(value);
+    fDefaultValue = std::make_shared<Int32PropertyData>(value);
 }
 
 void MaterialProperty::setDefault(float value)
 {
-    fDefaultValue = boost::make_shared<FloatPropertyData>(value);
+    fDefaultValue = std::make_shared<FloatPropertyData>(value);
 }
 
 void MaterialProperty::setDefault(float x, float y)
 {
-    fDefaultValue = boost::make_shared<Float2PropertyData>(x, y);
+    fDefaultValue = std::make_shared<Float2PropertyData>(x, y);
 }
 
 void MaterialProperty::setDefault(float x, float y, float z)
 {
-    fDefaultValue = boost::make_shared<Float3PropertyData>(x, y, z);
+    fDefaultValue = std::make_shared<Float3PropertyData>(x, y, z);
 }
 
 void MaterialProperty::setDefault(const MColor& value)
 {
-    fDefaultValue = boost::make_shared<ColorPropertyData>(boost::ref(value));
+    fDefaultValue = std::make_shared<ColorPropertyData>(boost::ref(value));
 }
 
 void MaterialProperty::setDefault(const MString& value)
 {
-    fDefaultValue = boost::make_shared<StringPropertyData>(boost::ref(value));
+    fDefaultValue = std::make_shared<StringPropertyData>(boost::ref(value));
 }
 
 bool MaterialProperty::getDefaultAsBool() const
@@ -265,22 +265,22 @@ MaterialProperty::PropertyDataPtr MaterialProperty::createData(Type type)
 {
     switch (type) {
     case kBool:
-        return boost::make_shared<BoolPropertyData>();
+        return std::make_shared<BoolPropertyData>();
     case kInt32:
-        return boost::make_shared<Int32PropertyData>();
+        return std::make_shared<Int32PropertyData>();
     case kFloat:
-        return boost::make_shared<FloatPropertyData>();
+        return std::make_shared<FloatPropertyData>();
     case kFloat2:
-        return boost::make_shared<Float2PropertyData>();
+        return std::make_shared<Float2PropertyData>();
     case kFloat3:
-        return boost::make_shared<Float3PropertyData>();
+        return std::make_shared<Float3PropertyData>();
     case kRGB:
-        return boost::make_shared<ColorPropertyData>();
+        return std::make_shared<ColorPropertyData>();
     case kString:
-        return boost::make_shared<StringPropertyData>();
+        return std::make_shared<StringPropertyData>();
     default:
         assert(0);  // Unknown type
-        return boost::make_shared<FloatPropertyData>();
+        return std::make_shared<FloatPropertyData>();
     }
 }
 
@@ -309,7 +309,7 @@ MaterialProperty::MPtr MaterialNode::findProperty(const MString& name)
     // Find a mutable property pointer.
     PropertyMap::iterator it = fProperties.find(name);
     if (it != fProperties.end()) {
-        return boost::const_pointer_cast<MaterialProperty>((*it).second);
+        return std::const_pointer_cast<MaterialProperty>((*it).second);
     }
     return MaterialProperty::MPtr();
 }

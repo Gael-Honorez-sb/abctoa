@@ -18,8 +18,7 @@
 #include <maya/MGlobal.h>
 #include <maya/MImage.h>
 
-#include <boost/shared_ptr.hpp>
-#include <boost/make_shared.hpp>
+#include <memory>
 
 
 namespace AlembicHolder {
@@ -58,34 +57,33 @@ public:
     // referenced. This is mainly used when running low on video
     // memory and it is no longer possible to keep VBO loaded from
     // frame to frame.
-    static boost::shared_ptr<const VBOBuffer> create(
-        const boost::shared_ptr<const IndexBuffer>& buffer,
+    static std::shared_ptr<const VBOBuffer> create(
+        const std::shared_ptr<const IndexBuffer>& buffer,
         const bool isTemporary = false);
 
     // Allocate a VBO and upload the vertex buffer data to the VBO
-    static boost::shared_ptr<const VBOBuffer> create(
-        const boost::shared_ptr<const VertexBuffer>& buffer,
+    static std::shared_ptr<const VBOBuffer> create(
+        const std::shared_ptr<const VertexBuffer>& buffer,
         const bool isTemporary = false);
 
     // Allocate a VBO and initialize it by flipping the normals of the
     // passed VBO.
-    static boost::shared_ptr<const VBOBuffer> createFlippedNormals(
-        const boost::shared_ptr<const VertexBuffer>& buffer,
+    static std::shared_ptr<const VBOBuffer> createFlippedNormals(
+        const std::shared_ptr<const VertexBuffer>& buffer,
         const bool isTemporary = false);
 
 
     // Lookup to see if VBOBuffer for the given buffer already exists.
-    static boost::shared_ptr<const VBOBuffer> lookup(
-        const boost::shared_ptr<const IndexBuffer>& buffer);
+    static std::shared_ptr<const VBOBuffer> lookup(
+        const std::shared_ptr<const IndexBuffer>& buffer);
 
     // Lookup to see if VBOBuffer for the given buffer already exists.
-    static boost::shared_ptr<const VBOBuffer> lookup(
-        const boost::shared_ptr<const VertexBuffer>& buffer);
+    static std::shared_ptr<const VBOBuffer> lookup(
+        const std::shared_ptr<const VertexBuffer>& buffer);
 
     // Lookup to see if VBOBuffer for the given buffer already exists.
-    static boost::shared_ptr<const VBOBuffer> lookupFlippedNormals(
-        const boost::shared_ptr<const VertexBuffer>& buffer);
-
+    static std::shared_ptr<const VBOBuffer> lookupFlippedNormals(
+        const std::shared_ptr<const VertexBuffer>& buffer);
 
     // Total size of all the VBOs currently allocated
     static size_t nbAllocatedBytes();
@@ -133,7 +131,7 @@ private:
 
     /*----- member functions -----*/
 
-    GPUCACHE_DECLARE_MAKE_SHARED_FRIEND_3;
+    GPUCACHE_DECLARE_MAKE_SHARED_FRIEND;
 
     // Construct the VBO Buffer with a memory address and size
     VBOBuffer(BufferType bufferType, const Key& key, const void* buffer);
@@ -224,24 +222,24 @@ public:
 
     // Draw the vertices of the given geometry sample
     void drawVertices(
-        const boost::shared_ptr<const ShapeSample>& sample,
+        const std::shared_ptr<const ShapeSample>& sample,
         const VBOMode vboMode = kUseVBOIfPossible);
 
     // Draw the wireframe of the given geometry sample
     void drawWireframe(
-        const boost::shared_ptr<const ShapeSample>& sample,
+        const std::shared_ptr<const ShapeSample>& sample,
         const VBOMode vboMode = kUseVBOIfPossible);
 
     // Draw the triangles of the given geometry sample
     void drawTriangles(
-        const boost::shared_ptr<const ShapeSample>& sample,
+        const std::shared_ptr<const ShapeSample>& sample,
         const size_t groupId,
         const NormalsMode normalsMode, const UVsMode uvsMode,
         const VBOMode vboMode = kUseVBOIfPossible);
 
     // Draw the bounding box of the given geometry sample
     void drawBoundingBox(
-        const boost::shared_ptr<const ShapeSample>& sample,
+        const std::shared_ptr<const ShapeSample>& sample,
         bool overrideShadedState = false);
     void drawBoundingBox(
         const MBoundingBox& boundingBox,
@@ -270,10 +268,10 @@ private:
     // card. Returns an enum representing the graphic API that should
     // be used to perform the drawing.
     BindingType updateBuffers(
-        const boost::shared_ptr<const IndexBuffer>&   indices,
-        const boost::shared_ptr<const VertexBuffer>&  positions,
-        const boost::shared_ptr<const VertexBuffer>&  normals,
-        const boost::shared_ptr<const VertexBuffer>&  uvs,
+        const std::shared_ptr<const IndexBuffer>&   indices,
+        const std::shared_ptr<const VertexBuffer>&  positions,
+        const std::shared_ptr<const VertexBuffer>&  normals,
+        const std::shared_ptr<const VertexBuffer>&  uvs,
         const bool                                    areNormalsFlipped,
         const VBOMode                                 vboMode,
         VertexBuffer::ReadInterfacePtr&               positionsRead,
@@ -284,16 +282,16 @@ private:
     /*----- member functions -----*/
 
     // Currently bound buffers.
-    boost::shared_ptr<const IndexBuffer>    fIndices;
-    boost::shared_ptr<const VertexBuffer>   fPositions;
-    boost::shared_ptr<const VertexBuffer>   fNormals;
-    boost::shared_ptr<const VertexBuffer>   fUVs;
+    std::shared_ptr<const IndexBuffer>    fIndices;
+    std::shared_ptr<const VertexBuffer>   fPositions;
+    std::shared_ptr<const VertexBuffer>   fNormals;
+    std::shared_ptr<const VertexBuffer>   fUVs;
 
     // Currently bound VBOs.
-    boost::shared_ptr<const VBOBuffer>      fVBOIndices;
-    boost::shared_ptr<const VBOBuffer>      fVBOPositions;
-    boost::shared_ptr<const VBOBuffer>      fVBONormals;
-    boost::shared_ptr<const VBOBuffer>      fVBOUVs;
+    std::shared_ptr<const VBOBuffer>      fVBOIndices;
+    std::shared_ptr<const VBOBuffer>      fVBOPositions;
+    std::shared_ptr<const VBOBuffer>      fVBONormals;
+    std::shared_ptr<const VBOBuffer>      fVBOUVs;
     bool                                    fAreNormalsFlipped;
 
     // Last binding type.

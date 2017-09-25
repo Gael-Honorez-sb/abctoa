@@ -9,7 +9,9 @@
 #include <maya/MStringResourceId.h>
 
 #include <boost/foreach.hpp>
-#include <boost/unordered_set.hpp>
+#include <boost/unordered_map.hpp>
+#include <map>
+#include <unordered_set>
 
 
 namespace AlembicHolder {
@@ -75,7 +77,7 @@ inline void DisplayWarning(const MStringResourceId& id)
 //==============================================================================
 
 template <class ArrayProperty>
-boost::shared_ptr<ReadableArray<typename AlembicArray<ArrayProperty>::T> >
+std::shared_ptr<ReadableArray<typename AlembicArray<ArrayProperty>::T> >
 AlembicArray<ArrayProperty>::create(
     const ArraySamplePtr& arraySamplePtr, const Digest& digest)
 {
@@ -93,7 +95,7 @@ AlembicArray<ArrayProperty>::create(
     // We first look if a similar array already exists in the
     // cache. If so, we return the cached array to promote sharing as
     // much as possible.
-    boost::shared_ptr<ReadableArray<T> > ret;
+    std::shared_ptr<ReadableArray<T> > ret;
     {
         tbb::mutex::scoped_lock lock(ArrayRegistry<T>::mutex());
 
@@ -102,7 +104,7 @@ AlembicArray<ArrayProperty>::create(
         ret = ArrayRegistry<T>::lookupReadable(digest, size);
 
         if (!ret) {
-            ret = boost::make_shared<AlembicArray<ArrayProperty> >(
+            ret = std::make_shared<AlembicArray<ArrayProperty> >(
                 arraySamplePtr, digest);
             ArrayRegistry<T>::insert(ret);
         }
@@ -201,10 +203,10 @@ bool DataProvider::valid() const
     return fBoundingBoxCache.valid();
 }
 
-boost::shared_ptr<const ShapeSample>
+std::shared_ptr<const ShapeSample>
 DataProvider::getBBoxPlaceHolderSample(double seconds)
 {
-    boost::shared_ptr<ShapeSample> sample =
+    std::shared_ptr<ShapeSample> sample =
         ShapeSample::createBoundingBoxPlaceHolderSample(
             seconds,
             getBoundingBox(),
@@ -433,23 +435,23 @@ bool Triangulator::valid() const
             fFaceIndicesCache.valid();
 }
 
-boost::shared_ptr<const ShapeSample>
+std::shared_ptr<const ShapeSample>
 Triangulator::getSample(double seconds)
 {
     // empty mesh
     if (!fWireIndices || !fTriangleIndices) {
-        boost::shared_ptr<ShapeSample> sample =
+        std::shared_ptr<ShapeSample> sample =
             ShapeSample::createEmptySample(seconds);
         return sample;
     }
 
     // triangle indices
     // Currently, we only have 1 group
-    std::vector<boost::shared_ptr<IndexBuffer> > triangleVertIndices;
+    std::vector<std::shared_ptr<IndexBuffer> > triangleVertIndices;
     triangleVertIndices.push_back(IndexBuffer::create(fTriangleIndices));
 
 
-    boost::shared_ptr<ShapeSample> sample = ShapeSample::create(
+    std::shared_ptr<ShapeSample> sample = ShapeSample::create(
         seconds,                                           // time (in seconds)
         fWireIndices->size() / 2,                          // number of wireframes
         fMappedPositions->size() / 3,                      // number of vertices
@@ -547,14 +549,14 @@ TimeInterval Triangulator::updateCache(chrono_t time)
 }
 
 template<size_t SIZE>
-boost::shared_ptr<ReadableArray<float> > Triangulator::convertMultiIndexedStream(
-    boost::shared_ptr<ReadableArray<float> > attribArray,
-    boost::shared_ptr<ReadableArray<IndexBuffer::index_t> > indexArray)
+std::shared_ptr<ReadableArray<float> > Triangulator::convertMultiIndexedStream(
+    std::shared_ptr<ReadableArray<float> > attribArray,
+    std::shared_ptr<ReadableArray<IndexBuffer::index_t> > indexArray)
 {
     // map the indexed array to direct array
-    size_t numVerts                                 = indexArray->size();
-    const float* srcAttribs                         = attribArray->get();
-    const IndexBuffer::index_t* srcIndices          = indexArray->get();
+    size_t numVerts = indexArray->size();
+    const float* srcAttribs = attribArray->get();
+    const IndexBuffer::index_t* srcIndices = indexArray->get();
 
     boost::shared_array<float> mappedAttribs(new float[numVerts * SIZE]);
     for (size_t i = 0; i < numVerts; i++) {
@@ -565,6 +567,8 @@ boost::shared_ptr<ReadableArray<float> > Triangulator::convertMultiIndexedStream
 
     return SharedArray<float>::create(mappedAttribs, numVerts * SIZE);
 }
+
+
 
 void Triangulator::check()
 {
@@ -1149,152 +1153,153 @@ namespace {
 
 // This class is used for generating wireframe indices.
 //
-template<class INDEX_TYPE>
-class WireIndicesGenerator
-{
-public:
-    typedef INDEX_TYPE index_type;
-
-    WireIndicesGenerator(size_t numFaceCounts, const unsigned int* faceCounts,
-        size_t numFaceIndices, const index_type* faceIndices,
-        const index_type* mappedFaceIndices)
-        : fNumFaceCounts(numFaceCounts), fFaceCounts(faceCounts),
-        fNumFaceIndices(numFaceIndices), fFaceIndices(faceIndices),
-        fMappedFaceIndices(mappedFaceIndices),
-        fNumWires(0)
-    {}
-
-    void compute()
+    template<class INDEX_TYPE>
+    class WireIndicesGenerator
     {
-        if (fNumFaceCounts == 0 || fNumFaceIndices == 0) {
-            return;
-        }
+    public:
+        typedef INDEX_TYPE index_type;
 
-        // pre-allocate buffers for the worst case
-        size_t maxNumWires = fNumFaceIndices;
-        boost::unordered_set<WirePair, typename WirePair::Hash, typename WirePair::EqualTo>
-            wireSet(size_t(maxNumWires / 0.75f));
-
-        // insert all wires to the set
-        size_t polyIndex = 0;
-        size_t endOfPoly = fFaceCounts[polyIndex];
-        for (size_t i = 0; i < fNumFaceIndices; i++) {
-            // find the two vertices of the wireframe
-            // v1 and v2 (face indices before splitting vertices) are hashed to
-            // remove duplicated wireframe lines.
-            // mappedV1 and mappedV2 are the actual indices to remapped
-            // positions/normals/UVs
-            index_type v1, v2, mappedV1, mappedV2;
-            v1 = fFaceIndices[i];
-            mappedV1 = fMappedFaceIndices[i];
-
-            size_t v2Index;
-            if (i + 1 == endOfPoly) {
-                // wrap at the end of the polygon
-                v2Index = i + 1 - fFaceCounts[polyIndex];
-                if (++polyIndex < fNumFaceCounts) {
-                    endOfPoly += fFaceCounts[polyIndex];
-                }
-            }
-            else {
-                v2Index = i + 1;
-            }
-
-            v2 = fFaceIndices[v2Index];
-            mappedV2 = fMappedFaceIndices[v2Index];
-
-            // insert
-            wireSet.insert(WirePair(v1, v2, mappedV1, mappedV2));
-        }
-
-        // the number of wireframes
-        size_t numWires = wireSet.size();
-
-        // allocate buffers for wireframe indices
-        boost::shared_array<index_type> wireIndices(new index_type[numWires * 2]);
-        size_t wireCount = 0;
-        BOOST_FOREACH(const WirePair& pair, wireSet) {
-            wireIndices[wireCount * 2 + 0] = pair.fMappedV1;
-            wireIndices[wireCount * 2 + 1] = pair.fMappedV2;
-            wireCount++;
-        }
-
-        fNumWires = numWires;
-        fWireIndices = wireIndices;
-    }
-
-    size_t                           numWires() { return fNumWires; }
-    boost::shared_array<index_type>& wireIndices() { return fWireIndices; }
-
-private:
-    // Prohibited and not implemented.
-    WireIndicesGenerator(const WireIndicesGenerator&);
-    const WireIndicesGenerator& operator= (const WireIndicesGenerator&);
-
-    // This class represents an unordered pair for wireframe indices
-    struct WirePair
-    {
-        WirePair(index_type v1, index_type v2,
-            index_type mappedV1, index_type mappedV2)
-            : fV1(v1), fV2(v2), fMappedV1(mappedV1), fMappedV2(mappedV2)
+        WireIndicesGenerator(size_t numFaceCounts, const unsigned int* faceCounts,
+            size_t numFaceIndices, const index_type* faceIndices,
+            const index_type* mappedFaceIndices)
+            : fNumFaceCounts(numFaceCounts), fFaceCounts(faceCounts),
+            fNumFaceIndices(numFaceIndices), fFaceIndices(faceIndices),
+            fMappedFaceIndices(mappedFaceIndices),
+            fNumWires(0)
         {}
 
-        struct Hash : std::unary_function<WirePair, std::size_t>
+        void compute()
         {
-            std::size_t operator()(const WirePair& pair) const
-            {
-                std::size_t seed = 0;
-                if (pair.fV1 < pair.fV2) {
-                    boost::hash_combine(seed, pair.fV1);
-                    boost::hash_combine(seed, pair.fV2);
+            if (fNumFaceCounts == 0 || fNumFaceIndices == 0) {
+                return;
+            }
+
+            // pre-allocate buffers for the worst case
+            size_t maxNumWires = fNumFaceIndices;
+            std::unordered_set<WirePair, typename WirePair::Hash, typename WirePair::EqualTo>
+                wireSet(size_t(maxNumWires / 0.75f));
+
+            // insert all wires to the set
+            size_t polyIndex = 0;
+            size_t endOfPoly = fFaceCounts[polyIndex];
+            for (size_t i = 0; i < fNumFaceIndices; i++) {
+                // find the two vertices of the wireframe
+                // v1 and v2 (face indices before splitting vertices) are hashed to
+                // remove duplicated wireframe lines.
+                // mappedV1 and mappedV2 are the actual indices to remapped
+                // positions/normals/UVs
+                index_type v1, v2, mappedV1, mappedV2;
+                v1 = fFaceIndices[i];
+                mappedV1 = fMappedFaceIndices[i];
+
+                size_t v2Index;
+                if (i + 1 == endOfPoly) {
+                    // wrap at the end of the polygon
+                    v2Index = i + 1 - fFaceCounts[polyIndex];
+                    if (++polyIndex < fNumFaceCounts) {
+                        endOfPoly += fFaceCounts[polyIndex];
+                    }
                 }
                 else {
-                    boost::hash_combine(seed, pair.fV2);
-                    boost::hash_combine(seed, pair.fV1);
+                    v2Index = i + 1;
                 }
-                return seed;
-            }
-        };
 
-        struct EqualTo : std::binary_function<WirePair, WirePair, bool>
+                v2 = fFaceIndices[v2Index];
+                mappedV2 = fMappedFaceIndices[v2Index];
+
+                // insert
+                wireSet.insert(WirePair(v1, v2, mappedV1, mappedV2));
+            }
+
+            // the number of wireframes
+            size_t numWires = wireSet.size();
+
+            // allocate buffers for wireframe indices
+            boost::shared_array<index_type> wireIndices(new index_type[numWires * 2]);
+            size_t wireCount = 0;
+            for (const WirePair& pair : wireSet) {
+                wireIndices[wireCount * 2 + 0] = pair.fMappedV1;
+                wireIndices[wireCount * 2 + 1] = pair.fMappedV2;
+                wireCount++;
+            }
+
+            fNumWires = numWires;
+            fWireIndices = wireIndices;
+        }
+
+        size_t                           numWires() { return fNumWires; }
+        boost::shared_array<index_type>& wireIndices() { return fWireIndices; }
+
+    private:
+        // Prohibited and not implemented.
+        WireIndicesGenerator(const WireIndicesGenerator&);
+        const WireIndicesGenerator& operator= (const WireIndicesGenerator&);
+
+        // This class represents an unordered pair for wireframe indices
+        struct WirePair
         {
-            bool operator()(const WirePair& x, const WirePair& y) const
+            WirePair(index_type v1, index_type v2,
+                index_type mappedV1, index_type mappedV2)
+                : fV1(v1), fV2(v2), fMappedV1(mappedV1), fMappedV2(mappedV2)
+            {}
+
+            struct Hash : std::unary_function<WirePair, std::size_t>
             {
-                if (x.fV1 < x.fV2) {
-                    if (y.fV1 < y.fV2) {
-                        return (x.fV1 == y.fV1 && x.fV2 == y.fV2);
+                std::size_t operator()(const WirePair& pair) const
+                {
+                    std::size_t seed = 0;
+                    if (pair.fV1 < pair.fV2) {
+                        boost::hash_combine(seed, pair.fV1);
+                        boost::hash_combine(seed, pair.fV2);
                     }
                     else {
-                        return (x.fV1 == y.fV2 && x.fV2 == y.fV1);
+                        boost::hash_combine(seed, pair.fV2);
+                        boost::hash_combine(seed, pair.fV1);
                     }
+                    return seed;
                 }
-                else {
-                    if (y.fV1 < y.fV2) {
-                        return (x.fV2 == y.fV1 && x.fV1 == y.fV2);
+            };
+
+            struct EqualTo : std::binary_function<WirePair, WirePair, bool>
+            {
+                bool operator()(const WirePair& x, const WirePair& y) const
+                {
+                    if (x.fV1 < x.fV2) {
+                        if (y.fV1 < y.fV2) {
+                            return (x.fV1 == y.fV1 && x.fV2 == y.fV2);
+                        }
+                        else {
+                            return (x.fV1 == y.fV2 && x.fV2 == y.fV1);
+                        }
                     }
                     else {
-                        return (x.fV2 == y.fV2 && x.fV1 == y.fV1);
+                        if (y.fV1 < y.fV2) {
+                            return (x.fV2 == y.fV1 && x.fV1 == y.fV2);
+                        }
+                        else {
+                            return (x.fV2 == y.fV2 && x.fV1 == y.fV1);
+                        }
                     }
                 }
-            }
+            };
+
+            index_type fV1, fV2;
+            index_type fMappedV1, fMappedV2;
         };
 
-        index_type fV1, fV2;
-        index_type fMappedV1, fMappedV2;
+        // Input
+        size_t              fNumFaceCounts;
+        const unsigned int* fFaceCounts;
+
+        size_t              fNumFaceIndices;
+        const index_type*   fFaceIndices;
+        const index_type*   fMappedFaceIndices;
+
+        // Output
+        size_t                          fNumWires;
+        boost::shared_array<index_type> fWireIndices;
     };
 
-    // Input
-    size_t              fNumFaceCounts;
-    const unsigned int* fFaceCounts;
-
-    size_t              fNumFaceIndices;
-    const index_type*   fFaceIndices;
-    const index_type*   fMappedFaceIndices;
-
-    // Output
-    size_t                          fNumWires;
-    boost::shared_array<index_type> fWireIndices;
-};
 
 } // unnamed namespace
 
@@ -1331,207 +1336,209 @@ namespace {
     //
     template<class INDEX_TYPE>
     class PolyTriangulator
-{
-public:
-    typedef INDEX_TYPE index_type;
-
-    PolyTriangulator(size_t numFaceCounts, const unsigned int* faceCounts,
-        const index_type* faceIndices, bool faceIndicesCW,
-        const float* positions, const float* normals)
-        : fNumFaceCounts(numFaceCounts), fFaceCounts(faceCounts),
-        fFaceIndices(faceIndices), fFaceIndicesCW(faceIndicesCW),
-        fPositions(positions), fNormals(normals),
-        fNumTriangles(0)
-    {}
-
-    void compute()
     {
-        // empty mesh
-        if (fNumFaceCounts == 0) {
-            return;
-        }
+    public:
+        typedef INDEX_TYPE index_type;
 
-        // scan the polygons to estimate the buffer size
-        size_t maxPoints = 0;  // the max number of vertices in one polygon
-        size_t totalTriangles = 0;  // the number of triangles in the mesh
+        PolyTriangulator(size_t numFaceCounts, const unsigned int* faceCounts,
+            const index_type* faceIndices, bool faceIndicesCW,
+            const float* positions, const float* normals)
+            : fNumFaceCounts(numFaceCounts), fFaceCounts(faceCounts),
+            fFaceIndices(faceIndices), fFaceIndicesCW(faceIndicesCW),
+            fPositions(positions), fNormals(normals),
+            fNumTriangles(0)
+        {}
 
-        for (size_t i = 0; i < fNumFaceCounts; i++) {
-            size_t numPoints = fFaceCounts[i];
-
-            // ignore degenerate polygon
-            if (numPoints < 3) {
-                continue;
+        void compute()
+        {
+            // empty mesh
+            if (fNumFaceCounts == 0) {
+                return;
             }
 
-            // max number of points in a polygon
-            maxPoints = std::max(numPoints, maxPoints);
+            // scan the polygons to estimate the buffer size
+            size_t maxPoints = 0;  // the max number of vertices in one polygon
+            size_t totalTriangles = 0;  // the number of triangles in the mesh
 
-            // the number of triangles expected in the polygon
-            size_t numTriangles = numPoints - 2;
-            totalTriangles += numTriangles;
-        }
+            for (size_t i = 0; i < fNumFaceCounts; i++) {
+                size_t numPoints = fFaceCounts[i];
 
-        size_t maxTriangles = maxPoints - 2;  // the max number of triangles in a polygon
-
-                                              // allocate buffers for the worst case
-        boost::shared_array<index_type>     indices(new index_type[maxPoints]);
-        boost::shared_array<unsigned short> triangles(new unsigned short[maxTriangles * 3]);
-        boost::shared_array<float>          aPosition(new float[maxPoints * 2]);
-        boost::shared_array<float>          aNormal;
-        if (fNormals) {
-            aNormal.reset(new float[maxPoints * 3]);
-        }
-
-        boost::shared_array<index_type> triangleIndices(new index_type[totalTriangles * 3]);
-
-        // triangulate each polygon
-        size_t triangleCount = 0;  // the triangles
-        for (size_t i = 0, polyVertOffset = 0; i < fNumFaceCounts; polyVertOffset += fFaceCounts[i], i++) {
-            size_t numPoints = fFaceCounts[i];
-
-            // ignore degenerate polygon
-            if (numPoints < 3) {
-                continue;
-            }
-
-            // no need to triangulate a triangle
-            if (numPoints == 3) {
-                if (fFaceIndicesCW) {
-                    triangleIndices[triangleCount * 3 + 0] = fFaceIndices[polyVertOffset + 2];
-                    triangleIndices[triangleCount * 3 + 1] = fFaceIndices[polyVertOffset + 1];
-                    triangleIndices[triangleCount * 3 + 2] = fFaceIndices[polyVertOffset + 0];
+                // ignore degenerate polygon
+                if (numPoints < 3) {
+                    continue;
                 }
-                else {
-                    triangleIndices[triangleCount * 3 + 0] = fFaceIndices[polyVertOffset + 0];
-                    triangleIndices[triangleCount * 3 + 1] = fFaceIndices[polyVertOffset + 1];
-                    triangleIndices[triangleCount * 3 + 2] = fFaceIndices[polyVertOffset + 2];
-                }
-                triangleCount++;
-                continue;
+
+                // max number of points in a polygon
+                maxPoints = std::max(numPoints, maxPoints);
+
+                // the number of triangles expected in the polygon
+                size_t numTriangles = numPoints - 2;
+                totalTriangles += numTriangles;
             }
 
-            // 1) correct the polygon winding from CW to CCW
-            if (fFaceIndicesCW)
-            {
-                for (size_t j = 0; j < numPoints; j++) {
-                    size_t jCCW = numPoints - j - 1;
-                    indices[j] = fFaceIndices[polyVertOffset + jCCW];
-                }
-            }
-            else {
-                for (size_t j = 0; j < numPoints; j++) {
-                    indices[j] = fFaceIndices[polyVertOffset + j];
-                }
-            }
+            size_t maxTriangles = maxPoints - 2;  // the max number of triangles in a polygon
 
-            // 2) compute the face normal (Newell's Method)
-            MFloatVector faceNormal(0.0f, 0.0f, 0.0f);
-            for (size_t j = 0; j < numPoints; j++) {
-                const float* thisPoint = &fPositions[indices[j] * 3];
-                const float* nextPoint = &fPositions[indices[(j + numPoints - 1) % numPoints] * 3];
-                faceNormal.x += (thisPoint[1] - nextPoint[1]) * (thisPoint[2] + nextPoint[2]);
-                faceNormal.y += (thisPoint[2] - nextPoint[2]) * (thisPoint[0] + nextPoint[0]);
-                faceNormal.z += (thisPoint[0] - nextPoint[0]) * (thisPoint[1] + nextPoint[1]);
-            }
-            faceNormal.normalize();
-
-            // 3) project the vertices to 2d plane by faceNormal
-            float cosa, sina, cosb, sinb, cacb, sacb;
-            sinb = -sqrtf(faceNormal[0] * faceNormal[0] + faceNormal[1] * faceNormal[1]);
-            if (sinb < -1e-5) {
-                cosb = faceNormal[2];
-                sina = faceNormal[1] / sinb;
-                cosa = -faceNormal[0] / sinb;
-
-                cacb = cosa * cosb;
-                sacb = sina * cosb;
-            }
-            else {
-                cacb = 1.0f;
-                sacb = 0.0f;
-                sinb = 0.0f;
-                sina = 0.0f;
-                if (faceNormal[2] > 0.0f) {
-                    cosa = 1.0f;
-                    cosb = 1.0f;
-                }
-                else {
-                    cosa = -1.0f;
-                    cosb = -1.0f;
-                }
-            }
-
-            for (size_t j = 0; j < numPoints; j++) {
-                const float* point = &fPositions[indices[j] * 3];
-                aPosition[j * 2 + 0] = cacb * point[0] - sacb * point[1] + sinb * point[2];
-                aPosition[j * 2 + 1] = sina * point[0] + cosa * point[1];
-            }
-
-            // 4) copy normals
+                                                  // allocate buffers for the worst case
+            boost::shared_array<index_type>     indices(new index_type[maxPoints]);
+            boost::shared_array<unsigned short> triangles(new unsigned short[maxTriangles * 3]);
+            boost::shared_array<float>          aPosition(new float[maxPoints * 2]);
+            boost::shared_array<float>          aNormal;
             if (fNormals) {
+                aNormal.reset(new float[maxPoints * 3]);
+            }
+
+            boost::shared_array<index_type> triangleIndices(new index_type[totalTriangles * 3]);
+
+            // triangulate each polygon
+            size_t triangleCount = 0;  // the triangles
+            for (size_t i = 0, polyVertOffset = 0; i < fNumFaceCounts; polyVertOffset += fFaceCounts[i], i++) {
+                size_t numPoints = fFaceCounts[i];
+
+                // ignore degenerate polygon
+                if (numPoints < 3) {
+                    continue;
+                }
+
+                // no need to triangulate a triangle
+                if (numPoints == 3) {
+                    if (fFaceIndicesCW) {
+                        triangleIndices[triangleCount * 3 + 0] = fFaceIndices[polyVertOffset + 2];
+                        triangleIndices[triangleCount * 3 + 1] = fFaceIndices[polyVertOffset + 1];
+                        triangleIndices[triangleCount * 3 + 2] = fFaceIndices[polyVertOffset + 0];
+                    }
+                    else {
+                        triangleIndices[triangleCount * 3 + 0] = fFaceIndices[polyVertOffset + 0];
+                        triangleIndices[triangleCount * 3 + 1] = fFaceIndices[polyVertOffset + 1];
+                        triangleIndices[triangleCount * 3 + 2] = fFaceIndices[polyVertOffset + 2];
+                    }
+                    triangleCount++;
+                    continue;
+                }
+
+                // 1) correct the polygon winding from CW to CCW
+                if (fFaceIndicesCW)
+                {
+                    for (size_t j = 0; j < numPoints; j++) {
+                        size_t jCCW = numPoints - j - 1;
+                        indices[j] = fFaceIndices[polyVertOffset + jCCW];
+                    }
+                }
+                else {
+                    for (size_t j = 0; j < numPoints; j++) {
+                        indices[j] = fFaceIndices[polyVertOffset + j];
+                    }
+                }
+
+                // 2) compute the face normal (Newell's Method)
+                MFloatVector faceNormal(0.0f, 0.0f, 0.0f);
                 for (size_t j = 0; j < numPoints; j++) {
-                    aNormal[j * 3 + 0] = fNormals[indices[j] * 3 + 0];
-                    aNormal[j * 3 + 1] = fNormals[indices[j] * 3 + 1];
-                    aNormal[j * 3 + 2] = fNormals[indices[j] * 3 + 2];
+                    const float* thisPoint = &fPositions[indices[j] * 3];
+                    const float* nextPoint = &fPositions[indices[(j + numPoints - 1) % numPoints] * 3];
+                    faceNormal.x += (thisPoint[1] - nextPoint[1]) * (thisPoint[2] + nextPoint[2]);
+                    faceNormal.y += (thisPoint[2] - nextPoint[2]) * (thisPoint[0] + nextPoint[0]);
+                    faceNormal.z += (thisPoint[0] - nextPoint[0]) * (thisPoint[1] + nextPoint[1]);
+                }
+                faceNormal.normalize();
+
+                // 3) project the vertices to 2d plane by faceNormal
+                float cosa, sina, cosb, sinb, cacb, sacb;
+                sinb = -sqrtf(faceNormal[0] * faceNormal[0] + faceNormal[1] * faceNormal[1]);
+                if (sinb < -1e-5) {
+                    cosb = faceNormal[2];
+                    sina = faceNormal[1] / sinb;
+                    cosa = -faceNormal[0] / sinb;
+
+                    cacb = cosa * cosb;
+                    sacb = sina * cosb;
+                }
+                else {
+                    cacb = 1.0f;
+                    sacb = 0.0f;
+                    sinb = 0.0f;
+                    sina = 0.0f;
+                    if (faceNormal[2] > 0.0f) {
+                        cosa = 1.0f;
+                        cosb = 1.0f;
+                    }
+                    else {
+                        cosa = -1.0f;
+                        cosb = -1.0f;
+                    }
+                }
+
+                for (size_t j = 0; j < numPoints; j++) {
+                    const float* point = &fPositions[indices[j] * 3];
+                    aPosition[j * 2 + 0] = cacb * point[0] - sacb * point[1] + sinb * point[2];
+                    aPosition[j * 2 + 1] = sina * point[0] + cosa * point[1];
+                }
+
+                // 4) copy normals
+                if (fNormals) {
+                    for (size_t j = 0; j < numPoints; j++) {
+                        aNormal[j * 3 + 0] = fNormals[indices[j] * 3 + 0];
+                        aNormal[j * 3 + 1] = fNormals[indices[j] * 3 + 1];
+                        aNormal[j * 3 + 2] = fNormals[indices[j] * 3 + 2];
+                    }
+                }
+
+                // 5) do triangulation
+                int numResultTriangles = 0;
+                MFnMesh::polyTriangulate(
+                    aPosition.get(),
+                    (unsigned int)numPoints,
+                    (unsigned int)numPoints,
+                    0,
+                    fNormals != NULL,
+                    aNormal.get(),
+                    triangles.get(),
+                    numResultTriangles);
+
+                if (numResultTriangles == int(numPoints - 2)) {
+                    // triangulation success
+                    for (size_t j = 0; j < size_t(numResultTriangles); j++) {
+                        triangleIndices[triangleCount * 3 + 0] = indices[triangles[j * 3 + 0]];
+                        triangleIndices[triangleCount * 3 + 1] = indices[triangles[j * 3 + 1]];
+                        triangleIndices[triangleCount * 3 + 2] = indices[triangles[j * 3 + 2]];
+                        triangleCount++;
+                    }
+                }
+                else {
+                    // triangulation failure, use the default triangulation
+                    for (size_t j = 1; j < numPoints - 1; j++) {
+                        triangleIndices[triangleCount * 3 + 0] = indices[0];
+                        triangleIndices[triangleCount * 3 + 1] = indices[j];
+                        triangleIndices[triangleCount * 3 + 2] = indices[j + 1];
+                        triangleCount++;
+                    }
                 }
             }
 
-            // 5) do triangulation
-            int numResultTriangles = 0;
-            MFnMesh::polyTriangulate(
-                aPosition.get(),
-                (unsigned int)numPoints,
-                (unsigned int)numPoints,
-                0,
-                fNormals != NULL,
-                aNormal.get(),
-                triangles.get(),
-                numResultTriangles);
-
-            if (numResultTriangles == int(numPoints - 2)) {
-                // triangulation success
-                for (size_t j = 0; j < size_t(numResultTriangles); j++) {
-                    triangleIndices[triangleCount * 3 + 0] = indices[triangles[j * 3 + 0]];
-                    triangleIndices[triangleCount * 3 + 1] = indices[triangles[j * 3 + 1]];
-                    triangleIndices[triangleCount * 3 + 2] = indices[triangles[j * 3 + 2]];
-                    triangleCount++;
-                }
-            }
-            else {
-                // triangulation failure, use the default triangulation
-                for (size_t j = 1; j < numPoints - 1; j++) {
-                    triangleIndices[triangleCount * 3 + 0] = indices[0];
-                    triangleIndices[triangleCount * 3 + 1] = indices[j];
-                    triangleIndices[triangleCount * 3 + 2] = indices[j + 1];
-                    triangleCount++;
-                }
-            }
+            fNumTriangles = totalTriangles;
+            fTriangleIndices = triangleIndices;
         }
 
-        fNumTriangles = totalTriangles;
-        fTriangleIndices = triangleIndices;
-    }
+        size_t numTriangles() { return fNumTriangles; }
+        boost::shared_array<index_type>& triangleIndices() { return fTriangleIndices; }
 
-    size_t numTriangles() { return fNumTriangles; }
-    boost::shared_array<index_type>& triangleIndices() { return fTriangleIndices; }
+    private:
+        // Prohibited and not implemented.
+        PolyTriangulator(const PolyTriangulator&);
+        const PolyTriangulator& operator= (const PolyTriangulator&);
 
-private:
-    // Prohibited and not implemented.
-    PolyTriangulator(const PolyTriangulator&);
-    const PolyTriangulator& operator= (const PolyTriangulator&);
+        // Input
+        size_t              fNumFaceCounts;
+        const unsigned int* fFaceCounts;
+        const index_type*   fFaceIndices;
+        bool                fFaceIndicesCW;
+        const float*        fPositions;
+        const float*        fNormals;
 
-    // Input
-    size_t              fNumFaceCounts;
-    const unsigned int* fFaceCounts;
-    const index_type*   fFaceIndices;
-    bool                fFaceIndicesCW;
-    const float*        fPositions;
-    const float*        fNormals;
+        // Output
+        size_t                          fNumTriangles;
+        boost::shared_array<index_type> fTriangleIndices;
+    };
 
-    // Output
-    size_t                          fNumTriangles;
-    boost::shared_array<index_type> fTriangleIndices;
-};
+
 
 } // unnamed namespace
 

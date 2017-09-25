@@ -18,7 +18,7 @@
 #include "Drawable.h"
 #include "nozAlembicHolderNode.h"
 
-#include <boost/shared_ptr.hpp>
+#include <memory>
 
 #define BOOST_DATE_TIME_NO_LIB
 #include <boost/date_time/posix_time/ptime.hpp>
@@ -52,28 +52,28 @@ public:
     static void clear();
 
     // Find the Viewport 2.0 index buffer.
-    static MHWRender::MIndexBuffer*  lookup(const boost::shared_ptr<const IndexBuffer>& indices);
+    static MHWRender::MIndexBuffer*  lookup(const std::shared_ptr<const IndexBuffer>& indices);
 
     // Find the Viewport 2.0 vertex buffer.
-    static MHWRender::MVertexBuffer* lookup(const boost::shared_ptr<const VertexBuffer>& vertices);
+    static MHWRender::MVertexBuffer* lookup(const std::shared_ptr<const VertexBuffer>& vertices);
 
     // Constructor and Destructor
     SubSceneOverride(const MObject& object);
-    virtual ~SubSceneOverride();
+    ~SubSceneOverride() override;
 
     // Overrides
-    virtual MHWRender::DrawAPI supportedDrawAPIs() const;
+    MHWRender::DrawAPI supportedDrawAPIs() const override;
 
     void initializeFragmentShaders();
 
-    virtual bool requiresUpdate(const MHWRender::MSubSceneContainer& container,
-                                const MHWRender::MFrameContext&      frameContext) const;
+    bool requiresUpdate(const MHWRender::MSubSceneContainer& container,
+                                const MHWRender::MFrameContext&      frameContext) const override;
 
-    virtual void update(MHWRender::MSubSceneContainer&  container,
-                        const MHWRender::MFrameContext& frameContext);
+    void update(MHWRender::MSubSceneContainer&  container,
+                        const MHWRender::MFrameContext& frameContext) override;
 
-    virtual bool getInstancedSelectionPath(const MHWRender::MRenderItem& renderItem, const MHWRender::MIntersection& intersection, MDagPath& dagPath) const;
-    virtual void updateSelectionGranularity(const MDagPath& path, MHWRender::MSelectionContext& selectionContext);
+    bool getInstancedSelectionPath(const MHWRender::MRenderItem& renderItem, const MHWRender::MIntersection& intersection, MDagPath& dagPath) const override;
+    void updateSelectionGranularity(const MDagPath& path, MHWRender::MSelectionContext& selectionContext) override;
 
 
     // Dirty methods (called from Callbacks)
@@ -91,7 +91,7 @@ public:
 
     // Current state methods
     const AlembicHolder::DrawablePtr& getGeometry() const { return fGeometry; }
-    MaterialGraphMap::Ptr getMaterial() const { return fMaterial;}
+    const MaterialGraphMap::Ptr getMaterial() const { return fMaterial;}
     bool isPartVisible(const std::string& partName) const;
     double getTime() const { return fTimeInSeconds; }
 
@@ -100,7 +100,7 @@ public:
 
     // Hardware instancing
     class HardwareInstanceManager;
-    boost::shared_ptr<HardwareInstanceManager>& hardwareInstanceManager()
+    std::shared_ptr<HardwareInstanceManager>& hardwareInstanceManager()
     { return fHardwareInstanceManager; }
 
     // Update methods
@@ -120,12 +120,12 @@ private:
     class HierarchyStat;
     class HierarchyStatVisitor;
 
-    const boost::shared_ptr<const HierarchyStat>& getHierarchyStat() const
+    const std::shared_ptr<const HierarchyStat>& getHierarchyStat() const
     { return fHierarchyStat; }
 
 
     const MObject    fObject;
-    ShapeNode*       fShapeNode;
+    const ShapeNode*       fShapeNode;
     MPlug            fCastsShadowsPlug;
     MPlug            fReceiveShadowsPlug;
 
@@ -167,17 +167,17 @@ private:
     class UpdateStreamsVisitor;
     class UpdateDiffuseColorVisitor;
     class InstanceRenderItems;
-    typedef std::vector<boost::shared_ptr<InstanceRenderItems> > InstanceRenderItemList;
-    typedef std::vector<boost::shared_ptr<SubNodeRenderItems> >  SubNodeRenderItemList;
+    typedef std::vector<std::shared_ptr<InstanceRenderItems> > InstanceRenderItemList;
+    typedef std::vector<std::shared_ptr<SubNodeRenderItems> >  SubNodeRenderItemList;
 
     MDagPathArray          fInstanceDagPaths;
     InstanceRenderItemList fInstanceRenderItems;
 
     // The hierarchy status to help pruning.
-    boost::shared_ptr<const HierarchyStat> fHierarchyStat;
+    std::shared_ptr<const HierarchyStat> fHierarchyStat;
 
     // Manages all hardware instances. NULL if hardware instancing is disabled.
-    boost::shared_ptr<HardwareInstanceManager> fHardwareInstanceManager;
+    std::shared_ptr<HardwareInstanceManager> fHardwareInstanceManager;
 
     MString fFragmentName;
 

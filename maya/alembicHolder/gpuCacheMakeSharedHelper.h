@@ -12,63 +12,27 @@
 //**************************************************************************/
 //+
 
-///////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////////// 
 //
 // Make Shared Helper
 //
-// Helpers to declare boost::make_shared friend.
+// Helpers to declare std::make_shared friend.
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-#include <boost/make_shared.hpp>
+#include <memory>
 
 namespace AlembicHolder {
 
-// Zero-argument versions
-#define GPUCACHE_DECLARE_MAKE_SHARED_FRIEND_0 template< class AA > friend typename boost::detail::sp_if_not_array< AA >::type boost::make_shared();
-
-#if !defined( BOOST_NO_CXX11_VARIADIC_TEMPLATES ) && !defined( BOOST_NO_CXX11_RVALUE_REFERENCES )
-
-// Variadic templates, rvalue reference
-
-#define GPUCACHE_DECLARE_MAKE_SHARED_FRIEND_1 template< class AA, class... Args > friend typename boost::detail::sp_if_not_array< AA >::type boost::make_shared( Args && ... args );
-#define GPUCACHE_DECLARE_MAKE_SHARED_FRIEND_2 template< class AA, class... Args > friend typename boost::detail::sp_if_not_array< AA >::type boost::make_shared( Args && ... args );
-#define GPUCACHE_DECLARE_MAKE_SHARED_FRIEND_3 template< class AA, class... Args > friend typename boost::detail::sp_if_not_array< AA >::type boost::make_shared( Args && ... args );
-#define GPUCACHE_DECLARE_MAKE_SHARED_FRIEND_4 template< class AA, class... Args > friend typename boost::detail::sp_if_not_array< AA >::type boost::make_shared( Args && ... args );
-#define GPUCACHE_DECLARE_MAKE_SHARED_FRIEND_5 template< class AA, class... Args > friend typename boost::detail::sp_if_not_array< AA >::type boost::make_shared( Args && ... args );
-#define GPUCACHE_DECLARE_MAKE_SHARED_FRIEND_6 template< class AA, class... Args > friend typename boost::detail::sp_if_not_array< AA >::type boost::make_shared( Args && ... args );
-#define GPUCACHE_DECLARE_MAKE_SHARED_FRIEND_7 template< class AA, class... Args > friend typename boost::detail::sp_if_not_array< AA >::type boost::make_shared( Args && ... args );
-#define GPUCACHE_DECLARE_MAKE_SHARED_FRIEND_8 template< class AA, class... Args > friend typename boost::detail::sp_if_not_array< AA >::type boost::make_shared( Args && ... args );
-#define GPUCACHE_DECLARE_MAKE_SHARED_FRIEND_9 template< class AA, class... Args > friend typename boost::detail::sp_if_not_array< AA >::type boost::make_shared( Args && ... args );
-
-#elif !defined( BOOST_NO_CXX11_RVALUE_REFERENCES )
-
-// For example MSVC 10.0
-
-#define GPUCACHE_DECLARE_MAKE_SHARED_FRIEND_1 template< class AA, class A1 > friend typename boost::detail::sp_if_not_array< AA >::type boost::make_shared( A1 && a1 );
-#define GPUCACHE_DECLARE_MAKE_SHARED_FRIEND_2 template< class AA, class A1, class A2 > friend typename boost::detail::sp_if_not_array< AA >::type boost::make_shared( A1 && a1, A2 && a2 );
-#define GPUCACHE_DECLARE_MAKE_SHARED_FRIEND_3 template< class AA, class A1, class A2, class A3 > friend typename boost::detail::sp_if_not_array< AA >::type boost::make_shared( A1 && a1, A2 && a2, A3 && a3 );
-#define GPUCACHE_DECLARE_MAKE_SHARED_FRIEND_4 template< class AA, class A1, class A2, class A3, class A4 > friend typename boost::detail::sp_if_not_array< AA >::type boost::make_shared( A1 && a1, A2 && a2, A3 && a3, A4 && a4 );
-#define GPUCACHE_DECLARE_MAKE_SHARED_FRIEND_5 template< class AA, class A1, class A2, class A3, class A4, class A5 > friend typename boost::detail::sp_if_not_array< AA >::type boost::make_shared( A1 && a1, A2 && a2, A3 && a3, A4 && a4, A5 && a5 );
-#define GPUCACHE_DECLARE_MAKE_SHARED_FRIEND_6 template< class AA, class A1, class A2, class A3, class A4, class A5, class A6 > friend typename boost::detail::sp_if_not_array< AA >::type boost::make_shared( A1 && a1, A2 && a2, A3 && a3, A4 && a4, A5 && a5, A6 && a6 );
-#define GPUCACHE_DECLARE_MAKE_SHARED_FRIEND_7 template< class AA, class A1, class A2, class A3, class A4, class A5, class A6, class A7 > friend typename boost::detail::sp_if_not_array< AA >::type boost::make_shared( A1 && a1, A2 && a2, A3 && a3, A4 && a4, A5 && a5, A6 && a6, A7 && a7 );
-#define GPUCACHE_DECLARE_MAKE_SHARED_FRIEND_8 template< class AA, class A1, class A2, class A3, class A4, class A5, class A6, class A7, class A8 > friend typename boost::detail::sp_if_not_array< AA >::type boost::make_shared( A1 && a1, A2 && a2, A3 && a3, A4 && a4, A5 && a5, A6 && a6, A7 && a7, A8 && a8 );
-#define GPUCACHE_DECLARE_MAKE_SHARED_FRIEND_9 template< class AA, class A1, class A2, class A3, class A4, class A5, class A6, class A7, class A8, class A9 > friend typename boost::detail::sp_if_not_array< AA >::type boost::make_shared( A1 && a1, A2 && a2, A3 && a3, A4 && a4, A5 && a5, A6 && a6, A7 && a7, A8 && a8, A9 && a9 );
-
+// make_shared friends for allocators
+#if defined(__clang__) && !defined(__linux__)
+    #define GPUCACHE_DECLARE_MAKE_SHARED_FRIEND template< class _T1, class _T2, unsigned > friend class _VSTD::__libcpp_compressed_pair_imp
+#elif defined(__GNUC__) || defined(__linux__)
+    #define GPUCACHE_DECLARE_MAKE_SHARED_FRIEND template< typename _Tp > friend class __gnu_cxx::new_allocator
+#elif defined(_MSC_VER)
+    #define GPUCACHE_DECLARE_MAKE_SHARED_FRIEND template< class _Ty > friend class std::_Ref_count_obj
 #else
-
-// C++03 version
-
-#define GPUCACHE_DECLARE_MAKE_SHARED_FRIEND_1 template< class AA, class A1 > friend typename boost::detail::sp_if_not_array< AA >::type boost::make_shared( A1 const & a1 );
-#define GPUCACHE_DECLARE_MAKE_SHARED_FRIEND_2 template< class AA, class A1, class A2 > friend typename boost::detail::sp_if_not_array< AA >::type boost::make_shared( A1 const & a1, A2 const & a2 );
-#define GPUCACHE_DECLARE_MAKE_SHARED_FRIEND_3 template< class AA, class A1, class A2, class A3 > friend typename boost::detail::sp_if_not_array< AA >::type boost::make_shared( A1 const & a1, A2 const & a2, A3 const & a3 );
-#define GPUCACHE_DECLARE_MAKE_SHARED_FRIEND_4 template< class AA, class A1, class A2, class A3, class A4 > friend typename boost::detail::sp_if_not_array< AA >::type boost::make_shared( A1 const & a1, A2 const & a2, A3 const & a3, A4 const & a4 );
-#define GPUCACHE_DECLARE_MAKE_SHARED_FRIEND_5 template< class AA, class A1, class A2, class A3, class A4, class A5 > friend typename boost::detail::sp_if_not_array< AA >::type boost::make_shared( A1 const & a1, A2 const & a2, A3 const & a3, A4 const & a4, A5 const & a5 );
-#define GPUCACHE_DECLARE_MAKE_SHARED_FRIEND_6 template< class AA, class A1, class A2, class A3, class A4, class A5, class A6 > friend typename boost::detail::sp_if_not_array< AA >::type boost::make_shared( A1 const & a1, A2 const & a2, A3 const & a3, A4 const & a4, A5 const & a5, A6 const & a6 );
-#define GPUCACHE_DECLARE_MAKE_SHARED_FRIEND_7 template< class AA, class A1, class A2, class A3, class A4, class A5, class A6, class A7 > friend typename boost::detail::sp_if_not_array< AA >::type boost::make_shared( A1 const & a1, A2 const & a2, A3 const & a3, A4 const & a4, A5 const & a5, A6 const & a6, A7 const & a7 );
-#define GPUCACHE_DECLARE_MAKE_SHARED_FRIEND_8 template< class AA, class A1, class A2, class A3, class A4, class A5, class A6, class A7, class A8 > friend typename boost::detail::sp_if_not_array< AA >::type boost::make_shared( A1 const & a1, A2 const & a2, A3 const & a3, A4 const & a4, A5 const & a5, A6 const & a6, A7 const & a7, A8 const & a8 );
-#define GPUCACHE_DECLARE_MAKE_SHARED_FRIEND_9 template< class AA, class A1, class A2, class A3, class A4, class A5, class A6, class A7, class A8, class A9 > friend typename boost::detail::sp_if_not_array< AA >::type boost::make_shared( A1 const & a1, A2 const & a2, A3 const & a3, A4 const & a4, A5 const & a5, A6 const & a6, A7 const & a7, A8 const & a8, A9 const & a9 );
-
+    #error Not implemented
 #endif
 
 } // namespace AlembicHolder

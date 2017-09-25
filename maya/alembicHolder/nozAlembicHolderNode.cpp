@@ -134,25 +134,10 @@ CAlembicDatas::CAlembicDatas() {
 	m_params->linkAttributes = false;
 }
 
-void abcDirtiedCallback(MObject & nodeMO, MPlug & plug, void* data) {
-
-    const nozAlembicHolder& node = *(nozAlembicHolder*)data;
-
-    //nozAlembicHolder::nozAlembicHolder *node = (nozAlembicHolder::nozAlembicHolder *) data;
-    //cout << "plug.attribute()" << plug.partialName(false, false, false, false, false, true) << endl;
-
-    MFnDagNode fn( nodeMO );
-    if (plug.partialName(false, false, false, false, false, true) == "abcFile" || plug.partialName(false, false, false, false, false, true) == "objectPath")
-    {
-        MFnDagNode fn(node.thisMObject());
-        //std::cout << "plugDirtied: " << fn.name() << " " << plug.name() << " = " << plug.asString() << std::endl;
-        node.boundingBox();
-
-    }
-}
-
-void abcChangedCallback(MNodeMessage::AttributeMessage msg, MPlug & plug,
-        MPlug & otherPlug, void* data) {
+void nodePreRemovalCallback(MObject& obj, void* data) 
+{
+    std::cout << "Pre Removal callback" << std::endl;
+    std::string sceneKey = ((nozAlembicHolder*)data)->getSceneKey();
 }
 
 nozAlembicHolder::nozAlembicHolder()
@@ -163,6 +148,7 @@ nozAlembicHolder::nozAlembicHolder()
 
 nozAlembicHolder::~nozAlembicHolder()
 {
+    std::cout << "removint alembic Holder" << std::endl;
     std::string sceneKey = getSceneKey();
     CAlembicDatas::abcSceneManager.removeScene(sceneKey);
     if(CAlembicDatas::abcSceneManager.hasKey(sceneKey) == 0)
@@ -173,8 +159,8 @@ nozAlembicHolder::~nozAlembicHolder()
             glDeleteLists((*J).second, 1);
             g_bboxCache.erase(J);
         }
-
     }
+    std::cout << "removint alembic Holder done" << std::endl;
 }
 
 void nozAlembicHolder::setHolderTime() {
@@ -234,7 +220,7 @@ void nozAlembicHolder::postConstructor()
     isConstant = false;
     // callbacks
     MObject node = thisMObject();
-    MNodeMessage::addAttributeChangedCallback(node, abcChangedCallback, this);
+    MNodeMessage::addNodePreRemovalCallback(node, nodePreRemovalCallback, this);
 
 
 }
@@ -996,7 +982,7 @@ public:
 
     virtual void visit(const IPolyMeshDrw&   shape)
     {
-        const boost::shared_ptr<const ShapeSample>& sample =
+        const std::shared_ptr<const ShapeSample>& sample =
             shape.getSample(fSeconds);
         if (!sample) return;
 
@@ -1062,7 +1048,7 @@ public:
         : BaseClass(state, xform, false, parentClippingResult)
     {}
 
-    void draw(const boost::shared_ptr<const ShapeSample>& sample)
+    void draw(const std::shared_ptr<const ShapeSample>& sample)
     {
         if (!sample->visibility()) return;
         if (sample->isBoundingBoxPlaceHolder()) return;
@@ -1123,10 +1109,14 @@ void* CAlembicHolderUI::creator()
 }
 
 CAlembicHolderUI::CAlembicHolderUI()
-{}
+{
+    std::cout << "CAlembicHolderUI constructor" << std::endl;
+}
 
 CAlembicHolderUI::~CAlembicHolderUI()
-{}
+{
+    std::cout << "CAlembicHolderUI destructor" << std::endl;
+}
 
 void CAlembicHolderUI::getDrawRequests(const MDrawInfo & info,
     bool objectAndActiveOnly,
@@ -1410,7 +1400,7 @@ public:
         : BaseClass(state, xform, isReflection, parentClippingResult)
     {}
 
-    void draw(const boost::shared_ptr<const ShapeSample>& sample)
+    void draw(const std::shared_ptr<const ShapeSample>& sample)
     {
         if (!sample->visibility()) return;
         gGLFT->glLoadMatrixd(xform().matrix[0]);
@@ -1512,7 +1502,7 @@ public:
         : BaseClass(state, xform, isReflection, parentClippingResult)
     {}
 
-    void draw(const boost::shared_ptr<const ShapeSample>& sample)
+    void draw(const std::shared_ptr<const ShapeSample>& sample)
     {
         if (!sample->visibility()) return;
 

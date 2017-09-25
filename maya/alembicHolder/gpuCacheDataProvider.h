@@ -87,7 +87,7 @@ public:
 
     // Returns a pointer to an Array that has the same content as the
     // buffer passed-in as determined by the computed digest hash-key.
-    static boost::shared_ptr<ReadableArray<T> > create(
+    static std::shared_ptr<ReadableArray<T> > create(
         const ArraySamplePtr& arraySamplePtr, const Digest& digest);
 
     virtual ~AlembicArray();
@@ -99,7 +99,7 @@ private:
 
     // The constructor is declare private to force user to go through
     // the create() factory member function.
-    GPUCACHE_DECLARE_MAKE_SHARED_FRIEND_2;
+    GPUCACHE_DECLARE_MAKE_SHARED_FRIEND;
 
     AlembicArray(
         const ArraySamplePtr& arraySamplePtr, const Digest& digest
@@ -328,7 +328,7 @@ class ArrayPropertyCache
     : public PropertyCache<
     PROPERTY,
     Alembic::AbcCoreAbstract::ArraySampleKey,
-    boost::shared_ptr<
+    std::shared_ptr<
     ReadableArray<
     typename BaseTypeOfElem<
     typename PROPERTY::traits_type::value_type
@@ -340,7 +340,7 @@ public:
     typedef PropertyCache<
         PROPERTY,
         Alembic::AbcCoreAbstract::ArraySampleKey,
-        boost::shared_ptr<
+        std::shared_ptr<
         ReadableArray<
         typename BaseTypeOfElem<
         typename PROPERTY::traits_type::value_type
@@ -422,7 +422,7 @@ class ArrayPropertyCacheWithConverter
     : public PropertyCache<
     PROPERTY,
     Alembic::AbcCoreAbstract::ArraySampleKey,
-    boost::shared_ptr<
+    std::shared_ptr<
     ReadableArray<
     typename BaseTypeOfElem<
     typename PROPERTY::traits_type::value_type
@@ -434,7 +434,7 @@ public:
     typedef PropertyCache<
         PROPERTY,
         Alembic::AbcCoreAbstract::ArraySampleKey,
-        boost::shared_ptr<
+        std::shared_ptr<
         ReadableArray<
         typename BaseTypeOfElem<
         typename PROPERTY::traits_type::value_type
@@ -451,7 +451,7 @@ public:
     typedef typename BaseTypeOfElem<typename traits_type::value_type>::value_type BaseType;
     typedef Alembic::Util::Digest Digest;
 
-    typedef boost::shared_ptr<ReadableArray<BaseType> >
+    typedef std::shared_ptr<ReadableArray<BaseType> >
         (*Converter)(const typename PROPERTY::sample_ptr_type& sample);
 
     static const size_t kDimensions =
@@ -584,11 +584,11 @@ public:
     bool isVisible() const;
 
     // Retrieve the current bounding box proxy sample from property cache
-    boost::shared_ptr<const ShapeSample>
+    std::shared_ptr<const ShapeSample>
     getBBoxPlaceHolderSample(double seconds);
 
     // Retrieve the current sample from property cache
-    virtual boost::shared_ptr<const ShapeSample>
+    virtual std::shared_ptr<const ShapeSample>
     getSample(double seconds) = 0;
 
     // Return the bounding box and validity interval for the current
@@ -701,7 +701,7 @@ public:
     virtual bool valid() const;
 
     // Retrieve the current sample from property cache
-    virtual boost::shared_ptr<const ShapeSample>
+    virtual std::shared_ptr<const ShapeSample>
     getSample(double seconds);
 
 protected:
@@ -731,9 +731,9 @@ protected:
 
 private:
     template<size_t SIZE>
-    boost::shared_ptr<ReadableArray<float> > convertMultiIndexedStream(
-        boost::shared_ptr<ReadableArray<float> > attribArray,
-        boost::shared_ptr<ReadableArray<IndexBuffer::index_t> > indexArray);
+    std::shared_ptr<ReadableArray<float> > convertMultiIndexedStream(
+        std::shared_ptr<ReadableArray<float> > attribArray,
+        std::shared_ptr<ReadableArray<IndexBuffer::index_t> > indexArray);
 
     void check();
     void computeNormals();
@@ -744,32 +744,32 @@ private:
 
     // compute in check();
     Alembic::AbcGeom::GeometryScope                 fCheckedNormalsScope;
-    boost::shared_ptr<ReadableArray<float> >                fCheckedNormals;
-    boost::shared_ptr<ReadableArray<IndexBuffer::index_t> > fCheckedNormalIndices;
+    std::shared_ptr<ReadableArray<float> >                fCheckedNormals;
+    std::shared_ptr<ReadableArray<IndexBuffer::index_t> > fCheckedNormalIndices;
     Alembic::AbcGeom::GeometryScope                 fCheckedUVsScope;
-    boost::shared_ptr<ReadableArray<float> >                fCheckedUVs;
-    boost::shared_ptr<ReadableArray<IndexBuffer::index_t> > fCheckedUVIndices;
+    std::shared_ptr<ReadableArray<float> >                fCheckedUVs;
+    std::shared_ptr<ReadableArray<IndexBuffer::index_t> > fCheckedUVIndices;
 
     // compute in computeNormals()
     Alembic::AbcGeom::GeometryScope                 fComputedNormalsScope;
-    boost::shared_ptr<ReadableArray<float> >                fComputedNormals;
-    boost::shared_ptr<ReadableArray<IndexBuffer::index_t> > fComputedNormalIndices;
+    std::shared_ptr<ReadableArray<float> >                fComputedNormals;
+    std::shared_ptr<ReadableArray<IndexBuffer::index_t> > fComputedNormalIndices;
 
     // compute in convertMultiIndexedStreams()
     size_t                                          fNumVertices;
     boost::shared_array<unsigned int>               fVertAttribsIndices;
-    boost::shared_ptr<ReadableArray<IndexBuffer::index_t> > fMappedFaceIndices;
+    std::shared_ptr<ReadableArray<IndexBuffer::index_t> > fMappedFaceIndices;
 
     // compute in remapVertAttribs()
-    boost::shared_ptr<ReadableArray<float> >                fMappedPositions;
-    boost::shared_ptr<ReadableArray<float> >                fMappedNormals;
-    boost::shared_ptr<ReadableArray<float> >                fMappedUVs;
+    std::shared_ptr<ReadableArray<float> >                fMappedPositions;
+    std::shared_ptr<ReadableArray<float> >                fMappedNormals;
+    std::shared_ptr<ReadableArray<float> >                fMappedUVs;
 
     // compute in computeWireIndices()
-    boost::shared_ptr<ReadableArray<IndexBuffer::index_t> > fWireIndices;
+    std::shared_ptr<ReadableArray<IndexBuffer::index_t> > fWireIndices;
 
     // compute in triangulate()
-    boost::shared_ptr<ReadableArray<IndexBuffer::index_t> > fTriangleIndices;
+    std::shared_ptr<ReadableArray<IndexBuffer::index_t> > fTriangleIndices;
 };
 
 } // namespace CacheReaderAlembicPrivate

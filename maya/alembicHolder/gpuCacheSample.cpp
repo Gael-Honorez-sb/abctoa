@@ -1,23 +1,22 @@
 //-
 //**************************************************************************/
-// Copyright 2012 Autodesk, Inc. All rights reserved.
+// Copyright 2015 Autodesk, Inc.  All rights reserved.
 //
-// Use of this software is subject to the terms of the Autodesk
-// license agreement provided at the time of installation or download,
-// or which otherwise accompanies this software in either electronic
+// Use of this software is subject to the terms of the Autodesk 
+// license agreement provided at the time of installation or download, 
+// or which otherwise accompanies this software in either electronic 
 // or hard copy form.
 //**************************************************************************/
 //+
 
 #include "gpuCacheSample.h"
+#include "gpuCacheVBOProxy.h"
 
 #include <Alembic/Util/Murmur3.h>
 
-#include <maya/MGlobal.h>
-
-#include <boost/weak_ptr.hpp>
-#include <boost/unordered_map.hpp>
-#include <boost/foreach.hpp>
+#include <memory>
+#include <unordered_map>
+#include <boost/shared_array.hpp>
 
 #include <cassert>
 
@@ -33,7 +32,7 @@ using namespace AlembicHolder;
 // CLASS ArrayBaseImp
 //==============================================================================
 
-class ArrayBaseImp
+class ArrayBaseImp 
 {
 public:
     typedef ArrayBase::Callback Callback;
@@ -55,7 +54,7 @@ public:
 
     static void invokeCreationCallback(const Key& key)
     {
-        BOOST_FOREACH(const Callback& callback, creationCallbacks) {
+        for(const Callback& callback : creationCallbacks) {
             (*callback)(key);
         }
     }
@@ -76,7 +75,7 @@ public:
 
     static void invokeDestructionCallback(const Key& key)
     {
-        BOOST_FOREACH(const Callback& callback, destructionCallbacks) {
+        for(const Callback& callback : destructionCallbacks) {
             (*callback)(key);
         }
     }
@@ -125,23 +124,23 @@ public:
     }
 
 
-    tbb::mutex& mutex()
+    tbb::mutex& mutex() 
     { return fMutex; }
-
-    boost::shared_ptr<Array<T> > lookup(
+    
+    std::shared_ptr<Array<T> > lookup(
         const Digest& digest,
         size_t size
     )
     {
         // Caller will accept either readable or non-readable.  First look for non-readable.
-        boost::shared_ptr<Array<T> > ret = lookupNonReadable(digest, size);
+        std::shared_ptr<Array<T> > ret = lookupNonReadable(digest, size);
         if (!ret) {
             ret = lookupReadable(digest, size);
         }
         return ret;
     }
 
-    boost::shared_ptr<Array<T> > lookupNonReadable(
+    std::shared_ptr<Array<T> > lookupNonReadable(
         const Digest& digest,
         size_t size
     )
@@ -150,18 +149,18 @@ public:
         if (it != fMapNonReadable.end()) {
             // Might return null if the weak_ptr<> is now dangling
             // but not yet removed from the map...
-            boost::shared_ptr<Array<T> > ret = it->second.lock();
+            std::shared_ptr<Array<T> > ret = it->second.lock();
             if (!ret) {
                 fMapNonReadable.erase(it);
             }
             return ret;
         }
         else {
-            return boost::shared_ptr<Array<T> >();
+            return std::shared_ptr<Array<T> >();
         }
     }
 
-    boost::shared_ptr<ReadableArray<T> > lookupReadable(
+    std::shared_ptr<ReadableArray<T> > lookupReadable(
         const Digest& digest,
         size_t size
     )
@@ -170,18 +169,18 @@ public:
         if (it != fMapReadable.end()) {
             // Might return null if the weak_ptr<> is now dangling
             // but not yet removed from the map...
-            boost::shared_ptr<ReadableArray<T> > ret = it->second.lock();
+            std::shared_ptr<ReadableArray<T> > ret = it->second.lock();
             if (!ret) {
                 fMapReadable.erase(it);
             }
             return ret;
         }
         else {
-            return boost::shared_ptr<ReadableArray<T> >();
+            return std::shared_ptr<ReadableArray<T> >();
         }
     }
 
-    void insert(boost::shared_ptr<Array<T> > array)
+    void insert(std::shared_ptr<Array<T> > array)
     {
         if (array->isReadable()) {
             fMapReadable.insert(std::make_pair(array->key(), array->getReadableArray()));
@@ -197,7 +196,7 @@ public:
             if (it != fMapReadable.end()) {
                 // Might return null if the weak_ptr<> is now dangling
                 // but not yet removed from the map...
-                boost::shared_ptr<Array<T> > ret = it->second.lock();
+                std::shared_ptr<Array<T> > ret = it->second.lock();
                 if (!ret) {
                     // Get rid of the stalled entry so that insert() can
                     // work properly.
@@ -209,7 +208,7 @@ public:
             if (it != fMapNonReadable.end()) {
                 // Might return null if the weak_ptr<> is now dangling
                 // but not yet removed from the map...
-                boost::shared_ptr<Array<T> > ret = it->second.lock();
+                std::shared_ptr<Array<T> > ret = it->second.lock();
                 if (!ret) {
                     // Get rid of the stalled entry so that insert() can
                     // work properly.
@@ -220,14 +219,14 @@ public:
     }
 
 private:
-    typedef boost::unordered_map<
+    typedef std::unordered_map<
         Key,
-        boost::weak_ptr<Array<T> >,
+        std::weak_ptr<Array<T> >,
         KeyHash,
         KeyEqualTo> Map;
-    typedef boost::unordered_map<
+    typedef std::unordered_map<
         Key,
-        boost::weak_ptr<ReadableArray<T> >,
+        std::weak_ptr<ReadableArray<T> >,
         KeyHash,
         KeyEqualTo> MapReadable;
 
@@ -262,12 +261,12 @@ public:
 
     ~IndexBufferRegistry() {}
 
-    tbb::mutex& mutex()
+    tbb::mutex& mutex() 
     { return fMutex; }
-
-
-    boost::shared_ptr<IndexBuffer> lookup(
-        const boost::shared_ptr<Array<index_t> >& array,
+    
+    
+    std::shared_ptr<IndexBuffer> lookup(
+        const std::shared_ptr<Array<index_t> >& array,
         const size_t beginIdx,
         const size_t endIdx
     )
@@ -276,7 +275,7 @@ public:
         if (it != fMap.end()) {
             // Might return null if the weak_ptr<> is now dangling
             // but not yet removed from the map...
-            boost::shared_ptr<IndexBuffer> ret = it->second.lock();
+            std::shared_ptr<IndexBuffer> ret = it->second.lock();
             if (!ret) {
                 // Get rid of the stalled entry so that insert() can
                 // work properly.
@@ -285,11 +284,11 @@ public:
             return ret;
         }
         else {
-            return boost::shared_ptr<IndexBuffer>();
+            return std::shared_ptr<IndexBuffer>();
         }
     }
 
-    void insert(boost::shared_ptr<IndexBuffer> buffer)
+    void insert(std::shared_ptr<IndexBuffer> buffer)
     {
         fMap.insert(
             std::make_pair(
@@ -298,7 +297,7 @@ public:
     }
 
     void removeIfStaled(
-        const boost::shared_ptr<Array<index_t> >& array,
+        const std::shared_ptr<Array<index_t> >& array,
         const size_t beginIdx,
         const size_t endIdx
     )
@@ -307,7 +306,7 @@ public:
         if (it != fMap.end()) {
             // Might return null if the weak_ptr<> is now dangling
             // but not yet removed from the map...
-            boost::shared_ptr<IndexBuffer> ret = it->second.lock();
+            std::shared_ptr<IndexBuffer> ret = it->second.lock();
             if (!ret) {
                 // Get rid of the stalled entry so that insert() can
                 // work properly.
@@ -322,8 +321,8 @@ public:
     size_t nbAllocatedBytes()
     {
         size_t bytes = 0;
-        BOOST_FOREACH(const Map::value_type& v, fMap) {
-            boost::shared_ptr<IndexBuffer> buf = v.second.lock();
+        for(const Map::value_type& v : fMap) {
+            std::shared_ptr<IndexBuffer> buf = v.second.lock();
             if (buf) {
                 bytes += buf->bytes();
             }
@@ -332,9 +331,9 @@ public:
     }
 
 private:
-    typedef boost::unordered_map<
+    typedef std::unordered_map<
         Key,
-        boost::weak_ptr<IndexBuffer>,
+        std::weak_ptr<IndexBuffer>,
         KeyHash,
         KeyEqualTo
     > Map;
@@ -364,11 +363,11 @@ public:
 
     ~VertexBufferRegistry() {}
 
-    tbb::mutex& mutex()
+    tbb::mutex& mutex() 
     { return fMutex; }
-
-    boost::shared_ptr<VertexBuffer> lookup(
-        const boost::shared_ptr<Array<float> >&     array,
+    
+    std::shared_ptr<VertexBuffer> lookup(
+        const std::shared_ptr<Array<float> >&     array,
         const MHWRender::MVertexBufferDescriptor&   desc
     )
     {
@@ -376,7 +375,7 @@ public:
         if (it != fMap.end()) {
             // Might return null if the weak_ptr<> is now dangling
             // but not yet removed from the map...
-            boost::shared_ptr<VertexBuffer> ret = it->second.lock();
+            std::shared_ptr<VertexBuffer> ret = it->second.lock();
             if (!ret) {
                 // Get rid of the stalled entry so that insert() can
                 // work properly.
@@ -385,11 +384,11 @@ public:
             return ret;
         }
         else {
-            return boost::shared_ptr<VertexBuffer>();
+            return std::shared_ptr<VertexBuffer>();
         }
     }
 
-    void insert(boost::shared_ptr<VertexBuffer> buffer)
+    void insert(std::shared_ptr<VertexBuffer> buffer)
     {
         fMap.insert(
             std::make_pair(
@@ -398,7 +397,7 @@ public:
     }
 
     void removeIfStaled(
-        const boost::shared_ptr<Array<float> >&     array,
+        const std::shared_ptr<Array<float> >&     array,
         const MHWRender::MVertexBufferDescriptor&   desc
     )
     {
@@ -406,7 +405,7 @@ public:
         if (it != fMap.end()) {
             // Might return null if the weak_ptr<> is now dangling
             // but not yet removed from the map...
-            boost::shared_ptr<VertexBuffer> ret = it->second.lock();
+            std::shared_ptr<VertexBuffer> ret = it->second.lock();
             if (!ret) {
                 // Get rid of the stalled entry so that insert() can
                 // work properly.
@@ -421,8 +420,8 @@ public:
     size_t nbAllocatedBytes()
     {
         size_t bytes = 0;
-        BOOST_FOREACH(const Map::value_type& v, fMap) {
-            boost::shared_ptr<VertexBuffer> buf = v.second.lock();
+        for(const Map::value_type& v : fMap) {
+            std::shared_ptr<VertexBuffer> buf = v.second.lock();
             if (buf) {
                 bytes += buf->bytes();
             }
@@ -431,9 +430,9 @@ public:
     }
 
 private:
-    typedef boost::unordered_map<
+    typedef std::unordered_map<
         Key,
-        boost::weak_ptr<VertexBuffer>,
+        std::weak_ptr<VertexBuffer>,
         KeyHash,
         KeyEqualTo
     > Map;
@@ -529,12 +528,12 @@ tbb::mutex& ArrayRegistry<T>::mutex()
 }
 
 template <typename T>
-boost::shared_ptr<Array<T> > ArrayRegistry<T>::lookup(
+std::shared_ptr<Array<T> > ArrayRegistry<T>::lookup(
     const Digest& digest,
     size_t size
 )
 {
-    boost::shared_ptr<Array<T> > result =
+    std::shared_ptr<Array<T> > result =
         ArrayRegistryImp<T>::singleton().lookup(digest, size);
 
     assert(!result || result->digest() == digest);
@@ -544,12 +543,12 @@ boost::shared_ptr<Array<T> > ArrayRegistry<T>::lookup(
 }
 
 template <typename T>
-boost::shared_ptr<Array<T> > ArrayRegistry<T>::lookupNonReadable(
+std::shared_ptr<Array<T> > ArrayRegistry<T>::lookupNonReadable(
     const Digest& digest,
     size_t size
 )
 {
-    boost::shared_ptr<Array<T> > result =
+    std::shared_ptr<Array<T> > result =
         ArrayRegistryImp<T>::singleton().lookupNonReadable(digest, size);
 
     assert(!result || result->digest() == digest);
@@ -559,12 +558,12 @@ boost::shared_ptr<Array<T> > ArrayRegistry<T>::lookupNonReadable(
 }
 
 template <typename T>
- boost::shared_ptr<ReadableArray<T> >  ArrayRegistry<T>::lookupReadable(
+ std::shared_ptr<ReadableArray<T> >  ArrayRegistry<T>::lookupReadable(
     const Digest& digest,
     size_t size
 )
 {
-    boost::shared_ptr<ReadableArray<T> > result =
+    std::shared_ptr<ReadableArray<T> > result =
         ArrayRegistryImp<T>::singleton().lookupReadable(digest, size);
 
     assert(!result || result->digest() == digest);
@@ -575,7 +574,7 @@ template <typename T>
 
 template <typename T>
 void ArrayRegistry<T>::insert(
-    boost::shared_ptr<Array<T> > array
+    std::shared_ptr<Array<T> > array
 )
 {
     ArrayRegistryImp<T>::singleton().insert(array);
@@ -589,7 +588,7 @@ template class ArrayRegistry<float>;
 //==============================================================================
 
 template <typename T>
-boost::shared_ptr<ReadableArray<T> >
+std::shared_ptr<ReadableArray<T> >
 SharedArray<T>::create(
     const boost::shared_array<T>& data, size_t size)
 {
@@ -602,21 +601,21 @@ SharedArray<T>::create(
 }
 
 template <typename T>
-boost::shared_ptr<ReadableArray<T> >
+std::shared_ptr<ReadableArray<T> >
 SharedArray<T>::create(
     const boost::shared_array<T>& data, Digest digest, size_t size)
 {
     // We first look if a similar array already exists in the
     // cache. If so, we return the cached array to promote sharing as
     // much as possible.
-    boost::shared_ptr<ReadableArray<T> > ret;
+    std::shared_ptr<ReadableArray<T> > ret;
     {
         tbb::mutex::scoped_lock lock(ArrayRegistry<T>::mutex());
 
         ret = ArrayRegistry<T>::lookupReadable(digest, size);
 
         if (!ret) {
-            ret = boost::make_shared<SharedArray<T> >(
+            ret = std::make_shared<SharedArray<T> >(
                 data, size, digest);
             ArrayRegistry<T>::insert(ret);
         }
@@ -642,8 +641,8 @@ template class SharedArray<float>;
 // CLASS IndexBuffer
 //==============================================================================
 
-boost::shared_ptr<IndexBuffer> IndexBuffer::create(
-    const boost::shared_ptr<Array<index_t> >& array,
+std::shared_ptr<IndexBuffer> IndexBuffer::create(
+    const std::shared_ptr<Array<index_t> >& array,
     const size_t beginIdx,
     const size_t endIdx
 )
@@ -651,7 +650,7 @@ boost::shared_ptr<IndexBuffer> IndexBuffer::create(
     // We first look if a similar array already exists in the
     // cache. If so, we return the cached array to promote sharing as
     // much as possible.
-    boost::shared_ptr<IndexBuffer> ret;
+    std::shared_ptr<IndexBuffer> ret;
     {
         tbb::mutex::scoped_lock lock(
             IndexBufferRegistry::singleton().mutex());
@@ -660,7 +659,7 @@ boost::shared_ptr<IndexBuffer> IndexBuffer::create(
             array, beginIdx, endIdx);
 
         if (!ret) {
-            ret = boost::make_shared<IndexBuffer>(
+            ret = std::make_shared<IndexBuffer>(
                 array, beginIdx, endIdx);
             IndexBufferRegistry::singleton().insert(ret);
         }
@@ -692,12 +691,12 @@ IndexBuffer::~IndexBuffer()
         fArray, fBeginIdx, fEndIdx);
 }
 
-void IndexBuffer::ReplaceArrayInstance(boost::shared_ptr<Array<index_t> >& newArray) const
+void IndexBuffer::ReplaceArrayInstance(std::shared_ptr<Array<index_t> >& newArray) const
 {
     assert(ArrayBase::KeyEqualTo()(fArray->key(), newArray->key()));
 
     if (fArray != newArray) {
-        boost::shared_ptr<Array<index_t> >& nonConstArray = const_cast<boost::shared_ptr<Array<index_t> >& >(fArray);
+        std::shared_ptr<Array<index_t> >& nonConstArray = const_cast<std::shared_ptr<Array<index_t> >& >(fArray);
         nonConstArray = newArray;
     }
 }
@@ -707,9 +706,9 @@ void IndexBuffer::ReplaceArrayInstance(boost::shared_ptr<Array<index_t> >& newAr
 // CLASS VertexBuffer
 //==============================================================================
 
-boost::shared_ptr<VertexBuffer>
+std::shared_ptr<VertexBuffer>
 VertexBuffer::createPositions(
-    const boost::shared_ptr<Array<float> >& array)
+    const std::shared_ptr<Array<float> >& array)
 {
     return create(array,
                   MHWRender::MVertexBufferDescriptor(
@@ -718,9 +717,9 @@ VertexBuffer::createPositions(
                       MHWRender::MGeometry::kFloat, 3));
 }
 
-boost::shared_ptr<VertexBuffer>
+std::shared_ptr<VertexBuffer>
 VertexBuffer::createNormals(
-    const boost::shared_ptr<Array<float> >& array)
+    const std::shared_ptr<Array<float> >& array)
 {
     return create(array,
                   MHWRender::MVertexBufferDescriptor(
@@ -729,9 +728,9 @@ VertexBuffer::createNormals(
                       MHWRender::MGeometry::kFloat, 3));
 }
 
-boost::shared_ptr<VertexBuffer>
+std::shared_ptr<VertexBuffer>
 VertexBuffer::createUVs(
-    const boost::shared_ptr<Array<float> >& array)
+    const std::shared_ptr<Array<float> >& array)
 {
     return create( array,
                    MHWRender::MVertexBufferDescriptor(
@@ -741,7 +740,7 @@ VertexBuffer::createUVs(
                        MHWRender::MGeometry::kFloat, 2));
 }
 
-boost::shared_ptr<VertexBuffer> VertexBuffer::createTangents(const boost::shared_ptr<Array<float>>& array)
+std::shared_ptr<VertexBuffer> VertexBuffer::createTangents(const std::shared_ptr<Array<float>>& array)
 {
     return create( array,
                    MHWRender::MVertexBufferDescriptor(
@@ -750,7 +749,7 @@ boost::shared_ptr<VertexBuffer> VertexBuffer::createTangents(const boost::shared
                        MHWRender::MGeometry::kFloat, 3));
 }
 
-boost::shared_ptr<VertexBuffer> VertexBuffer::createBitangents(const boost::shared_ptr<Array<float>>& array)
+std::shared_ptr<VertexBuffer> VertexBuffer::createBitangents(const std::shared_ptr<Array<float>>& array)
 {
     return create( array,
                    MHWRender::MVertexBufferDescriptor(
@@ -759,15 +758,15 @@ boost::shared_ptr<VertexBuffer> VertexBuffer::createBitangents(const boost::shar
                        MHWRender::MGeometry::kFloat, 3));
 }
 
-boost::shared_ptr<VertexBuffer>
+std::shared_ptr<VertexBuffer>
 VertexBuffer::create(
-    const boost::shared_ptr<Array<float> >&     array,
+    const std::shared_ptr<Array<float> >&     array,
     const MHWRender::MVertexBufferDescriptor&   desc)
 {
     // We first look if a similar array already exists in the
     // cache. If so, we return the cached array to promote sharing as
     // much as possible.
-    boost::shared_ptr<VertexBuffer> ret;
+    std::shared_ptr<VertexBuffer> ret;
     {
         tbb::mutex::scoped_lock lock(
             VertexBufferRegistry::singleton().mutex());
@@ -775,7 +774,7 @@ VertexBuffer::create(
         ret = VertexBufferRegistry::singleton().lookup(array, desc);
 
         if (!ret) {
-            ret = boost::make_shared<VertexBuffer>(
+            ret = std::make_shared<VertexBuffer>(
                 array, desc);
             VertexBufferRegistry::singleton().insert(ret);
         }
@@ -807,12 +806,12 @@ VertexBuffer::~VertexBuffer()
         fArray, fDescriptor);
 }
 
-void VertexBuffer::ReplaceArrayInstance(boost::shared_ptr<Array<float> >& newArray) const
+void VertexBuffer::ReplaceArrayInstance(std::shared_ptr<Array<float> >& newArray) const
 {
     assert(ArrayBase::KeyEqualTo()(fArray->key(), newArray->key()));
 
     if (fArray != newArray) {
-        boost::shared_ptr<Array<float> >& nonConstArray = const_cast<boost::shared_ptr<Array<float> >& >(fArray);
+        std::shared_ptr<Array<float> >& nonConstArray = const_cast<std::shared_ptr<Array<float> >& >(fArray);
         nonConstArray = newArray;
     }
 }
@@ -826,9 +825,9 @@ ShapeSample::ShapeSample(
     double timeInSeconds,
     size_t numWires,
     size_t numVerts,
-    const boost::shared_ptr<IndexBuffer>&  wireVertIndices,
-    const boost::shared_ptr<IndexBuffer>&  triangleVertIndices,
-    const boost::shared_ptr<VertexBuffer>& positions,
+    const std::shared_ptr<IndexBuffer>&  wireVertIndices,
+    const std::shared_ptr<IndexBuffer>&  triangleVertIndices,
+    const std::shared_ptr<VertexBuffer>& positions,
     const MBoundingBox& boundingBox,
     const MColor&       diffuseColor,
     bool                visibility
@@ -837,8 +836,8 @@ ShapeSample::ShapeSample(
       fNumWires(numWires),
       fNumVerts(numVerts),
       fWireVertIndices(wireVertIndices),
-      fTriangleVertIndices(
-      std::vector<boost::shared_ptr<IndexBuffer> >(1, triangleVertIndices)),
+	  fTriangleVertIndices(
+	  std::vector<std::shared_ptr<IndexBuffer> >(1, triangleVertIndices)),
       fPositions(positions),
       fBoundingBox(boundingBox),
       fDiffuseColor(diffuseColor),
@@ -853,9 +852,9 @@ ShapeSample::ShapeSample(
     double timeInSeconds,
     size_t numWires,
     size_t numVerts,
-    const boost::shared_ptr<IndexBuffer>&  wireVertIndices,
-    const std::vector<boost::shared_ptr<IndexBuffer> >&  triangleVertIndices,
-    const boost::shared_ptr<VertexBuffer>& positions,
+    const std::shared_ptr<IndexBuffer>&  wireVertIndices,
+    const std::vector<std::shared_ptr<IndexBuffer> >&  triangleVertIndices,
+    const std::shared_ptr<VertexBuffer>& positions,
     const MBoundingBox& boundingBox,
     const MColor&       diffuseColor,
     bool                visibility
@@ -888,7 +887,7 @@ size_t ShapeSample::numTriangles() const
 }
 
 void ShapeSample::setNormals(
-    const boost::shared_ptr<VertexBuffer>& normals
+    const std::shared_ptr<VertexBuffer>& normals
 )
 {
     assert( !normals || normals->numVerts() == fNumVerts );
@@ -896,7 +895,7 @@ void ShapeSample::setNormals(
 }
 
 void ShapeSample::setUVs(
-    const boost::shared_ptr<VertexBuffer>& uvs
+    const std::shared_ptr<VertexBuffer>& uvs
 )
 {
     assert( !uvs || uvs->numVerts() == fNumVerts );

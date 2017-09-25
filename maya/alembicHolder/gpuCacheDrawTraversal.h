@@ -77,7 +77,7 @@ private:
 // hierarchical view frustum culling. The user only to implement a
 // draw function with the following signature:
 //
-// void draw(const boost::shared_ptr<const ShapeSample>& sample);
+// void draw(const std::shared_ptr<const ShapeSample>& sample);
 //
 // Implemented using the "Curiously recurring template pattern".
 
@@ -156,7 +156,7 @@ private:
 
     virtual void visit(const IPolyMeshDrw&   shape)
     {
-        const boost::shared_ptr<const ShapeSample>& sample =
+        const std::shared_ptr<const ShapeSample>& sample =
             shape.getSample(fState.seconds());
         if (!sample) return;
 

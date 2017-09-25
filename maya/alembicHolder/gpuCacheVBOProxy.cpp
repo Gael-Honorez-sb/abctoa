@@ -22,10 +22,9 @@
 
 #include <limits>
 
-#include <boost/foreach.hpp>
-#include <boost/unordered_map.hpp>
-#include <boost/unordered_set.hpp>
-#include <boost/random/mersenne_twister.hpp>
+#include <unordered_map>
+#include <unordered_set>
+#include <random>
 
 #include <tbb/tbb_thread.h>
 #include <tbb/mutex.h>
@@ -140,7 +139,7 @@ void BindBufferBase(MGLuint index, MGLuint buffer)
 class FlipNormalsProgram
 {
 public:
-    static boost::shared_ptr<FlipNormalsProgram> getInstance();
+    static std::shared_ptr<FlipNormalsProgram> getInstance();
     static void resetInstance();
 
     ~FlipNormalsProgram();
@@ -158,7 +157,7 @@ private:
 
     MGLhandleARB fProgramObj;
     MGLuint      fQuery;
-    static boost::shared_ptr<FlipNormalsProgram> fsFlipNormalsProgram;
+    static std::shared_ptr<FlipNormalsProgram> fsFlipNormalsProgram;
     static const char* fsFlipNormalsProgramText;
 };
 
@@ -169,11 +168,11 @@ const char* FlipNormalsProgram::fsFlipNormalsProgramText = "#version 120\n"
     "    outNormal = -gl_Vertex.xyz;\n"
     "    gl_Position = gl_Vertex;\n"
     "}\n\n" ;
-boost::shared_ptr<FlipNormalsProgram> FlipNormalsProgram::fsFlipNormalsProgram;
-
+std::shared_ptr<FlipNormalsProgram> FlipNormalsProgram::fsFlipNormalsProgram;
+    
 //------------------------------------------------------------------------------
 //
-boost::shared_ptr<FlipNormalsProgram> FlipNormalsProgram::getInstance()
+std::shared_ptr<FlipNormalsProgram> FlipNormalsProgram::getInstance()
 {
     // return the transform feedback program cached in weak pointer
     if (fsFlipNormalsProgram) {
@@ -183,13 +182,13 @@ boost::shared_ptr<FlipNormalsProgram> FlipNormalsProgram::getInstance()
     // check transform feedback extension
     if (!gGLFT->extensionExists(kMGLext_NV_transform_feedback) &&
         !gGLFT->extensionExists(kMGLext_EXT_transform_feedback)) {
-        return boost::shared_ptr<FlipNormalsProgram>();;
+        return std::shared_ptr<FlipNormalsProgram>();;
     }
 
     // create a new transform feedback program
-    boost::shared_ptr<FlipNormalsProgram> prog(new FlipNormalsProgram());
+    std::shared_ptr<FlipNormalsProgram> prog(new FlipNormalsProgram());
     if (!prog->validate()) {
-        return boost::shared_ptr<FlipNormalsProgram>();
+        return std::shared_ptr<FlipNormalsProgram>();
     }
     fsFlipNormalsProgram = prog;
 
@@ -385,7 +384,7 @@ private:
 //
 MGLuint FlipNormals::compute()
 {
-    boost::shared_ptr<FlipNormalsProgram> prog = FlipNormalsProgram::getInstance();
+    std::shared_ptr<FlipNormalsProgram> prog = FlipNormalsProgram::getInstance();
     if (!prog) {
         return 0;
     }
@@ -462,7 +461,7 @@ public:
 
     // Returns the buffer matchng the given key if it exists. Returns
     // a null pointer otherwise.
-    boost::shared_ptr<const VBOBuffer> find(
+    std::shared_ptr<const VBOBuffer> find(
         const BufferType& bufferType, const Key& key)
     {
         {
@@ -477,18 +476,18 @@ public:
             if (it != fPreviousFrameBuffers[bufferType].end()) {
                 // The VBO was used while drawing the previous
                 // frame. Moving it to the active list.
-                boost::shared_ptr<const VBOBuffer> result = it->second;
+                std::shared_ptr<const VBOBuffer> result = it->second;
                 fActiveBuffers[bufferType].insert(*it);
                 fPreviousFrameBuffers[bufferType].erase(it);
                 return result;
             }
         }
-
-        return boost::shared_ptr<const VBOBuffer>();
+        
+        return std::shared_ptr<const VBOBuffer>();
     }
 
     // Insert the given buffer in the registry.
-    void insert(boost::shared_ptr<const VBOBuffer>& buffer)
+    void insert(std::shared_ptr<const VBOBuffer>& buffer)
     {
         fActiveBuffers[buffer->bufferType()].insert(
             std::make_pair(buffer->key(), buffer));
@@ -513,7 +512,7 @@ public:
     {
         if (!fBuffersToDelete.empty()) {
             tbb::mutex::scoped_lock lock(fBuffersToDeleteMutex);
-            BOOST_FOREACH (const Key& key, fBuffersToDelete) {
+            for(const Key& key : fBuffersToDelete) {
                 erase(key);
             }
             fBuffersToDelete.clear();
@@ -521,8 +520,8 @@ public:
     }
 
     // Randomly selects a random buffer from the previous frame and
-    // erases it. Returns false if all allocated buffers are active.
-    bool eraseRandomBuffer()
+    // erases it. Returns false if all allocated buffers are active. 
+    bool eraseRandomBuffer() 
     {
         size_t nbCandidateBuffers = 0;
         for (int i = 0; i < VBOBuffer::kNbBufferType; ++i) {
@@ -580,11 +579,11 @@ public:
     size_t nbIndexAllocatedBytes() const
     {
         size_t bytes = 0;
-        BOOST_FOREACH(const Map::value_type& v,
+        for(const Map::value_type& v :
                       fActiveBuffers[VBOBuffer::kIndexBufferType]) {
             bytes += v.second->key().fBytes;
         }
-        BOOST_FOREACH(const Map::value_type& v,
+        for(const Map::value_type& v :
                       fPreviousFrameBuffers[VBOBuffer::kIndexBufferType]) {
             bytes += v.second->key().fBytes;
         }
@@ -595,19 +594,19 @@ public:
     size_t nbVertexAllocatedBytes() const
     {
         size_t bytes = 0;
-        BOOST_FOREACH(const Map::value_type& v,
+        for(const Map::value_type& v :
                       fActiveBuffers[VBOBuffer::kVertexBufferType]) {
             bytes += v.second->key().fBytes;
         }
-        BOOST_FOREACH(const Map::value_type& v,
+        for(const Map::value_type& v :
                       fPreviousFrameBuffers[VBOBuffer::kVertexBufferType]) {
             bytes += v.second->key().fBytes;
         }
-        BOOST_FOREACH(const Map::value_type& v,
+        for(const Map::value_type& v :
                       fActiveBuffers[VBOBuffer::kFlippedNormalBufferType]) {
             bytes += v.second->key().fBytes;
         }
-        BOOST_FOREACH(const Map::value_type& v,
+        for(const Map::value_type& v :
                       fPreviousFrameBuffers[VBOBuffer::kFlippedNormalBufferType]) {
             bytes += v.second->key().fBytes;
         }
@@ -637,20 +636,20 @@ private:
     static void mayaExitCallback(void* clientData);
     static MCallbackId fsMayaExitCallbackId;
 
-    typedef boost::unordered_map<
+    typedef std::unordered_map<
         Key,
-        boost::shared_ptr<const VBOBuffer>,
+        std::shared_ptr<const VBOBuffer>,
         KeyHash,
         KeyEqualTo
-        > Map;
+        > Map; 
     Map fActiveBuffers[VBOBuffer::kNbBufferType];
     Map fPreviousFrameBuffers[VBOBuffer::kNbBufferType];
 
     // This allow deleting a VBO from a non-main thread.
     tbb::mutex fBuffersToDeleteMutex;
-    boost::unordered_set<Key, KeyHash, KeyEqualTo> fBuffersToDelete;
+    std::unordered_set<Key, KeyHash, KeyEqualTo> fBuffersToDelete;
 
-    boost::mt19937_64 fRandomEvictionIndex;
+    std::mt19937_64 fRandomEvictionIndex;
 };
 
 MCallbackId VBOBufferRegistry::fsMayaExitCallbackId;
@@ -773,29 +772,31 @@ size_t VBOBuffer::fsNbEvictedBytes = 0;
 
 //------------------------------------------------------------------------------
 //
-boost::shared_ptr<const VBOBuffer>
+std::shared_ptr<const VBOBuffer>
 VBOBuffer::create(
-    const boost::shared_ptr<const IndexBuffer>& buffer,
+    const std::shared_ptr<const IndexBuffer>& buffer,
     const bool isTemporary)
 {
-    boost::shared_ptr<const VBOBuffer> result =
+    std::shared_ptr<const VBOBuffer> result =
         theBufferRegistry().find(kIndexBufferType, buffer->array()->key());
 
     if (!result) {
 #ifdef DOWNCONVERT_SSO_TO_SOFTWARE
-        boost::shared_ptr<ReadableArray<unsigned int> > readable = buffer->array()->getReadableArray();
+        std::shared_ptr<ReadableArray<unsigned int> > readable = buffer->array()->getReadableArray();
         if (!buffer->array()->isReadable()) {
             // We are converting from viewport 2.0 SubSceneOverride non-readable arrays back to VBOBuffers.
             // So graft the SharedArray copy of the data back into the VertexBuffer.  This happens when changing
             // the viewport mode from vp2.0 to the default viewport and allows the vp2.0 buffer to be freed.
-            boost::shared_ptr<Array<unsigned int> > array(readable);
+            std::shared_ptr<Array<unsigned int> > array(readable);
             buffer->ReplaceArrayInstance(array);
         }
 #else
         IndexBuffer::ReadInterfacePtr readable = buffer->array()->getReadable();
 #endif
-        result = boost::make_shared<VBOBuffer>(
-            kIndexBufferType, buffer->array()->key(), readable->get());
+        const BufferType bufferType = kIndexBufferType;
+        const void*      bufferData = readable->get();
+        result = std::make_shared<VBOBuffer>(
+            bufferType, buffer->array()->key(), bufferData);
         if (!isTemporary)
             theBufferRegistry().insert(result);
     }
@@ -805,29 +806,31 @@ VBOBuffer::create(
 
 //------------------------------------------------------------------------------
 //
-boost::shared_ptr<const VBOBuffer>
+std::shared_ptr<const VBOBuffer>
 VBOBuffer::create(
-    const boost::shared_ptr<const VertexBuffer>& buffer,
+    const std::shared_ptr<const VertexBuffer>& buffer,
     const bool isTemporary)
 {
-    boost::shared_ptr<const VBOBuffer> result =
+    std::shared_ptr<const VBOBuffer> result =
         theBufferRegistry().find(kVertexBufferType, buffer->array()->key());
 
     if (!result) {
 #ifdef DOWNCONVERT_SSO_TO_SOFTWARE
-        boost::shared_ptr<ReadableArray<float> > readable = buffer->array()->getReadableArray();
+        std::shared_ptr<ReadableArray<float> > readable = buffer->array()->getReadableArray();
         if (!buffer->array()->isReadable()) {
             // We are converting from viewport 2.0 SubSceneOverride non-readable arrays back to VBOBuffers.
             // So graft the SharedArray copy of the data back into the VertexBuffer.  This happens when changing
             // the viewport mode from vp2.0 to the default viewport and allows the vp2.0 buffer to be freed.
-            boost::shared_ptr<Array<float> > array(readableArray);
+            std::shared_ptr<Array<float> > array(readableArray);
             buffer->ReplaceArrayInstance(array);
         }
 #else
         VertexBuffer::ReadInterfacePtr readable = buffer->array()->getReadable();
 #endif
-        result = boost::make_shared<VBOBuffer>(
-            kVertexBufferType, buffer->array()->key(), readable->get());
+        const BufferType bufferType = kVertexBufferType;
+        const void*      bufferData = readable->get();
+        result = std::make_shared<VBOBuffer>(
+            bufferType, buffer->array()->key(), bufferData);
         if (!isTemporary)
             theBufferRegistry().insert(result);
     }
@@ -837,23 +840,24 @@ VBOBuffer::create(
 
 //------------------------------------------------------------------------------
 //
-boost::shared_ptr<const VBOBuffer>
+std::shared_ptr<const VBOBuffer>
 VBOBuffer::createFlippedNormals(
-    const boost::shared_ptr<const VertexBuffer>& buffer,
+    const std::shared_ptr<const VertexBuffer>& buffer,
     const bool isTemporary)
 {
-    boost::shared_ptr<const VBOBuffer> flippedVBO =
+    std::shared_ptr<const VBOBuffer> flippedVBO =
         theBufferRegistry().find(kFlippedNormalBufferType, buffer->array()->key());
 
     if (!flippedVBO) {
-        boost::shared_ptr<const VBOBuffer> unflippedVBO = create(buffer, isTemporary);
+        std::shared_ptr<const VBOBuffer> unflippedVBO = create(buffer, isTemporary);
 
         MGLuint flippedNormalName =
             FlipNormals(buffer->numVerts(), unflippedVBO->name()).compute();
 
         if (flippedNormalName !=0 ) {
-            flippedVBO = boost::make_shared<VBOBuffer>(
-                kFlippedNormalBufferType, buffer->array()->key(), flippedNormalName);
+            const BufferType bufferType = kFlippedNormalBufferType;
+            flippedVBO = std::make_shared<VBOBuffer>(
+                bufferType, buffer->array()->key(), flippedNormalName);
             if (!isTemporary)
                 theBufferRegistry().insert(flippedVBO);
         }
@@ -864,9 +868,9 @@ VBOBuffer::createFlippedNormals(
 
 //------------------------------------------------------------------------------
 //
-boost::shared_ptr<const VBOBuffer>
+std::shared_ptr<const VBOBuffer>
 VBOBuffer::lookup(
-    const boost::shared_ptr<const IndexBuffer>& buffer)
+    const std::shared_ptr<const IndexBuffer>& buffer)
 {
     return theBufferRegistry().find(
         kIndexBufferType, buffer->array()->key());
@@ -874,9 +878,9 @@ VBOBuffer::lookup(
 
 //------------------------------------------------------------------------------
 //
-boost::shared_ptr<const VBOBuffer>
+std::shared_ptr<const VBOBuffer>
 VBOBuffer::lookup(
-    const boost::shared_ptr<const VertexBuffer>& buffer)
+    const std::shared_ptr<const VertexBuffer>& buffer)
 {
     return theBufferRegistry().find(
         kVertexBufferType, buffer->array()->key());
@@ -884,9 +888,9 @@ VBOBuffer::lookup(
 
 //------------------------------------------------------------------------------
 //
-boost::shared_ptr<const VBOBuffer>
+std::shared_ptr<const VBOBuffer>
 VBOBuffer::lookupFlippedNormals(
-    const boost::shared_ptr<const VertexBuffer>& buffer)
+    const std::shared_ptr<const VertexBuffer>& buffer)
 {
     return theBufferRegistry().find(
         kFlippedNormalBufferType, buffer->array()->key());
@@ -1137,10 +1141,10 @@ VBOProxy::~VBOProxy()
 //------------------------------------------------------------------------------
 //
 VBOProxy::BindingType VBOProxy::updateBuffers(
-    const boost::shared_ptr<const IndexBuffer>&  indices,
-    const boost::shared_ptr<const VertexBuffer>& positions,
-    const boost::shared_ptr<const VertexBuffer>& normals,
-    const boost::shared_ptr<const VertexBuffer>& uvs,
+    const std::shared_ptr<const IndexBuffer>&  indices,
+    const std::shared_ptr<const VertexBuffer>& positions,
+    const std::shared_ptr<const VertexBuffer>& normals,
+    const std::shared_ptr<const VertexBuffer>& uvs,
     const bool                                   areNormalsFlipped,
     const VBOMode                                vboMode,
     VertexBuffer::ReadInterfacePtr&              positionsRead,
@@ -1152,11 +1156,11 @@ VBOProxy::BindingType VBOProxy::updateBuffers(
     assert(positions);
 
     theBufferRegistry().doDelayedErase();
-
-    boost::shared_ptr<const VBOBuffer> vboIndices;
-    boost::shared_ptr<const VBOBuffer> vboPositions;
-    boost::shared_ptr<const VBOBuffer> vboNormals;
-    boost::shared_ptr<const VBOBuffer> vboUVs;
+    
+    std::shared_ptr<const VBOBuffer> vboIndices;
+    std::shared_ptr<const VBOBuffer> vboPositions;
+    std::shared_ptr<const VBOBuffer> vboNormals;
+    std::shared_ptr<const VBOBuffer> vboUVs;
 
     // Attempt to use VBOs as much as possible since this is the
     // highest performance API.
@@ -1212,7 +1216,7 @@ VBOProxy::BindingType VBOProxy::updateBuffers(
 
                     // The unflipped normals buffer will also be
                     // necessary to compute the flipped buffer ones..
-                    boost::shared_ptr<const VBOBuffer> unflippedNormals =
+                    std::shared_ptr<const VBOBuffer> unflippedNormals =
                         theBufferRegistry().find(
                             VBOBuffer::kVertexBufferType, normals->array()->key());
                     if (!unflippedNormals) {
@@ -1537,7 +1541,7 @@ VBOProxy::BindingType VBOProxy::updateBuffers(
 //------------------------------------------------------------------------------
 //
 void VBOProxy::drawVertices(
-    const boost::shared_ptr<const ShapeSample>& sample,
+    const std::shared_ptr<const ShapeSample>& sample,
     const VBOMode                               vboMode)
 {
     // We may need to read from the buffers in this function and also in
@@ -1560,8 +1564,8 @@ void VBOProxy::drawVertices(
     BindingType bindingType = updateBuffers(
         sample->wireVertIndices(),
         sample->positions(),
-        boost::shared_ptr<VertexBuffer>(),
-        boost::shared_ptr<VertexBuffer>(),
+        std::shared_ptr<VertexBuffer>(),
+        std::shared_ptr<VertexBuffer>(),
         false,
         vboMode,
         positionsRead,
@@ -1614,7 +1618,7 @@ void VBOProxy::drawVertices(
 //------------------------------------------------------------------------------
 //
 void VBOProxy::drawWireframe(
-    const boost::shared_ptr<const ShapeSample>& sample,
+    const std::shared_ptr<const ShapeSample>& sample,
     const VBOMode                               vboMode)
 {
     // We may need to read from the buffers in this function and also in
@@ -1628,8 +1632,8 @@ void VBOProxy::drawWireframe(
     BindingType bindingType = updateBuffers(
         sample->wireVertIndices(),
         sample->positions(),
-        boost::shared_ptr<VertexBuffer>(),
-        boost::shared_ptr<VertexBuffer>(),
+        std::shared_ptr<VertexBuffer>(),
+        std::shared_ptr<VertexBuffer>(),
         false,
         vboMode,
         positionsRead,
@@ -1685,7 +1689,7 @@ void VBOProxy::drawWireframe(
 //------------------------------------------------------------------------------
 //
 void VBOProxy::drawTriangles(
-    const boost::shared_ptr<const ShapeSample>& sample,
+    const std::shared_ptr<const ShapeSample>& sample,
     const size_t                                groupId,
     const NormalsMode                           normalsMode,
     const UVsMode                               uvsMode,
@@ -1702,8 +1706,8 @@ void VBOProxy::drawTriangles(
     BindingType bindingType = updateBuffers(
         sample->triangleVertIndices(groupId),
         sample->positions(),
-        normalsMode != kNoNormals ? sample->normals() : boost::shared_ptr<VertexBuffer>(),
-        uvsMode != kNoUVs         ? sample->uvs()     : boost::shared_ptr<VertexBuffer>(),
+        normalsMode != kNoNormals ? sample->normals() : std::shared_ptr<VertexBuffer>(),
+        uvsMode != kNoUVs         ? sample->uvs()     : std::shared_ptr<VertexBuffer>(),
         normalsMode == kBackNormals,
         vboMode,
         positionsRead,
@@ -1826,7 +1830,7 @@ void VBOProxy::drawTriangles(
 //------------------------------------------------------------------------------
 //
 void VBOProxy::drawBoundingBox(
-    const boost::shared_ptr<const ShapeSample>& sample,
+    const std::shared_ptr<const ShapeSample>& sample, 
     bool overrideShadedState  /* = false */
 )
 {
@@ -1851,8 +1855,8 @@ void VBOProxy::drawBoundingBox(
     BindingType bindingType = updateBuffers(
         UnitBoundingBox::indices(),
         UnitBoundingBox::positions(),
-        boost::shared_ptr<VertexBuffer>(),
-        boost::shared_ptr<VertexBuffer>(),
+        std::shared_ptr<VertexBuffer>(),
+        std::shared_ptr<VertexBuffer>(),
         false,
         kDontUseVBO,
         positionsRead,

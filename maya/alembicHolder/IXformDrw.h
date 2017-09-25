@@ -71,7 +71,7 @@ public:
     bool isReflection() const { return m_is_reflection; }
 
     /*
-    boost::shared_ptr<AlembicHolder::XformSample> getSample(double seconds) const {
+    std::shared_ptr<AlembicHolder::XformSample> getSample(double seconds) const {
         return AlembicHolder::XformSample::create(
             seconds,
             MMatrix(m_localToParent),

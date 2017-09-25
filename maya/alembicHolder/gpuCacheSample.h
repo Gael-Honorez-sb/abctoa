@@ -24,26 +24,20 @@
 #include "gpuCacheConfig.h"
 #include "gpuCacheMakeSharedHelper.h"
 
-#include <Alembic/Util/Digest.h>
 
 #include <maya/MBoundingBox.h>
 #include <maya/MMatrix.h>
 #include <maya/MHWGeometry.h>
-#include <maya/MGLdefinitions.h>
-#include <maya/MString.h>
-#include <maya/MStringArray.h>
 
 #include <boost/shared_array.hpp>
-#include <boost/shared_ptr.hpp>
-#include <boost/weak_ptr.hpp>
-#include <boost/make_shared.hpp>
 #include <boost/functional/hash.hpp>
-#include <boost/enable_shared_from_this.hpp>
+
+#include <Alembic/Util/Digest.h>
 
 #include <tbb/mutex.h>
 
 #include <vector>
-#include <map>
+#include <memory>
 
 namespace AlembicHolder {
 
@@ -199,7 +193,7 @@ public:
     // the encapsulated array depending on the detail of the memory
     // management. The destructor also takes care of removing its
     // entry from the ArrayRegistry.
-    virtual ~Array();
+    ~Array() override;
 
     // Gets a pointer to a readable array or basic read-interface.  If this array is
     // internally in a readable format then this is a simple cast.  If this is a
@@ -207,8 +201,8 @@ public:
     // may not be fast and is not safe outside the main thread.  So these functions may
     // not be called except on the main thread.
     // See the comment in MayaBufferArray for more details.
-    virtual boost::shared_ptr<const ArrayReadInterface<T> > getReadable() const = 0;
-    virtual boost::shared_ptr<ReadableArray<T> > getReadableArray() const = 0;
+    virtual std::shared_ptr<const ArrayReadInterface<T> > getReadable() const = 0;
+    virtual std::shared_ptr<ReadableArray<T> > getReadableArray() const = 0;
 
     // The number of elements in the array.
     size_t size() const     { return bytes() / sizeof(T); }
@@ -226,25 +220,25 @@ protected:
 // An array where the contents are available for reading from system memory.  These are
 // safe to use from outside the main thread.
 template <typename T>
-class ReadableArray : public Array<T>, public ArrayReadInterface<T>, public boost::enable_shared_from_this<ReadableArray<T> >
+class ReadableArray : public Array<T>, public ArrayReadInterface<T>, public std::enable_shared_from_this<ReadableArray<T> >
 {
 public:
     typedef typename Array<T>::Digest Digest;
 
-    virtual ~ReadableArray() {}
+    ~ReadableArray() override {}
 
     // If overhead from enable_shared_from_this is a problem, then an alternative is
-    // to lookup using our own ArrayBase key into the ArrayRegistry.  Or possibly to
-    // take a shared_ptr<Array> as a parameter and cast it to shared_ptr<ReadableArray>,
+    // to lookup using our own ArrayBase key into the ArrayRegistry.  Or possibly to 
+    // take a shared_ptr<Array> as a parameter and cast it to shared_ptr<ReadableArray>, 
     // verifying that it equals this.
-    virtual boost::shared_ptr<const ArrayReadInterface<T> > getReadable() const
+    std::shared_ptr<const ArrayReadInterface<T> > getReadable() const override
     {
         // enable_shared_from_this<ReadableArray<T>> is a dependant base, sp shared_from_this()
         // fails to compile on Linux gcc as an unqualified symbol unless we add this->
         return this->shared_from_this();
     }
 
-    virtual boost::shared_ptr<ReadableArray<T> > getReadableArray() const
+    std::shared_ptr<ReadableArray<T> > getReadableArray() const override
     {
         // shared_from_this tries to stick you with a shared_ptr<const T> for const functions.
         return const_cast<ReadableArray<T> *>(this)->shared_from_this();
@@ -302,16 +296,16 @@ public:
     // exist at the same time, though that should be a rare occurrence.
     // See the comment in MayaBufferArray for more details on this.
 
-    static boost::shared_ptr<Array<T> > lookup(
+    static std::shared_ptr<Array<T> > lookup(
         const Digest& digest,
         size_t size
     );
 
-    static boost::shared_ptr<Array<T> > lookupNonReadable(
+    static std::shared_ptr<Array<T> > lookupNonReadable(
         const Digest& digest,
         size_t size
     );
-    static boost::shared_ptr<ReadableArray<T> > lookupReadable(
+    static std::shared_ptr<ReadableArray<T> > lookupReadable(
         const Digest& digest,
         size_t size
     );
@@ -324,7 +318,7 @@ public:
     //
     // NOTE: the registry mutex must be held by the current thread
     // while calling insert().
-    static void insert(boost::shared_ptr<Array<T> > array);
+    static void insert(std::shared_ptr<Array<T> > array);
 };
 
 
@@ -344,20 +338,20 @@ public:
 
     // Returns a pointer to a Array that has the same
     // content as the buffer passed-in as determined by the computed
-    // digest hash-key.
-    static boost::shared_ptr<ReadableArray<T> > create(
+    // digest hash-key. 
+    static std::shared_ptr<ReadableArray<T> > create(
         const boost::shared_array<T>& data, size_t size);
 
     // Alternate faster version if you already know the Digest hash.
-    static boost::shared_ptr<ReadableArray<T> > create(
+    static std::shared_ptr<ReadableArray<T> > create(
         const boost::shared_array<T>& data, Digest digest, size_t size);
 
 
     /*----- member functions -----*/
 
-    virtual ~SharedArray();
+    ~SharedArray() override;
 
-    virtual const T* get() const;
+    const T* get() const override;
 
 private:
 
@@ -365,8 +359,8 @@ private:
 
     // The constructor is declare private to force user to go through
     // the create() factory member function.
-    GPUCACHE_DECLARE_MAKE_SHARED_FRIEND_3;
-
+	GPUCACHE_DECLARE_MAKE_SHARED_FRIEND;
+ 
     SharedArray(
         const boost::shared_array<T>& data,
         size_t size,
@@ -391,17 +385,17 @@ class IndexBuffer
 public:
     typedef Alembic::Util::Digest Digest;
     typedef unsigned int index_t;
-    typedef boost::shared_ptr<const ReadableArray<index_t> > ReadableArrayPtr;
-    typedef boost::shared_ptr<const ArrayReadInterface<index_t> > ReadInterfacePtr;
+    typedef std::shared_ptr<const ReadableArray<index_t> > ReadableArrayPtr;
+    typedef std::shared_ptr<const ArrayReadInterface<index_t> > ReadInterfacePtr;
 
     /*----- classes -----*/
 
-    // Helper classes for implementing boost::unordered_map of
+    // Helper classes for implementing std::unordered_map of
     // IndexBuffers.
-    struct Key
+    struct Key 
     {
         Key(
-            const boost::shared_ptr<Array<index_t> >& array,
+            const std::shared_ptr<Array<index_t> >& array,
             const size_t beginIdx,
             const size_t endIdx
         ) : fArrayKey(array->key()),
@@ -442,15 +436,15 @@ public:
 
     /*----- static member functions -----*/
 
-    static boost::shared_ptr<IndexBuffer> create(
-        const boost::shared_ptr<Array<index_t> >& array
-    )
+    static std::shared_ptr<IndexBuffer> create(
+        const std::shared_ptr<Array<index_t> >& array
+    ) 
     { return create( array, 0, array->size() ); }
 
     // Note that the endIdx is exclusive following the STL iterator
     // convention.
-    static boost::shared_ptr<IndexBuffer> create(
-        const boost::shared_ptr<Array<index_t> >& array,
+    static std::shared_ptr<IndexBuffer> create(
+        const std::shared_ptr<Array<index_t> >& array,
         const size_t beginIdx,
         const size_t endIdx
     );
@@ -473,7 +467,7 @@ public:
     size_t numIndices() const       { return fEndIdx - fBeginIdx; }
     size_t bytes() const            { return numIndices() * sizeof(index_t); }
 
-    const boost::shared_ptr<Array<index_t> >& array() const
+    const std::shared_ptr<Array<index_t> >& array() const
     { return fArray; }
 
     const size_t beginIdx() const
@@ -488,7 +482,7 @@ public:
     // structure is already in place (or vice-versa).  The new buffer should represent the
     // same contents as the old buffer.
     // Note:  this breaks const conventions.
-    void ReplaceArrayInstance(boost::shared_ptr<Array<index_t> >& newArray) const;
+    void ReplaceArrayInstance(std::shared_ptr<Array<index_t> >& newArray) const;
 
 private:
 
@@ -496,10 +490,10 @@ private:
 
     // The constructor is declare private to force user to go through
     // the create() factory member function.
-    GPUCACHE_DECLARE_MAKE_SHARED_FRIEND_3;
+    GPUCACHE_DECLARE_MAKE_SHARED_FRIEND;
 
     IndexBuffer(
-        const boost::shared_ptr<Array<index_t> >& array,
+        const std::shared_ptr<Array<index_t> >& array,
         const size_t beginIdx,
         const size_t endIdx
     ) : fArray(array),
@@ -509,8 +503,8 @@ private:
 
 
     /*----- data members -----*/
-
-    const   boost::shared_ptr<Array<index_t> >          fArray;
+    
+    const   std::shared_ptr<Array<index_t> >          fArray;
     const   size_t                                      fBeginIdx;
     const   size_t                                      fEndIdx;
 };
@@ -525,17 +519,17 @@ class VertexBuffer
 {
 public:
     typedef Alembic::Util::Digest Digest;
-    typedef boost::shared_ptr<const ReadableArray<float> > ReadableArrayPtr;
-    typedef boost::shared_ptr<const ArrayReadInterface<float> > ReadInterfacePtr;
-
+    typedef std::shared_ptr<const ReadableArray<float> > ReadableArrayPtr;
+    typedef std::shared_ptr<const ArrayReadInterface<float> > ReadInterfacePtr;
+    
     /*----- classes -----*/
 
-    // Helper classes for implementing boost::unordered_map of
+    // Helper classes for implementing std::unordered_map of
     // VertexBuffers.
-    struct Key
+    struct Key 
     {
         Key(
-            const boost::shared_ptr<Array<float> >&     array,
+            const std::shared_ptr<Array<float> >&     array,
             const MHWRender::MVertexBufferDescriptor&   desc
         ) : fArrayKey(array->key()),
             fName(desc.name().asChar()),
@@ -591,20 +585,20 @@ public:
 
     /*----- static member functions -----*/
 
-    static boost::shared_ptr<VertexBuffer> createPositions(
-        const boost::shared_ptr<Array<float> >& array);
+    static std::shared_ptr<VertexBuffer> createPositions(
+        const std::shared_ptr<Array<float> >& array);
+    
+    static std::shared_ptr<VertexBuffer> createNormals(
+        const std::shared_ptr<Array<float> >& array);
+    
+    static std::shared_ptr<VertexBuffer> createUVs(
+        const std::shared_ptr<Array<float> >& array);
 
-    static boost::shared_ptr<VertexBuffer> createNormals(
-        const boost::shared_ptr<Array<float> >& array);
+    static std::shared_ptr<VertexBuffer> createTangents(
+        const std::shared_ptr<Array<float> >& array);
 
-    static boost::shared_ptr<VertexBuffer> createUVs(
-        const boost::shared_ptr<Array<float> >& array);
-
-    static boost::shared_ptr<VertexBuffer> createTangents(
-        const boost::shared_ptr<Array<float> >& array);
-
-    static boost::shared_ptr<VertexBuffer> createBitangents(
-        const boost::shared_ptr<Array<float> >& array);
+    static std::shared_ptr<VertexBuffer> createBitangents(
+        const std::shared_ptr<Array<float> >& array);
 
     // Return the number of currently allocated IndexBuffer
     // within the process.
@@ -626,8 +620,8 @@ public:
 
     size_t bytes() const
     { return fArray->bytes(); }
-
-    const boost::shared_ptr<Array<float> >& array() const
+    
+    const std::shared_ptr<Array<float> >& array() const
     { return fArray; }
 
     const   MHWRender::MVertexBufferDescriptor& descriptor() const
@@ -639,35 +633,35 @@ public:
     // structure is already in place (or vice-versa).  The new buffer should represent the
     // same contents as the old buffer.
     // Note:  this breaks const conventions.
-    void ReplaceArrayInstance(boost::shared_ptr<Array<float> >& newArray) const;
-
+    void ReplaceArrayInstance(std::shared_ptr<Array<float> >& newArray) const;
+    
 private:
 
     // The constructor is declare private to force user to go through
     // the create() factory member function.
-    GPUCACHE_DECLARE_MAKE_SHARED_FRIEND_2;
-
+    GPUCACHE_DECLARE_MAKE_SHARED_FRIEND;
+    
     /*----- static member functions -----*/
 
-    static boost::shared_ptr<VertexBuffer> create(
-        const boost::shared_ptr<Array<float> >&     array,
+    static std::shared_ptr<VertexBuffer> create(
+        const std::shared_ptr<Array<float> >&     array,
         const MHWRender::MVertexBufferDescriptor&   desc
     );
 
     /*----- member functions -----*/
 
     VertexBuffer(
-        const boost::shared_ptr<Array<float> >&     array,
+        const std::shared_ptr<Array<float> >&     array,
         const MHWRender::MVertexBufferDescriptor&   desc
-    )
+    ) 
         : fArray(array),
           fDescriptor(desc)
     {}
 
 
     /*----- data members -----*/
-
-    const   boost::shared_ptr<Array<float> >            fArray;
+    
+    const   std::shared_ptr<Array<float> >            fArray;
     const   MHWRender::MVertexBufferDescriptor          fDescriptor;
 };
 
@@ -681,72 +675,72 @@ class ShapeSample
 {
 public:
 
-    typedef boost::shared_ptr<ShapeSample> Ptr;
-    typedef boost::shared_ptr<const ShapeSample> CPtr;
+    typedef std::shared_ptr<ShapeSample> Ptr;
+    typedef std::shared_ptr<const ShapeSample> CPtr;
 
     /*----- static member functions -----*/
 
-    static boost::shared_ptr<ShapeSample> create(
+    static std::shared_ptr<ShapeSample> create(
         double timeInSeconds,
         size_t numWires,
         size_t numVerts,
-        const boost::shared_ptr<IndexBuffer>&  wireVertIndices,
-        const boost::shared_ptr<IndexBuffer>&  triangleVertIndices,
-        const boost::shared_ptr<VertexBuffer>& positions,
+        const std::shared_ptr<IndexBuffer>&  wireVertIndices,
+		const std::shared_ptr<IndexBuffer>&  triangleVertIndices,
+        const std::shared_ptr<VertexBuffer>& positions,
         const MBoundingBox& boundingBox,
         const MColor&       diffuseColor,
         bool                visibility)
     {
-        return boost::make_shared<ShapeSample>(
+        return std::make_shared<ShapeSample>(
             timeInSeconds,
             numWires, numVerts,
             wireVertIndices, triangleVertIndices,
             positions, boundingBox, diffuseColor, visibility);
     }
 
-    static boost::shared_ptr<ShapeSample> create(
-        double timeInSeconds,
-        size_t numWires,
-        size_t numVerts,
-        const boost::shared_ptr<IndexBuffer>&  wireVertIndices,
-        const std::vector<boost::shared_ptr<IndexBuffer> >&  triangleVertIndices,
-        const boost::shared_ptr<VertexBuffer>& positions,
-        const MBoundingBox& boundingBox,
+	static std::shared_ptr<ShapeSample> create(
+		double timeInSeconds,
+		size_t numWires,
+		size_t numVerts,
+		const std::shared_ptr<IndexBuffer>&  wireVertIndices,
+		const std::vector<std::shared_ptr<IndexBuffer> >&  triangleVertIndices,
+		const std::shared_ptr<VertexBuffer>& positions,
+		const MBoundingBox& boundingBox,
         const MColor&       diffuseColor,
         bool                visibility)
-    {
-        return boost::make_shared<ShapeSample>(
-            timeInSeconds,
-            numWires, numVerts,
-            wireVertIndices, triangleVertIndices,
-            positions, boundingBox, diffuseColor, visibility);
-    }
+	{
+		return std::make_shared<ShapeSample>(
+			timeInSeconds,
+			numWires, numVerts,
+			wireVertIndices, triangleVertIndices,
+			positions, boundingBox, diffuseColor, visibility);
+	}
 
-    static boost::shared_ptr<ShapeSample> createEmptySample(
+    static std::shared_ptr<ShapeSample> createEmptySample( 
         double timeInSeconds)
     {
         return ShapeSample::create(
             timeInSeconds,
             0,
             0,
-            boost::shared_ptr<IndexBuffer>(),
-            boost::shared_ptr<IndexBuffer>(),
-            boost::shared_ptr<VertexBuffer>(),
+            std::shared_ptr<IndexBuffer>(),
+            std::shared_ptr<IndexBuffer>(),
+            std::shared_ptr<VertexBuffer>(),
             MBoundingBox(),
             AlembicHolder::Config::kDefaultGrayColor,
             false);
     }
 
-    static boost::shared_ptr<ShapeSample> createBoundingBoxPlaceHolderSample(
+    static std::shared_ptr<ShapeSample> createBoundingBoxPlaceHolderSample(
         double timeInSeconds, const MBoundingBox& bbox, bool visibility)
     {
-        boost::shared_ptr<ShapeSample> sample = ShapeSample::create(
+        std::shared_ptr<ShapeSample> sample = ShapeSample::create(
             timeInSeconds,
             0,
             0,
-            boost::shared_ptr<IndexBuffer>(),
-            boost::shared_ptr<IndexBuffer>(),
-            boost::shared_ptr<VertexBuffer>(),
+            std::shared_ptr<IndexBuffer>(),
+            std::shared_ptr<IndexBuffer>(),
+            std::shared_ptr<VertexBuffer>(),
             bbox,
             AlembicHolder::Config::kDefaultGrayColor,
             visibility);
@@ -758,8 +752,8 @@ public:
 
     ~ShapeSample();
 
-    void setNormals(const boost::shared_ptr<VertexBuffer>& normals);
-    void setUVs(const boost::shared_ptr<VertexBuffer>& uvs);
+    void setNormals(const std::shared_ptr<VertexBuffer>& normals);
+    void setUVs(const std::shared_ptr<VertexBuffer>& uvs);
 
     void setTexture(const MString& texturePath);
     MString getTexturePath() const { return fTexture; }
@@ -770,31 +764,30 @@ public:
     bool visibility() const { return fVisibility; }
 
     size_t numWires() const         { return fNumWires; }
-    size_t numTriangles(size_t groupId) const
+    size_t numTriangles(size_t groupId) const 
     { return fTriangleVertIndices[groupId] ? fTriangleVertIndices[groupId]->numIndices()/3 : 0; }
     size_t numTriangles() const;
     size_t numVerts() const         { return fNumVerts; }
 
-
-    const boost::shared_ptr<IndexBuffer>& wireVertIndices() const
+    const std::shared_ptr<IndexBuffer>& wireVertIndices() const
     { return fWireVertIndices; }
-    const boost::shared_ptr<IndexBuffer>& triangleVertIndices(size_t groupId) const
-    { return fTriangleVertIndices[groupId]; }
-    const std::vector<boost::shared_ptr<IndexBuffer> >& triangleVertexIndexGroups() const
-    { return fTriangleVertIndices; }
-    size_t numIndexGroups() const
-    { return fTriangleVertIndices.size(); }
+	const std::shared_ptr<IndexBuffer>& triangleVertIndices(size_t groupId) const
+	{ return fTriangleVertIndices[groupId]; }
+	const std::vector<std::shared_ptr<IndexBuffer> >& triangleVertexIndexGroups() const
+	{ return fTriangleVertIndices; }
+	size_t numIndexGroups() const
+	{ return fTriangleVertIndices.size(); }
 
-    const boost::shared_ptr<VertexBuffer>& positions() const
+    const std::shared_ptr<VertexBuffer>& positions() const
     { return fPositions; }
     const MBoundingBox& boundingBox() const
     { return fBoundingBox; }
     const MColor& diffuseColor() const
     { return fDiffuseColor; }
 
-    const boost::shared_ptr<VertexBuffer>& normals() const
+    const std::shared_ptr<VertexBuffer>& normals() const
     { return fNormals; }
-    const boost::shared_ptr<VertexBuffer>& uvs() const
+    const std::shared_ptr<VertexBuffer>& uvs() const
     { return fUVs; }
 
     bool isBoundingBoxPlaceHolder() const
@@ -808,27 +801,27 @@ private:
 
     // The constructor is declare private to force user to go through
     // the create() factory member function.
-    GPUCACHE_DECLARE_MAKE_SHARED_FRIEND_9;
+    GPUCACHE_DECLARE_MAKE_SHARED_FRIEND;
 
-    ShapeSample(
+	ShapeSample(
         double timeInSeconds,
         size_t numWires,
         size_t numVerts,
-        const boost::shared_ptr<IndexBuffer>&  wireVertIndices,
-        const boost::shared_ptr<IndexBuffer>&  triangleVertIndices,
-        const boost::shared_ptr<VertexBuffer>& positions,
+        const std::shared_ptr<IndexBuffer>&  wireVertIndices,
+        const std::shared_ptr<IndexBuffer>&  triangleVertIndices,
+        const std::shared_ptr<VertexBuffer>& positions,
         const MBoundingBox& boundingBox,
         const MColor&       diffuseColor,
         bool                visibility
     );
 
-    ShapeSample(
+	ShapeSample(
         double timeInSeconds,
         size_t numWires,
         size_t numVerts,
-        const boost::shared_ptr<IndexBuffer>&  wireVertIndices,
-        const std::vector<boost::shared_ptr<IndexBuffer> >&  triangleVertIndices,
-        const boost::shared_ptr<VertexBuffer>& positions,
+        const std::shared_ptr<IndexBuffer>&  wireVertIndices,
+        const std::vector<std::shared_ptr<IndexBuffer> >&  triangleVertIndices,
+        const std::shared_ptr<VertexBuffer>& positions,
         const MBoundingBox& boundingBox,
         const MColor&       diffuseColor,
         bool                visibility
@@ -836,24 +829,24 @@ private:
 
     /*----- data members -----*/
 
+    MString     fTexture;
+
     const double  fTimeInSeconds;
 
     const size_t fNumWires;
     const size_t fNumVerts;
 
     // Mandatory attributes
-    const boost::shared_ptr<IndexBuffer>                fWireVertIndices;
-    const std::vector<boost::shared_ptr<IndexBuffer> >  fTriangleVertIndices;
-    const boost::shared_ptr<VertexBuffer>               fPositions;
+    const std::shared_ptr<IndexBuffer>                fWireVertIndices;
+    const std::vector<std::shared_ptr<IndexBuffer> >  fTriangleVertIndices;
+    const std::shared_ptr<VertexBuffer>               fPositions;
     const MBoundingBox                                  fBoundingBox;
     const MColor                                        fDiffuseColor;
     const bool                                          fVisibility;
 
     // Optional attributes
-    boost::shared_ptr<VertexBuffer>                     fNormals;
-    boost::shared_ptr<VertexBuffer>                     fUVs;
-
-    MString                                             fTexture;
+    std::shared_ptr<VertexBuffer>                     fNormals;
+    std::shared_ptr<VertexBuffer>                     fUVs;
 
     // Flag that this sample is a bounding box place holder for the real geometry sample
     bool                                                fBoundingBoxPlaceHolder;
@@ -870,35 +863,35 @@ public:
 
     /*----- static member functions -----*/
 
-    static boost::shared_ptr<XformSample> create(
-        double              timeInSeconds,
-        const MMatrix&      xform,
-        const MBoundingBox& boundingBox,
-        bool                visibility)
-    {
-        return boost::make_shared<XformSample>(
-            timeInSeconds, xform, boundingBox, visibility);
-    }
+	static std::shared_ptr<XformSample> create(
+		double              timeInSeconds,
+		const MMatrix&      xform,
+		const MBoundingBox& boundingBox,
+		bool                visibility)
+	{
+		return std::make_shared<XformSample>(
+			timeInSeconds, xform, boundingBox, visibility);
+	}
 
     /*----- member functions -----*/
 
-    ~XformSample() {}
+	~XformSample() {}
 
-    double timeInSeconds() const            { return fTimeInSeconds; }
-    const MMatrix& xform() const            { return fXform; }
+	double timeInSeconds() const            { return fTimeInSeconds; }
+	const MMatrix& xform() const            { return fXform; }
     bool isReflection() const               { return fIsReflection; }
-    const MBoundingBox& boundingBox() const { return fBoundingBox; }
-    bool visibility() const                 { return fVisibility; }
+	const MBoundingBox& boundingBox() const { return fBoundingBox; }
+	bool visibility() const                 { return fVisibility; }
 
 private:
 
-    /*----- member functions -----*/
+	/*----- member functions -----*/
 
-    // The constructor is declare private to force user to go through
-    // the create() factory member function.
-    GPUCACHE_DECLARE_MAKE_SHARED_FRIEND_4;
+	// The constructor is declare private to force user to go through
+	// the create() factory member function.
+    GPUCACHE_DECLARE_MAKE_SHARED_FRIEND;
 
-    XformSample(double                 timeInSeconds,
+	XformSample(double                 timeInSeconds,
                 const MMatrix&         xform,
                 const MBoundingBox&    boundingBox,
                 bool                   visibility)

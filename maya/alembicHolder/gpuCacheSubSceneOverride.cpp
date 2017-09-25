@@ -173,8 +173,8 @@ MColor ShadedModeColor::evaluateDefaultColor(
     const MaterialProperty::Ptr srcProp = prop->srcProp();
     if (srcNode && srcProp) {
         // There is a source connection. Let's check if it's a texture2d node.
-        const boost::shared_ptr<const Texture2d> srcTex =
-            boost::dynamic_pointer_cast<const Texture2d>(srcNode);
+        const std::shared_ptr<const Texture2d> srcTex =
+            std::dynamic_pointer_cast<const Texture2d>(srcNode);
         if (srcTex && srcTex->OutColor == srcProp) {
             // This property has a source texture2d node and the output
             // of the texture2d node is outColor.
@@ -284,7 +284,7 @@ class MayaBufferArray : public Array<T>
     class TempCopyReadableInterface : public ArrayReadInterface<T>
     {
          boost::shared_array<T> fLocalArray;
-         GPUCACHE_DECLARE_MAKE_SHARED_FRIEND_1;
+         GPUCACHE_DECLARE_MAKE_SHARED_FRIEND;
     public:
         TempCopyReadableInterface(boost::shared_array<T> localArray) : fLocalArray(localArray) {}
         virtual ~TempCopyReadableInterface() {}
@@ -295,7 +295,7 @@ class MayaBufferArray : public Array<T>
 public:
     typedef typename Array<T>::Digest Digest;
 
-    static boost::shared_ptr<Array<T> > create(const boost::shared_ptr<C>& mayaBuffer, Digest digest)
+    static std::shared_ptr<Array<T> > create(const std::shared_ptr<C>& mayaBuffer, Digest digest)
     {
         // The Digest is pre-calculated.
         size_t size = MayaBufferSizeHelper(mayaBuffer.get());
@@ -303,14 +303,14 @@ public:
         // We first look if a similar array already exists in the
         // cache. If so, we return the cached array to promote sharing as
         // much as possible.
-        boost::shared_ptr<Array<T> > ret;
+        std::shared_ptr<Array<T> > ret;
         {
             tbb::mutex::scoped_lock lock(ArrayRegistry<T>::mutex());
 
             ret = ArrayRegistry<T>::lookupNonReadable(digest, size);
 
             if (!ret) {
-                ret = boost::make_shared<MayaBufferArray<T, C> >(
+                ret = std::make_shared<MayaBufferArray<T, C> >(
                     mayaBuffer, digest);
                 ArrayRegistry<T>::insert(ret);
             }
@@ -323,17 +323,17 @@ public:
     virtual ~MayaBufferArray() {}
 
 
-    virtual boost::shared_ptr<const ArrayReadInterface<T> > getReadable() const
+    virtual std::shared_ptr<const ArrayReadInterface<T> > getReadable() const
     {
         // Get a temporary readable copy of the buffer contents.  Nothing new
         // will be registered with the ArrayRegistry.
         // This function can only be called from the main thread.
-        boost::shared_ptr<const TempCopyReadableInterface> ret(boost::make_shared<const TempCopyReadableInterface>(GetTempArrayCopy()));
+        std::shared_ptr<const TempCopyReadableInterface> ret(std::make_shared<const TempCopyReadableInterface>(GetTempArrayCopy()));
         return ret;
     }
 
 
-    virtual boost::shared_ptr<ReadableArray<T> > getReadableArray() const
+    virtual std::shared_ptr<ReadableArray<T> > getReadableArray() const
     {
         // Get a full-fledged SharedArray version of the buffer contents.  This
         // SharedArray will be registered with the ArrayRegistry.
@@ -342,7 +342,7 @@ public:
             // If the readable version already exists in the registry, return that one.
             tbb::mutex::scoped_lock lock(ArrayRegistry<T>::mutex());
 
-            boost::shared_ptr<ReadableArray<T> > ret;
+            std::shared_ptr<ReadableArray<T> > ret;
             // Linux gcc complains about these base class functions unless they are explicitly
             // disambiguated by proving this->
             ret = ArrayRegistry<T>::lookupReadable(this->digest(), this->bytes());
@@ -356,14 +356,14 @@ public:
         return SharedArray<T>::create(rawData, this->digest(), this->bytes()/sizeof(T));
     }
 
-    boost::shared_ptr<C> getMBuffer() const
+    std::shared_ptr<C> getMBuffer() const
     {
         return fMayaBuffer;
     }
 
 private:
 
-    MayaBufferArray(const boost::shared_ptr<C>& mayaBuffer, Digest digest)  // private constructor.  use create() instead.
+    MayaBufferArray(const std::shared_ptr<C>& mayaBuffer, Digest digest)  // private constructor.  use create() instead.
         : Array<T>(MayaBufferSizeHelper(mayaBuffer.get()), digest, false)
         , fMayaBuffer(mayaBuffer)
     {}
@@ -402,9 +402,9 @@ private:
         return rawData;
     }
 
-    GPUCACHE_DECLARE_MAKE_SHARED_FRIEND_2;
+    GPUCACHE_DECLARE_MAKE_SHARED_FRIEND;
 
-    const boost::shared_ptr<C> fMayaBuffer;
+    const std::shared_ptr<C> fMayaBuffer;
 };
 
 
@@ -441,10 +441,10 @@ public:
     void setBuffers(
         SubSceneOverride&                            subSceneOverride,
         MRenderItem*                                 renderItem,
-        const boost::shared_ptr<const IndexBuffer>&  indices,
-        const boost::shared_ptr<const VertexBuffer>& positions,
-        const boost::shared_ptr<const VertexBuffer>& normals,
-        const boost::shared_ptr<const VertexBuffer>& uvs,
+        const std::shared_ptr<const IndexBuffer>&  indices,
+        const std::shared_ptr<const VertexBuffer>& positions,
+        const std::shared_ptr<const VertexBuffer>& normals,
+        const std::shared_ptr<const VertexBuffer>& uvs,
         const MBoundingBox&                          boundingBox
     )
     {
@@ -492,10 +492,10 @@ public:
     // Remove Viewport 2.0 buffers from this cache. This means that these
     // buffers is no longer used (and might become free buffers and then deleted).
     void removeBuffers(
-        const boost::shared_ptr<const IndexBuffer>&  indices,
-        const boost::shared_ptr<const VertexBuffer>& positions,
-        const boost::shared_ptr<const VertexBuffer>& normals = boost::shared_ptr<const VertexBuffer>(),
-        const boost::shared_ptr<const VertexBuffer>& uvs     = boost::shared_ptr<const VertexBuffer>()
+        const std::shared_ptr<const IndexBuffer>&  indices,
+        const std::shared_ptr<const VertexBuffer>& positions,
+        const std::shared_ptr<const VertexBuffer>& normals = std::shared_ptr<const VertexBuffer>(),
+        const std::shared_ptr<const VertexBuffer>& uvs     = std::shared_ptr<const VertexBuffer>()
     )
     {
         if (indices) {
@@ -519,15 +519,15 @@ public:
     void updateBuffers(
         SubSceneOverride&                            subSceneOverride,
         MRenderItem*                                 renderItem,
-        const boost::shared_ptr<const IndexBuffer>&  indices,
-        const boost::shared_ptr<const VertexBuffer>& positions,
-        const boost::shared_ptr<const VertexBuffer>& normals,
-        const boost::shared_ptr<const VertexBuffer>& uvs,
+        const std::shared_ptr<const IndexBuffer>&  indices,
+        const std::shared_ptr<const VertexBuffer>& positions,
+        const std::shared_ptr<const VertexBuffer>& normals,
+        const std::shared_ptr<const VertexBuffer>& uvs,
         const MBoundingBox&                          boundingBox,
-        const boost::shared_ptr<const IndexBuffer>&  prevIndices,
-        const boost::shared_ptr<const VertexBuffer>& prevPositions,
-        const boost::shared_ptr<const VertexBuffer>& prevNormals = boost::shared_ptr<const VertexBuffer>(),
-        const boost::shared_ptr<const VertexBuffer>& prevUVs     = boost::shared_ptr<const VertexBuffer>()
+        const std::shared_ptr<const IndexBuffer>&  prevIndices,
+        const std::shared_ptr<const VertexBuffer>& prevPositions,
+        const std::shared_ptr<const VertexBuffer>& prevNormals = std::shared_ptr<const VertexBuffer>(),
+        const std::shared_ptr<const VertexBuffer>& prevUVs     = std::shared_ptr<const VertexBuffer>()
     )
     {
         removeBuffers(prevIndices, prevPositions, prevNormals, prevUVs);
@@ -535,7 +535,7 @@ public:
     }
 
     // Find the Viewport 2.0 index buffer in the cache. Returns NULL if not found.
-    MIndexBuffer* lookup(const boost::shared_ptr<const IndexBuffer>& indices)
+    MIndexBuffer* lookup(const std::shared_ptr<const IndexBuffer>& indices)
     {
         MIndexBuffer* buffer = NULL;
         lookup(indices, buffer);
@@ -543,7 +543,7 @@ public:
     }
 
     // Find the Viewport 2.0 vertex buffer in the cache. Returns NULL if not found.
-    MVertexBuffer* lookup(const boost::shared_ptr<const VertexBuffer>& vertices)
+    MVertexBuffer* lookup(const std::shared_ptr<const VertexBuffer>& vertices)
     {
         MVertexBuffer* buffer = NULL;
         lookup(vertices, buffer);
@@ -599,7 +599,7 @@ private:
 
     // Allocate an index buffer or return the existing index buffer.
     // This will add the reference count by 1.
-    MIndexBuffer* acquireIndexBuffer(const boost::shared_ptr<const IndexBuffer>& indices)
+    MIndexBuffer* acquireIndexBuffer(const std::shared_ptr<const IndexBuffer>& indices)
     {
         assert(indices);
         MIndexBuffer* buffer = NULL;
@@ -609,7 +609,7 @@ private:
 
     // Allocate a vertex buffer or return the existing vertex buffer.
     // This will add the reference count by 1.
-    MVertexBuffer* acquireVertexBuffer(const boost::shared_ptr<const VertexBuffer>& vertices)
+    MVertexBuffer* acquireVertexBuffer(const std::shared_ptr<const VertexBuffer>& vertices)
     {
         assert(vertices);
         MVertexBuffer* buffer = NULL;
@@ -756,14 +756,14 @@ private:
             MGeometry::DataType dataType;
             MGeometry::Semantic semantic;
 
-            BufferKey(const boost::shared_ptr<const IndexBuffer>& indices)
+            BufferKey(const std::shared_ptr<const IndexBuffer>& indices)
                 : type(kIndex),
                   arrayKey(indices->array()->key()),
                   dataType(MGeometry::kUnsignedInt32),
                   semantic(MGeometry::kInvalidSemantic)
             {}
 
-            BufferKey(const boost::shared_ptr<const VertexBuffer>& vertices)
+            BufferKey(const std::shared_ptr<const VertexBuffer>& vertices)
                 : type(kVertex),
                   arrayKey(vertices->array()->key()),
                   dataType(vertices->descriptor().dataType()),
@@ -795,7 +795,7 @@ private:
             }
         };
 
-        BufferEntry(const boost::shared_ptr<const IndexBuffer>& indices)
+        BufferEntry(const std::shared_ptr<const IndexBuffer>& indices)
             : fKey(indices),
               fRefCount(0)
         {
@@ -810,7 +810,7 @@ private:
                     const MayaIndexBufferWrapper* mbufferWrapper = dynamic_cast<const MayaIndexBufferWrapper*>(indices->array().get());
                     assert(mbufferWrapper);
                     if (mbufferWrapper) {
-                        boost::shared_ptr<MIndexBuffer> mbuffer = mbufferWrapper->getMBuffer();
+                        std::shared_ptr<MIndexBuffer> mbuffer = mbufferWrapper->getMBuffer();
                         assert(mbuffer);
                         if (mbuffer) {
                             fIndexBuffer = mbuffer;
@@ -836,13 +836,13 @@ private:
                 // back into the IndexBuffer.  The readable version that it previously held can then be freed.
 
                 if (indices->array()->isReadable()) {
-                    boost::shared_ptr<Array<IndexBuffer::index_t> > mayaArray = MayaIndexBufferWrapper::create(fIndexBuffer, indices->array()->digest());
+                    std::shared_ptr<Array<IndexBuffer::index_t> > mayaArray = MayaIndexBufferWrapper::create(fIndexBuffer, indices->array()->digest());
                     indices->ReplaceArrayInstance(mayaArray);
                 }
             }
         }
 
-        BufferEntry(const boost::shared_ptr<const VertexBuffer>& vertices)
+        BufferEntry(const std::shared_ptr<const VertexBuffer>& vertices)
             : fKey(vertices),
               fRefCount(0)
         {
@@ -861,7 +861,7 @@ private:
                     const MayaVertexBufferWrapper* mbufferWrapper = dynamic_cast<const MayaVertexBufferWrapper*>(vertices->array().get());
                     assert(mbufferWrapper);
                     if (mbufferWrapper) {
-                        boost::shared_ptr<MVertexBuffer> mbuffer = mbufferWrapper->getMBuffer();
+                        std::shared_ptr<MVertexBuffer> mbuffer = mbufferWrapper->getMBuffer();
                         assert(mbuffer);
                         if (mbuffer) {
                             if (mbuffer->descriptor().semantic() == vertices->descriptor().semantic()) {
@@ -875,7 +875,7 @@ private:
                                 // that we can't make a duplicate MayaVertexBufferWrapper, so make a new MBuffer backed
                                 // by a plain software buffer.  Graft the software buffer back into the VertexBuffer so
                                 // that we store both.
-                                boost::shared_ptr<Array<float> > softwareArray = vertices->array()->getReadableArray();
+                                std::shared_ptr<Array<float> > softwareArray = vertices->array()->getReadableArray();
                                 vertices->ReplaceArrayInstance(softwareArray);
                                 allowReplaceBufferArray = false;
                                 // Now proceed with normal MBuffer creation, but skip the final step of converting the
@@ -901,7 +901,7 @@ private:
                 // So after creating the Maya MVertexBuffer, we graft a non-readable version of the Array
                 // back into the VertexBuffer.  The readable version that it previously held can then be freed.
                 if (allowReplaceBufferArray && vertices->array()->isReadable()) {
-                    boost::shared_ptr<Array<float> > mayaArray = MayaVertexBufferWrapper::create(fVertexBuffer, vertices->array()->digest());
+                    std::shared_ptr<Array<float> > mayaArray = MayaVertexBufferWrapper::create(fVertexBuffer, vertices->array()->digest());
                     vertices->ReplaceArrayInstance(mayaArray);
                 }
             }
@@ -936,8 +936,8 @@ private:
 
     private:
         BufferKey                           fKey;
-        boost::shared_ptr<MIndexBuffer>     fIndexBuffer;
-        boost::shared_ptr<MVertexBuffer>    fVertexBuffer;
+        std::shared_ptr<MIndexBuffer>     fIndexBuffer;
+        std::shared_ptr<MVertexBuffer>    fVertexBuffer;
         mutable size_t                      fRefCount;
     };
 
@@ -1207,8 +1207,8 @@ public:
     {}
 
     // Wraps a MShaderInstance* and its template MShaderInstance*.
-    ShaderInstancePtr(boost::shared_ptr<MShaderInstance> shader,
-                      boost::shared_ptr<MShaderInstance> source)
+    ShaderInstancePtr(std::shared_ptr<MShaderInstance> shader,
+                      std::shared_ptr<MShaderInstance> source)
         : fShader(shader), fTemplate(source)
     {}
 
@@ -1232,13 +1232,13 @@ public:
         return fShader.get();
     }
 
-    boost::shared_ptr<MShaderInstance> getShader() const
+    std::shared_ptr<MShaderInstance> getShader() const
     {
         assert(fShader);
         return fShader;
     }
 
-    boost::shared_ptr<MShaderInstance> getTemplate() const
+    std::shared_ptr<MShaderInstance> getTemplate() const
     {
         assert(fTemplate);
         return fTemplate;
@@ -1261,8 +1261,8 @@ public:
     }
 
 private:
-    boost::shared_ptr<MShaderInstance> fShader;
-    boost::shared_ptr<MShaderInstance> fTemplate;
+    std::shared_ptr<MShaderInstance> fShader;
+    std::shared_ptr<MShaderInstance> fTemplate;
 };
 
 
@@ -1279,7 +1279,7 @@ public:
     {}
 
     // Wrap a shader instance to be used as a template.
-    ShaderTemplatePtr(boost::shared_ptr<MShaderInstance> source)
+    ShaderTemplatePtr(std::shared_ptr<MShaderInstance> source)
         : fTemplate(source)
     {}
 
@@ -1297,7 +1297,7 @@ public:
         return fTemplate.get();
     }
 
-    boost::shared_ptr<MShaderInstance> getTemplate() const
+    std::shared_ptr<MShaderInstance> getTemplate() const
     {
         assert(fTemplate);
         return fTemplate;
@@ -1307,13 +1307,13 @@ public:
     ShaderInstancePtr newShaderInstance(Deleter deleter) const
     {
         assert(fTemplate);
-        boost::shared_ptr<MShaderInstance> newShader;
+        std::shared_ptr<MShaderInstance> newShader;
         newShader.reset(fTemplate->clone(), std::ptr_fun(deleter));
         return ShaderInstancePtr(newShader, fTemplate);
     }
 
 private:
-    boost::shared_ptr<MShaderInstance> fTemplate;
+    std::shared_ptr<MShaderInstance> fTemplate;
 };
 
 
@@ -1589,7 +1589,7 @@ private:
         assert(shader);
         if (!shader) return ShaderTemplatePtr();
 
-        boost::shared_ptr<MShaderInstance> ptr;
+        std::shared_ptr<MShaderInstance> ptr;
         ptr.reset(shader, std::ptr_fun(shaderTemplateDeleter));
         return ShaderTemplatePtr(ptr);
     }
@@ -1611,7 +1611,7 @@ private:
     struct FragmentAndShaderTemplate {
         MString                          fragmentAndOutput;
         MShaderInstance*                 shader;
-        boost::weak_ptr<MShaderInstance> ptr;
+        std::weak_ptr<MShaderInstance> ptr;
     };
     typedef boost::multi_index_container<
         FragmentAndShaderTemplate,
@@ -1899,7 +1899,7 @@ public:
 
         // Found in cache.
         if (it != fPointShaders.get<0>().end()) {
-            boost::shared_ptr<MShaderInstance> shader = it->ptr.lock();
+            std::shared_ptr<MShaderInstance> shader = it->ptr.lock();
             assert(shader);  // no staled pointer.
             return ShaderInstancePtr(shader, it->source);
         }
@@ -1935,7 +1935,7 @@ public:
 
         // Found in cache.
         if (it != fWireShaders.get<0>().end()) {
-            boost::shared_ptr<MShaderInstance> shader = it->ptr.lock();
+            std::shared_ptr<MShaderInstance> shader = it->ptr.lock();
             assert(shader);  // no staled pointer.
             return ShaderInstancePtr(shader, it->source);
         }
@@ -1974,7 +1974,7 @@ public:
 
         // Found in cache.
         if (it != fWireShadersWithCB.get<0>().end()) {
-            boost::shared_ptr<MShaderInstance> shader = it->ptr.lock();
+            std::shared_ptr<MShaderInstance> shader = it->ptr.lock();
             assert(shader);  // no staled pointer.
             return ShaderInstancePtr(shader, it->source);
         }
@@ -2013,7 +2013,7 @@ public:
 
         // Found in cache.
         if (it != fBoundingBoxPlaceHolderShaders.get<0>().end()) {
-            boost::shared_ptr<MShaderInstance> shader = it->ptr.lock();
+            std::shared_ptr<MShaderInstance> shader = it->ptr.lock();
             assert(shader);  // no staled pointer.
             return ShaderInstancePtr(shader, it->source);
         }
@@ -2052,7 +2052,7 @@ public:
 
         // Found in cache.
         if (it != fDiffuseColorShaders.get<0>().end()) {
-            boost::shared_ptr<MShaderInstance> shader = it->ptr.lock();
+            std::shared_ptr<MShaderInstance> shader = it->ptr.lock();
             assert(shader);  // no staled pointer.
             return ShaderInstancePtr(shader, it->source);
         }
@@ -2117,7 +2117,7 @@ public:
 
         // Found in cache.
         if (it != end_it) {
-            boost::shared_ptr<MShaderInstance> shader = it->ptr.lock();
+            std::shared_ptr<MShaderInstance> shader = it->ptr.lock();
             assert(shader);  // no staled pointer.
             return ShaderInstancePtr(shader, it->source);
         }
@@ -2185,7 +2185,7 @@ public:
 
         // Found in cache.
         if (it != fShadedMaterialShaders.get<0>().end()) {
-            boost::shared_ptr<MShaderInstance> shader = it->ptr.lock();
+            std::shared_ptr<MShaderInstance> shader = it->ptr.lock();
             assert(shader);  // no staled pointer.
             return ShaderInstancePtr(shader, it->source);
         }
@@ -2313,8 +2313,8 @@ private:
         MString                            fileTexturePath;
         MString                            key;
         MShaderInstance*                   shader;
-        boost::weak_ptr<MShaderInstance>   ptr;
-        boost::shared_ptr<MShaderInstance> source;
+        std::weak_ptr<MShaderInstance>   ptr;
+        std::shared_ptr<MShaderInstance> source;
     };
     typedef boost::multi_index_container<
         ColorAndShaderInstance,
@@ -2346,8 +2346,8 @@ private:
     struct MaterialAndShaderInstance {
         MaterialGraph::Ptr                 material;
         MShaderInstance*                   shader;
-        boost::weak_ptr<MShaderInstance>   ptr;
-        boost::shared_ptr<MShaderInstance> source;
+        std::weak_ptr<MShaderInstance>   ptr;
+        std::shared_ptr<MShaderInstance> source;
         bool                               isAnimated;
         mutable double                     timeInSeconds;
     };
@@ -2470,7 +2470,7 @@ private:
 class RenderItemWrapper : boost::noncopyable
 {
 public:
-    typedef boost::shared_ptr<RenderItemWrapper> Ptr;
+    typedef std::shared_ptr<RenderItemWrapper> Ptr;
 
     RenderItemWrapper(const MString&                     name,
                       const MRenderItem::RenderItemType  type,
@@ -2569,10 +2569,10 @@ public:
     }
 
     void setBuffers(SubSceneOverride&                               subSceneOverride,
-                    const boost::shared_ptr<const IndexBuffer>&     indices,
-                    const boost::shared_ptr<const VertexBuffer>&    positions,
-                    const boost::shared_ptr<const VertexBuffer>&    normals,
-                    const boost::shared_ptr<const VertexBuffer>&    uvs,
+                    const std::shared_ptr<const IndexBuffer>&     indices,
+                    const std::shared_ptr<const VertexBuffer>&    positions,
+                    const std::shared_ptr<const VertexBuffer>&    normals,
+                    const std::shared_ptr<const VertexBuffer>&    uvs,
                     const MBoundingBox&                             boundingBox)
     {
         const bool buffersChanged =
@@ -2637,7 +2637,7 @@ public:
         }
     }
 
-    void setCustomData(const boost::shared_ptr<MUserData>& userData)
+    void setCustomData(const std::shared_ptr<MUserData>& userData)
     {
         if (fUserData != userData) {
             if (fRenderItem) {
@@ -2736,7 +2736,7 @@ public:
     // Set up for hardware instancing.
     // If the hardware instance data is NULL, the render item will never be instanced.
     // This method must be called from HardwareInstanceManager.
-    void installHardwareInstanceData(const boost::shared_ptr<HardwareInstanceData>& data)
+    void installHardwareInstanceData(const std::shared_ptr<HardwareInstanceData>& data)
     {
         fHardwareInstanceData = data;
         notifyInstancingChange();
@@ -2838,12 +2838,12 @@ public:
     const MString&                      name() const      { return fName; }
     const MRenderItem::RenderItemType   type() const      { return fType; }
     const MGeometry::Primitive          primitive() const { return fPrimitive; }
-    const boost::shared_ptr<MUserData>& userData() const  { return fUserData; }
+    const std::shared_ptr<MUserData>& userData() const  { return fUserData; }
 
-    const boost::shared_ptr<const IndexBuffer>&  indices() const    { return fIndices; }
-    const boost::shared_ptr<const VertexBuffer>& positions() const  { return fPositions; }
-    const boost::shared_ptr<const VertexBuffer>& normals() const    { return fNormals; }
-    const boost::shared_ptr<const VertexBuffer>& uvs() const        { return fUVs; }
+    const std::shared_ptr<const IndexBuffer>&  indices() const    { return fIndices; }
+    const std::shared_ptr<const VertexBuffer>& positions() const  { return fPositions; }
+    const std::shared_ptr<const VertexBuffer>& normals() const    { return fNormals; }
+    const std::shared_ptr<const VertexBuffer>& uvs() const        { return fUVs; }
     const MBoundingBox& boundingBox() const { return fBoundingBox; }
 
     bool                enabled() const                 { return fEnabled; }
@@ -2898,14 +2898,14 @@ private:
     const MString                           fName;
     const MRenderItem::RenderItemType       fType;
     const MGeometry::Primitive              fPrimitive;
-    boost::shared_ptr<MUserData>            fUserData;
+    std::shared_ptr<MUserData>            fUserData;
 
     MRenderItem*                            fRenderItem;
 
-    boost::shared_ptr<const IndexBuffer>    fIndices;
-    boost::shared_ptr<const VertexBuffer>   fPositions;
-    boost::shared_ptr<const VertexBuffer>   fNormals;
-    boost::shared_ptr<const VertexBuffer>   fUVs;
+    std::shared_ptr<const IndexBuffer>    fIndices;
+    std::shared_ptr<const VertexBuffer>   fPositions;
+    std::shared_ptr<const VertexBuffer>   fNormals;
+    std::shared_ptr<const VertexBuffer>   fUVs;
     MBoundingBox                            fBoundingBox;
 
     bool                                    fEnabled;
@@ -2919,7 +2919,7 @@ private:
 
     ShaderInstancePtr                       fShader;
 
-    boost::shared_ptr<HardwareInstanceData> fHardwareInstanceData;
+    std::shared_ptr<HardwareInstanceData> fHardwareInstanceData;
 };
 
 
@@ -3987,7 +3987,7 @@ public:
     void installHardwareInstanceData(RenderItemWrapper::Ptr& renderItem)
     {
         if (!renderItem->hasHardwareInstanceData()) {
-            boost::shared_ptr<HardwareInstanceData> data(
+            std::shared_ptr<HardwareInstanceData> data(
                 new HardwareInstanceData(fImpl.get(), renderItem.get())
             );
             renderItem->installHardwareInstanceData(data);
@@ -4000,7 +4000,7 @@ public:
     }
 
 private:
-    boost::shared_ptr<HardwareInstanceManagerImpl> fImpl;
+    std::shared_ptr<HardwareInstanceManagerImpl> fImpl;
 };
 
 
@@ -4012,7 +4012,7 @@ private:
 class SubSceneOverride::HierarchyStat : boost::noncopyable
 {
 public:
-    typedef boost::shared_ptr<const HierarchyStat> Ptr;
+    typedef std::shared_ptr<const HierarchyStat> Ptr;
 
     // This is the status of a sub-node and its descendants.
     struct SubNodeStat
@@ -4101,7 +4101,7 @@ public:
         // Is the visibility animated?
         bool isVisibilityAnimated = false;
         if (xform.getSamples().size() > 1) {
-            const boost::shared_ptr<const XformSample>& sample =
+            const std::shared_ptr<const XformSample>& sample =
                 xform.getSamples().begin()->second;
             if (sample) {
                 const bool oneVisibility = sample->visibility();
@@ -4117,7 +4117,7 @@ public:
         // Is the xform animated?
         bool isXformAnimated = false;
         if (xform.getSamples().size() > 1) {
-            const boost::shared_ptr<const XformSample>& sample =
+            const std::shared_ptr<const XformSample>& sample =
                 xform.getSamples().begin()->second;
             if (sample) {
                 const MMatrix& oneMatrix = sample->xform();
@@ -4178,7 +4178,7 @@ public:
         fIsDiffuseColorAnimated = false;
 
         if (fIsShapeAnimated) {
-            const boost::shared_ptr<const ShapeSample>& sample =
+            const std::shared_ptr<const ShapeSample>& sample =
                 shape.getSamples().begin()->second;
             if (sample) {
                 const MColor& oneColor = sample->diffuseColor();
@@ -4195,7 +4195,7 @@ public:
         fIsVisibilityAnimated = false;
 
         if (fIsShapeAnimated) {
-            const boost::shared_ptr<const ShapeSample>& sample =
+            const std::shared_ptr<const ShapeSample>& sample =
                 shape.getSamples().begin()->second;
             if (sample) {
                 const bool oneVisibility = sample->visibility();
@@ -4239,7 +4239,7 @@ private:
     size_t             fSubNodeIndex;
     size_t             fShapeSubNodeIndex;
 
-    boost::shared_ptr<HierarchyStat> fHierarchyStat;
+    std::shared_ptr<HierarchyStat> fHierarchyStat;
 };
 #endif
 
@@ -4252,7 +4252,7 @@ private:
 class SubSceneOverride::SubNodeRenderItems : boost::noncopyable
 {
 public:
-    typedef boost::shared_ptr<SubNodeRenderItems> Ptr;
+    typedef std::shared_ptr<SubNodeRenderItems> Ptr;
 
     SubNodeRenderItems()
         : fIsBoundingBoxPlaceHolder(false),
@@ -4272,7 +4272,7 @@ public:
                            const bool          isSelected)
     {
         // Get the current shape sample.
-        const boost::shared_ptr<const ShapeSample>& sample =
+        const std::shared_ptr<const ShapeSample>& sample =
             shape.getSample(subSceneOverride.getTime());
         if (!sample) return;
 
@@ -4362,7 +4362,7 @@ public:
                        MSubSceneContainer& container,
                        const IPolyMeshDrw& shape)
     {
-        const boost::shared_ptr<const ShapeSample>& sample =
+        const std::shared_ptr<const ShapeSample>& sample =
             shape.getSample(subSceneOverride.getTime());
         if (!sample) return;
 
@@ -4388,10 +4388,10 @@ public:
             // require an index buffer.
             fSnappingItem->setBuffers(
                 subSceneOverride,
-                boost::shared_ptr<const IndexBuffer>(),
+                std::shared_ptr<const IndexBuffer>(),
                 sample->positions(),
-                boost::shared_ptr<const VertexBuffer>(),
-                boost::shared_ptr<const VertexBuffer>(),
+                std::shared_ptr<const VertexBuffer>(),
+                std::shared_ptr<const VertexBuffer>(),
                 sample->boundingBox()
             );
         }
@@ -4402,8 +4402,8 @@ public:
                 subSceneOverride,
                 sample->wireVertIndices(),
                 sample->positions(),
-                boost::shared_ptr<const VertexBuffer>(),
-                boost::shared_ptr<const VertexBuffer>(),
+                std::shared_ptr<const VertexBuffer>(),
+                std::shared_ptr<const VertexBuffer>(),
                 sample->boundingBox()
             );
         }
@@ -4413,8 +4413,8 @@ public:
                 subSceneOverride,
                 sample->wireVertIndices(),
                 sample->positions(),
-                boost::shared_ptr<const VertexBuffer>(),
-                boost::shared_ptr<const VertexBuffer>(),
+                std::shared_ptr<const VertexBuffer>(),
+                std::shared_ptr<const VertexBuffer>(),
                 sample->boundingBox()
             );
         }
@@ -4458,7 +4458,7 @@ public:
                          MSubSceneContainer& container,
                          const IPolyMeshDrw& shape)
     {
-        const boost::shared_ptr<const ShapeSample>& sample =
+        const std::shared_ptr<const ShapeSample>& sample =
             shape.getSample(subSceneOverride.getTime());
         if (!sample) return;
 
@@ -4566,14 +4566,14 @@ public:
                 subSceneOverride,
                 UnitBoundingBox::indices(),
                 UnitBoundingBox::positions(),
-                boost::shared_ptr<const VertexBuffer>(),
-                boost::shared_ptr<const VertexBuffer>(),
+                std::shared_ptr<const VertexBuffer>(),
+                std::shared_ptr<const VertexBuffer>(),
                 UnitBoundingBox::boundingBox()
             );
 
             // Add a custom data to indicate the sub-node.
             //fBoundingBoxItem->setCustomData(
-            //    boost::shared_ptr<MUserData>(new SubNodeUserData(subNode))
+            //    std::shared_ptr<MUserData>(new SubNodeUserData(subNode))
             //);
         }
 
@@ -4622,7 +4622,7 @@ public:
         }
 
         // Hardware instancing.
-        boost::shared_ptr<HardwareInstanceManager>& hwInstanceManager =
+        std::shared_ptr<HardwareInstanceManager>& hwInstanceManager =
             subSceneOverride.hardwareInstanceManager();
         if (hwInstanceManager) {
             hwInstanceManager->installHardwareInstanceData(fSnappingItem);
@@ -4665,7 +4665,7 @@ public:
         }
 
         // Hardware instancing.
-        boost::shared_ptr<HardwareInstanceManager>& hwInstanceManager =
+        std::shared_ptr<HardwareInstanceManager>& hwInstanceManager =
             subSceneOverride.hardwareInstanceManager();
         if (hwInstanceManager) {
             hwInstanceManager->installHardwareInstanceData(fDormantWireItem);
@@ -4717,7 +4717,7 @@ public:
         }
 
         // Hardware instancing.
-        boost::shared_ptr<HardwareInstanceManager>& hwInstanceManager =
+        std::shared_ptr<HardwareInstanceManager>& hwInstanceManager =
             subSceneOverride.hardwareInstanceManager();
         if (hwInstanceManager) {
             hwInstanceManager->installHardwareInstanceData(fActiveWireItem);
@@ -4830,7 +4830,7 @@ public:
             renderItem->setReceivesShadows(receiveShadows);
 
             // Hardware instancing.
-            boost::shared_ptr<HardwareInstanceManager>& hwInstanceManager =
+            std::shared_ptr<HardwareInstanceManager>& hwInstanceManager =
                 subSceneOverride.hardwareInstanceManager();
             if (hwInstanceManager && renderItem->shader() && !renderItem->shader()->isTransparent()) {
                 hwInstanceManager->installHardwareInstanceData(renderItem);
@@ -4932,7 +4932,7 @@ public:
             renderItem->setReceivesShadows(receiveShadows);
 
             // Hardware instancing.
-            boost::shared_ptr<HardwareInstanceManager>& hwInstanceManager =
+            std::shared_ptr<HardwareInstanceManager>& hwInstanceManager =
                 subSceneOverride.hardwareInstanceManager();
             if (hwInstanceManager && renderItem->shader() && !renderItem->shader()->isTransparent()) {
                 hwInstanceManager->installHardwareInstanceData(renderItem);
@@ -5169,7 +5169,7 @@ public:
     {
         // Create new sub-node render items.
         if (fSubNodeIndex >= fSubNodeItems.size()) {
-            fSubNodeItems.push_back(boost::make_shared<SubNodeRenderItems>());
+            fSubNodeItems.push_back(std::make_shared<SubNodeRenderItems>());
         }
 
         const auto longName = shape.getIObject().getFullName();
@@ -5262,7 +5262,7 @@ public:
                 }
 
                 if (!fTraverseInvisible) {
-                    //const boost::shared_ptr<const XformSample>& sample =
+                    //const std::shared_ptr<const XformSample>& sample =
                     //    xform.getSample(fSubSceneOverride.getTime());
                     //if (sample && !sample->visibility()) {
                     if (xform.isVisible()) {
@@ -5346,7 +5346,7 @@ public:
                 SubNodeRenderItems::Ptr& subNodeItems)
     {
         // Get the shape sample.
-        const boost::shared_ptr<const ShapeSample>& sample =
+        const std::shared_ptr<const ShapeSample>& sample =
             shape.getSample(fSubSceneOverride.getTime());
         if (!sample) return;
 
@@ -5367,7 +5367,7 @@ public:
     virtual void visit(const IXformDrw&   xform)
     {
         // Get the xform sample.
-        //const boost::shared_ptr<const XformSample>& sample =
+        //const std::shared_ptr<const XformSample>& sample =
         //    xform.getSample(fSubSceneOverride.getTime());
         //if (!sample) return;
 
@@ -5426,7 +5426,7 @@ public:
     virtual void visit(const IXformDrw&   xform)
     {
         // Get the xform sample.
-        //const boost::shared_ptr<const XformSample>& sample =
+        //const std::shared_ptr<const XformSample>& sample =
         //    xform.getSample(fSubSceneOverride.getTime());
         //if (!sample) return;
 
@@ -5525,7 +5525,7 @@ public:
 class SubSceneOverride::InstanceRenderItems : boost::noncopyable
 {
 public:
-    typedef boost::shared_ptr<InstanceRenderItems> Ptr;
+    typedef std::shared_ptr<InstanceRenderItems> Ptr;
 
     InstanceRenderItems()
         : fVisibility(true),
@@ -5603,8 +5603,8 @@ public:
                 subSceneOverride,
                 UnitBoundingBox::indices(),
                 UnitBoundingBox::positions(),
-                boost::shared_ptr<const VertexBuffer>(),
-                boost::shared_ptr<const VertexBuffer>(),
+                std::shared_ptr<const VertexBuffer>(),
+                std::shared_ptr<const VertexBuffer>(),
                 UnitBoundingBox::boundingBox()
             );
         }
@@ -5801,13 +5801,13 @@ void SubSceneOverride::clear()
     BuffersCache::getInstance().clear();
 }
 
-MIndexBuffer* SubSceneOverride::lookup(const boost::shared_ptr<const IndexBuffer>& indices)
+MIndexBuffer* SubSceneOverride::lookup(const std::shared_ptr<const IndexBuffer>& indices)
 {
     // Find the corresponding index buffer.
     return BuffersCache::getInstance().lookup(indices);
 }
 
-MVertexBuffer* SubSceneOverride::lookup(const boost::shared_ptr<const VertexBuffer>& vertices)
+MVertexBuffer* SubSceneOverride::lookup(const std::shared_ptr<const VertexBuffer>& vertices)
 {
     // Find the corresponding vertex buffer.
     return BuffersCache::getInstance().lookup(vertices);
@@ -5863,6 +5863,7 @@ SubSceneOverride::SubSceneOverride(const MObject& object)
 
 SubSceneOverride::~SubSceneOverride()
 {
+    std::cout << "SubSceneOverride destructor" << std::endl;
     // Deregister callbacks
     MMessage::removeCallback(fInstanceAddedCallback);
     MMessage::removeCallback(fInstanceRemovedCallback);
@@ -5874,6 +5875,7 @@ SubSceneOverride::~SubSceneOverride()
     // Destroy render items.
     fInstanceRenderItems.clear();
     fHardwareInstanceManager.reset();
+    std::cout << "SubSceneOverride destructor" << std::endl;
 }
 
 MHWRender::DrawAPI SubSceneOverride::supportedDrawAPIs() const
@@ -6359,7 +6361,7 @@ void SubSceneOverride::updateRenderItems(MHWRender::MSubSceneContainer&  contain
         fInstanceRenderItems.reserve(instanceCount);
         for (unsigned int i = 0; i < difference; i++) {
             fInstanceRenderItems.push_back(
-                boost::make_shared<InstanceRenderItems>());
+                std::make_shared<InstanceRenderItems>());
         }
 
         // Recompute shadow map.

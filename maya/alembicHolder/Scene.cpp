@@ -68,7 +68,8 @@ Scene::Scene(const std::vector<std::string> &abcFileName, const std::string &obj
 
 	if (!m_archive.valid())
     {
-        //std::cout << "[nozAlembicHolder] ERROR : Can't open file : " << abcFileName << std::endl;
+        for (int i=  0; i < abcFileName.size(); i++)
+            std::cout << "[nozAlembicHolder] ERROR : Can't open file : " << abcFileName[i] << std::endl;
         throw AbcLoadError();
     }
 
@@ -111,8 +112,8 @@ Scene::Scene(const std::vector<std::string> &abcFileName, const std::string &obj
     // Bounds have been formed!
     m_bounds = m_drawable->getBounds();
 
-
-    //std::cout << "[nozAlembicHolder] Opened archive: " << abcFileName << "|" << objectPath << std::endl;
+    for (int i = 0; i < abcFileName.size(); i++)
+        std::cout << "[nozAlembicHolder] Opened archives : " << abcFileName[i] << "|" << objectPath << std::endl;
 
 }
 
@@ -262,7 +263,7 @@ private:
 
     private:
         std::string                                       fName;
-        boost::shared_ptr<ScalarPropertyCache<ABC_PROP> > fCache;
+        std::shared_ptr<ScalarPropertyCache<ABC_PROP> > fCache;
         MaterialProperty::MPtr                            fProp;
     };
 
@@ -272,7 +273,7 @@ private:
     }
 
     template<typename T> static void setMaterialProperty(
-        boost::shared_ptr<ScalarPropertyCache<T> >& cache,
+        std::shared_ptr<ScalarPropertyCache<T> >& cache,
         MaterialProperty::MPtr prop,
         double seconds)
     {}
@@ -338,7 +339,7 @@ inline MaterialProperty::Type AlembicCacheMaterialReader::propertyType<Alembic::
 
 template<>
 inline void AlembicCacheMaterialReader::setMaterialProperty<Alembic::Abc::IBoolProperty>(
-    boost::shared_ptr<ScalarPropertyCache<Alembic::Abc::IBoolProperty> >& cache,
+    std::shared_ptr<ScalarPropertyCache<Alembic::Abc::IBoolProperty> >& cache,
     MaterialProperty::MPtr prop,
     double seconds)
 {
@@ -347,7 +348,7 @@ inline void AlembicCacheMaterialReader::setMaterialProperty<Alembic::Abc::IBoolP
 
 template<>
 inline void AlembicCacheMaterialReader::setMaterialProperty<Alembic::Abc::IInt32Property>(
-    boost::shared_ptr<ScalarPropertyCache<Alembic::Abc::IInt32Property> >& cache,
+    std::shared_ptr<ScalarPropertyCache<Alembic::Abc::IInt32Property> >& cache,
     MaterialProperty::MPtr prop,
     double seconds)
 {
@@ -356,7 +357,7 @@ inline void AlembicCacheMaterialReader::setMaterialProperty<Alembic::Abc::IInt32
 
 template<>
 inline void AlembicCacheMaterialReader::setMaterialProperty<Alembic::Abc::IFloatProperty>(
-    boost::shared_ptr<ScalarPropertyCache<Alembic::Abc::IFloatProperty> >& cache,
+    std::shared_ptr<ScalarPropertyCache<Alembic::Abc::IFloatProperty> >& cache,
     MaterialProperty::MPtr prop,
     double seconds)
 {
@@ -365,7 +366,7 @@ inline void AlembicCacheMaterialReader::setMaterialProperty<Alembic::Abc::IFloat
 
 template<>
 inline void AlembicCacheMaterialReader::setMaterialProperty<Alembic::Abc::IV2fProperty>(
-    boost::shared_ptr<ScalarPropertyCache<Alembic::Abc::IV2fProperty> >& cache,
+    std::shared_ptr<ScalarPropertyCache<Alembic::Abc::IV2fProperty> >& cache,
     MaterialProperty::MPtr prop,
     double seconds)
 {
@@ -375,7 +376,7 @@ inline void AlembicCacheMaterialReader::setMaterialProperty<Alembic::Abc::IV2fPr
 
 template<>
 inline void AlembicCacheMaterialReader::setMaterialProperty<Alembic::Abc::IV3fProperty>(
-    boost::shared_ptr<ScalarPropertyCache<Alembic::Abc::IV3fProperty> >& cache,
+    std::shared_ptr<ScalarPropertyCache<Alembic::Abc::IV3fProperty> >& cache,
     MaterialProperty::MPtr prop,
     double seconds)
 {
@@ -385,7 +386,7 @@ inline void AlembicCacheMaterialReader::setMaterialProperty<Alembic::Abc::IV3fPr
 
 template<>
 inline void AlembicCacheMaterialReader::setMaterialProperty<Alembic::Abc::IC3fProperty>(
-    boost::shared_ptr<ScalarPropertyCache<Alembic::Abc::IC3fProperty> >& cache,
+    std::shared_ptr<ScalarPropertyCache<Alembic::Abc::IC3fProperty> >& cache,
     MaterialProperty::MPtr prop,
     double seconds)
 {
@@ -395,7 +396,7 @@ inline void AlembicCacheMaterialReader::setMaterialProperty<Alembic::Abc::IC3fPr
 
 template<>
 inline void AlembicCacheMaterialReader::setMaterialProperty<Alembic::Abc::IWstringProperty>(
-    boost::shared_ptr<ScalarPropertyCache<Alembic::Abc::IWstringProperty> >& cache,
+    std::shared_ptr<ScalarPropertyCache<Alembic::Abc::IWstringProperty> >& cache,
     MaterialProperty::MPtr prop,
     double seconds)
 {
@@ -418,7 +419,7 @@ AlembicCacheMaterialReader::AlembicCacheMaterialReader(Alembic::Abc::IObject abc
     Alembic::AbcMaterial::IMaterialSchema schema = material.getSchema();
 
     // Create the material graph
-    fMaterialGraph = boost::make_shared<MaterialGraph>(fName.c_str());
+    fMaterialGraph = std::make_shared<MaterialGraph>(fName.c_str());
 
     // The number of nodes in the material
     size_t numNetworkNodes = schema.getNumNetworkNodes();
@@ -612,7 +613,7 @@ void Scene::readMaterials(const IObject& topObject)
             m_materials.reset();
         }
 
-        AlembicHolder::MaterialGraphMap::MPtr materials = boost::make_shared<AlembicHolder::MaterialGraphMap>();
+        AlembicHolder::MaterialGraphMap::MPtr materials = std::make_shared<AlembicHolder::MaterialGraphMap>();
 
         // Read materials one by one. Hierarchical materials are not supported.
         for (size_t i = 0; i < materialsObject.getNumChildren(); i++) {

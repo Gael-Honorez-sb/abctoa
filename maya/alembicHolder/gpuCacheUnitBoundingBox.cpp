@@ -18,8 +18,8 @@ namespace AlembicHolder {
 // CLASS UnitBoundingBox
 //==============================================================================
 
-boost::shared_ptr<const IndexBuffer>  UnitBoundingBox::fBoundingBoxIndices;
-boost::shared_ptr<const VertexBuffer> UnitBoundingBox::fBoundingBoxPositions;
+std::shared_ptr<const IndexBuffer>  UnitBoundingBox::fBoundingBoxIndices;
+std::shared_ptr<const VertexBuffer> UnitBoundingBox::fBoundingBoxPositions;
 
 const MBoundingBox& UnitBoundingBox::boundingBox()
 {
@@ -29,7 +29,7 @@ const MBoundingBox& UnitBoundingBox::boundingBox()
     return sBoundingBox;
 }
 
-boost::shared_ptr<const IndexBuffer>& UnitBoundingBox::indices()
+std::shared_ptr<const IndexBuffer>& UnitBoundingBox::indices()
 {
     // Initialize the unit bounding box buffers
     if (!fBoundingBoxIndices) {
@@ -47,7 +47,7 @@ boost::shared_ptr<const IndexBuffer>& UnitBoundingBox::indices()
     return fBoundingBoxIndices;
 }
 
-boost::shared_ptr<const VertexBuffer>& UnitBoundingBox::positions()
+std::shared_ptr<const VertexBuffer>& UnitBoundingBox::positions()
 {
     if (!fBoundingBoxPositions) {
         const float positions[24] = {
@@ -78,8 +78,8 @@ void UnitBoundingBox::clear()
 MMatrix UnitBoundingBox::boundingBoxMatrix(const MBoundingBox& boundingBox)
 {
     const MPoint offset = boundingBox.center();
-    const MPoint scale = MPoint(boundingBox.width()  / 2.0f,
-                                boundingBox.height() / 2.0f,
+    const MPoint scale = MPoint(boundingBox.width()  / 2.0f, 
+                                boundingBox.height() / 2.0f, 
                                 boundingBox.depth()  / 2.0f);
 
     MMatrix boundingBoxMatrix;

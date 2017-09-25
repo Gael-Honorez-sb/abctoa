@@ -52,7 +52,7 @@ public:
     // Get the bounding box from a xform node.
     void visit(const AlembicHolder::IXformDrw& xform) override
     {
-        //const boost::shared_ptr<const XformSample>& sample =
+        //const std::shared_ptr<const XformSample>& sample =
         //    xform.getSample(fTimeInSeconds);
         //if (sample) {
         //    fBoundingBox = sample->boundingBox();
@@ -63,7 +63,7 @@ public:
     // Get the bounding box from a shape node.
     void visit(const AlembicHolder::IPolyMeshDrw& shape) override
     {
-        //const boost::shared_ptr<const ShapeSample>& sample =
+        //const std::shared_ptr<const ShapeSample>& sample =
         //    shape.getSample(fTimeInSeconds);
         //if (sample) {
         //    fBoundingBox = sample->boundingBox();

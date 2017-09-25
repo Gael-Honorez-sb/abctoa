@@ -124,6 +124,8 @@ DLLEXPORT MStatus initializePlugin( MObject obj )
 
 DLLEXPORT MStatus uninitializePlugin( MObject obj)
 {
+    std::cout << "uninitializePlugin" << std::endl;
+
     MStatus   status;
     MFnPlugin plugin( obj );
 

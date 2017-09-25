@@ -24,7 +24,7 @@
 
 #include <maya/MColor.h>
 #include <maya/MString.h>
-
+#include <unordered_map>
 
 namespace AlembicHolder {
 
@@ -56,14 +56,14 @@ class MaterialProperty : boost::noncopyable
 {
 public:
     // Const, Weak and Mutable pointers
-    typedef boost::shared_ptr<const MaterialProperty> Ptr;
-    typedef boost::weak_ptr<const MaterialProperty>   WPtr;
-    typedef boost::shared_ptr<MaterialProperty>       MPtr;
+    typedef std::shared_ptr<const MaterialProperty> Ptr;
+    typedef std::weak_ptr<const MaterialProperty>   WPtr;
+    typedef std::shared_ptr<MaterialProperty>       MPtr;
 
     // MaterialNode class has not been declared.
     // Declare the shared pointers for MaterialNode class.
-    typedef boost::shared_ptr<const MaterialNode> NodePtr;
-    typedef boost::weak_ptr<const MaterialNode>   NodeWPtr;
+    typedef std::shared_ptr<const MaterialNode> NodePtr;
+    typedef std::weak_ptr<const MaterialNode>   NodeWPtr;
 
     // The value type of this property.
     enum Type {
@@ -78,7 +78,7 @@ public:
 
     // The internal structures to store the property values.
     struct PropertyData;
-    typedef boost::shared_ptr<PropertyData> PropertyDataPtr;
+    typedef std::shared_ptr<PropertyData> PropertyDataPtr;
 
     // Map: timeInSeconds -> propertyData
     typedef std::map<double,PropertyDataPtr> SampleMap;
@@ -254,12 +254,12 @@ class MaterialNode : boost::noncopyable
 {
 public:
     // Const, Weak and Mutable pointers.
-    typedef boost::shared_ptr<const MaterialNode> Ptr;
-    typedef boost::weak_ptr<const MaterialNode>   WPtr;
-    typedef boost::shared_ptr<MaterialNode>       MPtr;
+    typedef std::shared_ptr<const MaterialNode> Ptr;
+    typedef std::weak_ptr<const MaterialNode>   WPtr;
+    typedef std::shared_ptr<MaterialNode>       MPtr;
 
     // Map: MString -> Property
-    typedef boost::unordered_map<MString,MaterialProperty::Ptr,MStringHash> PropertyMap;
+    typedef std::unordered_map<MString,MaterialProperty::Ptr,MStringHash> PropertyMap;
 
     static MaterialNode::MPtr create(const MString& name, const MString& nodeType);
 
@@ -308,12 +308,12 @@ class MaterialGraph : boost::noncopyable
 {
 public:
     // Const and Mutable pointers
-    typedef boost::shared_ptr<const MaterialGraph> Ptr;
-    typedef boost::shared_ptr<MaterialGraph>       MPtr;
-    typedef boost::weak_ptr<const MaterialGraph>   WPtr;
+    typedef std::shared_ptr<const MaterialGraph> Ptr;
+    typedef std::shared_ptr<MaterialGraph>       MPtr;
+    typedef std::weak_ptr<const MaterialGraph>   WPtr;
 
     // Map: MString -> MaterialNode
-    typedef boost::unordered_map<MString, MaterialNode::Ptr, MStringHash > NamedMap;
+    typedef std::unordered_map<MString, MaterialNode::Ptr, MStringHash > NamedMap;
 
     // Constructor and Destructor
     MaterialGraph(const MString& name)
@@ -357,8 +357,8 @@ class MaterialGraphMap : boost::noncopyable
 {
 public:
     // Const and Mutable pointers.
-    typedef boost::shared_ptr<const MaterialGraphMap> Ptr;
-    typedef boost::shared_ptr<MaterialGraphMap>       MPtr;
+    typedef std::shared_ptr<const MaterialGraphMap> Ptr;
+    typedef std::shared_ptr<MaterialGraphMap>       MPtr;
 
     // Map: MString -> MaterialGraph
     typedef boost::unordered_map<MString, MaterialGraph::Ptr, MStringHash > NamedMap;

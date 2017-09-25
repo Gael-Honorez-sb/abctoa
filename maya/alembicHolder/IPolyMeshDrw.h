@@ -70,7 +70,7 @@ public:
 
     virtual void accept(DrawableVisitor& visitor) const { visitor.visit(*this); }
 
-    boost::shared_ptr<const AlembicHolder::ShapeSample> getSample(double seconds) const { return m_shapeSample; }
+    std::shared_ptr<const AlembicHolder::ShapeSample> getSample(double seconds) const { return m_shapeSample; }
     const std::vector<MString>& getMaterialAssignments() const { return m_materialAssignments; }
 
 protected:

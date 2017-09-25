@@ -223,25 +223,25 @@ void UnknownTexture2d::accept(MaterialNodeVisitor& visitor) const
 MaterialNode::MPtr MaterialNode::create(const MString& name, const MString& nodeType)
 {
     if (nodeType == "surfaceShader") {
-        return boost::make_shared<SurfaceMaterial>(name);
+        return std::make_shared<SurfaceMaterial>(name);
     }
     else if (nodeType == "lambert") {
-        return boost::make_shared<LambertMaterial>(name);
+        return std::make_shared<LambertMaterial>(name);
     }
     else if (nodeType == "phong") {
-        return boost::make_shared<PhongMaterial>(name);
+        return std::make_shared<PhongMaterial>(name);
     }
     else if (nodeType == "blinn") {
-        return boost::make_shared<BlinnMaterial>(name);
+        return std::make_shared<BlinnMaterial>(name);
     }
     else if (nodeType == "file") {
-        return boost::make_shared<FileTexture>(name);
+        return std::make_shared<FileTexture>(name);
     }
     else if (nodeType == "unknownTexture2d") {
-        return boost::make_shared<UnknownTexture2d>(name);
+        return std::make_shared<UnknownTexture2d>(name);
     }
     else {
-        return boost::make_shared<UnknownMaterialNode>(name, nodeType);
+        return std::make_shared<UnknownMaterialNode>(name, nodeType);
     }
 }
 

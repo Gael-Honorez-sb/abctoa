@@ -14,6 +14,7 @@
 
 #include "gpuCacheSample.h"
 #include <IMathBox.h>
+#include <memory>
 
 
 namespace AlembicHolder {
@@ -30,10 +31,10 @@ public:
     static const MBoundingBox&                    boundingBox();
 
     // Return the index buffer of a unit bounding box.
-    static boost::shared_ptr<const IndexBuffer>&  indices();
+    static std::shared_ptr<const IndexBuffer>&  indices();
 
     // Return the vertex buffer of a unit bounding box.
-    static boost::shared_ptr<const VertexBuffer>& positions();
+    static std::shared_ptr<const VertexBuffer>& positions();
 
     // Free the unit bounding box buffers.
     static void                                   clear();
@@ -43,8 +44,8 @@ public:
     static MMatrix boundingBoxMatrix(const Imath::Box3d& boundingBox);
 
 private:
-    static boost::shared_ptr<const IndexBuffer>  fBoundingBoxIndices;
-    static boost::shared_ptr<const VertexBuffer> fBoundingBoxPositions;
+    static std::shared_ptr<const IndexBuffer>  fBoundingBoxIndices;
+    static std::shared_ptr<const VertexBuffer> fBoundingBoxPositions;
 };
 
 } // namespace AlembicHolder
