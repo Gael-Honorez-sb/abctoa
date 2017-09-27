@@ -5837,14 +5837,12 @@ private:
 MPxSubSceneOverride* SubSceneOverride::creator(const MObject& object)
 {
     return new SubSceneOverride(object);
-    std::cout << "SubSceneOverride creator" << std::endl;
 }
 
 void SubSceneOverride::clear()
 {
     // Delete the buffers in the cache.
     BuffersCache::getInstance().clear();
-    std::cout << "SubSceneOverride clear" << std::endl;
 }
 
 MIndexBuffer* SubSceneOverride::lookup(const std::shared_ptr<const IndexBuffer>& indices)
@@ -5909,7 +5907,13 @@ SubSceneOverride::SubSceneOverride(const MObject& object)
 
 SubSceneOverride::~SubSceneOverride()
 {
-    std::cout << "SubSceneOverride destructor start" << std::endl;
+    // Remove the scene. For some reason, if we don't do that, close the VP2 don't clear the buffer properly.
+    auto cache = fShapeNode->alembicData();
+    if (cache)
+    {
+        CAlembicDatas::abcSceneManager.removeScene(cache->m_currscenekey);
+    }
+
     // Deregister callbacks
     MMessage::removeCallback(fInstanceAddedCallback);
     MMessage::removeCallback(fInstanceRemovedCallback);
@@ -5921,7 +5925,7 @@ SubSceneOverride::~SubSceneOverride()
     // Destroy render items.
     fInstanceRenderItems.clear();
     fHardwareInstanceManager.reset();
-    std::cout << "SubSceneOverride destructor end" << std::endl;
+
 }
 
 MHWRender::DrawAPI SubSceneOverride::supportedDrawAPIs() const
