@@ -284,22 +284,21 @@ class MayaBufferArray : public Array<T>
     class TempCopyReadableInterface : public ArrayReadInterface<T>
     {
          boost::shared_array<T> fLocalArray;
-         GPUCACHE_DECLARE_MAKE_SHARED_FRIEND;
     public:
         TempCopyReadableInterface(boost::shared_array<T> localArray) : fLocalArray(localArray) {}
-        virtual ~TempCopyReadableInterface() {}
+        ~TempCopyReadableInterface() override {}
 
-        virtual const T* get() const { return fLocalArray.get(); }
+        const T* get() const override { return fLocalArray.get(); }
     };
 
 public:
     typedef typename Array<T>::Digest Digest;
-
+    
     static std::shared_ptr<Array<T> > create(const std::shared_ptr<C>& mayaBuffer, Digest digest)
     {
         // The Digest is pre-calculated.
         size_t size = MayaBufferSizeHelper(mayaBuffer.get());
-
+       
         // We first look if a similar array already exists in the
         // cache. If so, we return the cached array to promote sharing as
         // much as possible.
@@ -308,7 +307,7 @@ public:
             tbb::mutex::scoped_lock lock(ArrayRegistry<T>::mutex());
 
             ret = ArrayRegistry<T>::lookupNonReadable(digest, size);
-
+        
             if (!ret) {
                 ret = std::make_shared<MayaBufferArray<T, C> >(
                     mayaBuffer, digest);
@@ -320,10 +319,10 @@ public:
     }
 
 
-    virtual ~MayaBufferArray() {}
+    ~MayaBufferArray() override {}
 
 
-    virtual std::shared_ptr<const ArrayReadInterface<T> > getReadable() const
+    std::shared_ptr<const ArrayReadInterface<T> > getReadable() const override
     {
         // Get a temporary readable copy of the buffer contents.  Nothing new
         // will be registered with the ArrayRegistry.
@@ -333,7 +332,7 @@ public:
     }
 
 
-    virtual std::shared_ptr<ReadableArray<T> > getReadableArray() const
+    std::shared_ptr<ReadableArray<T> > getReadableArray() const override
     {
         // Get a full-fledged SharedArray version of the buffer contents.  This
         // SharedArray will be registered with the ArrayRegistry.
@@ -715,10 +714,10 @@ private:
             tbb::mutex::scoped_lock lock(fBuffersToDeleteMutex);
 
             typedef BufferSet::nth_index<1>::type::iterator KeyIterator;
-            BOOST_FOREACH (const ArrayBase::Key& key, fBuffersToDelete) {
+            for(const ArrayBase::Key& key : fBuffersToDelete) {
                 // Find all the buffers that have the same key.
                 // It's possible that the array is used for both position and normal.
-                std::pair<KeyIterator,KeyIterator> range =
+                std::pair<KeyIterator,KeyIterator> range = 
                     fFreeBuffers.get<1>().equal_range(key);
                 for (KeyIterator it = range.first; it != range.second; it++) {
                     assert((*it).refCount() == 0);
@@ -960,7 +959,7 @@ private:
         >
     > BufferSet;
 
-    typedef boost::unordered_set<
+    typedef std::unordered_set<
         ArrayBase::Key,
         ArrayBase::KeyHash,
         ArrayBase::KeyEqualTo
@@ -978,12 +977,11 @@ private:
 // The user data is attached on bounding box place holder render items.
 // When the bounding box place holder is drawn, a post draw callback is
 // triggered to hint the shape should be read in priority.
-class SubNodeUserData : public MUserData
+class SubNodeUserData : boost::noncopyable
 {
 public:
     SubNodeUserData(const SubNode& subNode)
-        : MUserData(false /*deleteAfterUse*/),
-          fSubNode(subNode)
+        : fSubNode(subNode)
     {}
 
     virtual ~SubNodeUserData()
@@ -999,6 +997,30 @@ public:
 private:
     const SubNode& fSubNode;
 };
+
+// The deletion order of MRenderItem and MPxSubSceneOverride is not consistent.
+// We let Maya/VP2 delete the delegate and decrease the reference counter.
+class SubNodeUserDataDelegate : public MUserData
+{
+public:
+    SubNodeUserDataDelegate(const std::shared_ptr<SubNodeUserData>& userData)
+        : MUserData(true /*deleteAfterUse*/),
+          fUserData(userData)
+    {}
+
+    ~SubNodeUserDataDelegate() override
+    {}
+
+    void hintShapeReadOrder() const
+    {
+        if (fUserData)
+            fUserData->hintShapeReadOrder();
+    }
+
+private:
+    std::shared_ptr<SubNodeUserData>  fUserData;
+};
+
 
 // For GPUCache OGS draw, make sure the pattern has its first bit == 1
 static void SetDashLinePattern(MShaderInstance* shader, unsigned short pattern)
@@ -1650,12 +1672,12 @@ public:
         : fShader(shader), fDeleter(NULL), fTimeInSeconds(timeInSeconds)
     {}
 
-    virtual ~MaterialGraphTranslatorShaded() {}
+    ~MaterialGraphTranslatorShaded() override {}
 
     ShaderInstancePtr getShader() const
     { return fShader; }
 
-    virtual void visit(const LambertMaterial& node)
+    void visit(const LambertMaterial& node) override
     {
         if (!fShader) {
             createShader("mayaLambertSurface", "outSurfaceFinal");
@@ -1664,7 +1686,7 @@ public:
         setupLambert(node);
     }
 
-    virtual void visit(const PhongMaterial& node)
+    void visit(const PhongMaterial& node) override
     {
         if (!fShader) {
             createShader("mayaPhongSurface", "outSurfaceFinal");
@@ -1674,7 +1696,7 @@ public:
         setupLambert(node);
     }
 
-    virtual void visit(const BlinnMaterial& node)
+    void visit(const BlinnMaterial& node) override
     {
         if (!fShader) {
             createShader("mayaBlinnSurface", "outSurfaceFinal");
@@ -1685,9 +1707,9 @@ public:
     }
 
     // Nodes that can't be used as root material node.
-    virtual void visit(const SurfaceMaterial& node) {}
-    virtual void visit(const Texture2d& node) {}
-    virtual void visit(const FileTexture& node) {}
+    void visit(const SurfaceMaterial& node) override {}
+    void visit(const Texture2d& node) override {}
+    void visit(const FileTexture& node) override {}
 
 private:
     void createShader(const MString& fragmentName,
@@ -2222,7 +2244,7 @@ public:
     void updateCachedShadedShaders(double timeInSeconds)
     {
         // Update all cached MShaderInstance* for shaded mode to the current time.
-        BOOST_FOREACH (const MaterialAndShaderInstance& entry, fShadedMaterialShaders) {
+        for(const MaterialAndShaderInstance& entry : fShadedMaterialShaders) {
             // Not animated. Skipping.
             if (!entry.isAnimated) continue;
 
@@ -2637,11 +2659,11 @@ public:
         }
     }
 
-    void setCustomData(const std::shared_ptr<MUserData>& userData)
+    void setCustomData(const std::shared_ptr<SubNodeUserData>& userData)
     {
         if (fUserData != userData) {
             if (fRenderItem) {
-                fRenderItem->setCustomData(userData.get());
+                fRenderItem->setCustomData(new SubNodeUserDataDelegate(userData));
             }
             fUserData = userData;
 
@@ -2733,7 +2755,15 @@ public:
         }
     }
 
-    // Set up for hardware instancing.
+	void setCompatibleWithMayaInstancer(bool state)
+	{
+		if (fRenderItem && fRenderItem->isCompatibleWithMayaInstancer() != state)
+		{
+			fRenderItem->setCompatibleWithMayaInstancer(state);
+		}
+	}
+
+    // Set up for hardware instancing. 
     // If the hardware instance data is NULL, the render item will never be instanced.
     // This method must be called from HardwareInstanceManager.
     void installHardwareInstanceData(const std::shared_ptr<HardwareInstanceData>& data)
@@ -2800,7 +2830,7 @@ public:
         addToContainer(container);
 
         // Restore parameters.
-        fRenderItem->setCustomData(fUserData.get());
+        fRenderItem->setCustomData(new SubNodeUserDataDelegate(fUserData));
         fRenderItem->enable(fEnabled);
         fRenderItem->setMatrix(&fWorldMatrix);
         fRenderItem->setDrawMode(fDrawMode);
@@ -2809,10 +2839,14 @@ public:
         fRenderItem->castsShadows(fCastsShadows);
         fRenderItem->receivesShadows(fReceivesShadows);
         fRenderItem->setShader(fShader.get());
-        if (fIsPointSnapping) {
+		fRenderItem->setCompatibleWithMayaInstancer(true);
+        if (fIsPointSnapping)
+        {
             MSelectionMask pointsForGravityMask(MSelectionMask::kSelectPointsForGravity);
             fRenderItem->setSelectionMask(pointsForGravityMask);
-        } else {
+        }
+        else
+        {
             MSelectionMask gpuCacheMask(kPluginId);
             fRenderItem->setSelectionMask(gpuCacheMask);
         }
@@ -2838,7 +2872,7 @@ public:
     const MString&                      name() const      { return fName; }
     const MRenderItem::RenderItemType   type() const      { return fType; }
     const MGeometry::Primitive          primitive() const { return fPrimitive; }
-    const std::shared_ptr<MUserData>& userData() const  { return fUserData; }
+    const std::shared_ptr<SubNodeUserData>& userData() const  { return fUserData; }
 
     const std::shared_ptr<const IndexBuffer>&  indices() const    { return fIndices; }
     const std::shared_ptr<const VertexBuffer>& positions() const  { return fPositions; }
@@ -2853,6 +2887,7 @@ public:
     bool                excludedFromPostEffects() const { return fExcludedFromPostEffects; }
     bool                castsShadows() const            { return fCastsShadows; }
     bool                receivesShadows() const         { return fReceivesShadows; }
+	bool				isCompatibleWithMayaInstancer() const { return fRenderItem ? fRenderItem->isCompatibleWithMayaInstancer() : false; }
 
     const ShaderInstancePtr& shader() const { return fShader; }
 
@@ -2898,7 +2933,7 @@ private:
     const MString                           fName;
     const MRenderItem::RenderItemType       fType;
     const MGeometry::Primitive              fPrimitive;
-    std::shared_ptr<MUserData>            fUserData;
+    std::shared_ptr<SubNodeUserData>      fUserData;
 
     MRenderItem*                            fRenderItem;
 
@@ -2961,11 +2996,11 @@ public:
         updateInstanceTransforms();
 
         // Extract dirty source render items.
-        boost::unordered_set<HardwareInstanceData*> dirtySourceItems;
+        std::unordered_set<HardwareInstanceData*> dirtySourceItems;
         extractDirtySourceItems(container, dirtySourceItems);
 
         // Process all dirty source render items.
-        boost::unordered_set<HardwareInstanceData*> dirtyCandidates;
+        std::unordered_set<HardwareInstanceData*> dirtyCandidates;
         processDirtySourceItems(container, dirtySourceItems, dirtyCandidates);
 
         // Process all dirty candidates.
@@ -2987,11 +3022,11 @@ public:
         assert(fItemsPendingRemove.empty());
 
         // Collect all render items.
-        boost::unordered_set<RenderItemWrapper*> renderItems;
+        std::unordered_set<RenderItemWrapper*> renderItems;
 
-        BOOST_FOREACH (const HardwareInstance& hwInstance, fInstances) {
+        for(const HardwareInstance& hwInstance : fInstances) {
             renderItems.insert(hwInstance.master->renderItem());
-            BOOST_FOREACH (HardwareInstanceData* data, hwInstance.sources) {
+            for(HardwareInstanceData* data : hwInstance.sources) {
                 renderItems.insert(data->renderItem());
             }
         }
@@ -3006,7 +3041,7 @@ public:
         // Delete the attached hardware instance data on the render item.
         // If the render item is already instanced, it will be re-created to
         // get rid of the instancing.
-        BOOST_FOREACH (RenderItemWrapper* renderItem, renderItems) {
+        for(RenderItemWrapper* renderItem : renderItems) {
             renderItem->removeHardwareInstanceData(fSubSceneOverride, container);
         }
     }
@@ -3052,7 +3087,7 @@ public:
 
             // This is a master render item. We dismiss this hardware instance or
             // instance candidate.
-            BOOST_FOREACH (HardwareInstanceData* sourceData, it->sources) {
+            for(HardwareInstanceData* sourceData : it->sources) {
                 // Dirty the source item so it will get processed again later.
                 fInstancingChangeItems.insert(sourceData);
                 fWorldMatrixChangeItems.erase(sourceData);
@@ -3136,7 +3171,7 @@ public:
     unsigned int instancePathIndex(const MHWRender::MRenderItem& renderItem, int hardwareInstanceIndex)
     {
         unsigned int hardwareInstanceID(hardwareInstanceIndex);
-        BOOST_FOREACH (const HardwareInstance& hwInstance, fInstances) {
+        for(const HardwareInstance& hwInstance : fInstances) {
             if (hwInstance.master->renderItem()->name() == renderItem.name())
             {
                 MString renderItemName;
@@ -3149,7 +3184,7 @@ public:
                 }
                 else
                 {
-                    BOOST_FOREACH (HardwareInstanceData* sourceData, hwInstance.sources) {
+                    for(HardwareInstanceData* sourceData : hwInstance.sources) {
                         if (sourceData->instanceId() == hardwareInstanceID)
                         {
                             renderItemName = sourceData->renderItem()->name();
@@ -3180,10 +3215,10 @@ public:
         ostringstream tmp;
 
         size_t hwInstCounter = 0;
-        BOOST_FOREACH (const HardwareInstance& hwInstance, fInstances) {
+        for(const HardwareInstance& hwInstance : fInstances) {
             tmp << "HW Instance #" << (hwInstCounter++) << endl;
 
-            tmp << '\t' << "Master: "
+            tmp << '\t' << "Master: " 
                 << hwInstance.master->renderItem()->name().asChar()
                 << endl;
 
@@ -3196,9 +3231,10 @@ public:
                 << endl;
 
             size_t sourceCounter = 0;
-            BOOST_FOREACH (HardwareInstanceData* sourceData, hwInstance.sources) {
+            for(HardwareInstanceData* sourceData : hwInstance.sources) {
                 tmp << '\t' << '\t' << "Source #" << (sourceCounter++)
-                    << sourceData->renderItem()->name().asChar()
+                    << " " << sourceData->renderItem()->name().asChar()
+                    << " instance ID: " << sourceData->instanceId()
                     << endl;
             }
         }
@@ -3211,7 +3247,7 @@ private:
     // This is the final step to update the underlying MRenderItem.
     void removePendingInstances(MSubSceneContainer& container)
     {
-        BOOST_FOREACH (HardwareInstanceData* data, fItemsPendingRemove) {
+        for(HardwareInstanceData* data : fItemsPendingRemove) {
             data->renderItem()->unloadItem(container);
         }
         fItemsPendingRemove.clear();
@@ -3222,7 +3258,7 @@ private:
     // item might become instance again.
     void loadPendingItems(MSubSceneContainer& container)
     {
-        BOOST_FOREACH (HardwareInstanceData* data, fItemsPendingLoad) {
+        for(HardwareInstanceData* data : fItemsPendingLoad) {
             assert(data);
             data->renderItem()->loadItem(fSubSceneOverride, container);
         }
@@ -3233,7 +3269,7 @@ private:
     // update the corresponding instance matrix in the master render item.
     void updateInstanceTransforms()
     {
-        BOOST_FOREACH (HardwareInstanceData* data, fWorldMatrixChangeItems) {
+        for(HardwareInstanceData* data : fWorldMatrixChangeItems) {
             assert(data && data->isInstanced());
             if (!data || !data->isInstanced()) continue;
 
@@ -3263,9 +3299,9 @@ private:
     // we consider all its source render items are dirty as well.
     void extractDirtySourceItems(
         MSubSceneContainer&                          container,
-        boost::unordered_set<HardwareInstanceData*>& dirtySourceItems)
+        std::unordered_set<HardwareInstanceData*>& dirtySourceItems)
     {
-        BOOST_FOREACH (HardwareInstanceData* data, fInstancingChangeItems) {
+        for(HardwareInstanceData* data : fInstancingChangeItems) {
             assert(data);
 
             // This is a source item. Skip it.
@@ -3284,7 +3320,7 @@ private:
 
             // Search the source items. If the source item is different from
             // the changed master item, mark it as dirty.
-            BOOST_FOREACH (HardwareInstanceData* sourceData, it->sources) {
+            for(HardwareInstanceData* sourceData : it->sources) {
                 assert(sourceData);
                 dirtySourceItems.insert(sourceData);
             }
@@ -3299,7 +3335,7 @@ private:
             else {
                 // We already have a hardware instance that has the same look..
                 // Dismiss this instance.
-                BOOST_FOREACH (HardwareInstanceData* sourceData, hwInstance.sources) {
+                for(HardwareInstanceData* sourceData : hwInstance.sources) {
                     dirtySourceItems.insert(sourceData);
                     if (sourceData->isInstanced()) {
                         sourceData->renderItem()->unloadItem(container);
@@ -3322,11 +3358,11 @@ private:
     // to the correct instance group.
     void processDirtySourceItems(
         MSubSceneContainer&                                container,
-        const boost::unordered_set<HardwareInstanceData*>& dirtySourceItems,
-        boost::unordered_set<HardwareInstanceData*>&       dirtyCandidates)
+        const std::unordered_set<HardwareInstanceData*>& dirtySourceItems,
+        std::unordered_set<HardwareInstanceData*>&       dirtyCandidates)
     {
         // Process all dirty source items.
-        BOOST_FOREACH (HardwareInstanceData* data, dirtySourceItems) {
+        for(HardwareInstanceData* data : dirtySourceItems) {
             assert(data && !data->isMasterItem());
             assert(fInstances.find(data) == fInstances.end());
 
@@ -3344,7 +3380,7 @@ private:
 
             // Process this dirty render item.
             bool skipThisItem = false;
-            HardwareInstanceSet::nth_index<1>::type::iterator it =
+            HardwareInstanceSet::nth_index<1>::type::iterator it = 
                 fInstances.get<1>().find(data);
 
             if (data->isInstanced()) {
@@ -3400,9 +3436,9 @@ private:
     // the number of source render items meets the threshold requirement.
     void processCandidates(
         MSubSceneContainer&                                container,
-        const boost::unordered_set<HardwareInstanceData*>& dirtyCandidates)
+        const std::unordered_set<HardwareInstanceData*>& dirtyCandidates)
     {
-        BOOST_FOREACH (HardwareInstanceData* data, dirtyCandidates) {
+        for(HardwareInstanceData* data : dirtyCandidates) {
             assert(data);
 
             HardwareInstanceSet::iterator it = fInstances.find(data);
@@ -3427,7 +3463,7 @@ private:
             newInstance(hwInstance.master, container);
 
             // Join the remaining instances.
-            BOOST_FOREACH (HardwareInstanceData* data, hwInstance.sources) {
+            for(HardwareInstanceData* data : hwInstance.sources) {
                 assert(data && !data->isInstanced() && !data->isMasterItem());
                 data->clearInstanceData();
                 joinInstance(hwInstance.master, data, container);
@@ -3512,7 +3548,7 @@ private:
         fInstances.insert(hwInstance);
     }
 
-    void joinInstance(HardwareInstanceData* master,
+    void joinInstance(HardwareInstanceData* master, 
                       HardwareInstanceData* source,
                       MSubSceneContainer&   container)
     {
@@ -3548,7 +3584,7 @@ private:
         assert(instanceId > 0);
         if (instanceId == 0) return;    // failure?
 
-        // Delete the source render item.
+        // Delete the source render item. 
         sourceItem->unloadItem(container);
         fItemsPendingLoad.erase(source);
 
@@ -3613,6 +3649,7 @@ private:
             boost::hash_combine(seed, w->castsShadows());
             boost::hash_combine(seed, w->receivesShadows());
             boost::hash_combine(seed, w->shader().get());
+			boost::hash_combine(seed, w->isCompatibleWithMayaInstancer());
             return seed;
         }
     };
@@ -3662,7 +3699,7 @@ private:
 
         // Other render items that have the same appearance as the
         // master render item.
-        mutable boost::unordered_set<HardwareInstanceData*> sources;
+        mutable std::unordered_set<HardwareInstanceData*> sources;
     };
 
     typedef boost::multi_index_container<
@@ -3689,10 +3726,10 @@ private:
 
     // Helper structures to track render item changes.
     // They should be empty after processInstances() method.
-    boost::unordered_set<HardwareInstanceData*> fInstancingChangeItems;
-    boost::unordered_set<HardwareInstanceData*> fWorldMatrixChangeItems;
-    boost::unordered_set<HardwareInstanceData*> fItemsPendingLoad;
-    boost::unordered_set<HardwareInstanceData*> fItemsPendingRemove;
+    std::unordered_set<HardwareInstanceData*> fInstancingChangeItems;
+    std::unordered_set<HardwareInstanceData*> fWorldMatrixChangeItems;
+    std::unordered_set<HardwareInstanceData*> fItemsPendingLoad;
+    std::unordered_set<HardwareInstanceData*> fItemsPendingRemove;
 };
 
 // The following methods have dependency on HardwareInstanceManagerImpl.
@@ -3835,21 +3872,21 @@ public:
         }
 
         // Check Active -> Dormant
-        BOOST_FOREACH (const ShapeNodeNameMap::value_type& val, fLastSelection) {
+        for(const ShapeNodeNameMap::value_type& val : fLastSelection) {
             if (currentSelection.find(val.first) == currentSelection.end()) {
                 ShapeNodeSubSceneMap::iterator it = fShapeNodes.find(val.second);
                 if (it != fShapeNodes.end() && it->second) {
-                    it->second->dirtyVisibility();
+                    it->second->dirtyEverything();
                 }
             }
         }
 
         // Check Dormant -> Active
-        BOOST_FOREACH (const ShapeNodeNameMap::value_type& val, currentSelection) {
+        for(const ShapeNodeNameMap::value_type& val : currentSelection) {
             if (fLastSelection.find(val.first) == fLastSelection.end()) {
                 ShapeNodeSubSceneMap::iterator it = fShapeNodes.find(val.second);
                 if (it != fShapeNodes.end() && it->second) {
-                    it->second->dirtyVisibility();
+                    it->second->dirtyEverything();
                 }
             }
         }
@@ -3860,7 +3897,7 @@ public:
     // Detect render layer change and dirty SubSceneOverride.
     void renderLayerChanged()
     {
-        BOOST_FOREACH (ShapeNodeSubSceneMap::value_type& val, fShapeNodes) {
+        for(ShapeNodeSubSceneMap::value_type& val : fShapeNodes) {
             val.second->dirtyEverything();   // render layer change is destructive
         }
     }
@@ -3896,13 +3933,13 @@ private:
     MCallbackId fRenderLayerChangeCallback;
     MCallbackId fRenderLayerManagerChangeCallback;
 
-    typedef boost::unordered_map<MString,const ShapeNode*,MStringHash> ShapeNodeNameMap;
-    typedef boost::unordered_map<const ShapeNode*,SubSceneOverride*>   ShapeNodeSubSceneMap;
+    typedef std::unordered_map<MString,const ShapeNode*,MStringHash> ShapeNodeNameMap;
+    typedef std::unordered_map<const ShapeNode*,SubSceneOverride*>   ShapeNodeSubSceneMap;
 
     ShapeNodeNameMap     fLastSelection;
     ShapeNodeSubSceneMap fShapeNodes;
 
-    boost::unordered_set<MString, MStringHash> fAttrsAffectAppearance;
+    std::unordered_set<MString, MStringHash> fAttrsAffectAppearance;
 };
 
 
@@ -4086,13 +4123,14 @@ public:
         fHierarchyStat.reset(new HierarchyStat());
     }
 
-    virtual ~HierarchyStatVisitor()
+    ~HierarchyStatVisitor() override
     {}
 
     const HierarchyStat::Ptr getStat() const
     { return fHierarchyStat; }
 
-    virtual void visit(const IXformDrw& form)
+    virtual void visit(const IXformDrw& form),
+                       const SubNode&     subNode) override
     {
         // Increase the sub-node counter.
         size_t thisSubNodeIndex = fSubNodeIndex;
@@ -4105,7 +4143,7 @@ public:
                 xform.getSamples().begin()->second;
             if (sample) {
                 const bool oneVisibility = sample->visibility();
-                BOOST_FOREACH (const XformData::SampleMap::value_type& val, xform.getSamples()) {
+                for(const XformData::SampleMap::value_type& val : xform.getSamples()) {
                     if (val.second && val.second->visibility() != oneVisibility) {
                         isVisibilityAnimated = true;
                         break;
@@ -4121,7 +4159,7 @@ public:
                 xform.getSamples().begin()->second;
             if (sample) {
                 const MMatrix& oneMatrix = sample->xform();
-                BOOST_FOREACH (const XformData::SampleMap::value_type& val, xform.getSamples()) {
+                for(const XformData::SampleMap::value_type& val : xform.getSamples()) {
                     if (val.second && val.second->xform() != oneMatrix) {
                         isXformAnimated = true;
                         break;
@@ -4143,7 +4181,7 @@ public:
             bool isDiffuseColorAnimated = false;
 
             // Recursive calls into children
-            BOOST_FOREACH (const SubNode::Ptr& child, subNode.getChildren()) {
+            for(const SubNode::Ptr& child : subNode.getChildren()) {
                 child->accept(*this);
 
                 // Merge shape animated flags.
@@ -4163,8 +4201,8 @@ public:
         appendStat(thisSubNodeIndex);
     }
 
-    virtual void visit(const ShapeData&   shape,
-                       const SubNode&     subNode)
+    void visit(const ShapeData&   shape,
+                       const SubNode&     subNode) override
     {
         // Increase the sub-node counter.
         size_t thisSubNodeIndex = fSubNodeIndex;
@@ -4182,7 +4220,7 @@ public:
                 shape.getSamples().begin()->second;
             if (sample) {
                 const MColor& oneColor = sample->diffuseColor();
-                BOOST_FOREACH (const ShapeData::SampleMap::value_type& val, shape.getSamples()) {
+                for(const ShapeData::SampleMap::value_type& val : shape.getSamples()) {
                     if (val.second && val.second->diffuseColor() != oneColor) {
                         fIsDiffuseColorAnimated = true;
                         break;
@@ -4199,7 +4237,7 @@ public:
                 shape.getSamples().begin()->second;
             if (sample) {
                 const bool oneVisibility = sample->visibility();
-                BOOST_FOREACH (const ShapeData::SampleMap::value_type& val, shape.getSamples()) {
+                for(const ShapeData::SampleMap::value_type& val : shape.getSamples()) {
                     if (val.second && val.second->visibility() != oneVisibility) {
                         fIsVisibilityAnimated = true;
                         break;
@@ -4353,7 +4391,7 @@ public:
             shadedItem->setWorldMatrix(matrix);
         }
 
-        BOOST_FOREACH (RenderItemWrapper::Ptr& shadedItem, fTexturedItems) {
+        for (RenderItemWrapper::Ptr& shadedItem : fTexturedItems) {
             shadedItem->setWorldMatrix(matrix);
         }
     }
@@ -4462,8 +4500,6 @@ public:
             shape.getSample(subSceneOverride.getTime());
         if (!sample) return;
 
-        M3dView view = M3dView::active3dView();
-
         for (size_t groupId = 0; groupId < sample->numIndexGroups(); groupId++) {
             if (groupId >= fShadedItems.size()) break;  // background loading
             if (groupId >= fSharedDiffuseColorShaders.size()) break;
@@ -4481,7 +4517,7 @@ public:
                 continue;
             }
 
-            if (view.textureMode()) {
+            /*if (view.textureMode()) {
                 shader = ShaderInstanceCache::getInstance().getTexturedShader(
                     sample->diffuseColor(), sample->getTexturePath());
                 // If the shared shader instance is different from the existing one,
@@ -4494,7 +4530,7 @@ public:
 
                     fTexturedItems[groupId]->setShader(shader);
                 }
-            }
+            }*/
 
             // Then, check if the shader instance is already unique to the render item.
             shader = fUniqueDiffuseColorShaders[groupId];
@@ -4550,9 +4586,10 @@ public:
             ));
             fBoundingBoxItem->setDrawMode((MGeometry::DrawMode)(MGeometry::kWireframe | MGeometry::kShaded | MGeometry::kTextured));
             fBoundingBoxItem->setDepthPriority(MRenderItem::sDormantWireDepthPriority);
+			fBoundingBoxItem->setCompatibleWithMayaInstancer(true);
 
             // Set the shader so that we can fill the geometry data.
-            ShaderInstancePtr boundingBoxShader =
+            ShaderInstancePtr boundingBoxShader = 
                 ShaderInstanceCache::getInstance().getSharedBoundingBoxPlaceHolderShader(wireColor);
             if (boundingBoxShader) {
                 fBoundingBoxItem->setShader(boundingBoxShader);
@@ -4572,9 +4609,9 @@ public:
             );
 
             // Add a custom data to indicate the sub-node.
-            //fBoundingBoxItem->setCustomData(
-            //    std::shared_ptr<MUserData>(new SubNodeUserData(subNode))
-            //);
+            /*fBoundingBoxItem->setCustomData(
+                std::make_shared<SubNodeUserData>(subNode)
+            );*/
         }
 
         updateBoundingBoxShader(wireColor);
@@ -4592,6 +4629,8 @@ public:
         if (boundingBoxShader) {
             fBoundingBoxItem->setShader(boundingBoxShader);
         }
+
+        toggleBoundingBoxItem();
     }
 
     void updateSnappingItems(SubSceneOverride&   subSceneOverride,
@@ -4616,13 +4655,14 @@ public:
             fSnappingItem->setDrawMode(MHWRender::MGeometry::kSelectionOnly);
             fSnappingItem->setDepthPriority(MRenderItem::sSelectionDepthPriority);
             fSnappingItem->setSnappingSelectionMask();
+			fSnappingItem->setCompatibleWithMayaInstancer(true);
 
             // Add to the container
             fSnappingItem->addToContainer(container);
         }
 
         // Hardware instancing.
-        std::shared_ptr<HardwareInstanceManager>& hwInstanceManager =
+        std::shared_ptr<HardwareInstanceManager>& hwInstanceManager = 
             subSceneOverride.hardwareInstanceManager();
         if (hwInstanceManager) {
             hwInstanceManager->installHardwareInstanceData(fSnappingItem);
@@ -4659,13 +4699,14 @@ public:
             ));
             fDormantWireItem->setDrawMode(MGeometry::kWireframe);
             fDormantWireItem->setDepthPriority(MRenderItem::sDormantWireDepthPriority);
+			fDormantWireItem->setCompatibleWithMayaInstancer(true);
 
             // Add to the container
             fDormantWireItem->addToContainer(container);
         }
 
         // Hardware instancing.
-        std::shared_ptr<HardwareInstanceManager>& hwInstanceManager =
+        std::shared_ptr<HardwareInstanceManager>& hwInstanceManager = 
             subSceneOverride.hardwareInstanceManager();
         if (hwInstanceManager) {
             hwInstanceManager->installHardwareInstanceData(fDormantWireItem);
@@ -4711,13 +4752,14 @@ public:
             ));
             fActiveWireItem->setDrawMode((MGeometry::DrawMode)(MGeometry::kWireframe | MGeometry::kShaded | MGeometry::kTextured));
             fActiveWireItem->setDepthPriority(MRenderItem::sActiveWireDepthPriority);
+			fActiveWireItem->setCompatibleWithMayaInstancer(true);
 
             // Add to the container.
             fActiveWireItem->addToContainer(container);
         }
 
         // Hardware instancing.
-        std::shared_ptr<HardwareInstanceManager>& hwInstanceManager =
+        std::shared_ptr<HardwareInstanceManager>& hwInstanceManager = 
             subSceneOverride.hardwareInstanceManager();
         if (hwInstanceManager) {
             hwInstanceManager->installHardwareInstanceData(fActiveWireItem);
@@ -4751,7 +4793,7 @@ public:
         // Shaded render items.
         if (fIsBoundingBoxPlaceHolder) {
             // This shape is a bounding box place holder.
-            BOOST_FOREACH (RenderItemWrapper::Ptr& item, fShadedItems) {
+            for(RenderItemWrapper::Ptr& item : fShadedItems) {
                 item->setEnabled(false);
             }
             return;
@@ -4824,13 +4866,13 @@ public:
         const bool castsShadows   = subSceneOverride.castsShadows();
         const bool receiveShadows = subSceneOverride.receiveShadows();
 
-        BOOST_FOREACH (RenderItemWrapper::Ptr& renderItem, fShadedItems) {
+        for(RenderItemWrapper::Ptr& renderItem : fShadedItems) {
             // Set Casts Shadows and Receives Shadows.
             renderItem->setCastsShadows(castsShadows);
             renderItem->setReceivesShadows(receiveShadows);
 
             // Hardware instancing.
-            std::shared_ptr<HardwareInstanceManager>& hwInstanceManager =
+            std::shared_ptr<HardwareInstanceManager>& hwInstanceManager = 
                 subSceneOverride.hardwareInstanceManager();
             if (hwInstanceManager && renderItem->shader() && !renderItem->shader()->isTransparent()) {
                 hwInstanceManager->installHardwareInstanceData(renderItem);
@@ -4948,7 +4990,8 @@ public:
         if (fBoundingBoxItem) {
             if (fIsBoundingBoxPlaceHolder) {
                 fBoundingBoxItem->setEnabled(fVisibility);
-            } else {
+            }
+            else {
                 fBoundingBoxItem->setEnabled(false);
             }
         }
@@ -4960,7 +5003,8 @@ public:
         if (fSnappingItem) {
             if (fIsBoundingBoxPlaceHolder) {
                 fSnappingItem->setEnabled(false);
-            } else {
+            }
+            else {
                 fSnappingItem->setEnabled(fVisibility && fValidPoly);
             }
         }
@@ -4995,7 +5039,7 @@ public:
     // Enable or disable shaded items.
     void toggleShadedItems()
     {
-        BOOST_FOREACH (RenderItemWrapper::Ptr& shadedItem, fShadedItems) {
+        for(RenderItemWrapper::Ptr& shadedItem : fShadedItems) {
             if (fIsBoundingBoxPlaceHolder) {
                 shadedItem->setEnabled(false);
             }
@@ -5129,10 +5173,10 @@ public:
           fSubNodeIndex(0)
     {}
 
-    virtual ~UpdateRenderItemsVisitor()
+    ~UpdateRenderItemsVisitor() override
     {}
 
-    virtual void visit(const IXformDrw&   xform)
+    void visit(const IXformDrw&  xform) override
     {
         // We use the hierarchical name to represent the unique render item name.
         //ScopedGuard<MString> longNameGuard(fLongName);
@@ -5145,12 +5189,12 @@ public:
         //}
 
         // Recursive calls into children
-        BOOST_FOREACH (const auto& child, xform.getChildren()) {
+        for(const auto& child : xform.getChildren()) {
             child->accept(*this);
         }
     }
 
-    virtual void visit(const IPolyMeshDrw&   shape)
+    void visit(const IPolyMeshDrw& shape) override
     {
         //// We use the hierarchical name to represent the unique render item name.
         //const MString prevName = fLongName;
@@ -5230,7 +5274,7 @@ public:
           fShapeSubNodeIndex(0)
     {}
 
-    virtual ~UpdateVisitorWithPrune()
+    ~UpdateVisitorWithPrune() override
     {}
 
     // Disable prune.
@@ -5245,7 +5289,7 @@ public:
         fTraverseInvisible = traverseInvisible;
     }
 
-    virtual void visit(const AlembicHolder::IXformDrw&   xform)
+    void visit(const AlembicHolder::IXformDrw&   xform) override
     {
         // Try to prune this sub-hierarchy.
         const HierarchyStat::Ptr& hierarchyStat = fSubSceneOverride.getHierarchyStat();
@@ -5334,7 +5378,7 @@ public:
         setTraverseInvisible(true);
     }
 
-    virtual ~UpdateVisibilityVisitor()
+    ~UpdateVisibilityVisitor() override
     {}
 
     bool canPrune(const HierarchyStat::SubNodeStat& stat)
@@ -5404,7 +5448,7 @@ public:
           fMatrix(dagMatrix)
     {}
 
-    virtual ~UpdateWorldMatrixVisitor()
+    ~UpdateWorldMatrixVisitor() override
     {}
 
     bool canPrune(const HierarchyStat::SubNodeStat& stat)
@@ -5423,7 +5467,7 @@ public:
         );
     }
 
-    virtual void visit(const IXformDrw&   xform)
+    void visit(const IXformDrw& xform) override
     {
         // Get the xform sample.
         //const std::shared_ptr<const XformSample>& sample =
@@ -5460,7 +5504,7 @@ public:
         : ParentClass(subSceneOverride, container, subNodeItems)
     {}
 
-    virtual ~UpdateStreamsVisitor()
+    ~UpdateStreamsVisitor() override
     {}
 
     bool canPrune(const HierarchyStat::SubNodeStat& stat)
@@ -5497,7 +5541,7 @@ public:
         : ParentClass(subSceneOverride, container, subNodeItems)
     {}
 
-    virtual ~UpdateDiffuseColorVisitor()
+    ~UpdateDiffuseColorVisitor() override
     {}
 
     bool canPrune(const HierarchyStat::SubNodeStat& stat)
@@ -5556,7 +5600,7 @@ public:
         // Early out if we can't see this instance.
         if (!fVisibility) {
             // Disable all render items that belong to this instance.
-            BOOST_FOREACH (SubNodeRenderItemList::value_type& items, fSubNodeItems) {
+            for(SubNodeRenderItemList::value_type& items : fSubNodeItems) {
                 items->hideRenderItems();
             }
 
@@ -5765,7 +5809,7 @@ public:
         }
 
         // Destroy the sub node render items.
-        BOOST_FOREACH (SubNodeRenderItems::Ptr& subNodeItem, fSubNodeItems) {
+        for(SubNodeRenderItems::Ptr& subNodeItem : fSubNodeItems) {
             subNodeItem->destroyRenderItems(container);
         }
     }
@@ -5793,12 +5837,14 @@ private:
 MPxSubSceneOverride* SubSceneOverride::creator(const MObject& object)
 {
     return new SubSceneOverride(object);
+    std::cout << "SubSceneOverride creator" << std::endl;
 }
 
 void SubSceneOverride::clear()
 {
     // Delete the buffers in the cache.
     BuffersCache::getInstance().clear();
+    std::cout << "SubSceneOverride clear" << std::endl;
 }
 
 MIndexBuffer* SubSceneOverride::lookup(const std::shared_ptr<const IndexBuffer>& indices)
@@ -5835,7 +5881,7 @@ SubSceneOverride::SubSceneOverride(const MObject& object)
 {
     // Extract the ShapeNode pointer.
     MFnDagNode dagNode(object);
-    fShapeNode = (ShapeNode*)dagNode.userNode();
+    fShapeNode = (const ShapeNode*)dagNode.userNode();
     assert(fShapeNode);
 
     // Get all DAG paths.
@@ -5863,7 +5909,7 @@ SubSceneOverride::SubSceneOverride(const MObject& object)
 
 SubSceneOverride::~SubSceneOverride()
 {
-    std::cout << "SubSceneOverride destructor" << std::endl;
+    std::cout << "SubSceneOverride destructor start" << std::endl;
     // Deregister callbacks
     MMessage::removeCallback(fInstanceAddedCallback);
     MMessage::removeCallback(fInstanceRemovedCallback);
@@ -5875,7 +5921,7 @@ SubSceneOverride::~SubSceneOverride()
     // Destroy render items.
     fInstanceRenderItems.clear();
     fHardwareInstanceManager.reset();
-    std::cout << "SubSceneOverride destructor" << std::endl;
+    std::cout << "SubSceneOverride destructor end" << std::endl;
 }
 
 MHWRender::DrawAPI SubSceneOverride::supportedDrawAPIs() const
@@ -6073,7 +6119,6 @@ bool SubSceneOverride::requiresUpdate(const MSubSceneContainer& container,
 void SubSceneOverride::update(MSubSceneContainer&  container,
                               const MFrameContext& frameContext)
 {
-    M3dView view = M3dView::active3dView();
     assert(fShapeNode);
     if (!fShapeNode) return;
 
@@ -6117,7 +6162,7 @@ void SubSceneOverride::update(MSubSceneContainer&  container,
     fUpdateTime = boost::date_time::microsec_clock<boost::posix_time::ptime>::local_time();
 
     // Check if the cached geometry or materials have been changed.
-    if (cacheChanged || assignmentChanged || (!textureMode && view.textureMode())) {
+    if (cacheChanged || assignmentChanged || (!textureMode)) {
         // Set the cached geometry and materials.
         fGeometry = geometry;
         fMaterial = material;
@@ -6129,7 +6174,7 @@ void SubSceneOverride::update(MSubSceneContainer&  container,
         dirtyEverything();
     }
 
-    textureMode = view.textureMode();
+    //textureMode = view.textureMode();
 
     // Update the render items to match the Wireframe on Shaded mode.
     if (fWireOnShadedMode != DisplayPref::wireframeOnShadedMode()) {
@@ -6403,7 +6448,7 @@ void SubSceneOverride::updateVisibility(MHWRender::MSubSceneContainer&  containe
     }
 
     // Update the visibility for all instances.
-    BOOST_FOREACH (InstanceRenderItems::Ptr& instance, fInstanceRenderItems) {
+    for(InstanceRenderItems::Ptr& instance : fInstanceRenderItems) {
         instance->updateVisibility(*this, container, fOutOfViewFrustum);
     }
 }
@@ -6417,7 +6462,7 @@ void SubSceneOverride::updateWorldMatrix(MHWRender::MSubSceneContainer&  contain
     }
 
     // Update the world matrix for all instances.
-    BOOST_FOREACH (InstanceRenderItems::Ptr& instance, fInstanceRenderItems) {
+    for(InstanceRenderItems::Ptr& instance : fInstanceRenderItems) {
         instance->updateWorldMatrix(*this, container);
     }
 }
@@ -6431,7 +6476,7 @@ void SubSceneOverride::updateStreams(MHWRender::MSubSceneContainer&  container,
     }
 
     // Update the streams for all instances.
-    BOOST_FOREACH (InstanceRenderItems::Ptr& instance, fInstanceRenderItems) {
+    for(InstanceRenderItems::Ptr& instance : fInstanceRenderItems) {
         instance->updateStreams(*this, container);
     }
 }
@@ -6445,7 +6490,7 @@ void SubSceneOverride::updateMaterials(MHWRender::MSubSceneContainer&  container
     }
 
     // Update the diffuse color materials for all instances.
-    BOOST_FOREACH (InstanceRenderItems::Ptr& instance, fInstanceRenderItems) {
+    for(InstanceRenderItems::Ptr& instance : fInstanceRenderItems) {
         instance->updateMaterials(*this, container);
     }
 

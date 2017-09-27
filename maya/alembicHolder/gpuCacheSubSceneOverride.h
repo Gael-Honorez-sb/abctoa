@@ -91,7 +91,7 @@ public:
 
     // Current state methods
     const AlembicHolder::DrawablePtr& getGeometry() const { return fGeometry; }
-    const MaterialGraphMap::Ptr getMaterial() const { return fMaterial;}
+    const MaterialGraphMap::Ptr& getMaterial() const { return fMaterial;}
     bool isPartVisible(const std::string& partName) const;
     double getTime() const { return fTimeInSeconds; }
 
