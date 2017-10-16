@@ -343,13 +343,13 @@ class ShaderManager(QtWidgets.QMainWindow, UI_ABCHierarchy.Ui_NAM):
                 if cmds.nodeType(nodeName) == "displacementShader":
                     icon = QtGui.QIcon()
                     icon.addFile(os.path.join(d, "../../icons/sg.xpm"), QtCore.QSize(25,25))
-                    item = QtGui.QListWidgetItem(nodeName)
+                    item = QtWidgets.QListWidgetItem(nodeName)
                     item.setIcon(icon)
                     self.displacementList.addItem(item)
                 else:
                     icon = QtGui.QIcon()
                     icon.addFile(os.path.join(d, "../../icons/sg.xpm"), QtCore.QSize(25,25))
-                    item = QtGui.QListWidgetItem(nodeName)
+                    item = QtWidgets.QListWidgetItem(nodeName)
                     item.setIcon(icon)
                     self.shadersList.addItem(item)
 
@@ -695,7 +695,7 @@ class ShaderManager(QtWidgets.QMainWindow, UI_ABCHierarchy.Ui_NAM):
         icon = QtGui.QIcon()
         icon.addFile(os.path.join(d, "../../icons/displacement.xpm"), QtCore.QSize(25,25))
         for sg in displaces:
-            item = QtGui.QListWidgetItem(sg)
+            item = QtWidgets.QListWidgetItem(sg)
             item.setIcon(icon)
             self.displacementList.addItem(item)
 
