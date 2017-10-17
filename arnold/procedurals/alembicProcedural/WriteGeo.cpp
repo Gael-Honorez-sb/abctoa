@@ -581,6 +581,15 @@ AtNode* writeMesh(
         }
     }
 
+    // UVs.
+    ProcessIndexedBuiltinParam(
+        ps.getUVsParam(),
+        singleSampleTimes,
+        uvlist,
+        uvidxs,
+        2);
+
+
     // Set the meshNode.
     AtNode* meshNode = AiNode( "polymesh" );
 
