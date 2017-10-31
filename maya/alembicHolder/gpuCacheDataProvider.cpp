@@ -393,24 +393,29 @@ Triangulator::Triangulator(
             diffuseColorProperty = Alembic::Abc::IC3fArrayProperty(arbGeomParamsProperty.getPtr(), kDiffuseColorParamName);
         } catch (Alembic::Util::Exception) {
         }
-        const auto color_sample = diffuseColorProperty.getValue();
-        if (color_sample && color_sample->size() != 0) {
-            auto color = color_sample->get();
-            fDiffuseColor.r = color->x;
-            fDiffuseColor.g = color->y;
-            fDiffuseColor.b = color->z;
-            fDiffuseColor.a = 1.0f;
+        if(diffuseColorProperty.valid())
+        {
+            const auto color_sample = diffuseColorProperty.getValue();
+            if (color_sample && color_sample->size() != 0) {
+                auto color = color_sample->get();
+                fDiffuseColor.r = color->x;
+                fDiffuseColor.g = color->y;
+                fDiffuseColor.b = color->z;
+                fDiffuseColor.a = 1.0f;
+            }
         }
-
         // Texture path.
         Alembic::Abc::IStringArrayProperty texturePathProperty;
         try {
             texturePathProperty = Alembic::Abc::IStringArrayProperty(arbGeomParamsProperty.getPtr(), kTexturePathParamName);
         } catch (Alembic::Util::Exception) {
         }
-        const auto string_sample = texturePathProperty.getValue();
-        if (string_sample && string_sample->size() != 0) {
-            fTexturePath = MString(string_sample->get()->c_str());
+        if(texturePathProperty.valid())
+        {
+            const auto string_sample = texturePathProperty.getValue();
+            if (string_sample && string_sample->size() != 0) {
+                fTexturePath = MString(string_sample->get()->c_str());
+            }
         }
     }
 }
