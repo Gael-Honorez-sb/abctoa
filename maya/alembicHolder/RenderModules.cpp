@@ -46,7 +46,11 @@ BufferObject::BufferObject():
     mPrimNum(0)
 {
     if (gGLFT == NULL)
-        gGLFT = MHardwareRenderer::theRenderer()->glFunctionTable();
+    {
+        MHardwareRenderer *rend = MHardwareRenderer::theRenderer();
+        if (rend)
+            gGLFT = rend->glFunctionTable();
+    }
 }
 
 BufferObject::~BufferObject() { }
@@ -188,13 +192,14 @@ BufferObject::genColorBuffer(const std::vector<MGLfloat>& v)
 void
 BufferObject::clear()
 {
-    if(gGLFT != NULL)
-    {
-        if (gGLFT->glIsBufferARB(mIndexBuffer) == MGL_TRUE) gGLFT->glDeleteBuffersARB(1, &mIndexBuffer);
-        if (gGLFT->glIsBufferARB(mVertexBuffer) == MGL_TRUE) gGLFT->glDeleteBuffersARB(1, &mVertexBuffer);
-        if (gGLFT->glIsBufferARB(mColorBuffer) == MGL_TRUE) gGLFT->glDeleteBuffersARB(1, &mColorBuffer);
-        if (gGLFT->glIsBufferARB(mNormalBuffer) == MGL_TRUE) gGLFT->glDeleteBuffersARB(1, &mNormalBuffer);
-    }
+    if (gGLFT == NULL || mPrimNum == 0) 
+        return;
+
+    if (gGLFT->glIsBufferARB(mIndexBuffer) == MGL_TRUE) gGLFT->glDeleteBuffersARB(1, &mIndexBuffer);
+    if (gGLFT->glIsBufferARB(mVertexBuffer) == MGL_TRUE) gGLFT->glDeleteBuffersARB(1, &mVertexBuffer);
+    if (gGLFT->glIsBufferARB(mColorBuffer) == MGL_TRUE) gGLFT->glDeleteBuffersARB(1, &mColorBuffer);
+    if (gGLFT->glIsBufferARB(mNormalBuffer) == MGL_TRUE) gGLFT->glDeleteBuffersARB(1, &mNormalBuffer);
+
     mPrimType = MGL_POINTS;
     mPrimNum = 0;
 }
