@@ -3910,6 +3910,7 @@ public:
 private:
     static void MayaExitingCallback(void* clientData)
     {
+        CAlembicDatas::abcSceneManager.removeScenes();
         // Free VP2.0 buffers on exit.
         BuffersCache::getInstance().clear();
         UnitBoundingBox::clear();
@@ -5907,13 +5908,6 @@ SubSceneOverride::SubSceneOverride(const MObject& object)
 
 SubSceneOverride::~SubSceneOverride()
 {
-    // Remove the scene. For some reason, if we don't do that, close the VP2 don't clear the buffer properly.
-    auto cache = fShapeNode->alembicData();
-    if (cache)
-    {
-        CAlembicDatas::abcSceneManager.removeScene(cache->m_currscenekey);
-    }
-
     // Deregister callbacks
     MMessage::removeCallback(fInstanceAddedCallback);
     MMessage::removeCallback(fInstanceRemovedCallback);

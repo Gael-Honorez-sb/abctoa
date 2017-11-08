@@ -73,17 +73,18 @@ class SceneManager
             if (m_scenes.count(key)) {
                 if (m_scenes[key].second > 1) {
                     m_scenes[key].second--;
-//                    std::cout << key << " - " << m_scenes[key].second << " instances left!" << std::endl;
+                    //std::cout << key << " - " << m_scenes[key].second << " instances left!" << std::endl;
                 } else {
                     m_scenes.erase(key);
                     std::cout << "[nozAlembicHolder] Closed: " << key << std::endl;
-
-//                    std::cout << key << " - last instance removed" << std::endl;
+                    //std::cout << key << " - last instance removed" << std::endl;
                 }
             }
         }
 
         bool hasKey(std::string key) { return m_scenes.count(key) > 0; }
+
+        void removeScenes() { m_scenes.clear(); }
 
     private:
         std::map<std::string, CountedScene> m_scenes;

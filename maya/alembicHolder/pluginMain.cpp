@@ -129,13 +129,6 @@ DLLEXPORT MStatus uninitializePlugin( MObject obj)
     MStatus   status;
     MFnPlugin plugin( obj );
 
-    status = MHWRender::MDrawRegistry::deregisterSubSceneOverrideCreator(
-        drawDbClassification,
-        drawRegistrantId);
-    if (!status) {
-        status.perror("deregisterSubSceneOverrideCreator");
-        return status;
-    }
 
     status = plugin.deregisterNode( nozAlembicHolder::id );
     if (!status) {
@@ -146,6 +139,14 @@ DLLEXPORT MStatus uninitializePlugin( MObject obj)
     status = plugin.deregisterCommand( "ABCGetTags" );
     if (!status) {
         status.perror("deregisterCommand");
+        return status;
+    }
+
+    status = MHWRender::MDrawRegistry::deregisterSubSceneOverrideCreator(
+        drawDbClassification,
+        drawRegistrantId);
+    if (!status) {
+        status.perror("deregisterSubSceneOverrideCreator");
         return status;
     }
 

@@ -1,5 +1,5 @@
 /*Alembic Holder
-Copyright (c) 2014, Gaël Honorez, All rights reserved.
+Copyright (c) 2014, Gaï¿½l Honorez, All rights reserved.
 This library is free software; you can redistribute it and/or
 modify it under the terms of the GNU Lesser General Public
 License as published by the Free Software Foundation; either
@@ -136,8 +136,19 @@ CAlembicDatas::CAlembicDatas() {
 
 void nodePreRemovalCallback(MObject& obj, void* data) 
 {
-    std::cout << "Pre Removal callback" << std::endl;
     std::string sceneKey = ((nozAlembicHolder*)data)->getSceneKey();
+    CAlembicDatas *aData = ((nozAlembicHolder*)data)->alembicData();
+
+    CAlembicDatas::abcSceneManager.removeScene(sceneKey);
+    if (CAlembicDatas::abcSceneManager.hasKey(sceneKey) == 0)
+    {
+        NodeCache::iterator J = g_bboxCache.find(sceneKey);
+        if (J != g_bboxCache.end())
+        {
+            glDeleteLists((*J).second, 1);
+            g_bboxCache.erase(J);
+        }
+    }
 }
 
 nozAlembicHolder::nozAlembicHolder()
@@ -148,19 +159,6 @@ nozAlembicHolder::nozAlembicHolder()
 
 nozAlembicHolder::~nozAlembicHolder()
 {
-    std::cout << "removint alembic Holder" << std::endl;
-    std::string sceneKey = getSceneKey();
-    CAlembicDatas::abcSceneManager.removeScene(sceneKey);
-    if(CAlembicDatas::abcSceneManager.hasKey(sceneKey) == 0)
-    {
-        NodeCache::iterator J = g_bboxCache.find(sceneKey);
-        if (J != g_bboxCache.end())
-        {
-            glDeleteLists((*J).second, 1);
-            g_bboxCache.erase(J);
-        }
-    }
-    std::cout << "removint alembic Holder done" << std::endl;
 }
 
 void nozAlembicHolder::setHolderTime() {
@@ -221,51 +219,10 @@ void nozAlembicHolder::postConstructor()
     // callbacks
     MObject node = thisMObject();
     MNodeMessage::addNodePreRemovalCallback(node, nodePreRemovalCallback, this);
-
-
 }
 
-void nozAlembicHolder::copyInternalData(MPxNode* srcNode) {
-    // here we ensure that the scene manager stays up to date when duplicating nodes
-
-    const nozAlembicHolder& node = *(nozAlembicHolder*)srcNode;
-
-    CAlembicDatas* geom = alembicData();
-
-    MFnDagNode fn(node.thisMObject());
-    MStringArray abcfiles;
-    MPlug plug = fn.findPlug(aAbcFiles);
-
-    std::vector<std::string> fileNames;
-
-    for (unsigned int i = 0; i <plug.numElements(); i++)
-    {
-        MPlug fileName = plug[i];
-        MString filename;
-        fileName.getValue(filename);
-        fileNames.push_back(filename.asChar());
-    }
-
-    MString objectPath;
-    plug = fn.findPlug(aObjectPath);
-    plug.getValue(objectPath);
-
-    MString selectionPath;
-    plug = fn.findPlug(aSelectionPath);
-    plug.getValue(selectionPath);
-
-    bool extendedMode = false;
-    plug = fn.findPlug(aBoundingExtended);
-    plug.getValue(extendedMode);
-
-    if(geom != NULL)
-    {
-        geom->abcSceneManager.addScene(fileNames, objectPath.asChar());
-        geom->m_currscenekey = getSceneKey();
-		geom->m_currselectionkey = getSelectionKey();
-        geom->m_bbextendedmode = extendedMode;
-    }
-
+void nozAlembicHolder::copyInternalData(MPxNode* srcNode) 
+{
 }
 
 MStatus nozAlembicHolder::initialize() {
@@ -820,6 +777,9 @@ MStatus nozAlembicHolder::compute(const MPlug& plug, MDataBlock& block)
 
         key += objectPath.asChar();
 
+        if (fGeometry.m_currscenekey == key && CAlembicDatas::abcSceneManager.hasKey(key) == false)
+            CAlembicDatas::abcSceneManager.addScene(files, objectPath.asChar());
+
         if (fGeometry.m_currscenekey != key || hasToReload)
         {
             if (fGeometry.m_currscenekey != key)
@@ -861,8 +821,8 @@ MStatus nozAlembicHolder::compute(const MPlug& plug, MDataBlock& block)
 
             }
             fGeometry.m_abcdirty = true;
-            if(fGeometry.abcSceneManager.hasKey(fGeometry.m_currscenekey))
-                isConstant = fGeometry.abcSceneManager.getScene(fGeometry.m_currscenekey)->isConstant();
+            if(CAlembicDatas::abcSceneManager.hasKey(fGeometry.m_currscenekey))
+                isConstant = CAlembicDatas::abcSceneManager.getScene(fGeometry.m_currscenekey)->isConstant();
 
         }
 
@@ -926,7 +886,7 @@ AlembicHolder::DrawablePtr nozAlembicHolder::getGeometry() const
     if (!cache->abcSceneManager.hasKey(key))
         return nullptr;
 
-    const auto& scene = cache->abcSceneManager.getScene(key);
+    const auto& scene = CAlembicDatas::abcSceneManager.getScene(key);
     if (!scene)
         return nullptr;
 
@@ -940,10 +900,10 @@ AlembicHolder::MaterialGraphMap::Ptr nozAlembicHolder::getMaterial() const
         return nullptr;
 
     const auto& key = cache->m_currscenekey;
-    if (!cache->abcSceneManager.hasKey(key))
+    if (!CAlembicDatas::abcSceneManager.hasKey(key))
         return nullptr;
 
-    const auto& scene = cache->abcSceneManager.getScene(key);
+    const auto& scene = CAlembicDatas::abcSceneManager.getScene(key);
     if (!scene)
         return nullptr;
 
@@ -1110,12 +1070,10 @@ void* CAlembicHolderUI::creator()
 
 CAlembicHolderUI::CAlembicHolderUI()
 {
-    std::cout << "CAlembicHolderUI constructor" << std::endl;
 }
 
 CAlembicHolderUI::~CAlembicHolderUI()
 {
-    std::cout << "CAlembicHolderUI destructor" << std::endl;
 }
 
 void CAlembicHolderUI::getDrawRequests(const MDrawInfo & info,
