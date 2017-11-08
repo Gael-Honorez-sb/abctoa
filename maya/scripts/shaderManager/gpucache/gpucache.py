@@ -168,8 +168,8 @@ class gpucache(object):
 
     def updateCache(self):
         if self.isValid():
-            self.ABCcache =  str(cmds.getAttr("%s.cacheFileName" % self.shape))
-            self.ABCcurPath = str(cmds.getAttr("%s.cacheGeomPath" % self.shape))
+            self.ABCcache =  str(cmds.getAttr("%s.cacheFileName" % self.shape) or "")
+            self.ABCcurPath = str(cmds.getAttr("%s.cacheGeomPath" % self.shape) or "")
             if self.ABCcache:
                 self.archive = IArchive(self.ABCcache)
 

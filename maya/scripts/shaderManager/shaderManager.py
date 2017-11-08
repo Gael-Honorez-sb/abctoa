@@ -936,20 +936,15 @@ class ShaderManager(QMainWindow, UI_ABCHierarchy.Ui_NAM):
     def populate(self) :
         for cache in self.ABCViewerNode.values():
             if cache.cache != "":
-                firstLevel = cache.getHierarchy()
+                firstLevel = cache.getHierarchy(cache.ABCcurPath or "/")
 
-                root = treeitem.abcTreeItem(cache, [], "Transform", self)
-                #root.setCheckState(0, QtCore.Qt.Unchecked)
+                pathList = [elem for elem in cache.ABCcurPath.split("/") if elem]
+                root = treeitem.abcTreeItem(cache, pathList, "Transform", self)
+
                 root.checkShaders(self.getLayer())
                 root.checkProperties(self.getLayer())
                 root.setHasChildren(True)
                 cache.itemsTree.append(root)
-
-                if cache.ABCcurPath != None :
-                    if cache.ABCcurPath != "/" :
-                        paths = cache.ABCcurPath.split("/")
-                        if len(paths) > 0 :
-                            self.createBranch(root, paths[1:], True)
 
                 self.hierarchyWidget.addTopLevelItem(root)
                 self.createBranch(root,firstLevel)
