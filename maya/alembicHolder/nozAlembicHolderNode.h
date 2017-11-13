@@ -12,19 +12,17 @@ You should have received a copy of the GNU Lesser General Public
 License along with this library.*/
 
 
-
 #ifndef _nozAlembicHolderNode
 #define _nozAlembicHolderNode
 
+#include "AlembicScene.h"
+#include "RenderModules.h"
 #include "Foundation.h"
-#include "Scene.h"
-#include "SceneManager.h"
 
 #include <maya/MPxSurfaceShape.h>
 #include <maya/MPxSurfaceShapeUI.h>
 
 #include <maya/MPxNode.h>
-//#include <maya/MPxLocatorNode.h>
 #include <maya/MFnNumericAttribute.h>
 #include <maya/MFnData.h>
 #include <maya/MFnDagNode.h>
@@ -44,33 +42,37 @@ License along with this library.*/
 #include <maya/MMatrix.h>
 #include <maya/MFnCamera.h>
 #include <maya/MFnRenderLayer.h>
+#include <maya/MTime.h>
 
 #include <json/json.h>
 #include "parseJson.h"
 
 #include <iostream>
+#include <unordered_map>
+#include <unordered_set>
 
+namespace AlembicHolder {
 
-class CAlembicDatas
+struct MStringComp
 {
-public:
-    CAlembicDatas();
-    MBoundingBox bbox;
-    int token;
-    bool m_abcdirty;
-    std::string m_currscenekey;
-	std::string m_currselectionkey;
-    bool m_bbextendedmode;
-    double time;
-
-	holderPrms *m_params;
-
-    //BufferObject buffer;
-
-    static AlembicHolder::SceneState   abcSceneState;
-    static AlembicHolder::SceneManager abcSceneManager;
+    bool operator() (MString lhs, MString rhs) const
+    {
+        int res = strcmp(lhs.asChar(), rhs.asChar());
+        if (res < 0) {
+            return true;
+        }
+        else {
+            return false;
+        }
+        return strcmp(lhs.asChar(), rhs.asChar()) <= 0;
+    }
 };
 
+typedef HierarchyNodeCategories::DrawableID DrawableID;
+struct DiffuseColorOverride {
+    C3f diffuse_color;
+};
+typedef std::unordered_map<DrawableID, DiffuseColorOverride> DiffuseColorOverrideMap;
 
 class nozAlembicHolder : public MPxSurfaceShape
 {
@@ -80,51 +82,65 @@ public:
 
     virtual void postConstructor();
     virtual MStatus compute( const MPlug& plug, MDataBlock& data );
-//
-//    virtual bool getInternalValueInContext     (     const MPlug &      plug,
-//            MDataHandle &      dataHandle,
-//            MDGContext &      ctx
-//        )     ;
-//
-//    virtual bool setInternalValueInContext     (     const MPlug &      plug,
-//                MDataHandle &      dataHandle,
-//                MDGContext &      ctx
-//            )     ;
 
     virtual bool isBounded() const;
-    virtual MBoundingBox boundingBox()const ;
-    bool GetPlugData();
-    MStatus setDependentsDirty(MPlug const & inPlug, MPlugArray  & affectedPlugs);
+    virtual MBoundingBox boundingBox()const;
 
     virtual void copyInternalData( MPxNode* srcNode );
-
-    void setHolderTime() const;
 
     static  void*       creator();
     static  MStatus     initialize();
 
-    std::string getSceneKey() const;
-    std::string getSelectionKey() const;
-
-    CAlembicDatas* alembicData();
-
-
-
-
-
+    MSelectionMask getShapeSelectionMask() const override;
 
 private:
-    CAlembicDatas        fGeometry;
+    void updateCache() const { MPlug(thisMObject(), aUpdateCache).asInt(); }
+    void updateAssign() const { MPlug(thisMObject(), aUpdateAssign).asInt(); }
+
+public:
+    const AlembicScenePtr& getScene() const;
+    const AlembicSceneKey& getSceneKey() const;
+    std::string getSelectionKey() const;
+    chrono_t getTime() const;
+    bool isBBExtendedMode() const;
+    const DiffuseColorOverrideMap& getDiffuseColorOverrides() const;
+    std::string getShaderAssignmentsJson() const;
+
+    struct SceneSample {
+        chrono_t time;
+        DrawableSampleVector drawable_samples;
+        HierarchyStat hierarchy_stat;
+        std::vector<bool> selection_visibility;
+        SceneSample() : time(-std::numeric_limits<chrono_t>::infinity()) {}
+        bool empty() const { return drawable_samples.empty(); }
+    };
+    const SceneSample& getSample() const;
+
+private:
+    AlembicSceneKey m_scene_key;
+    AlembicScenePtr m_scene;
+    SceneSample m_sample;
+    std::string m_selection_key;
+
+    std::string m_shader_assignments;
+    DiffuseColorOverrideMap m_diffuse_color_overrides;
+    void updateDiffuseColorOverrides();
+
+private:
+    holderPrms m_params;
+public:
+    const holderPrms& params() const { return m_params; }
+
+private:
     static    MObject    aAbcFile;
     static    MObject    aObjectPath;
     static    MObject    aBoundingExtended;
-//    static  MObject    aBooleanAttr; // example boolean attribute
     static    MObject    aTime;
     static    MObject    aTimeOffset;
     static    MObject    aSelectionPath;
     static    MObject    aShaderPath;
     static    MObject    aForceReload;
-    
+
 	static    MObject    aJsonFile;
 	static    MObject    aJsonFileSecondary;
 	static    MObject    aShadersNamespace;
@@ -146,16 +162,58 @@ private:
 
     static    MObject    aBoundMin;
     static    MObject    aBoundMax;
-    bool isConstant;
 
 public:
     static  MTypeId     id;
-
-protected:
-    int dUpdate;
-	int dUpdateA;
-
 };
+
+struct VP1DrawableItem {
+    BufferObject buffer;
+    M44f world_matrix;
+    DrawableID drawable_id;
+    VP1DrawableItem(MGLenum prim_type, MGLsizei prim_count)
+    {
+        buffer.setPrimType(prim_type);
+        buffer.setPrimNum(prim_count);
+    }
+};
+struct VP1PrimitiveFilter {
+    enum { POINTS = 1, LINES = 2, TRIANGLES = 4, ALL = 7 };
+    uint8_t mask;
+    VP1PrimitiveFilter(uint8_t mask_=ALL) : mask(mask_) {}
+    bool has(MGLenum gl_prim_type) const
+    {
+        uint8_t prim_type = 0;
+        if (gl_prim_type == MGL_POINTS)
+            prim_type = POINTS;
+        else if (gl_prim_type == MGL_LINES)
+            prim_type = LINES;
+        else if (gl_prim_type == MGL_TRIANGLES)
+            prim_type = TRIANGLES;
+        return (mask & prim_type) != 0;
+    }
+};
+struct VP1DrawSettings {
+    bool override_color;
+    const DiffuseColorOverrideMap& color_overrides;
+    // Only draw the types of primitives specified in the filter.
+    VP1PrimitiveFilter primitive_filter;
+    bool flip_normals;
+    VP1DrawSettings(bool override_color_,
+                 const DiffuseColorOverrideMap& color_overrides_ = DiffuseColorOverrideMap(),
+                 VP1PrimitiveFilter primitive_filter_ = VP1PrimitiveFilter(),
+                 bool flip_normals_=false)
+        : override_color(override_color_)
+        , color_overrides(color_overrides_)
+        , primitive_filter(primitive_filter_)
+        , flip_normals(flip_normals_)
+    {}
+};
+struct VP1DrawableContainer {
+    std::vector<VP1DrawableItem> drawables;
+    void draw(const VP1DrawSettings& draw_settings) const;
+};
+
 // UI class    - defines the UI part of a shape node
 class CAlembicHolderUI: public MPxSurfaceShapeUI {
 public:
@@ -166,7 +224,6 @@ public:
     virtual void draw(const MDrawRequest & request, M3dView & view) const;
 
     void drawBoundingBox( const MDrawRequest & request, M3dView & view ) const;
-    void drawingMeshes( std::string sceneKey, CAlembicDatas * cache, std::string selectionKey) const;
 
     MPoint getPointAtDepth(MSelectInfo &selectInfo, double    depth) const;
 
@@ -193,11 +250,12 @@ public:
         kLastToken
     };
 
-}; // class CArnoldStandInShapeUI
+private:
+    VP1DrawableContainer m_vp1drawables;
+    void updateVP1Drawables(const nozAlembicHolder::SceneSample& scene_sample, const DiffuseColorOverrideMap& color_overrides);
+    void drawWithTwoSidedLightingSupport(const VP1DrawableContainer& drawable_container, VP1DrawSettings draw_settings) const;
+}; // class CAlembicHolderUI
 
+} // namespace AlembicHolder
 
-
-
-#endif
-
-
+#endif // header guard

@@ -3,11 +3,11 @@
 
 //-
 //**************************************************************************/
-// Copyright 2012 Autodesk, Inc. All rights reserved. 
+// Copyright 2012 Autodesk, Inc. All rights reserved.
 //
-// Use of this software is subject to the terms of the Autodesk 
-// license agreement provided at the time of installation or download, 
-// or which otherwise accompanies this software in either electronic 
+// Use of this software is subject to the terms of the Autodesk
+// license agreement provided at the time of installation or download,
+// or which otherwise accompanies this software in either electronic
 // or hard copy form.
 //**************************************************************************/
 //+
@@ -20,7 +20,7 @@
  *============================================================================*/
 
 // Abstract API for selecting geometry.
-class Select 
+class Select
 {
 public:
     typedef unsigned int index_t;
@@ -29,18 +29,16 @@ public:
 
     // Process edges to determine if they fall within the selection
     // region.
-    virtual void processEdges(CAlembicDatas* geom,
-                                std::string scenekey,
+    virtual void processEdges(const AlembicHolder::VP1DrawableContainer& drawables,
                               size_t numWires) = 0;
 
     // Process triangles to determine if they fall within the
     // selection region.
-    virtual void processTriangles(CAlembicDatas* geom,
-                                    std::string scenekey,
+    virtual void processTriangles(const AlembicHolder::VP1DrawableContainer& drawables,
                                   size_t triangles) = 0;
 
     // End rasterization selection mode.
-    // 
+    //
     // If a selection hit occurred, minZ() will be set to the depth of
     // the closest selection hit in the range [0..1]. If no selection
     // hit occurred, minZ() will be set to

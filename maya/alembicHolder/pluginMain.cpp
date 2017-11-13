@@ -13,7 +13,6 @@ License along with this library.*/
 
 
 #include "nozAlembicHolderNode.h"
-#include "alembicHolderOverride.h"
 #include "version.h"
 
 #include "cmds/ABCGetTags.h"
@@ -44,6 +43,9 @@ MString    drawRegistrantId("alembicHolder");
 #define DLLEXPORT __attribute__ ((visibility("default")))
 #endif
 
+
+using namespace AlembicHolder;
+
 DLLEXPORT MStatus initializePlugin( MObject obj )
 {
     MStatus   status;
@@ -59,18 +61,6 @@ DLLEXPORT MStatus initializePlugin( MObject obj )
 
     if (!status) {
         status.perror("registerNode");
-        return status;
-    }
-
-    status = MHWRender::MDrawRegistry::registerDrawOverrideCreator
-    (
-                drawDbClassification,
-                drawRegistrantId,
-               AlembicHolderOverride::Creator
-    );
-
-    if (!status) {
-        status.perror("registerNodeDrawOverride");
         return status;
     }
 
@@ -131,14 +121,6 @@ DLLEXPORT MStatus uninitializePlugin( MObject obj)
 {
     MStatus   status;
     MFnPlugin plugin( obj );
-
-    status = MHWRender::MDrawRegistry::deregisterDrawOverrideCreator(
-        drawDbClassification,
-        drawRegistrantId);
-    if (!status) {
-        status.perror("deregisterDrawOverrideCreator");
-        return status;
-    }
 
     status = plugin.deregisterNode( nozAlembicHolder::id );
     if (!status) {

@@ -54,6 +54,7 @@
 #include <boost/preprocessor/stringize.hpp>*/
 #include <boost/timer.hpp>
 //#include <boost/utility.hpp>
+#include <boost/functional/hash.hpp>
 
 #include <iostream>
 #include <algorithm>
@@ -74,7 +75,17 @@
 
 #include <maya/MHardwareRenderer.h>
 #include <maya/MGLFunctionTable.h>
+#include <maya/MPoint.h>
+#include <maya/MMatrix.h>
+#include <maya/MBoundingBox.h>
 
+#include <sys/types.h>
+#include <sys/stat.h>
+#ifndef WIN32
+#include <unistd.h>
+#else
+#define stat _stat
+#endif
 
 
 namespace AlembicHolder {
@@ -104,6 +115,29 @@ inline const T &clamp( const T &x, const T &lo, const T &hi )
     return x < lo ? lo : x > hi ? hi : x;
 }
 
+template <typename T>
+inline MColor mayaFromImath(const Imath::Color3<T>& c)
+{
+    return MColor(c.x, c.y, c.z);
+};
+
+template <typename T>
+inline MPoint mayaFromImath(const Imath::Vec3<T>& v)
+{
+    return MPoint(v.x, v.y, v.z);
+};
+
+template <typename T>
+inline MMatrix mayaFromImath(const Imath::Matrix44<T>& m)
+{
+    return MMatrix(m.x);
+};
+
+template <typename T>
+inline MBoundingBox mayaFromImath(const Imath::Box<T>& bbox)
+{
+    return MBoundingBox(mayaFromImath(bbox.min), mayaFromImath(bbox.max));
+}
 
 //-*****************************************************************************
 //-*****************************************************************************
@@ -189,6 +223,54 @@ struct Span {
     T& operator[](size_t index) const { assert(index < size); return start[index]; }
 };
 
+template <typename T>
+bool updateValue(T& out, const T& in)
+{
+    if (out == in)
+        return false;
+    out = in;
+    return true;
+}
+
+// Stores a file path a hash computed from the path, the file's creation time
+// and last modification time.
+class FileRef {
+public:
+    FileRef() : m_hash(0) {}
+    FileRef(const std::string& path)
+        : m_path(path), m_hash(computeHash(path))
+    {}
+    const std::string& path() const { return m_path; }
+    size_t hash() const { return m_hash; }
+    bool operator==(const FileRef& rhs) const { return m_path == rhs.m_path && m_hash == rhs.m_hash; }
+    bool operator!=(const FileRef& rhs) const { return !(*this == rhs); }
+private:
+    std::string m_path;
+    size_t m_hash;
+
+    static size_t computeHash(const std::string& path)
+    {
+        auto hash = std::hash<std::string>()(path);
+        struct stat file_stat;
+        if (stat(path.c_str(), &file_stat) != 0) {
+            return hash;
+        }
+        boost::hash_combine(hash, file_stat.st_ctime);
+        boost::hash_combine(hash, file_stat.st_mtime);
+        return hash;
+    }
+};
+
 } // End namespace AlembicHolder
+
+namespace std {
+    template<>
+    struct hash<AlembicHolder::FileRef> {
+        size_t operator()(const AlembicHolder::FileRef& file_hash) const
+        {
+            return file_hash.hash();
+        }
+    };
+} // namespace std
 
 #endif

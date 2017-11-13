@@ -1,10 +1,10 @@
 //-
 //**************************************************************************/
-// Copyright 2012 Autodesk, Inc. All rights reserved. 
+// Copyright 2012 Autodesk, Inc. All rights reserved.
 //
-// Use of this software is subject to the terms of the Autodesk 
-// license agreement provided at the time of installation or download, 
-// or which otherwise accompanies this software in either electronic 
+// Use of this software is subject to the terms of the Autodesk
+// license agreement provided at the time of installation or download,
+// or which otherwise accompanies this software in either electronic
 // or hard copy form.
 //**************************************************************************/
 //+
@@ -12,6 +12,8 @@
 #include "gpuCacheGLPickingSelect.h"
 #include <boost/shared_array.hpp>
 #include <algorithm>
+
+using namespace AlembicHolder;
 
 //==============================================================================
 // LOCAL FUNCTIONS
@@ -49,7 +51,7 @@ unsigned int closestElem(unsigned int nbPick, const GLuint* buffPtr)
 //
 GLPickingSelect::GLPickingSelect(
     MSelectInfo& selectInfo
-) 
+)
     : fSelectInfo(selectInfo),
       fMinZ(std::numeric_limits<float>::max())
 {}
@@ -57,15 +59,14 @@ GLPickingSelect::GLPickingSelect(
 
 //------------------------------------------------------------------------------
 //
-GLPickingSelect::~GLPickingSelect() 
+GLPickingSelect::~GLPickingSelect()
 {}
 
 
 //------------------------------------------------------------------------------
 //
 void GLPickingSelect::processEdges(
-    CAlembicDatas* geom,
-    std::string scenekey,
+    const AlembicHolder::VP1DrawableContainer& drawables,
     const size_t numWires
 )
 {
@@ -86,7 +87,7 @@ void GLPickingSelect::processEdges(
     {
         Frustum frustum(localToPort.inverse());
         MMatrix xform(modelViewMatrix);
-        
+
         DrawWireframeState state(frustum, seconds);
         DrawWireframeTraversal traveral(state, xform, false, Frustum::kUnknown);
         rootNode->accept(traveral);
@@ -95,7 +96,7 @@ void GLPickingSelect::processEdges(
     int nbPick = view.endSelect();
 
     if (nbPick > 0) {
-        unsigned int Zdepth = closestElem(nbPick, buffer.get());    
+        unsigned int Zdepth = closestElem(nbPick, buffer.get());
         float depth = float(Zdepth)/MAX_HW_DEPTH_VALUE;
         fMinZ = std::min(depth,fMinZ);
     }*/
@@ -104,8 +105,7 @@ void GLPickingSelect::processEdges(
 //------------------------------------------------------------------------------
 //
 void GLPickingSelect::processTriangles(
-    CAlembicDatas* geom,
-    std::string sceneKey,
+    const AlembicHolder::VP1DrawableContainer& drawables,
     const size_t numTriangles
 )
 {
@@ -123,20 +123,12 @@ void GLPickingSelect::processTriangles(
     */
     view.beginSelect(buffer.get(), bufferSize*4);
     view.pushName(0);
-    {/*
-        Frustum frustum(localToPort.inverse());
-        MMatrix xform(modelViewMatrix);
-        
-        DrawShadedState state(frustum, seconds);
-        DrawShadedTraversal traveral(state, xform, false, Frustum::kUnknown);
-        rootNode->accept(traveral);*/
-		geom->abcSceneManager.getScene(sceneKey)->draw(geom->abcSceneState, geom->m_currselectionkey, geom->time, geom->m_params);
-    }
+    drawables.draw(VP1DrawSettings(false));
     view.popName();
     int nbPick = view.endSelect();
 
     if (nbPick > 0) {
-        unsigned int Zdepth = closestElem(nbPick, buffer.get());    
+        unsigned int Zdepth = closestElem(nbPick, buffer.get());
         float depth = float(Zdepth)/MAX_HW_DEPTH_VALUE;
         fMinZ = std::min(depth,fMinZ);
     }

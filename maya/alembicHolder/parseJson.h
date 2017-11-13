@@ -9,7 +9,6 @@ struct holderPrms
 	bool linkAttributes;
     std::vector<std::string> attributes;
     Json::Value attributesRoot;
-	std::map<std::string, MColor> shaderColors;
 
 };
 
