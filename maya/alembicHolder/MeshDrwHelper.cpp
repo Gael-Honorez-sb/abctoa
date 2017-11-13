@@ -226,7 +226,9 @@ void MeshDrwHelper::update( P3fArraySamplePtr iP,
     }
 
     buffer.genVertexBuffer(Span<V3f>(v));
-    buffer.genIndexBuffer(Span<uint32_t>(vidx), MGL_TRIANGLES);
+    buffer.genIndexBuffer(Span<uint32_t>(vidx));
+    buffer.setPrimType(MGL_TRIANGLES);
+    buffer.setPrimNum(vidx.size());
 
     m_valid = true;
 

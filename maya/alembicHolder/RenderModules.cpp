@@ -54,9 +54,10 @@ BufferObject::~BufferObject() { }
 void
 BufferObject::render(bool normalFlipped) const
 {
-    if (gGLFT == NULL || mPrimNum == 0 || !gGLFT->glIsBufferARB(mIndexBuffer) || !gGLFT->glIsBufferARB(mVertexBuffer))
+    if (gGLFT == NULL || mPrimNum == 0 || !gGLFT->glIsBufferARB(mVertexBuffer))
         return;
 
+    const bool usesIndexBuffer = gGLFT->glIsBufferARB(mIndexBuffer);
     const bool usesColorBuffer = gGLFT->glIsBufferARB(mColorBuffer);
     const bool usesNormalBuffer = gGLFT->glIsBufferARB(mNormalBuffer);
 
@@ -79,8 +80,12 @@ BufferObject::render(bool normalFlipped) const
         gGLFT->glNormalPointer(MGL_FLOAT, 0, 0);
     }
 
-    gGLFT->glBindBufferARB(MGL_ELEMENT_ARRAY_BUFFER_ARB, mIndexBuffer);
-    gGLFT->glDrawElements(mPrimType, mPrimNum, MGL_UNSIGNED_INT, 0);
+    if (usesIndexBuffer) {
+        gGLFT->glBindBufferARB(MGL_ELEMENT_ARRAY_BUFFER_ARB, mIndexBuffer);
+        gGLFT->glDrawElements(mPrimType, mPrimNum, MGL_UNSIGNED_INT, 0);
+    } else {
+        gGLFT->glDrawArrays(mPrimType, 0, mPrimNum);
+    }
 
     // disable client-side capabilities
     if (usesColorBuffer) gGLFT->glDisableClientState(MGL_COLOR_ARRAY);
@@ -88,11 +93,11 @@ BufferObject::render(bool normalFlipped) const
 
     // release vbo's
     gGLFT->glBindBufferARB(MGL_ARRAY_BUFFER_ARB, 0);
-    gGLFT->glBindBufferARB(MGL_ELEMENT_ARRAY_BUFFER_ARB, 0);
+    if (usesIndexBuffer) gGLFT->glBindBufferARB(MGL_ELEMENT_ARRAY_BUFFER_ARB, 0);
 }
 
 void
-BufferObject::genIndexBuffer(const Span<const uint32_t>& indices, MGLenum primType)
+BufferObject::genIndexBuffer(const Span<const uint32_t>& indices)
 {
     if(gGLFT == NULL)
         return;
@@ -112,9 +117,6 @@ BufferObject::genIndexBuffer(const Span<const uint32_t>& indices, MGLenum primTy
 
     // release buffer
     gGLFT->glBindBufferARB(MGL_ELEMENT_ARRAY_BUFFER_ARB, 0);
-
-    mPrimNum = indices.size;
-    mPrimType = primType;
 }
 
 void
