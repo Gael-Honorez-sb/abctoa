@@ -47,10 +47,10 @@ public:
     /// @note accepted @c primType: GL_POINTS, GL_LINE_STRIP, GL_LINE_LOOP,
     /// GL_LINES, GL_TRIANGLE_STRIP, GL_TRIANGLE_FAN, GL_TRIANGLES,
     /// GL_QUAD_STRIP, GL_QUADS and GL_POLYGON
-    void genIndexBuffer(const std::vector<MGLuint>&, MGLenum primType);
+    void genIndexBuffer(const Span<const uint32_t>& indices, MGLenum primType);
 
-    void genVertexBuffer(const std::vector<MGLfloat>&);
-    void genNormalBuffer(const std::vector<MGLfloat>&, bool flipped = false);
+    void genVertexBuffer(const Span<const V3f>& vertices);
+    void genNormalBuffer(const Span<const V3f>& normals, bool flipped = false);
     void genColorBuffer(const std::vector<MGLfloat>&);
 
     void clear();

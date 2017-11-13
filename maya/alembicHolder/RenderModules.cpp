@@ -92,7 +92,7 @@ BufferObject::render(bool normalFlipped) const
 }
 
 void
-BufferObject::genIndexBuffer(const std::vector<MGLuint>& v, MGLenum primType)
+BufferObject::genIndexBuffer(const Span<const uint32_t>& indices, MGLenum primType)
 {
     if(gGLFT == NULL)
         return;
@@ -107,18 +107,19 @@ BufferObject::genIndexBuffer(const std::vector<MGLuint>& v, MGLenum primType)
 
     // upload data
     gGLFT->glBufferDataARB(MGL_ELEMENT_ARRAY_BUFFER_ARB,
-        sizeof(MGLuint) * v.size(), &v[0], MGL_STATIC_DRAW_ARB); // upload data
+        sizeof(MGLuint) * indices.size, indices.start, MGL_STATIC_DRAW_ARB); // upload data
     if (MGL_NO_ERROR != gGLFT->glGetError()) throw "Error: Unable to upload index buffer data";
 
     // release buffer
     gGLFT->glBindBufferARB(MGL_ELEMENT_ARRAY_BUFFER_ARB, 0);
 
-    mPrimNum = v.size();
+    mPrimNum = indices.size;
     mPrimType = primType;
 }
 
 void
-BufferObject::genVertexBuffer(const std::vector<MGLfloat>& v)
+BufferObject::genVertexBuffer(const Span<const V3f>& vertices)
+
 {
     if(gGLFT == NULL)
         return;
@@ -129,14 +130,14 @@ BufferObject::genVertexBuffer(const std::vector<MGLfloat>& v)
     gGLFT->glBindBufferARB(MGL_ARRAY_BUFFER_ARB, mVertexBuffer);
     if (gGLFT->glIsBufferARB(mVertexBuffer) == MGL_FALSE) throw "Error: Unable to create vertex buffer";
 
-    gGLFT->glBufferDataARB(MGL_ARRAY_BUFFER_ARB, sizeof(MGLfloat) * v.size(), &v[0], MGL_STATIC_DRAW_ARB);
+    gGLFT->glBufferDataARB(MGL_ARRAY_BUFFER_ARB, sizeof(MGLfloat) * 3 * vertices.size, vertices.start, MGL_STATIC_DRAW_ARB);
     if (MGL_NO_ERROR != gGLFT->glGetError()) throw "Error: Unable to upload vertex buffer data";
 
     gGLFT->glBindBufferARB(MGL_ARRAY_BUFFER_ARB, 0);
 }
 
 void
-BufferObject::genNormalBuffer(const std::vector<MGLfloat>& v, bool flipped)
+BufferObject::genNormalBuffer(const Span<const V3f>& normals, bool flipped)
 {
     if(gGLFT == NULL)
         return;
@@ -159,7 +160,7 @@ BufferObject::genNormalBuffer(const std::vector<MGLfloat>& v, bool flipped)
         if (gGLFT->glIsBufferARB(mNormalBuffer) == MGL_FALSE) throw "Error: Unable to create normal buffer";
     }
 
-    gGLFT->glBufferDataARB(MGL_ARRAY_BUFFER_ARB, sizeof(MGLfloat) * v.size(), &v[0], MGL_STATIC_DRAW_ARB);
+    gGLFT->glBufferDataARB(MGL_ARRAY_BUFFER_ARB, sizeof(MGLfloat) * 3 * normals.size, normals.start, MGL_STATIC_DRAW_ARB);
     if (MGL_NO_ERROR != gGLFT->glGetError()) throw "Error: Unable to upload normal buffer data";
     gGLFT->glBindBufferARB(MGL_ARRAY_BUFFER_ARB, 0);
 

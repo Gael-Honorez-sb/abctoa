@@ -203,7 +203,7 @@ void MeshDrwHelper::update( P3fArraySamplePtr iP,
 
 
 
-    std::vector<MGLfloat> v;
+    std::vector<V3f> v;
 
     //size_t numPoints = m_meshP->size();
 
@@ -214,21 +214,19 @@ void MeshDrwHelper::update( P3fArraySamplePtr iP,
             const V3f &P = (*m_meshP)[p];
             if (alpha == 0 || iPCeil == NULL) 
             {
-                v.push_back(P.x);
-                v.push_back(P.y);
-                v.push_back(P.z);
+                v.push_back(P);
             }
             else
             {
-                v.push_back(simpleLerp<float>(alpha, P.x, (*iPCeil)[p].x));
-                v.push_back(simpleLerp<float>(alpha, P.y, (*iPCeil)[p].y));
-                v.push_back(simpleLerp<float>(alpha, P.z, (*iPCeil)[p].z));
+                v.push_back({ simpleLerp<float>(alpha, P.x, (*iPCeil)[p].x)
+                            , simpleLerp<float>(alpha, P.y, (*iPCeil)[p].y)
+                            , simpleLerp<float>(alpha, P.z, (*iPCeil)[p].z)});
             }
         }
     }
 
-    buffer.genVertexBuffer(v);
-    buffer.genIndexBuffer(vidx, MGL_TRIANGLES);
+    buffer.genVertexBuffer(Span<V3f>(v));
+    buffer.genIndexBuffer(Span<uint32_t>(vidx), MGL_TRIANGLES);
 
     m_valid = true;
 
@@ -294,24 +292,20 @@ void MeshDrwHelper::pushNormals()
 
     if(normals != NULL)
     {
-        std::vector<MGLfloat> v;
-        std::vector<MGLfloat> vflipped;
+        std::vector<V3f> v;
+        std::vector<V3f> vflipped;
         for ( size_t p = 0; p < m_meshP->size(); ++p )
         {
             V3f normal = normals[p];
 
-            v.push_back(normal.x);
-            v.push_back(normal.y);
-            v.push_back(normal.z);
+            v.push_back(normal);
 
-            vflipped.push_back(-normal.x);
-            vflipped.push_back(-normal.y);
-            vflipped.push_back(-normal.z);
+            vflipped.push_back(-normal);
 
         }
 
-        buffer.genNormalBuffer(v);
-        buffer.genNormalBuffer(vflipped, true);
+        buffer.genNormalBuffer(Span<V3f>(v));
+        buffer.genNormalBuffer(Span<V3f>(vflipped), true);
     }
 }
 

@@ -160,6 +160,34 @@ while( 0 )
 #endif
 
 
+// Stores a view to a [start, start+size) memory range.
+template <typename T>
+struct Span {
+    T* start;
+    size_t size;
+
+    Span() : start(nullptr), size(0) {}
+    Span(T* start_, size_t size_) : start(start_), size(size_) {}
+    template <typename U>
+    Span(const Span<U>& s) : start(s.start), size(s.size) {}
+    template <typename U>
+    explicit Span(std::vector<U>& v) : start(v.data()), size(v.size()) {}
+    template <typename U>
+    explicit Span(const std::vector<U>& v) : start(v.data()), size(v.size()) {}
+    template <typename U>
+    explicit Span(const TypedArraySample<U>& a) : start(a.get()), size(a.size()) {}
+    template <typename U>
+    explicit Span(const Alembic::Util::shared_ptr<TypedArraySample<U>>& p)
+        : start(p ? p->get() : nullptr), size(p ? p->size() : 0) {}
+
+    T* begin() { return start; }
+    const T* begin() const { return start; }
+    T* end() { return start + size; }
+    const T* end() const { return start + size; }
+
+    bool empty() const { return start == nullptr || size == 0; }
+    T& operator[](size_t index) const { assert(index < size); return start[index]; }
+};
 
 } // End namespace AlembicHolder
 

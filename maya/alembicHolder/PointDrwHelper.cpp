@@ -101,7 +101,7 @@ void PointDrwHelper::update( P3fArraySamplePtr iP,
         return;
     }
 
-    std::vector<MGLfloat> v;
+    std::vector<V3f> v;
 	std::vector<MGLuint> vidx;
     {
         for ( size_t p = 0; p < numPoints; ++p )
@@ -109,16 +109,14 @@ void PointDrwHelper::update( P3fArraySamplePtr iP,
             const V3f &P = (*m_pointsP)[p];
             if (alpha == 0 ) 
             {
-                v.push_back(P.x);
-                v.push_back(P.y);
-                v.push_back(P.z);
+                v.push_back(P);
 				vidx.push_back(p);
             }
         }
     }
 
-    buffer.genVertexBuffer(v);
-    buffer.genIndexBuffer(vidx, MGL_POINTS);
+    buffer.genVertexBuffer(Span<V3f>(v));
+    buffer.genIndexBuffer(Span<uint32_t>(vidx), MGL_POINTS);
 
     m_valid = true;
 
