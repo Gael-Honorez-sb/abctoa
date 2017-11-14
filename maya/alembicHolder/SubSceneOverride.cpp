@@ -228,8 +228,6 @@ float4 fileTexturePluginFragment(float2 uv, Texture2D map, sampler mapSampler)
         CHECK_MSTATUS(shader->setParameter("map", texture_assignment));
     }
 
-    const auto DEFAULT_SHADER_COLOR = C3f(0.7f, 0.7f, 0.7f);
-
 } // unnamed namespace
 
 
@@ -254,7 +252,7 @@ void SubSceneOverride::initializeShaderTemplates()
     s_flat_shader_template = shader_manager->getStockShader(MHWRender::MShaderManager::k3dSolidShader);
     if (s_flat_shader_template) {
         CHECK_MSTATUS(s_flat_shader_template->setIsTransparent(false));
-        setFlatShaderColor(s_flat_shader_template, DEFAULT_SHADER_COLOR);
+        setFlatShaderColor(s_flat_shader_template, kDefaultDiffuseColor);
     }
 
     s_shaded_shader_template = shader_manager->getStockShader(MHWRender::MShaderManager::k3dBlinnShader);
@@ -262,7 +260,7 @@ void SubSceneOverride::initializeShaderTemplates()
         CHECK_MSTATUS(s_shaded_shader_template->setIsTransparent(false));
         CHECK_MSTATUS(s_shaded_shader_template->setParameter("specularCoeff", 0.8f));
         CHECK_MSTATUS(s_shaded_shader_template->setParameter("specularPower", 4.0f));
-        setShadedShaderDiffuseColor(s_shaded_shader_template, DEFAULT_SHADER_COLOR);
+        setShadedShaderDiffuseColor(s_shaded_shader_template, kDefaultDiffuseColor);
     }
 
     // Initialize texturing fragment and textured shader template.
@@ -705,12 +703,13 @@ void SubSceneOverride::update(
 
     // Shaded items.
     const auto& color_overrides = m_shape_node->getDiffuseColorOverrides();
-    const auto getDrawableColor = [&color_overrides](DrawableID drawable_id) {
+    const auto getDrawableColor = [&scene, &color_overrides](DrawableID drawable_id) {
+        const auto& static_material = scene->getStaticMaterial(drawable_id);
         const auto color_it = color_overrides.find(drawable_id);
         if (color_it != color_overrides.end()) {
             return color_it->second.diffuse_color;
         } else {
-            return DEFAULT_SHADER_COLOR;
+            return static_material.diffuse_color;
         }
     };
     if (update_shaded_shaders) {
@@ -735,12 +734,13 @@ void SubSceneOverride::update(
     }
 
     // Textured items.
-    const auto getDrawableTexturePath = [&color_overrides](DrawableID drawable_id) {
+    const auto getDrawableTexturePath = [&scene, &color_overrides](DrawableID drawable_id) {
+        const auto& static_material = scene->getStaticMaterial(drawable_id);
         const auto color_it = color_overrides.find(drawable_id);
         if (color_it != color_overrides.end()) {
             return color_it->second.diffuse_texture_path;
         } else {
-            return std::string();
+            return static_material.diffuse_texture_path;
         }
     };
     if (update_textured_shaders) {

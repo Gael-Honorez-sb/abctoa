@@ -108,6 +108,59 @@ namespace {
         return Alembic::Abc::IObject(archive, Alembic::Abc::kTop);
     }
 
+    const std::string kArbGeomParamsName(".arbGeomParams");
+
+    // Read diffuse color and diffuse texture information from an alembic object.
+    void readStaticMaterial(const Alembic::Abc::IObject& object, StaticMaterial& out_static_material)
+    {
+        Alembic::AbcCoreAbstract::CompoundPropertyReaderPtr property_reader;
+        const Alembic::AbcCoreAbstract::PropertyHeader* arb_params_header = nullptr;
+
+        const auto header = object.getHeader();
+        if (Alembic::AbcGeom::IPolyMesh::matches(header)) {
+            auto schema = Alembic::AbcGeom::IPolyMesh(object).getSchema();
+            property_reader = schema.getPtr();
+            arb_params_header = schema.getPropertyHeader(kArbGeomParamsName);
+        } else if (Alembic::AbcGeom::ICurves::matches(header)) {
+            auto schema = Alembic::AbcGeom::ICurves(object).getSchema();
+            property_reader = schema.getPtr();
+            arb_params_header = schema.getPropertyHeader(kArbGeomParamsName);
+
+        } else if (Alembic::AbcGeom::IPoints::matches(header)) {
+            auto schema = Alembic::AbcGeom::IPoints(object).getSchema();
+            property_reader = schema.getPtr();
+            arb_params_header = schema.getPropertyHeader(kArbGeomParamsName);
+        }
+
+        out_static_material.diffuse_color = kDefaultDiffuseColor;
+
+        if (arb_params_header && arb_params_header->isCompound()) {
+            const Alembic::Abc::ICompoundProperty arb_geom_params =
+                Alembic::Abc::ICompoundProperty(property_reader, kArbGeomParamsName);
+
+            // Diffuse color.
+            Alembic::Abc::IC3fArrayProperty diffuseColorProperty;
+            try {
+                diffuseColorProperty = Alembic::Abc::IC3fArrayProperty(arb_geom_params.getPtr(), kDiffuseColorParamName);
+                const auto color_sample = diffuseColorProperty.getValue();
+                if (color_sample && color_sample->size() != 0) {
+                    out_static_material.diffuse_color = color_sample->get()[0];
+                }
+            } catch (Alembic::Util::Exception) {
+            }
+
+            // Texture path.
+            Alembic::Abc::IStringArrayProperty texturePathProperty;
+            try {
+                texturePathProperty = Alembic::Abc::IStringArrayProperty(arb_geom_params.getPtr(), kTexturePathParamName);
+                const auto string_sample = texturePathProperty.getValue();
+                if (string_sample && string_sample->size() != 0) {
+                    out_static_material.diffuse_texture_path = string_sample->get()[0];
+                }
+            } catch (Alembic::Util::Exception) {
+            }
+        }
+    }
 } // unnamed namespace
 
 AlembicScene::AlembicScene(const AlembicSceneKey& scene_key)
@@ -119,6 +172,15 @@ AlembicScene::AlembicScene(const AlembicSceneKey& scene_key)
     m_drawable_names.reserve(m_categories.drawableCount());
     for (const auto& drawable : m_categories.drawables()) {
         m_drawable_names.push_back(drawable.node_ref.source_object.getFullName());
+    }
+
+    // Read the diffuse color and diffuse texture values stored in the alembic,
+    // then load the textures. These are assumed to be constant in time.
+    m_static_materials.resize(m_categories.drawableCount());
+    for (const auto& drawable : m_categories.drawables()) {
+        readStaticMaterial(
+            drawable.node_ref.source_object,
+            m_static_materials[drawable.drawable_id]);
     }
 
     // Initialize drawable samplers.

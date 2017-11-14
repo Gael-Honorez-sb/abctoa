@@ -250,6 +250,23 @@ struct AlembicSceneKeyHasher {
     }
 };
 
+// Load diffuse color and texture path from the Alembic file written to the
+// .arbGeomParams of each drawable node.
+// The diffuse color is read from an IC3ArrayProperty called diffuse_color,
+// the diffuse texture is read from an IStringArrayProperty called diffuse_texture.
+
+const std::string kDiffuseColorParamName("diffuse_color");
+const std::string kTexturePathParamName("diffuse_texture");
+const C3f kDefaultDiffuseColor(0.7f, 0.7f, 0.7f);
+
+struct StaticMaterial {
+    Imath::C3f diffuse_color;
+    std::string diffuse_texture_path;
+};
+
+typedef std::vector<StaticMaterial> StaticMaterialVector;
+
+
 struct AlembicLoadFailedException {};
 
 struct HierarchyStat {
@@ -275,6 +292,11 @@ public:
     {
         return m_drawable_names[drawable_id];
     }
+    const StaticMaterial& getStaticMaterial(HierarchyNodeCategories::DrawableID drawable_id) const
+    {
+        return m_static_materials[drawable_id];
+    }
+    const StaticMaterialVector& staticMaterials() const { return m_static_materials; }
 
 private:
     // The order of these declaration matter. If the construction of something
@@ -283,6 +305,9 @@ private:
     HierarchyNodeCategories m_categories;
     HierarchyNodeVisibility m_visibility;
     std::vector<std::string> m_drawable_names;
+
+    // Per-drawable diffuse color and texture read from the Alembic file.
+    StaticMaterialVector m_static_materials;
 
     std::vector<DrawableBufferSampler> m_samplers;
     tbb::mutex m_mutex;

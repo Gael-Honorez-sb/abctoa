@@ -757,7 +757,7 @@ void* CAlembicHolderUI::creator() {
 CAlembicHolderUI::CAlembicHolderUI() {
 }
 
-void CAlembicHolderUI::updateVP1Drawables(const nozAlembicHolder::SceneSample& scene_sample, const DiffuseColorOverrideMap& color_overrides)
+void CAlembicHolderUI::updateVP1Drawables(const nozAlembicHolder::SceneSample& scene_sample, const DiffuseColorOverrideMap& color_overrides, const StaticMaterialVector& static_materials)
 {
     m_vp1drawables.drawables.clear();
     for (const auto& drawable : scene_sample.drawable_samples) {
@@ -791,6 +791,8 @@ void CAlembicHolderUI::updateVP1Drawables(const nozAlembicHolder::SceneSample& s
         auto& item = m_vp1drawables.drawables.back();
         item.world_matrix = drawable.world_matrix;
         item.drawable_id = drawable.drawable_id;
+        const auto& static_material = static_materials[drawable.drawable_id];
+        item.diffuse_color = static_material.diffuse_color;
 
         if (drawable.cache_handles.indices) {
             if (drawable.type == GeometryType::TRIANGLES) {
@@ -865,8 +867,9 @@ void CAlembicHolderUI::updateVP1Drawables(const nozAlembicHolder::SceneSample& s
         m_vp1drawables.textures.resize(m_vp1drawables.drawables.size());
         for (size_t i = 0; i < m_vp1drawables.drawables.size(); ++i) {
             const auto& drawable = m_vp1drawables.drawables[i];
+            const auto& static_material = static_materials[drawable.drawable_id];
             const auto override_it = color_overrides.find(drawable.drawable_id);
-            std::string texture_path;
+            std::string texture_path = static_material.diffuse_texture_path;
             if (override_it != color_overrides.end())
                 texture_path = override_it->second.diffuse_texture_path;
             const auto texture_path_updated = updateValue(m_vp1drawables.textures[i].first, texture_path);
@@ -889,7 +892,7 @@ void CAlembicHolderUI::getDrawRequests(const MDrawInfo & info,
     const auto& sample = shapeNode->getSample();
 
     // Update GL buffers.
-    updateVP1Drawables(sample, shapeNode->getDiffuseColorOverrides());
+    updateVP1Drawables(sample, shapeNode->getDiffuseColorOverrides(), scene ? scene->staticMaterials() : StaticMaterialVector());
 
     getDrawData(&m_vp1drawables, data);
     request.setDrawData(data);
@@ -1041,7 +1044,7 @@ void VP1DrawableContainer::draw(const VP1DrawSettings& draw_settings) const
             "matrix element size mismatch");
         gGLFT->glMultMatrixf((const MGLfloat *)&drawable.world_matrix[0][0]);
 
-        C3f color(0.7f, 0.7f, 0.7f);
+        C3f color = drawable.diffuse_color;
         const auto& color_overrides = draw_settings.color_overrides;
         auto color_override_it = color_overrides.find(drawable.drawable_id);
         if (color_override_it != color_overrides.end()) {

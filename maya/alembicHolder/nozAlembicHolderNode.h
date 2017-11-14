@@ -172,6 +172,7 @@ public:
 struct VP1DrawableItem {
     BufferObject buffer;
     M44f world_matrix;
+    C3f diffuse_color;
     DrawableID drawable_id;
     VP1DrawableItem(MGLenum prim_type, MGLsizei prim_count)
     {
@@ -256,7 +257,7 @@ public:
 
 private:
     VP1DrawableContainer m_vp1drawables;
-    void updateVP1Drawables(const nozAlembicHolder::SceneSample& scene_sample, const DiffuseColorOverrideMap& color_overrides);
+    void updateVP1Drawables(const nozAlembicHolder::SceneSample& scene_sample, const DiffuseColorOverrideMap& color_overrides, const StaticMaterialVector& static_materials);
     void drawWithTwoSidedLightingSupport(const VP1DrawableContainer& drawable_container, VP1DrawSettings draw_settings) const;
 }; // class CAlembicHolderUI
 
