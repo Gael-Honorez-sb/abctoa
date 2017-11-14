@@ -13,6 +13,7 @@ License along with this library.*/
 
 
 #include "nozAlembicHolderNode.h"
+#include "SubsceneOverride.h"
 #include "version.h"
 
 #include "cmds/ABCGetTags.h"
@@ -33,7 +34,7 @@ License along with this library.*/
 #define kOutlinerMenuItemLabel MStringResourceId( kPluginId, "kOutlinerMenuItemLabel", "Alembic Holder")
 
 
-MString    drawDbClassification("drawdb/geometry/alembicHolder");
+MString    drawDbClassification("drawdb/subscene/alembicHolder");
 MString    drawRegistrantId("alembicHolder");
 
 #ifdef _WIN32
@@ -61,6 +62,14 @@ DLLEXPORT MStatus initializePlugin( MObject obj )
 
     if (!status) {
         status.perror("registerNode");
+        return status;
+    }
+
+    status = MHWRender::MDrawRegistry::registerSubSceneOverrideCreator(
+        drawDbClassification, drawRegistrantId, AlembicHolder::SubSceneOverride::creator
+    );
+    if (!status) {
+        status.perror("registerSubSceneOverride");
         return status;
     }
 
@@ -114,6 +123,8 @@ DLLEXPORT MStatus initializePlugin( MObject obj )
         }
     }
 
+    SubSceneOverride::initializeShaderTemplates();
+
     return status;
 }
 
@@ -121,6 +132,16 @@ DLLEXPORT MStatus uninitializePlugin( MObject obj)
 {
     MStatus   status;
     MFnPlugin plugin( obj );
+
+    SubSceneOverride::releaseShaderTemplates();
+
+    status = MHWRender::MDrawRegistry::deregisterSubSceneOverrideCreator(
+        drawDbClassification,
+        drawRegistrantId);
+    if (!status) {
+        status.perror("deregisterSubSceneOverrideCreator");
+        return status;
+    }
 
     status = plugin.deregisterNode( nozAlembicHolder::id );
     if (!status) {
