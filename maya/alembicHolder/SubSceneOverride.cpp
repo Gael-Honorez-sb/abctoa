@@ -16,6 +16,7 @@
 #include <maya/MItDag.h>
 #include <maya/MSelectionList.h>
 #include <maya/MShaderManager.h>
+#include <maya/MFragmentManager.h>
 #include <maya/MUserData.h>
 
 #include <tbb/mutex.h>
@@ -35,6 +36,14 @@ using namespace MHWRender;
 namespace AlembicHolder {
 
 namespace {
+    MFragmentManager* getFragmentManager()
+    {
+        MRenderer* renderer = MRenderer::theRenderer();
+        if (!renderer)
+            return nullptr;
+        return renderer->getFragmentManager();
+    }
+
     const MShaderManager* getShaderManager()
     {
         MRenderer* renderer = MRenderer::theRenderer();
@@ -66,10 +75,85 @@ namespace {
     typedef Cache<MColor, MShaderInstance, MColorHasher, std::equal_to<MColor>, ShaderInstanceDeleter> WireShaderCache;
     WireShaderCache s_wire_shader_cache;
 
+    const char* s_texture_fragment_name = "fileTexturePluginFragment";
+    const char* s_texture_fragment_xml = R"xml(
+<fragment uiName="fileTexturePluginFragment" name="fileTexturePluginFragment" type="plumbing" class="ShadeFragment" version="1.0" feature_level="0">
+    <description><![CDATA[ Simple file texture fragment]]></description>
+    <properties>
+        <float2 name="uvCoord" semantic="mayaUvCoordSemantic" flags="varyingInputParam" />
+        <texture2 name="map" />
+        <sampler name="textureSampler" />
+    </properties>
+    <values/>
+    <outputs>
+        <float4 name="output" />
+    </outputs>
+    <implementation>
+    <implementation render="OGSRenderer" language="Cg" lang_version="2.100000">
+        <function_name val="fileTexturePluginFragment" />
+        <source>
+            <![CDATA[
+float4 fileTexturePluginFragment(float2 uv, texture2D map, sampler2D mapSampler)
+{
+    uv -= floor(uv);
+    uv.y = 1.0f - uv.y;
+    float4 color = tex2D(mapSampler, uv);
+    return color.rgba;
+}
+            ]]>
+        </source>
+    </implementation>
+    <implementation render="OGSRenderer" language="HLSL" lang_version="11.000000">
+        <function_name val="fileTexturePluginFragment" />
+        <source>
+            <![CDATA[
+float4 fileTexturePluginFragment(float2 uv, Texture2D map, sampler mapSampler)
+{
+    uv -= floor(uv);
+    uv.y = 1.0f - uv.y;
+    float4 color = map.Sample(mapSampler, uv);
+    return color.rgba;
+}
+            ]]>
+        </source>
+    </implementation>
+    <implementation render="OGSRenderer" language="GLSL" lang_version="3.000000">
+        <function_name val="fileTexturePluginFragment" />
+        <source>
+            <![CDATA[
+vec4 fileTexturePluginFragment(vec2 uv, sampler2D mapSampler)
+{
+    uv -= floor(uv);
+    uv.y = 1.0f - uv.y;
+    vec4 color = texture(mapSampler, uv);
+    return color.rgba;
+}
+            ]]>
+        </source>
+    </implementation>
+    <implementation render="OGSRenderer" language="HLSL" lang_version="10.000000">
+        <function_name val="fileTexturePluginFragment" />
+        <source>
+            <![CDATA[
+float4 fileTexturePluginFragment(float2 uv, Texture2D map, sampler mapSampler)
+{
+    uv -= floor(uv);
+    uv.y = 1.0f - uv.y;
+    float4 color = map.Sample(mapSampler, uv);
+    return color.rgba;
+}
+            ]]>
+        </source>
+    </implementation>
+    </implementation>
+</fragment>
+)xml";
+
     MShaderInstance* s_point_shader_template = nullptr;
     MShaderInstance* s_wire_shader_template = nullptr;
     MShaderInstance* s_flat_shader_template = nullptr;
     MShaderInstance* s_shaded_shader_template = nullptr;
+    MShaderInstance* s_textured_shader_template = nullptr;
 
     ShaderPtr getWireShader(const MColor& wire_color)
     {
@@ -129,6 +213,21 @@ namespace {
         CHECK_MSTATUS(shader->setParameter("diffuseColor", color));
     }
 
+    ShaderPtr newTexturedShader()
+    {
+        assert(s_textured_shader_template);
+        auto shader = s_textured_shader_template->clone();
+        return ShaderPtr(shader, ShaderInstanceDeleter());
+    }
+
+    void setTexturedShaderTexture(MShaderInstance* shader, MTexture* texture)
+    {
+        assert(shader);
+        MTextureAssignment texture_assignment;
+        texture_assignment.texture = texture;
+        CHECK_MSTATUS(shader->setParameter("map", texture_assignment));
+    }
+
     const auto DEFAULT_SHADER_COLOR = C3f(0.7f, 0.7f, 0.7f);
 
 } // unnamed namespace
@@ -165,6 +264,49 @@ void SubSceneOverride::initializeShaderTemplates()
         CHECK_MSTATUS(s_shaded_shader_template->setParameter("specularPower", 4.0f));
         setShadedShaderDiffuseColor(s_shaded_shader_template, DEFAULT_SHADER_COLOR);
     }
+
+    // Initialize texturing fragment and textured shader template.
+
+    // Textured template is cloned from the shaded template, so bail if the
+    // latter is nullptr.
+    if (!s_shaded_shader_template)
+        return;
+
+    auto fragment_manager = getFragmentManager();
+    if (!fragment_manager)
+        return;
+
+    // Register texturing fragment.
+    if (!fragment_manager->hasFragment(s_texture_fragment_name)) {
+        const auto fragment_name = fragment_manager->addShadeFragmentFromBuffer(s_texture_fragment_xml, false);
+        if (fragment_name != s_texture_fragment_name) {
+            MGlobal::displayError("[alembicHolder] Failed to register texturing fragment. Textured display is disabled.");
+            return;
+        }
+    }
+
+    // Clone the shaded shader.
+    s_textured_shader_template = s_shaded_shader_template->clone();
+    if (!s_textured_shader_template)
+        return;
+
+    // Connect the texturing fragment to the cloned shader.
+    CHECK_MSTATUS(s_textured_shader_template->addInputFragment(s_texture_fragment_name, MString("output"), MString("diffuseColor")));
+
+    // Set up anisotropic sampler.
+    MStatus status;
+    MSamplerStateDesc desc;
+    desc.setDefaults();
+    desc.addressU = MSamplerState::kTexWrap;
+    desc.addressV = MSamplerState::kTexWrap;
+    desc.filter = MHWRender::MSamplerState::kAnisotropic;
+    desc.maxAnisotropy = 8;
+    auto sampler = MStateManager::acquireSamplerState(desc, &status);
+    CHECK_MSTATUS(status);
+    if (!sampler)
+        return;
+    CHECK_MSTATUS(s_textured_shader_template->setParameter("textureSampler", *sampler));
+    MStateManager::releaseSamplerState(sampler);
 }
 
 void SubSceneOverride::releaseShaderTemplates()
@@ -173,10 +315,16 @@ void SubSceneOverride::releaseShaderTemplates()
     if (!shader_manager)
         return;
 
+    auto fragment_manager = getFragmentManager();
+    if (!fragment_manager)
+        return;
+
     shader_manager->releaseShader(s_point_shader_template);
     shader_manager->releaseShader(s_wire_shader_template);
     shader_manager->releaseShader(s_flat_shader_template);
     shader_manager->releaseShader(s_shaded_shader_template);
+    shader_manager->releaseShader(s_textured_shader_template);
+    fragment_manager->removeFragment(s_texture_fragment_name);
 }
 
 namespace {
@@ -275,6 +423,7 @@ bool SubSceneOverride::requiresUpdate(
         m_is_selected != isPathSelected(dag_path) ||
         m_is_visible != dag_path.isVisible() ||
         m_wire_color != MGeometryUtilities::wireframeColor(dag_path) ||
+        m_texture_mode != m3dview.textureMode() ||
         m_display_style != m3dview.displayStyle();
 }
 
@@ -300,6 +449,7 @@ void SubSceneOverride::update(
     const bool node_selection_updated = updateValue(m_is_selected, isPathSelected(dag_path));
     const bool node_visibility_updated = updateValue(m_is_visible, dag_path.isVisible());
     const bool wire_color_updated = updateValue(m_wire_color, MGeometryUtilities::wireframeColor(dag_path));
+    const bool texture_mode_changed = updateValue(m_texture_mode, m3dview.textureMode());
     const bool display_style_changed = updateValue(m_display_style, m3dview.displayStyle());
 
     const bool sample_updated = uninitialized || scene_updated || time_updated;
@@ -350,10 +500,10 @@ void SubSceneOverride::update(
         m_bbox_wireframe.render_item->setShader(m_wire_shader.get());
         container.add(m_bbox_wireframe.render_item);
 
-        // Add a wireframe and shaded render item for each drawable.
-        // Set default shader for the shaded item here, since a valid
+        // Add a wireframe, shaded and textured render item for each drawable.
+        // Set default shader for shaded and textured items here, since a valid
         // shader is needed for setGeometryForRenderItem, and we can be certain,
-        // that each shaded render item gets a unique clone of the
+        // that each shaded and textured render item gets a unique clone of the
         // corresponding template shader.
         // The wired shaders are shared based on color, so they are created in
         // the shader update loop.
@@ -409,6 +559,11 @@ void SubSceneOverride::update(
                     MGeometry::kWireframe | MGeometry::kShaded | MGeometry::kTextured);
                 wireframe_item->depthPriority(MRenderItem::sActiveWireDepthPriority);
 
+                // When no texture is bound, show the shaded item in textured
+                // mode instead of the textured item.
+                // This is changed when the textured shaders are updated and a
+                // texture is bound to the render item.
+
                 // Shaded item.
                 auto& shaded_item = mesh.shaded_item;
                 shaded_item = createRenderItem(sample.drawable_id, "shaded",
@@ -416,6 +571,15 @@ void SubSceneOverride::update(
                 shaded_item->setExcludedFromPostEffects(false);
                 mesh.shaded_shader = newShadedShader();
                 shaded_item->setShader(mesh.shaded_shader.get());
+
+                // Textured item.
+                auto& textured_item = mesh.textured_item;
+                textured_item = createRenderItem(sample.drawable_id, "textured",
+                    MRenderItem::MaterialSceneItem, MGeometry::kTriangles, 0);
+                textured_item->setExcludedFromPostEffects(false);
+                mesh.textured_shader = newTexturedShader();
+                textured_item->setShader(mesh.textured_shader.get());
+                mesh.texture_path.clear();
             }
         }
     }
@@ -458,6 +622,7 @@ void SubSceneOverride::update(
         display_style_changed;
     const bool update_wire_shaders = uninitialized || scene_updated || wire_color_updated;
     const bool update_shaded_shaders = uninitialized || scene_updated || color_overrides_updated;
+    const bool update_textured_shaders = (uninitialized || scene_updated || color_overrides_updated || texture_mode_changed) && m_texture_mode;
     const bool update_streams = sample_updated;
     const bool update_matrices = m_update_world_matrix_required || sample_updated;
 
@@ -507,9 +672,10 @@ void SubSceneOverride::update(
                 const bool enabled = sample_is_visible && wireframe_on;
                 mesh.wireframe_item->enable(enabled);
             }
-            // Update shaded item visibility.
-            if (mesh.shaded_item)
-                mesh.shaded_item->enable(sample_is_visible);
+            // Update shaded and textured visibility.
+            for (auto render_item : { mesh.shaded_item, mesh.textured_item })
+                if (render_item)
+                    render_item->enable(sample_is_visible);
         }
     }
 
@@ -565,6 +731,45 @@ void SubSceneOverride::update(
             const auto& sample = scene_sample.drawable_samples[mesh.drawable_id];
             const auto diffuse_color = getDrawableColor(sample.drawable_id);
             setShadedShaderDiffuseColor(mesh.shaded_shader.get(), diffuse_color);
+        }
+    }
+
+    // Textured items.
+    const auto getDrawableTexturePath = [&color_overrides](DrawableID drawable_id) {
+        const auto color_it = color_overrides.find(drawable_id);
+        if (color_it != color_overrides.end()) {
+            return color_it->second.diffuse_texture_path;
+        } else {
+            return std::string();
+        }
+    };
+    if (update_textured_shaders) {
+        for (auto& mesh : m_meshes) {
+            if (!mesh.textured_item)
+                continue;
+            const auto& sample = scene_sample.drawable_samples[mesh.drawable_id];
+            const auto& texture_path = getDrawableTexturePath(sample.drawable_id);
+            const bool texture_is_empty = texture_path.empty();
+            const bool texture_was_empty = mesh.texture_path.empty();
+            const auto texture_path_changed = updateValue(mesh.texture_path, texture_path);
+            if (!texture_path_changed)
+                continue;
+            if (!texture_is_empty) {
+                mesh.texture = loadTexture(texture_path);
+                setTexturedShaderTexture(mesh.textured_shader.get(), mesh.texture.get());
+            }
+            // If no texture is bound, show the shaded item in textured mode too.
+            if (texture_is_empty != texture_was_empty) {
+                auto shaded_draw_mode = MGeometry::kShaded;
+                if (texture_is_empty)
+                    shaded_draw_mode = MGeometry::DrawMode(shaded_draw_mode | MGeometry::kTextured);
+                mesh.shaded_item->setDrawMode(shaded_draw_mode);
+
+                auto textured_draw_mode = MGeometry::kTextured;
+                if (texture_is_empty)
+                    textured_draw_mode = MGeometry::DrawMode(0);
+                mesh.textured_item->setDrawMode(textured_draw_mode);
+            }
         }
     }
 
@@ -678,6 +883,21 @@ void SubSceneOverride::update(
                     : MIndexBuffer(MGeometry::kUnsignedInt32);
                 CHECK_MSTATUS(setGeometryForRenderItem(*mesh.shaded_item, vba, index_buffer, &maya_bbox));
             }
+
+            // Textured render item;
+            {
+                MVertexBufferArray vba;
+                addBufferIfNotEmpty(vba, "positions", &vp2_buffers.geometry->positions);
+                if (vp2_buffers.geometry->flags & VP2GeometrySample::HAS_NORMALS)
+                    addBufferIfNotEmpty(vba, "normals", &vp2_buffers.geometry->normals);
+                if (vp2_buffers.texcoords)
+                    addBufferIfNotEmpty(vba, "uvs", &vp2_buffers.texcoords->uvs);
+                // TODO: tangents, bitangents
+                const auto index_buffer = vp2_buffers.indices
+                    ? vp2_buffers.indices->triangle_buffer
+                    : MIndexBuffer(MGeometry::kUnsignedInt32);
+                CHECK_MSTATUS(setGeometryForRenderItem(*mesh.textured_item, vba, index_buffer, &maya_bbox));
+            }
         }
     }
 
@@ -708,7 +928,7 @@ void SubSceneOverride::update(
             if (!sample.visible)
                 continue;
             const auto& world_matrix = mayaFromImath(sample.world_matrix) * node_world_matrix;
-            for (auto render_item : { mesh.wireframe_item, mesh.shaded_item })
+            for (auto render_item : { mesh.wireframe_item, mesh.shaded_item, mesh.textured_item })
                 if (render_item)
                     render_item->setMatrix(&world_matrix);
         }
@@ -815,6 +1035,11 @@ namespace {
         }
     }
 
+    void updateVP2TexCoordsSample(const TexCoordsSample& input, VP2TexCoordsSample& output)
+    {
+        updateVP2Buffer(input.uvs, output.uvs);
+    }
+
 } // unnamed namespace
 
 VP2DrawableBufferCache::VP2DrawableBufferCache(const Hierarchy::Node& node)
@@ -822,6 +1047,7 @@ VP2DrawableBufferCache::VP2DrawableBufferCache(const Hierarchy::Node& node)
     , m_num_samples(0)
     , m_constant_indices(true)
     , m_constant_geometry(true)
+    , m_constant_texcoords(true)
 {
     if (node.type == Hierarchy::NodeType::POLYMESH) {
         auto schema = Alembic::AbcGeom::IPolyMesh(node.source_object).getSchema();
@@ -833,6 +1059,8 @@ VP2DrawableBufferCache::VP2DrawableBufferCache(const Hierarchy::Node& node)
         const auto normals_param = schema.getNormalsParam();
         const bool constant_normals = !normals_param.valid() || normals_param.isConstant();
         m_constant_geometry = schema.getPositionsProperty().isConstant() && constant_normals;
+        const auto uvs_param = schema.getUVsParam();
+        m_constant_texcoords = !uvs_param.valid() || uvs_param.isConstant();
 
     } else if (node.type == Hierarchy::NodeType::CURVES) {
         auto schema = Alembic::AbcGeom::ICurves(node.source_object).getSchema();
@@ -906,6 +1134,31 @@ VP2BufferHandles VP2DrawableBufferCache::sampleBuffers(chrono_t time, const Draw
         }
 
         res.geometry = m_vp2_geometry_sample_cache.put(geometry_key, geometry.release());
+    }
+
+    // UVs.
+    const auto texcoords_key = m_constant_texcoords ? 0 : time;
+    res.texcoords = m_vp2_texcoords_sample_cache.get(texcoords_key);
+    if (!res.texcoords && cache_handles.texcoords.endpoints[0]) {
+        const auto cpu_uvs = cache_handles.texcoords;
+        auto texcoords = std::unique_ptr<VP2TexCoordsSample>(new VP2TexCoordsSample());
+
+        // Interpolate if needed.
+        if (cache_handles.texcoords.endpoints[1] && cache_handles.texcoords.alpha != 0) {
+            const unsigned int vertex_count = unsigned(cpu_uvs.endpoints[0]->uvs.size());
+            auto uv_buffer = static_cast<V2f*>(texcoords->uvs.acquire(vertex_count));
+            lerpSpans(cpu_uvs.alpha,
+                Span<const V2f>(cpu_uvs.endpoints[0]->uvs),
+                Span<const V2f>(cpu_uvs.endpoints[1]->uvs),
+                Span<V2f>(uv_buffer, vertex_count));
+            texcoords->uvs.commit(uv_buffer);
+
+        } else {
+            // Simply copy endpoints[0].
+            updateVP2TexCoordsSample(*cpu_uvs.endpoints[0], *texcoords);
+        }
+
+        res.texcoords = m_vp2_texcoords_sample_cache.put(texcoords_key, texcoords.release());
     }
 
     return res;

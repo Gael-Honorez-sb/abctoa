@@ -18,6 +18,7 @@ License along with this library.*/
 #include "AlembicScene.h"
 #include "RenderModules.h"
 #include "Foundation.h"
+#include "TextureLoader.h"
 
 #include <maya/MPxSurfaceShape.h>
 #include <maya/MPxSurfaceShapeUI.h>
@@ -71,6 +72,7 @@ struct MStringComp
 typedef HierarchyNodeCategories::DrawableID DrawableID;
 struct DiffuseColorOverride {
     C3f diffuse_color;
+    std::string diffuse_texture_path;
 };
 typedef std::unordered_map<DrawableID, DiffuseColorOverride> DiffuseColorOverrideMap;
 
@@ -195,15 +197,16 @@ struct VP1PrimitiveFilter {
 };
 struct VP1DrawSettings {
     bool override_color;
+    bool use_texture;
     const DiffuseColorOverrideMap& color_overrides;
     // Only draw the types of primitives specified in the filter.
     VP1PrimitiveFilter primitive_filter;
     bool flip_normals;
-    VP1DrawSettings(bool override_color_,
+    VP1DrawSettings(bool override_color_, bool use_texture_ = false,
                  const DiffuseColorOverrideMap& color_overrides_ = DiffuseColorOverrideMap(),
                  VP1PrimitiveFilter primitive_filter_ = VP1PrimitiveFilter(),
                  bool flip_normals_=false)
-        : override_color(override_color_)
+        : override_color(override_color_), use_texture(use_texture_)
         , color_overrides(color_overrides_)
         , primitive_filter(primitive_filter_)
         , flip_normals(flip_normals_)
@@ -211,6 +214,7 @@ struct VP1DrawSettings {
 };
 struct VP1DrawableContainer {
     std::vector<VP1DrawableItem> drawables;
+    std::vector<std::pair<std::string, VP1TexturePtr>> textures;
     void draw(const VP1DrawSettings& draw_settings) const;
 };
 

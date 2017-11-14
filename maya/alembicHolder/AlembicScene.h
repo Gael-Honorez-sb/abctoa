@@ -130,6 +130,7 @@ struct IndexMapping {
     std::vector<int32_t> vertex_index_from_face_index;
     std::vector<int32_t> position_indices;
     std::vector<uint32_t> normal_indices;
+    std::vector<uint32_t> uv_indices;
 };
 
 struct IndexBufferSample {
@@ -148,8 +149,14 @@ struct GeometrySample {
     std::vector<V3f> bitangents;
 };
 
+struct TexCoordsSample {
+    std::vector<V2f> uvs;
+};
+
 typedef Cache<index_t, GeometrySample> GeometrySampleCache;
 typedef GeometrySampleCache::ValuePtr GeometrySamplePtr;
+typedef Cache<index_t, TexCoordsSample> TexCoordsSampleCache;
+typedef TexCoordsSampleCache::ValuePtr TexCoordsSamplePtr;
 
 template <typename T>
 struct InterpolationData {
@@ -179,6 +186,7 @@ struct DrawableCacheHandles {
     // If interpolation is not required, the first element should hold the
     // sample to use.
     InterpolationData<GeometrySamplePtr> geometry;
+    InterpolationData<TexCoordsSamplePtr> texcoords;
 };
 
 // The purpose of this struct is to keep a reference to cached buffers needed to
@@ -208,12 +216,15 @@ private:
     Alembic::AbcGeom::IInt32ArrayProperty m_face_indices_property;
     Alembic::AbcGeom::IP3fArrayProperty m_positions_property;
     Alembic::AbcGeom::IN3fGeomParam m_normals_param;
+    Alembic::AbcGeom::IV2fGeomParam m_uvs_param;
 
     Alembic::AbcGeom::MeshTopologyVariance m_topology_variance;
     bool m_normals_are_indexed;
+    bool m_uvs_are_indexed;
 
     IndexBufferSampleCache m_index_buffer_cache;
     GeometrySampleCache m_geometry_sample_cache;
+    TexCoordsSampleCache m_texcoords_sample_cache;
 };
 
 

@@ -201,6 +201,8 @@ void AlembicScene::sampleHierarchy(chrono_t time, DrawableSampleVector& out_samp
                     sample.cache_handles.indices.reset();
                     for (auto& endpoint : sample.cache_handles.geometry.endpoints)
                         endpoint.reset();
+                    for (auto& endpoint : sample.cache_handles.texcoords.endpoints)
+                        endpoint.reset();
                 }
 
                 // Triangle count stat.
@@ -292,52 +294,58 @@ namespace {
 // The Alembic FaceIndices property is an array of int32s, but the normal
 // and UV index properties are arrays of uint32s. Why? Dunno. Ask the
 // designers of the Alembic library.
-struct IndexPair {
+struct IndexTriplet {
     int32_t position_index;
     uint32_t normal_index;
-    IndexPair(int32_t position_index_, uint32_t normal_index_)
+    uint32_t uv_index;
+    IndexTriplet(int32_t position_index_, uint32_t normal_index_, uint32_t uv_index_)
         : position_index(position_index_)
         , normal_index(normal_index_)
+        , uv_index(uv_index_)
     {
     }
-    bool operator==(const IndexPair& rhs) const
+    bool operator==(const IndexTriplet& rhs) const
     {
         return position_index == rhs.position_index &&
-            normal_index == rhs.normal_index;
+            normal_index == rhs.normal_index &&
+            uv_index == rhs.uv_index;
     }
 };
 
-struct IndexPairHasher {
-    size_t operator()(const IndexPair& index_pair) const
+struct IndexTripletHasher {
+    size_t operator()(const IndexTriplet& index_triplet) const
     {
-        size_t res = std::hash<int32_t>()(index_pair.position_index);
-        boost::hash_combine(res, index_pair.normal_index);
+        size_t res = std::hash<int32_t>()(index_triplet.position_index);
+        boost::hash_combine(res, index_triplet.normal_index);
+        boost::hash_combine(res, index_triplet.uv_index);
         return res;
     }
 };
 
-// If normals are faceVarying, a mapping from face indices to
+// If normals or uvs are faceVarying, a mapping from face indices to
 // vertex buffer indices has to be computed.
 void computeIndexMapping(
     const Int32ArraySample& face_indices,
     const UInt32ArraySamplePtr& normal_indices,
+    const UInt32ArraySamplePtr& uv_indices,
     IndexMapping& output)
 {
-    // This will map a pair of position and normal indices to a
-    // vertex index identifying a unique position and normal pair.
-    std::unordered_map<IndexPair, uint32_t, IndexPairHasher> index_map;
+    // This will map a triplet of position, normal and uv indices to a
+    // vertex index identifying a unique position, normal and uv triplet.
+    std::unordered_map<IndexTriplet, uint32_t, IndexTripletHasher> index_map;
 
-    // Fill the index map by index pair.
+    // Fill the index map by index triplets.
     const auto face_vertex_count = face_indices.size();
     output.vertex_index_from_face_index.resize(face_vertex_count);
     uint32_t vertex_count = 0;
     for (size_t i_face_vertex = 0; i_face_vertex < face_vertex_count; ++i_face_vertex) {
         const auto position_index = face_indices.get()[i_face_vertex];
         const auto normal_index = normal_indices ? normal_indices->get()[i_face_vertex] : position_index;
-        const IndexPair index_pair = { position_index, normal_index };
-        const auto insert_result = index_map.insert({ index_pair, vertex_count });
+        const auto uv_index = uv_indices ? uv_indices->get()[i_face_vertex] : position_index;
+        const IndexTriplet index_triplet = { position_index, normal_index, uv_index };
+        const auto insert_result = index_map.insert({ index_triplet, vertex_count });
         if (insert_result.second) {
-            // The insertion was succesfull, this is the first occurence of this index pair.
+            // The insertion was succesfull, this is the first occurence of this index triplet.
             vertex_count += 1;
         }
         output.vertex_index_from_face_index[i_face_vertex] = insert_result.first->second;
@@ -348,13 +356,19 @@ void computeIndexMapping(
         output.normal_indices.resize(vertex_count);
     else
         output.normal_indices.clear();
+    if (uv_indices)
+        output.uv_indices.resize(vertex_count);
+    else
+        output.uv_indices.clear();
 
-    for (const auto& pair_and_index : index_map) {
-        const auto& pair = pair_and_index.first;
-        const auto vertex_index = pair_and_index.second;
-        output.position_indices[vertex_index] = pair.position_index;
+    for (const auto& triplet_index_pair : index_map) {
+        const auto& triplet = triplet_index_pair.first;
+        const auto vertex_index = triplet_index_pair.second;
+        output.position_indices[vertex_index] = triplet.position_index;
         if (normal_indices)
-            output.normal_indices[vertex_index] = pair.normal_index;
+            output.normal_indices[vertex_index] = triplet.normal_index;
+        if (uv_indices)
+            output.uv_indices[vertex_index] = triplet.uv_index;
     }
 }
 
@@ -525,6 +539,12 @@ void DrawableBufferSampler::sampleBuffers(chrono_t time, DrawableCacheHandles& o
     if (!constant_geo)
         std::tie(geo_floor_sidx, geo_floor_time) = floorIndexAndTime(m_positions_property, time);
 
+    const bool constant_uvs = !m_uvs_param.valid() || m_uvs_param.isConstant();
+    index_t uvs_floor_sidx = 0;
+    chrono_t uvs_floor_time = 0;
+    if (!constant_uvs)
+        std::tie(uvs_floor_sidx, uvs_floor_time) = floorIndexAndTime(m_uvs_param, time);
+
     std::shared_ptr<AlembicHolder::IndexBufferSample> index_sample_ptr;
     if (m_face_counts_property.valid() && m_face_indices_property.valid()) {
         // Index properties are valid; get index buffer.
@@ -542,18 +562,22 @@ void DrawableBufferSampler::sampleBuffers(chrono_t time, DrawableCacheHandles& o
             auto index_buffer_sample = std::unique_ptr<IndexBufferSample>(new IndexBufferSample());
 
             // Remap indices if needed.
-            const auto index_remapping_needed = m_normals_are_indexed;
+            const auto index_remapping_needed = m_normals_are_indexed || m_uvs_are_indexed;
             auto& index_mapping = index_buffer_sample->index_mapping;
             if (index_remapping_needed) {
                 N3fArraySamplePtr normals_sample;
                 UInt32ArraySamplePtr normals_indices;
+                V2fArraySamplePtr uvs_sample;
+                UInt32ArraySamplePtr uvs_indices;
                 getParamSample(m_normals_param, geo_floor_sidx, normals_sample, &normals_indices);
-                computeIndexMapping(*face_indices_sample, normals_indices, index_mapping);
+                getParamSample(m_uvs_param, uvs_floor_sidx, uvs_sample, &uvs_indices);
+                computeIndexMapping(*face_indices_sample, normals_indices, uvs_indices, index_mapping);
 
             } else {
                 // Clear index_mapping to indicate that the indices are not remapped.
                 index_mapping.position_indices.clear();
                 index_mapping.normal_indices.clear();
+                index_mapping.uv_indices.clear();
             }
 
             // Fill index buffers.
@@ -634,6 +658,34 @@ void DrawableBufferSampler::sampleBuffers(chrono_t time, DrawableCacheHandles& o
         return m_geometry_sample_cache.put(sample_index, geo_sample.release());
     };
 
+    // Helper function for obtaining a texcoord sample at index `sample_index`.
+    // Get from cache if found, otherwise create a new sample and cache it.
+    const auto getUVsSample = [this, &index_sample_ptr](index_t sample_index) -> TexCoordsSamplePtr {
+        if (!m_uvs_param.valid())
+            return nullptr;
+
+        // Return cached if in cache.
+        auto uvs_sample_ptr = m_texcoords_sample_cache.get(sample_index);
+        if (uvs_sample_ptr)
+            return uvs_sample_ptr;
+
+        // Not in cache; create sample.
+
+        // Read uv sample. It's possible that they are already read by the
+        // index remapping logic.
+        V2fArraySamplePtr uvs_sample;
+        getParamSample(m_uvs_param, sample_index, uvs_sample);
+
+        auto texcoords_sample = std::unique_ptr<TexCoordsSample>(new TexCoordsSample());
+
+        const auto& uv_indices = index_sample_ptr
+            ? Span<const uint32_t>(index_sample_ptr->index_mapping.uv_indices)
+            : Span<const uint32_t>();
+        fillBuffer(Span<const V2f>(uvs_sample), uv_indices, texcoords_sample->uvs);
+
+        return m_texcoords_sample_cache.put(sample_index, texcoords_sample.release());
+    };
+
     // Determine if interpolation is possible and needed.
     index_t geo_ceil_sidx;
     chrono_t geo_ceil_time;
@@ -641,18 +693,35 @@ void DrawableBufferSampler::sampleBuffers(chrono_t time, DrawableCacheHandles& o
     const bool interpolate_geo = homogeneous_topology && !constant_geo &&
         geo_floor_sidx != geo_ceil_sidx && geo_floor_time != time;
 
+    index_t uvs_ceil_sidx = 0;
+    chrono_t uvs_ceil_time = 0;
+    if (m_uvs_param.valid()) {
+        std::tie(uvs_ceil_sidx, uvs_ceil_time) = ceilIndexAndTime(m_uvs_param, time);
+    }
+    const bool interpolate_uvs = homogeneous_topology && !constant_uvs &&
+        uvs_floor_sidx != uvs_ceil_sidx && uvs_floor_time != time;
+
     // Get pointers first and assign them to the output after that to maximize
     // cache usage (when the ref count drops to zero the entry gets dedelet from
     // the cache).
     InterpolationData<GeometrySamplePtr> out_geometry;
+    InterpolationData<TexCoordsSamplePtr> out_texcoords;
     out_geometry.endpoints[0] = getGeoSample(geo_floor_sidx);
     if (interpolate_geo) {
         out_geometry.endpoints[1] = getGeoSample(geo_ceil_sidx);
         out_geometry.alpha = float((time - geo_floor_time) / (geo_ceil_time - geo_floor_time));
     }
+    if (m_uvs_param.valid()) {
+        out_texcoords.endpoints[0] = getUVsSample(uvs_floor_sidx);
+        if (interpolate_uvs) {
+            out_texcoords.endpoints[1] = getUVsSample(uvs_ceil_sidx);
+            out_texcoords.alpha = float((time - uvs_floor_time) / (uvs_ceil_time - uvs_floor_time));
+        }
+    }
 
     out_handles.indices = index_sample_ptr;
     out_handles.geometry = out_geometry;
+    out_handles.texcoords = out_texcoords;
 
     out_bbox.makeEmpty();
     for (auto& geo : out_handles.geometry.endpoints)
@@ -663,6 +732,7 @@ void DrawableBufferSampler::sampleBuffers(chrono_t time, DrawableCacheHandles& o
 DrawableBufferSampler::DrawableBufferSampler(const Hierarchy::Node& node)
     : m_topology_variance(Alembic::AbcGeom::MeshTopologyVariance::kConstantTopology)
     , m_normals_are_indexed(false)
+    , m_uvs_are_indexed(false)
 {
     if (node.type == Hierarchy::NodeType::POLYMESH) {
         m_type = GeometryType::TRIANGLES;
@@ -671,8 +741,10 @@ DrawableBufferSampler::DrawableBufferSampler(const Hierarchy::Node& node)
         m_face_indices_property = schema.getFaceIndicesProperty();
         m_positions_property = schema.getPositionsProperty();
         m_normals_param = schema.getNormalsParam();
+        m_uvs_param = schema.getUVsParam();
         m_topology_variance = schema.getTopologyVariance();
         m_normals_are_indexed = m_normals_param.valid() && m_normals_param.getScope() == kFacevaryingScope;
+        m_uvs_are_indexed = m_uvs_param.valid() && m_uvs_param.getScope() == kFacevaryingScope;
 
     } else if (node.type == Hierarchy::NodeType::CURVES) {
         m_type = GeometryType::LINES;

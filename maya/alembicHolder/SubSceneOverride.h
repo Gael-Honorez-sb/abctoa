@@ -1,6 +1,7 @@
 #pragma once
 
 #include "AlembicScene.h"
+#include "TextureLoader.h"
 #include "nozAlembicHolderNode.h"
 
 #include <maya/MPxSubSceneOverride.h>
@@ -37,9 +38,19 @@ struct VP2GeometrySample {
     {}
 };
 
+struct VP2TexCoordsSample {
+    MHWRender::MVertexBuffer uvs;
+    VP2TexCoordsSample()
+        : uvs(MHWRender::MVertexBufferDescriptor("", MHWRender::MGeometry::kTexture, MHWRender::MGeometry::kFloat, 2))
+    {}
+};
+
 // VP2 caches are indexed with chrono_t so interpolated buffers are cached too.
 typedef Cache<chrono_t, VP2GeometrySample> VP2GeometrySampleCache;
 typedef VP2GeometrySampleCache::ValuePtr VP2GeometrySamplePtr;
+
+typedef Cache<chrono_t, VP2TexCoordsSample> VP2TexCoordsSampleCache;
+typedef VP2TexCoordsSampleCache::ValuePtr VP2TexCoordsSamplePtr;
 
 // On the GPU, only interpolated samples are stored (not the interpolation
 // endpoints). This struct stores handles to the buffer cache entries holding
@@ -47,6 +58,7 @@ typedef VP2GeometrySampleCache::ValuePtr VP2GeometrySamplePtr;
 struct VP2BufferHandles {
     VP2IndexBufferSamplePtr indices;
     VP2GeometrySamplePtr geometry;
+    VP2TexCoordsSamplePtr texcoords;
 };
 typedef std::vector<VP2BufferHandles> VP2BufferHandlesVector;
 
@@ -60,9 +72,11 @@ private:
     bool m_has_indices;
     bool m_constant_indices;
     bool m_constant_geometry;
+    bool m_constant_texcoords;
 
     VP2IndexBufferSampleCache m_vp2_index_buffer_cache;
     VP2GeometrySampleCache m_vp2_geometry_sample_cache;
+    VP2TexCoordsSampleCache m_vp2_texcoords_sample_cache;
 };
 
 class VP2Scene {
@@ -130,6 +144,7 @@ private:
     bool m_is_selected;
     bool m_is_visible;
     std::string m_shader_assignments_json;
+    bool m_texture_mode;
     M3dView::DisplayStyle m_display_style;
 
 private:
@@ -165,10 +180,14 @@ private:
         DrawableID drawable_id;
         MHWRender::MRenderItem* wireframe_item;
         MHWRender::MRenderItem* shaded_item;
+        MHWRender::MRenderItem* textured_item;
         ShaderPtr shaded_shader;
+        ShaderPtr textured_shader;
+        std::string texture_path;
+        TexturePtr texture;
 
         TriangleMesh(DrawableID id)
-            : drawable_id(id), wireframe_item(nullptr), shaded_item(nullptr)
+            : drawable_id(id), wireframe_item(nullptr), shaded_item(nullptr), textured_item(nullptr)
         {}
     };
     std::vector<TriangleMesh> m_meshes;

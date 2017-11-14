@@ -474,7 +474,8 @@ void nozAlembicHolder::updateDiffuseColorOverrides()
         return;
 
     std::map<std::string, MColor> shaderColors;
-    ParseShaders(jroot, shaderColors);
+    std::map<std::string, std::string> shaderTextures;
+    ParseShaders(jroot, shaderColors, shaderTextures);
 
     for (const auto& drawable : m_scene->nodeCategories().drawables())
     {
@@ -491,6 +492,20 @@ void nozAlembicHolder::updateDiffuseColorOverrides()
                 const auto& color = it->second;
                 auto& entry = m_diffuse_color_overrides[drawable.drawable_id];
                 entry.diffuse_color = C3f(color.r, color.g, color.b);
+            }
+        }
+
+        for (auto it = shaderTextures.begin(); it != shaderTextures.end(); ++it)
+        {
+            //check both path & tag
+            const bool matches_exactly = it->first.find("/") != std::string::npos &&
+                fullName.find(it->first) != std::string::npos;
+            const bool matches_wildcard = matchPattern(fullName, it->first);
+            if (matches_exactly || matches_wildcard)
+            {
+                const auto& texture = it->second;
+                auto& entry = m_diffuse_color_overrides[drawable.drawable_id];
+                entry.diffuse_texture_path = texture;
             }
         }
     }
@@ -829,6 +844,35 @@ void CAlembicHolderUI::updateVP1Drawables(const nozAlembicHolder::SceneSample& s
             if (!geo.endpoints[0]->normals.empty())
                 item.buffer.genNormalBuffer(Span<const V3f>(geo.endpoints[0]->normals));
         }
+
+        if (drawable.cache_handles.texcoords.endpoints[0] && !drawable.cache_handles.texcoords.endpoints[0]->uvs.empty()) {
+            // Interpolate uvs if needed.
+            if (drawable.cache_handles.texcoords.endpoints[1] && drawable.cache_handles.texcoords.alpha != 0) {
+                std::vector<V2f> texcoords(drawable.cache_handles.texcoords.endpoints[0]->uvs.size());
+                auto texcoords_span = Span<V2f>(texcoords);
+                lerpSpans(drawable.cache_handles.texcoords.alpha,
+                    Span<const V2f>(drawable.cache_handles.texcoords.endpoints[0]->uvs),
+                    Span<const V2f>(drawable.cache_handles.texcoords.endpoints[1]->uvs),
+                    texcoords_span);
+                item.buffer.genUVBuffer(texcoords_span);
+            } else {
+                item.buffer.genUVBuffer(Span<const V2f>(drawable.cache_handles.texcoords.endpoints[0]->uvs));
+            }
+        }
+    }
+
+    if (M3dView::active3dView().textureMode()) {
+        m_vp1drawables.textures.resize(m_vp1drawables.drawables.size());
+        for (size_t i = 0; i < m_vp1drawables.drawables.size(); ++i) {
+            const auto& drawable = m_vp1drawables.drawables[i];
+            const auto override_it = color_overrides.find(drawable.drawable_id);
+            std::string texture_path;
+            if (override_it != color_overrides.end())
+                texture_path = override_it->second.diffuse_texture_path;
+            const auto texture_path_updated = updateValue(m_vp1drawables.textures[i].first, texture_path);
+            if (texture_path_updated)
+                m_vp1drawables.textures[i].second = loadVP1Texture(texture_path);
+        }
     }
 }
 
@@ -960,9 +1004,9 @@ void CAlembicHolderUI::draw(const MDrawRequest& request, M3dView& view) const
 		case kDrawFlatShaded:
         {
             if (drawable_container && !drawable_container->drawables.empty()) {
-                drawWithTwoSidedLightingSupport(*drawable_container, VP1DrawSettings(true, color_overrides, VP1PrimitiveFilter::TRIANGLES));
+                drawWithTwoSidedLightingSupport(*drawable_container, VP1DrawSettings(true, view.textureMode(), color_overrides, VP1PrimitiveFilter::TRIANGLES));
                 gGLFT->glDisable(GL_LIGHTING);
-                drawable_container->draw(VP1DrawSettings(true, color_overrides, ~VP1PrimitiveFilter::TRIANGLES));
+                drawable_container->draw(VP1DrawSettings(true, view.textureMode(), color_overrides, ~VP1PrimitiveFilter::TRIANGLES));
                 gGLFT->glEnable(GL_LIGHTING);
             } else {
                 drawBoundingBox( request, view );
@@ -1004,11 +1048,27 @@ void VP1DrawableContainer::draw(const VP1DrawSettings& draw_settings) const
             color = color_override_it->second.diffuse_color;
         }
 
+        const bool use_texture = draw_settings.use_texture && !textures.empty() && textures[i].second;
+        if (use_texture) {
+            gGLFT->glEnable(MGL_TEXTURE_2D);
+            gGLFT->glBindTexture(MGL_TEXTURE_2D, *textures[i].second);
+            gGLFT->glTexParameteri(MGL_TEXTURE_2D, MGL_TEXTURE_MIN_FILTER, MGL_LINEAR);
+            gGLFT->glTexParameteri(MGL_TEXTURE_2D, MGL_TEXTURE_MAG_FILTER, MGL_LINEAR);
+            gGLFT->glTexParameteri(MGL_TEXTURE_2D, MGL_TEXTURE_WRAP_S, MGL_REPEAT);
+            gGLFT->glTexParameteri(MGL_TEXTURE_2D, MGL_TEXTURE_WRAP_T, MGL_REPEAT);
+            color = C3f(1.0f, 1.0f, 1.0f);
+        }
+
         if (draw_settings.override_color) {
             gGLFT->glColor4f(color.x, color.y, color.z, 1.0f);
         }
 
         drawable.buffer.render(draw_settings.flip_normals);
+
+        if (use_texture) {
+            gGLFT->glDisable(MGL_TEXTURE_2D);
+            gGLFT->glBindTexture(MGL_TEXTURE_2D, 0); // deactivate the texture
+        }
 
         // And back out, restore the matrix.
         gGLFT->glMatrixMode(MGL_MODELVIEW);

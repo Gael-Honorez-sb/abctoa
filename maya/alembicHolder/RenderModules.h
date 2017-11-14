@@ -48,6 +48,7 @@ public:
 
     void genVertexBuffer(const Span<const V3f>& vertices);
     void genNormalBuffer(const Span<const V3f>& normals, bool flipped = false);
+    void genUVBuffer(const Span<const V2f>& uvs);
     void genColorBuffer(const std::vector<MGLfloat>&);
 
     /// @note accepted @c primType: GL_POINTS, GL_LINE_STRIP, GL_LINE_LOOP,
@@ -62,7 +63,7 @@ public:
     void clear();
 
 private:
-    MGLuint mVertexBuffer, mNormalBuffer, mNormalBufferFlipped, mIndexBuffer, mColorBuffer;
+    MGLuint mVertexBuffer, mNormalBuffer, mNormalBufferFlipped, mIndexBuffer, mUVBuffer, mColorBuffer;
     MGLenum mPrimType;
     MGLsizei mPrimNum;
 };

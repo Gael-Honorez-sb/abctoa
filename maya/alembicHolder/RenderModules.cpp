@@ -60,6 +60,7 @@ BufferObject::render(bool normalFlipped) const
     const bool usesIndexBuffer = gGLFT->glIsBufferARB(mIndexBuffer);
     const bool usesColorBuffer = gGLFT->glIsBufferARB(mColorBuffer);
     const bool usesNormalBuffer = gGLFT->glIsBufferARB(mNormalBuffer);
+    const bool usesUVBuffer = gGLFT->glIsBufferARB(mUVBuffer);
 
     gGLFT->glBindBufferARB(MGL_ARRAY_BUFFER_ARB, mVertexBuffer);
     gGLFT->glEnableClientState(MGL_VERTEX_ARRAY);
@@ -80,6 +81,12 @@ BufferObject::render(bool normalFlipped) const
         gGLFT->glNormalPointer(MGL_FLOAT, 0, 0);
     }
 
+    if (usesUVBuffer) {
+        gGLFT->glEnableClientState(MGL_TEXTURE_COORD_ARRAY);
+        gGLFT->glBindBufferARB(MGL_ARRAY_BUFFER_ARB, mUVBuffer);
+        gGLFT->glTexCoordPointer(2, MGL_FLOAT, 0, 0);
+    }
+
     if (usesIndexBuffer) {
         gGLFT->glBindBufferARB(MGL_ELEMENT_ARRAY_BUFFER_ARB, mIndexBuffer);
         gGLFT->glDrawElements(mPrimType, mPrimNum, MGL_UNSIGNED_INT, 0);
@@ -90,6 +97,7 @@ BufferObject::render(bool normalFlipped) const
     // disable client-side capabilities
     if (usesColorBuffer) gGLFT->glDisableClientState(MGL_COLOR_ARRAY);
     if (usesNormalBuffer) gGLFT->glDisableClientState(MGL_NORMAL_ARRAY);
+    if (usesUVBuffer) gGLFT->glDisableClientState(MGL_TEXTURE_COORD_ARRAY);
 
     // release vbo's
     gGLFT->glBindBufferARB(MGL_ARRAY_BUFFER_ARB, 0);
@@ -168,6 +176,23 @@ BufferObject::genNormalBuffer(const Span<const V3f>& normals, bool flipped)
 
 }
 
+void BufferObject::genUVBuffer(const Span<const V2f>& uvs)
+{
+    if(gGLFT == NULL)
+        return;
+
+    if (gGLFT->glIsBufferARB(mUVBuffer) == MGL_TRUE) gGLFT->glDeleteBuffersARB(1, &mUVBuffer);
+
+    gGLFT->glGenBuffersARB(1, &mUVBuffer);
+    gGLFT->glBindBufferARB(MGL_ARRAY_BUFFER_ARB, mUVBuffer);
+    if (gGLFT->glIsBufferARB(mUVBuffer) == MGL_FALSE) throw "Error: Unable to create UV buffer";
+
+    gGLFT->glBufferDataARB(MGL_ARRAY_BUFFER_ARB, sizeof(MGLfloat) * 2 * uvs.size, uvs.start, MGL_STATIC_DRAW_ARB);
+    if (MGL_NO_ERROR != gGLFT->glGetError()) throw "Error: Unable to upload UV buffer data";
+
+    gGLFT->glBindBufferARB(MGL_ARRAY_BUFFER_ARB, 0);
+}
+
 void
 BufferObject::genColorBuffer(const std::vector<MGLfloat>& v)
 {
@@ -195,6 +220,7 @@ BufferObject::clear()
         if (gGLFT->glIsBufferARB(mVertexBuffer) == MGL_TRUE) gGLFT->glDeleteBuffersARB(1, &mVertexBuffer);
         if (gGLFT->glIsBufferARB(mColorBuffer) == MGL_TRUE) gGLFT->glDeleteBuffersARB(1, &mColorBuffer);
         if (gGLFT->glIsBufferARB(mNormalBuffer) == MGL_TRUE) gGLFT->glDeleteBuffersARB(1, &mNormalBuffer);
+        if (gGLFT->glIsBufferARB(mUVBuffer) == MGL_TRUE) gGLFT->glDeleteBuffersARB(1, &mUVBuffer);
     }
     mPrimType = MGL_POINTS;
     mPrimNum = 0;
