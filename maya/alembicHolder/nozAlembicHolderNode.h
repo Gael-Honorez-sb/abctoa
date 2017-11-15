@@ -168,9 +168,6 @@ public:
     static  MTypeId     id;
 };
 
-private:
-    static MSelectionMask s_selection_mask;
-};
 
 struct VP1DrawableItem {
     BufferObject buffer;
