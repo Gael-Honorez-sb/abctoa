@@ -1,5 +1,5 @@
 /*Alembic Holder
-Copyright (c) 2014, Ga�l Honorez, All rights reserved.
+Copyright (c) 2014, Gaël Honorez, All rights reserved.
 This library is free software; you can redistribute it and/or
 modify it under the terms of the GNU Lesser General Public
 License as published by the Free Software Foundation; either
@@ -12,15 +12,10 @@ You should have received a copy of the GNU Lesser General Public
 License along with this library.*/
 
 
-#include <maya/MCommandResult.h>
-
 #include "nozAlembicHolderNode.h"
 #include "parseJsonShaders.h"
+#include "../../common/PathUtil.h"
 
-#include "gpuCacheConfig.h"
-#include "gpuCacheDrawTraversal.h"
-#include "gpuCacheFrustum.h"
-#include "gpuCacheGLFT.h"
 #include "gpuCacheGLPickingSelect.h"
 #include "gpuCacheRasterSelect.h"
 
@@ -39,7 +34,6 @@ License along with this library.*/
 #include <maya/MViewport2Renderer.h>
 #include <maya/MHWGeometryUtilities.h>
 #include <maya/MFnMessageAttribute.h>
-#include <maya/MFnEnumAttribute.h>
 #include <maya/MFileObject.h>
 #include <maya/MSelectionList.h>
 #include <maya/MRenderView.h>
@@ -47,9 +41,6 @@ License along with this library.*/
 #include <maya/MHWGeometryUtilities.h>
 #include <maya/MFileObject.h>
 #include <maya/MObjectArray.h>
-#include <maya/MStringResource.h>
-#include <maya/MStringResourceId.h>
-#include <maya/MEventMessage.h>
 
 #include <stdio.h>
 #include <map>
@@ -66,6 +57,7 @@ License along with this library.*/
 
 #include <stdio.h>
 #include <map>
+#include <unordered_map>
 
 #define LEAD_COLOR                18    // green
 #define ACTIVE_COLOR            15    // white
@@ -74,11 +66,12 @@ License along with this library.*/
 #define HILITE_COLOR            17    // pale blue
 //#include "timer.h"
 
+namespace AlembicHolder {
+
+//
+static MGLFunctionTable *gGLFT = NULL;
+
 //#include "boost/foreach.hpp"
-
-typedef std::map<std::string, GLuint> NodeCache;
-
-NodeCache g_bboxCache;
 
 
 // The id is a 32bit value used to identify this type of node in the binary file format.
@@ -117,76 +110,15 @@ MObject nozAlembicHolder::aUpdateCache;
 MObject nozAlembicHolder::aBoundMin;
 MObject nozAlembicHolder::aBoundMax;
 
-MObject nozAlembicHolder::aTextureResolution;
-
-AlembicHolder::SceneState CAlembicDatas::abcSceneState;
-AlembicHolder::SceneManager CAlembicDatas::abcSceneManager;
-
-CAlembicDatas::CAlembicDatas() {
-
-    bbox = MBoundingBox(MPoint(-1.0f, -1.0f, -1.0f), MPoint(1.0f, 1.0f, 1.0f));
-    token = 0;
-    m_bbextendedmode = false;
-    m_currscenekey = "";
-	m_currselectionkey = "";
-    m_abcdirty = false;
-	m_params = new holderPrms();
-	m_params->linkAttributes = false;
-}
-
-void nodePreRemovalCallback(MObject& obj, void* data) 
-{
-    std::string sceneKey = ((nozAlembicHolder*)data)->getSceneKey();
-    CAlembicDatas *aData = ((nozAlembicHolder*)data)->alembicData();
-
-    CAlembicDatas::abcSceneManager.removeScene(sceneKey);
-    if (CAlembicDatas::abcSceneManager.hasKey(sceneKey) == 0)
-    {
-        NodeCache::iterator J = g_bboxCache.find(sceneKey);
-        if (J != g_bboxCache.end())
-        {
-            glDeleteLists((*J).second, 1);
-            g_bboxCache.erase(J);
-        }
-    }
-}
-
 nozAlembicHolder::nozAlembicHolder()
-    : fCacheVersion(0)
-    , fAssignmentVersion(0)
 {
+    if (gGLFT == NULL)
+        gGLFT = MHardwareRenderer::theRenderer()->glFunctionTable();
 }
 
 nozAlembicHolder::~nozAlembicHolder()
 {
 }
-
-void nozAlembicHolder::setHolderTime() {
-
-    CAlembicDatas* geom = alembicData();
-
-    if(geom != NULL)
-    {
-        MFnDagNode fn(thisMObject());
-        MTime time, timeOffset;
-
-        MPlug plug = fn.findPlug(aTime);
-        plug.getValue(time);
-        plug = fn.findPlug(aTimeOffset);
-        plug.getValue(timeOffset);
-
-        double dtime;
-
-        dtime = time.as(MTime::kSeconds) + timeOffset.as(MTime::kSeconds);
-		
-		geom->time = dtime;
-
-        std::string sceneKey = getSceneKey();
-        if (geom->abcSceneManager.hasKey(sceneKey))
-            geom->abcSceneManager.getScene(sceneKey)->setTime(dtime );
-    }
-}
-
 
 bool nozAlembicHolder::isBounded() const
 {
@@ -197,13 +129,11 @@ bool nozAlembicHolder::isBounded() const
 
 MBoundingBox nozAlembicHolder::boundingBox() const
 {
-	const CAlembicDatas* geom = alembicData();
-    MBoundingBox bbox = MBoundingBox(MPoint(-1.0f, -1.0f, -1.0f), MPoint(1.0f, 1.0f, 1.0f));
-
-    if(geom != NULL)
-        bbox = geom->bbox;
-
-    return bbox;
+    updateCache();
+    if (m_scene)
+        return mayaFromImath(m_sample.hierarchy_stat.bbox);
+    else
+        return mayaFromImath(Box3d({-0.5, -0.5, -0.5}, {0.5, 0.5, 0.5}));
 }
 
 void* nozAlembicHolder::creator()
@@ -215,14 +145,9 @@ void nozAlembicHolder::postConstructor()
 {
     // This call allows the shape to have shading groups assigned
     setRenderable(true);
-    isConstant = false;
-    // callbacks
-    MObject node = thisMObject();
-    MNodeMessage::addNodePreRemovalCallback(node, nodePreRemovalCallback, this);
 }
 
-void nozAlembicHolder::copyInternalData(MPxNode* srcNode) 
-{
+void nozAlembicHolder::copyInternalData(MPxNode* srcNode) {
 }
 
 MStatus nozAlembicHolder::initialize() {
@@ -413,17 +338,6 @@ MStatus nozAlembicHolder::initialize() {
     nAttr.setWritable( false );
     nAttr.setStorable( false );
 
-    MFnEnumAttribute enumAttrFn;
-    aTextureResolution = enumAttrFn.create("textureResolution", "txr", 0, &stat);
-    CHECK_MSTATUS(enumAttrFn.addField("Original", 0));
-    CHECK_MSTATUS(enumAttrFn.addField("128", 128));
-    CHECK_MSTATUS(enumAttrFn.addField("256", 256));
-    CHECK_MSTATUS(enumAttrFn.addField("512", 512));
-    CHECK_MSTATUS(enumAttrFn.addField("1024", 1024));
-    CHECK_MSTATUS(enumAttrFn.addField("2048", 2048));
-    enumAttrFn.setInternal(true);
-    addAttribute(aTextureResolution);
-
     // Add the attributes we have created to the node
     //
     addAttribute(aAbcFiles);
@@ -456,6 +370,7 @@ MStatus nozAlembicHolder::initialize() {
     addAttribute(aBoundMin);
     addAttribute(aBoundMax);
 
+    // Update cache
     attributeAffects(aAbcFiles, aUpdateCache);
     attributeAffects(aTime, aUpdateCache);
     attributeAffects(aTimeOffset, aUpdateCache);
@@ -472,77 +387,110 @@ MStatus nozAlembicHolder::initialize() {
 	return MS::kSuccess;
 }
 
-MStatus nozAlembicHolder::setDependentsDirty(const MPlug& plug, MPlugArray& plugArray)
+MSelectionMask nozAlembicHolder::s_selection_mask("alembicHolder");
+
+MSelectionMask nozAlembicHolder::getShapeSelectionMask() const
 {
+    return s_selection_mask;
+}
 
-    if (plug != aForceReload && plug != aBoundingExtended && plug != aObjectPath
-        && plug != aSelectionPath && plug != aTime && plug != aTimeOffset && plug != aUpdateCache)
-        return MPxNode::setDependentsDirty(plug, plugArray);
+const nozAlembicHolder::SceneSample& nozAlembicHolder::getSample() const
+{
+    updateCache();
+    return m_sample;
+}
 
+const AlembicScenePtr& nozAlembicHolder::getScene() const
+{
+    updateCache();
+    return m_scene;
+}
 
-    if ((plug == aTime || plug == aTimeOffset) && isConstant)
-        return MPxNode::setDependentsDirty(plug, plugArray);
-
-    if (plug == aUpdateCache)
-    {
-        MObjectArray objArray;
-        objArray.append(aBoundMin);
-        objArray.append(aBoundMax);
-        for (unsigned i(0), numObjects = objArray.length(); i < numObjects; i++)
-        {
-            MPlug plug(thisMObject(), objArray[i]);
-            plugArray.append(plug);
-        }
-    }
-    else
-    {
-        MPlug plug(thisMObject(), aUpdateCache);
-        plugArray.append(plug);
-    }
-    return MPxNode::setDependentsDirty(plug, plugArray);
+const AlembicSceneKey& nozAlembicHolder::getSceneKey() const
+{
+    updateCache();
+    return m_scene_key;
 }
 
 std::string nozAlembicHolder::getSelectionKey() const {
-    MFnDagNode fn(thisMObject());
-    MString selectionPath;
-    MPlug plug = fn.findPlug(aSelectionPath);
-    plug.getValue(selectionPath);
-    return std::string(selectionPath.asChar());
+    return std::string(MPlug(thisMObject(), aSelectionPath).asString().asChar());
 }
 
-std::string nozAlembicHolder::getSceneKey() const {
-    MFnDagNode fn(thisMObject());
+chrono_t nozAlembicHolder::getTime() const
+{
+    auto time = MPlug(thisMObject(), aTime).asMTime() + MPlug(thisMObject(), aTimeOffset).asMTime();
+    return time.as(MTime::kSeconds);
+}
 
-    MPlug plug = fn.findPlug(aAbcFiles);
-    std::string key;
-    for (unsigned int i = 0; i <plug.numElements(); i++)
+bool nozAlembicHolder::isBBExtendedMode() const
+{
+    return MPlug(thisMObject(), aBoundingExtended).asBool();
+}
+
+const DiffuseColorOverrideMap& nozAlembicHolder::getDiffuseColorOverrides() const
+{
+    updateCache();
+    return m_diffuse_color_overrides;
+}
+
+std::string nozAlembicHolder::getShaderAssignmentsJson() const
+{
+    return MPlug(thisMObject(), aShadersAssignation).asString().asChar();
+}
+
+void nozAlembicHolder::updateDiffuseColorOverrides()
+{
+    if (!m_scene)
+        return;
+
+    m_diffuse_color_overrides.clear();
+
+    Json::Value jroot;
+    Json::Reader reader;
+    if (!reader.parse(m_shader_assignments, jroot, false))
+        return;
+
+    std::map<std::string, MColor> shaderColors;
+    std::map<std::string, std::string> shaderTextures;
+    ParseShaders(jroot, shaderColors, shaderTextures);
+
+    for (const auto& drawable : m_scene->nodeCategories().drawables())
     {
-        MPlug fileName = plug[i];
-        MString filename;
-        fileName.getValue(filename);
-        MFileObject fileObject;
-        fileObject.setRawFullName(filename.expandFilePath());
-        fileObject.setResolveMethod(MFileObject::kInputFile);
-        std::string abcFile = fileObject.resolvedFullName().asChar();
-        key += abcFile + "|";
+        const auto fullName = drawable.node_ref.source_object.getFullName();
+
+        for (auto it = shaderColors.begin(); it != shaderColors.end(); ++it)
+        {
+            //check both path & tag
+            const bool matches_exactly = it->first.find("/") != std::string::npos &&
+                fullName.find(it->first) != std::string::npos;
+            const bool matches_wildcard = matchPattern(fullName, it->first);
+            if (matches_exactly || matches_wildcard)
+            {
+                const auto& color = it->second;
+                auto& entry = m_diffuse_color_overrides[drawable.drawable_id];
+                entry.diffuse_color = C3f(color.r, color.g, color.b);
+            }
+        }
+
+        for (auto it = shaderTextures.begin(); it != shaderTextures.end(); ++it)
+        {
+            //check both path & tag
+            const bool matches_exactly = it->first.find("/") != std::string::npos &&
+                fullName.find(it->first) != std::string::npos;
+            const bool matches_wildcard = matchPattern(fullName, it->first);
+            if (matches_exactly || matches_wildcard)
+            {
+                const auto& texture = it->second;
+                auto& entry = m_diffuse_color_overrides[drawable.drawable_id];
+                entry.diffuse_texture_path = texture;
+            }
+        }
     }
-
-    MString objectPath;
-    plug = fn.findPlug(aObjectPath);
-    plug.getValue(objectPath);
-
-    key += std::string(objectPath.asChar());
-
-    return key;
 }
 MStatus nozAlembicHolder::compute(const MPlug& plug, MDataBlock& block)
 {
 	if (plug == aUpdateAssign)
 	{
-        // Increment the value of aUpdateAssign which acts as a version number.
-        fAssignmentVersion += 1;
-        block.outputValue(aUpdateAssign).setInt(fAssignmentVersion);
-
 		MStatus status;
         MFnDagNode fn(thisMObject());
 
@@ -558,7 +506,7 @@ MStatus nozAlembicHolder::compute(const MPlug& plug, MDataBlock& block)
 			MFnRenderLayer currentRenderLayer(currentRenderLayerObj, &status);
 			if (status)
 				layerName = currentRenderLayer.name().asChar();
-		}		
+		}
         if(layerName != std::string("defaultRenderLayer"))
             customLayer = true;
 
@@ -670,14 +618,14 @@ MStatus nozAlembicHolder::compute(const MPlug& plug, MDataBlock& block)
 					OverrideProperties(jrootattributes, jrootLayers[layerName]["properties"]);
 			}
 		}
-		
-		fGeometry.m_params->attributes.clear();
+
+		m_params.attributes.clear();
 
 		if( jrootattributes.size() > 0 )
 		{
 			bool addtoPath = false;
-			fGeometry.m_params->linkAttributes = true;
-			fGeometry.m_params->attributesRoot = jrootattributes;
+			m_params.linkAttributes = true;
+			m_params.attributesRoot = jrootattributes;
 			for( Json::ValueIterator itr = jrootattributes.begin() ; itr != jrootattributes.end() ; itr++ )
 			{
 				addtoPath = false;
@@ -695,55 +643,31 @@ MStatus nozAlembicHolder::compute(const MPlug& plug, MDataBlock& block)
 					}
 				}
 				if(addtoPath)
-					fGeometry.m_params->attributes.push_back(path);
+					m_params.attributes.push_back(path);
 
 			}
-			
-			std::sort(fGeometry.m_params->attributes.begin(), fGeometry.m_params->attributes.end());
-			
+
+			std::sort(m_params.attributes.begin(), m_params.attributes.end());
+
 		}
 		else
 		{
-			fGeometry.m_params->linkAttributes = false;
+			m_params.linkAttributes = false;
 		}
 
-		fGeometry.m_abcdirty = true;
 		block.outputValue(aForceReload).setBool(false);
 
 	}
-
-	else if (plug == aUpdateCache)
+    else if (plug == aUpdateCache)
     {
-        // Increment the value of aUpdateCache which acts as a version number.
-        fCacheVersion += 1;
-        block.outputValue(aUpdateCache).setInt(fCacheVersion);
-
         MStatus status;
         MFnDagNode fn(thisMObject());
 
-        // Try to parse JSON Shader assignation here.
-        MPlug shaderAssignation = fn.findPlug("shadersAssignation", &status);
-
-        if(status == MS::kSuccess)
-        {
-            bool parsingSuccessful = false;
-            MString jsonAssign = block.inputValue(shaderAssignation).asString();
-            if(jsonAssign != "")
-            {
-                Json::Value jroot;
-                Json::Reader reader;
-                parsingSuccessful = reader.parse( jsonAssign.asChar(), jroot, false );
-                if(parsingSuccessful)
-                    ParseShaders(jroot, fGeometry.m_params->shaderColors);
-            }
-        }
-
-        unsigned count = block.inputArrayValue(aAbcFiles).elementCount();;
-
         MArrayDataHandle fileArrayHandle = block.inputArrayValue(aAbcFiles);
+        unsigned count = fileArrayHandle.elementCount();
 
-        std::string key;
         std::vector <std::string> files;
+        std::string key;
         for (unsigned i = 0; i < count; i++)
         {
             fileArrayHandle.jumpToArrayElement(i);
@@ -754,76 +678,46 @@ MStatus nozAlembicHolder::compute(const MPlug& plug, MDataBlock& block)
             fileObject.setResolveMethod(MFileObject::kInputFile);
             std::string nameResolved = std::string(fileObject.resolvedFullName().asChar());
             files.push_back(nameResolved);
-            key += nameResolved + "|";
         }
 
         MString objectPath = block.inputValue(aObjectPath).asString();
         MString selectionPath = block.inputValue(aSelectionPath).asString();
 
-		fGeometry.m_currselectionkey = selectionPath.asChar();
-
-        MTime time = block.inputValue(aTime).asTime() + block.inputValue(aTimeOffset).asTime();
-
-        fGeometry.m_bbextendedmode = block.inputValue(aBoundingExtended).asBool();
-
-        bool hasToReload = false;
-
-        if (fGeometry.time != time.value())
-        {
-            fGeometry.m_abcdirty = true;
-			fGeometry.time = time.value();
-            hasToReload = true;
+        // Update scene and scene key.
+        const auto scene_key_changed = updateValue(m_scene_key, AlembicSceneKey(FileRef(files), objectPath.asChar()));
+        if (!m_scene || scene_key_changed) {
+            // First clear the drawable samples so the handles to the cache
+            // buffers are deleted. The handles must not survive the caches.
+            m_sample.drawable_samples.clear();
+            m_scene = AlembicSceneCache::instance().getScene(m_scene_key);
         }
 
-        key += objectPath.asChar();
+        if (m_scene) {
+            // Update sample.
+            const auto time_changed = updateValue(m_sample.time, getTime());
+            if (m_sample.drawable_samples.empty() || time_changed) {
+                m_scene->sampleHierarchy(m_sample.time, m_sample.drawable_samples, m_sample.hierarchy_stat);
+            }
 
-        if (fGeometry.m_currscenekey == key && CAlembicDatas::abcSceneManager.hasKey(key) == false)
-            CAlembicDatas::abcSceneManager.addScene(files, objectPath.asChar());
+            // Update selection visibility.
+            if (scene_key_changed) {
+                m_sample.selection_visibility.assign(m_scene->nodeCategories().drawableCount(), true);
+            }
 
-        if (fGeometry.m_currscenekey != key || hasToReload)
-        {
-            if (fGeometry.m_currscenekey != key)
-            {
-                CAlembicDatas::abcSceneManager.removeScene(fGeometry.m_currscenekey);
-                if(CAlembicDatas::abcSceneManager.hasKey(fGeometry.m_currscenekey) == 0)
-                {
-                    NodeCache::iterator J = g_bboxCache.find(fGeometry.m_currscenekey);
-                    if (J != g_bboxCache.end())
-                    {
-                        glDeleteLists((*J).second, 1);
-                        g_bboxCache.erase(J);
-                    }
-
+            const auto selection_key_changed = updateValue(m_selection_key, getSelectionKey());
+            if (scene_key_changed || selection_key_changed) {
+                for (auto& sample : m_sample.drawable_samples) {
+                    const auto visible = m_selection_key.empty() ||
+                        pathInJsonString(m_scene->getDrawableName(sample.drawable_id), m_selection_key);
+                    m_sample.selection_visibility[sample.drawable_id] = visible;
                 }
-
-
-                fGeometry.m_currscenekey = "";
-                CAlembicDatas::abcSceneManager.addScene(files, objectPath.asChar());
-                fGeometry.m_currscenekey = key;
             }
+        }
 
-            if (CAlembicDatas::abcSceneManager.hasKey(key))
-            {
-                fGeometry.bbox = MBoundingBox();
-                AlembicHolder::Box3d bb;
-                setHolderTime();
-                bb = CAlembicDatas::abcSceneManager.getScene(key)->getBounds();
-                fGeometry.bbox.expand(MPoint(bb.min.x, bb.min.y, bb.min.z));
-                fGeometry.bbox.expand(MPoint(bb.max.x, bb.max.y, bb.max.z));
-
-
-				block.outputValue(aBoundMin).set3Float(float(bb.min.x), float(bb.min.y), float(bb.min.z));
-				block.outputValue(aBoundMax).set3Float(float(bb.max.x), float(bb.max.y), float(bb.max.z));
-
-
-                // notify viewport 2.0 that we are dirty
-                MHWRender::MRenderer::setGeometryDrawDirty(thisMObject());
-
-            }
-            fGeometry.m_abcdirty = true;
-            if(CAlembicDatas::abcSceneManager.hasKey(fGeometry.m_currscenekey))
-                isConstant = CAlembicDatas::abcSceneManager.getScene(fGeometry.m_currscenekey)->isConstant();
-
+        // Try to parse JSON Shader assignation here.
+        const bool shader_assignments_changed = updateValue(m_shader_assignments, getShaderAssignmentsJson());
+        if (scene_key_changed || shader_assignments_changed) {
+            updateDiffuseColorOverrides();
         }
 
         block.outputValue(aForceReload).setBool(false);
@@ -838,1056 +732,580 @@ MStatus nozAlembicHolder::compute(const MPlug& plug, MDataBlock& block)
 
 }
 
-bool nozAlembicHolder::getInternalValueInContext(const MPlug & plug, MDataHandle & dataHandle, MDGContext & ctx)
-{
-    if (plug == aTextureResolution) {
-        dataHandle.setShort(textRes);
-        return true;
-    }
-
-    return MPxNode::getInternalValueInContext(plug, dataHandle, ctx);
-}
-
-bool nozAlembicHolder::setInternalValueInContext(const MPlug & plug, const MDataHandle & dataHandle, MDGContext & ctx)
-{
-    if (plug == aTextureResolution) {
-        short newRes = dataHandle.asShort();
-        if (newRes != textRes){
-            textRes = newRes;
-
-            for (std::set<MString, MStringComp>::iterator it = ownTextures.begin(); it != ownTextures.end(); ++it)
-            {
-                textureMap.erase((*it));
-            }
-            ownTextures.clear();
-        }
-        return true;
-    }
-
-    return MPxNode::setInternalValueInContext(plug, dataHandle, ctx);
-}
-
-CAlembicDatas* nozAlembicHolder::alembicData()
-{
-    if (MRenderView::doesRenderEditorExist())
-    {
-        return &fGeometry;
-    }
-    return NULL;
-}
-
-AlembicHolder::DrawablePtr nozAlembicHolder::getGeometry() const
-{
-    auto cache = alembicData();
-    if (!cache)
-        return nullptr;
-
-    const auto& key = cache->m_currscenekey;
-    if (!cache->abcSceneManager.hasKey(key))
-        return nullptr;
-
-    const auto& scene = CAlembicDatas::abcSceneManager.getScene(key);
-    if (!scene)
-        return nullptr;
-
-    return scene->getDrawable();
-}
-
-AlembicHolder::MaterialGraphMap::Ptr nozAlembicHolder::getMaterial() const
-{
-    const CAlembicDatas* cache = alembicData();
-    if (!cache)
-        return nullptr;
-
-    const auto& key = cache->m_currscenekey;
-    if (!CAlembicDatas::abcSceneManager.hasKey(key))
-        return nullptr;
-
-    const auto& scene = CAlembicDatas::abcSceneManager.getScene(key);
-    if (!scene)
-        return nullptr;
-
-    return scene->getMaterials();
-}
-
-
 // UI IMPLEMENTATION
 
-using namespace AlembicHolder;
+CAlembicHolderUI::~CAlembicHolderUI() {
+}
 
-//==========================================================================
-// CLASS NbPrimitivesVisitor
-//==========================================================================
+void* CAlembicHolderUI::creator() {
+    return new CAlembicHolderUI();
+}
 
-class NbPrimitivesVisitor : public ::AlembicHolder::DrawableVisitor
+CAlembicHolderUI::CAlembicHolderUI() {
+}
+
+void CAlembicHolderUI::updateVP1Drawables(const nozAlembicHolder::SceneSample& scene_sample, const DiffuseColorOverrideMap& color_overrides, const StaticMaterialVector& static_materials)
 {
-public:
+    m_vp1drawables.drawables.clear();
+    for (const auto& drawable : scene_sample.drawable_samples) {
+        const bool is_visible = drawable.visible && scene_sample.selection_visibility[drawable.drawable_id];
+        if (!is_visible || !drawable.cache_handles.geometry.endpoints[0])
+            continue;
 
-    NbPrimitivesVisitor(double seconds)
-        : fSeconds(seconds),
-          fNumWires(0),
-          fNumTriangles(0)
-    {}
+        MGLenum primitive_type;
+        MGLsizei element_count;
+        if (drawable.type == GeometryType::TRIANGLES) {
+            primitive_type = MGL_TRIANGLES;
+            element_count = drawable.cache_handles.indices
+                ? MGLsizei(drawable.cache_handles.indices->triangle_buffer.size())
+                : MGLsizei(drawable.cache_handles.geometry.endpoints[0]->positions.size());
 
-    size_t numWires()       { return fNumWires; }
-    size_t numTriangles()   { return fNumTriangles; }
+        } else if (drawable.type == GeometryType::LINES) {
+            primitive_type = MGL_LINES;
+            element_count = drawable.cache_handles.indices
+                ? MGLsizei(drawable.cache_handles.indices->wireframe_buffer.size())
+                : MGLsizei(drawable.cache_handles.geometry.endpoints[0]->positions.size());
 
-    virtual void visit(const IXformDrw&   xform)
-    {
-        // Recurse into children sub nodes. Expand all instances.
-        BOOST_FOREACH(const auto& child, xform.getChildren() ) {
-            child->accept(*this);
+        } else if (drawable.type == GeometryType::POINTS) {
+            primitive_type = MGL_POINTS;
+            element_count = MGLsizei(drawable.cache_handles.geometry.endpoints[0]->positions.size());
+
+        } else {
+            continue;
         }
-    }
 
-    virtual void visit(const IPolyMeshDrw&   shape)
-    {
-        const std::shared_ptr<const ShapeSample>& sample =
-            shape.getSample(fSeconds);
-        if (!sample) return;
+        m_vp1drawables.drawables.push_back({primitive_type, element_count});
+        auto& item = m_vp1drawables.drawables.back();
+        item.world_matrix = drawable.world_matrix;
+        item.drawable_id = drawable.drawable_id;
+        const auto& static_material = static_materials[drawable.drawable_id];
+        item.diffuse_color = static_material.diffuse_color;
 
-        fNumWires       += sample->numWires();
-        fNumTriangles   += sample->numTriangles();
-    }
+        if (drawable.cache_handles.indices) {
+            if (drawable.type == GeometryType::TRIANGLES) {
+                item.buffer.genIndexBuffer(Span<const uint32_t>(drawable.cache_handles.indices->triangle_buffer));
+            } else if (drawable.type == GeometryType::LINES) {
+                item.buffer.genIndexBuffer(Span<const uint32_t>(drawable.cache_handles.indices->wireframe_buffer));
+            }
+        }
 
-private:
+        const auto& geo = drawable.cache_handles.geometry;
+        std::vector<V3f> staging(geo.endpoints[0]->positions.size());
+        const auto staging_span = Span<V3f>(staging);
 
-    const double    fSeconds;
-    size_t          fNumWires;
-    size_t          fNumTriangles;
-};
+        // Generate straight and flipped normal buffers.
+        // Should work if normals and staging alias the same memory range
+        // (and exactly the same, no partial overlap).
+        const auto genNormals = [&item, &staging_span](const Span<const V3f>& normals) {
+            item.buffer.genNormalBuffer(normals, false);
+            for (size_t i = 0; i < normals.size; ++i) {
+                staging_span[i] = -normals[i];
+            }
+            item.buffer.genNormalBuffer(staging_span, true);
+        };
 
+        // Interpolate positions and normals if needed.
+        if (geo.endpoints[1] && geo.alpha != 0) {
+            auto& pos0 = geo.endpoints[0]->positions;
+            auto& pos1 = geo.endpoints[1]->positions;
+            assert(pos0.size() == pos1.size());
 
-//==========================================================================
-// CLASS SnapTraversal
-//==========================================================================
+            lerpSpans(geo.alpha,
+                Span<const V3f>(pos0),
+                Span<const V3f>(pos1),
+                staging_span);
+            item.buffer.genVertexBuffer(staging_span);
 
-class SnapTraversalState : public DrawTraversalState
-{
-public:
+            auto& normals0 = geo.endpoints[0]->normals;
+            auto& normals1 = geo.endpoints[1]->normals;
+            assert(normals0.size() == normals1.size());
+            assert(normals0.size() == pos0.size());
 
-    SnapTraversalState(const Frustum&  frustrum,
-        const double    seconds,
-        const MMatrix&  localToPort,
-        const MMatrix&  inclusiveMatrix,
-        MSelectInfo&    snapInfo)
-        : DrawTraversalState(frustrum, seconds, kPruneNone),
-        fLocalToPort(localToPort),
-        fInclusiveMatrix(inclusiveMatrix),
-        fSnapInfo(snapInfo),
-        fSelected(false)
-    {}
+            if (!normals0.empty()) {
+                lerpSpans(geo.alpha,
+                    Span<const V3f>(normals0),
+                    Span<const V3f>(normals1),
+                    staging_span);
+                genNormals(staging_span);
+            }
+        } else {
+            item.buffer.genVertexBuffer(Span<const V3f>(geo.endpoints[0]->positions));
+            if (!geo.endpoints[0]->normals.empty())
+                item.buffer.genNormalBuffer(Span<const V3f>(geo.endpoints[0]->normals));
+        }
 
-    const MMatrix& localToPort() const { return fLocalToPort; }
-    const MMatrix& inclusiveMatrix() const { return fInclusiveMatrix; }
-    MSelectInfo& snapInfo() { return fSnapInfo; }
-
-    bool selected() const { return fSelected; }
-    void setSelected() { fSelected = true; }
-
-private:
-    const MMatrix   fLocalToPort;
-    const MMatrix   fInclusiveMatrix;
-    MSelectInfo&    fSnapInfo;
-    bool            fSelected;
-};
-
-
-class SnapTraversal
-    : public DrawTraversal<SnapTraversal, SnapTraversalState>
-{
-public:
-
-    typedef DrawTraversal<SnapTraversal, SnapTraversalState> BaseClass;
-
-    SnapTraversal(
-        SnapTraversalState&     state,
-        const MMatrix&          xform,
-        bool                    isReflection,
-        Frustum::ClippingResult parentClippingResult)
-        : BaseClass(state, xform, false, parentClippingResult)
-    {}
-
-    void draw(const std::shared_ptr<const ShapeSample>& sample)
-    {
-        if (!sample->visibility()) return;
-        if (sample->isBoundingBoxPlaceHolder()) return;
-
-        assert(sample->positions());
-        VertexBuffer::ReadInterfacePtr readable = sample->positions()->readableInterface();
-        const float* const positions = readable->get();
-
-        unsigned int srx, sry, srw, srh;
-        state().snapInfo().selectRect(srx, sry, srw, srh);
-        double srxl = srx;
-        double sryl = sry;
-        double srxh = srx + srw;
-        double sryh = sry + srh;
-
-        const MMatrix localToPort = xform() * state().localToPort();
-        const MMatrix inclusiveMatrix = xform() * state().inclusiveMatrix();
-
-        // Loop through all vertices of the mesh.
-        // See if they lie withing the view frustum,
-        // then send them to snapping check.
-        size_t numVertices = sample->numVerts();
-        for (size_t vertexIndex = 0; vertexIndex<numVertices; vertexIndex++)
-        {
-            const float* const currentPoint = &positions[vertexIndex * 3];
-
-            // Find the closest snapping point using the CPU. This is
-            // faster than trying to use OpenGL picking.
-            MPoint loPt(currentPoint[0], currentPoint[1], currentPoint[2]);
-            MPoint pt = loPt * localToPort;
-            pt.rationalize();
-
-            if (pt.x >= srxl && pt.x <= srxh &&
-                pt.y >= sryl && pt.y <= sryh &&
-                pt.z >= 0.0  && pt.z <= 1.0) {
-                MPoint wsPt = loPt * inclusiveMatrix;
-                wsPt.rationalize();
-                state().snapInfo().setSnapPoint(wsPt);
-                state().setSelected();
+        if (drawable.cache_handles.texcoords.endpoints[0] && !drawable.cache_handles.texcoords.endpoints[0]->uvs.empty()) {
+            // Interpolate uvs if needed.
+            if (drawable.cache_handles.texcoords.endpoints[1] && drawable.cache_handles.texcoords.alpha != 0) {
+                std::vector<V2f> texcoords(drawable.cache_handles.texcoords.endpoints[0]->uvs.size());
+                auto texcoords_span = Span<V2f>(texcoords);
+                lerpSpans(drawable.cache_handles.texcoords.alpha,
+                    Span<const V2f>(drawable.cache_handles.texcoords.endpoints[0]->uvs),
+                    Span<const V2f>(drawable.cache_handles.texcoords.endpoints[1]->uvs),
+                    texcoords_span);
+                item.buffer.genUVBuffer(texcoords_span);
+            } else {
+                item.buffer.genUVBuffer(Span<const V2f>(drawable.cache_handles.texcoords.endpoints[0]->uvs));
             }
         }
     }
-};
 
-
-//==============================================================================
-// CLASS ShapeUI
-//==============================================================================
-
-#define kPluginId "alembicHolder"
-#define kEvaluateMaterialErrorMsg MStringResourceId(kPluginId, "kEvaluateMaterialErrorMsg",\
-                "Couldn't evaluate material\n")
-
-
-void* CAlembicHolderUI::creator()
-{
-    return new CAlembicHolderUI;
-}
-
-CAlembicHolderUI::CAlembicHolderUI()
-{
-}
-
-CAlembicHolderUI::~CAlembicHolderUI()
-{
+    if (M3dView::active3dView().textureMode()) {
+        m_vp1drawables.textures.resize(m_vp1drawables.drawables.size());
+        for (size_t i = 0; i < m_vp1drawables.drawables.size(); ++i) {
+            const auto& drawable = m_vp1drawables.drawables[i];
+            const auto& static_material = static_materials[drawable.drawable_id];
+            const auto override_it = color_overrides.find(drawable.drawable_id);
+            std::string texture_path = static_material.diffuse_texture_path;
+            if (override_it != color_overrides.end())
+                texture_path = override_it->second.diffuse_texture_path;
+            const auto texture_path_updated = updateValue(m_vp1drawables.textures[i].first, texture_path);
+            if (texture_path_updated)
+                m_vp1drawables.textures[i].second = loadVP1Texture(texture_path);
+        }
+    }
 }
 
 void CAlembicHolderUI::getDrawRequests(const MDrawInfo & info,
-    bool objectAndActiveOnly,
-    MDrawRequestQueue & queue)
-{
-    // Get the data necessary to draw the shape
-    MDrawData data;
-    getDrawData(0, data);
+        bool /*objectAndActiveOnly*/, MDrawRequestQueue & queue) {
 
-    // Decode the draw info and determine what needs to be drawn
-    M3dView::DisplayStyle  appearance = info.displayStyle();
-    M3dView::DisplayStatus displayStatus = info.displayStatus();
-
-    // Are we displaying gpuCache?
-    if (!info.pluginObjectDisplayStatus(Config::kDisplayFilter)) {
+    if(MGlobal::mayaState() != MGlobal::kInteractive)
         return;
+
+    MDrawData data;
+    MDrawRequest request = info.getPrototype(*this);
+    nozAlembicHolder* shapeNode = (nozAlembicHolder*) surfaceShape();
+    const auto& scene = shapeNode->getScene();
+    const auto& sample = shapeNode->getSample();
+
+    // Update GL buffers.
+    updateVP1Drawables(sample, shapeNode->getDiffuseColorOverrides(), scene ? scene->staticMaterials() : StaticMaterialVector());
+
+    getDrawData(&m_vp1drawables, data);
+    request.setDrawData(data);
+
+    // Are we displaying meshes?
+    if (!info.objectDisplayStatus(M3dView::kDisplayMeshes))
+        return;
+
+    // Use display status to determine what color to draw the object
+    //
+    switch (info.displayStyle()) {
+    case M3dView::kWireFrame:
+        getDrawRequestsWireFrame(request, info);
+        queue.add(request);
+        break;
+
+    case M3dView::kGouraudShaded: {
+        request.setToken(kDrawSmoothShaded);
+        getDrawRequestsShaded(request, info, queue, data);
+        queue.add(request);
+        break;
     }
 
-    MDagPath path = info.multiPath();
-
-    switch (appearance)
-    {
-    case M3dView::kBoundingBox:
-    {
-        MDrawRequest request = info.getPrototype(*this);
-        request.setDrawData(data);
-        request.setToken(kBoundingBox);
-
-        MColor wireframeColor = MHWRender::MGeometryUtilities::wireframeColor(path);
-        request.setColor(wireframeColor);
-
-        queue.add(request);
-    }break;
-
-    case M3dView::kWireFrame:
-    {
-        MDrawRequest request = info.getPrototype(*this);
-        request.setDrawData(data);
-        request.setToken(kDrawWireframe);
-
-        MColor wireframeColor = MHWRender::MGeometryUtilities::wireframeColor(path);
-        request.setColor(wireframeColor);
-
-        queue.add(request);
-    } break;
-
-
-    // All of these modes are interpreted as meaning smooth shaded
-    // just as it is done in the viewport 2.0.
     case M3dView::kFlatShaded:
-    case M3dView::kGouraudShaded:
-    default:
-    {
-        nozAlembicHolder* node = (nozAlembicHolder*)surfaceShape();
-        if (!node) break;
-        const auto& geom = node->getGeometry();
-        if (!geom) break;
-
-        // Get the view to draw to
-        M3dView view = info.view();
-
-        const bool needWireframe = ((displayStatus == M3dView::kActive) ||
-            (displayStatus == M3dView::kLead) ||
-            (displayStatus == M3dView::kHilite) ||
-            (view.wireframeOnShaded()));
-
-        // When we need to draw both the shaded geometry and the
-        // wireframe mesh, we need to offset the shaded geometry
-        // in depth to avoid Z-fighting against the wireframe
-        // mesh.
-        //
-        // On the hand, we don't want to use depth offset when
-        // drawing only the shaded geometry because it leads to
-        // some drawing artifacts. The reason is a litle bit
-        // subtle. At silouhette edges, both front-facing and
-        // back-facing faces are meeting. These faces can have a
-        // different slope in Z and this can lead to a different
-        // Z-offset being applied. When unlucky, the back-facing
-        // face can be drawn in front of the front-facing face. If
-        // two-sided lighting is enabled, the back-facing fragment
-        // can have a different resultant color. This can lead to
-        // a rim of either dark or bright pixels around silouhette
-        // edges.
-        //
-        // When the wireframe mesh is drawn on top (even a dotted
-        // one), it masks this effect sufficiently that it is no
-        // longer distracting for the user, so it is OK to use
-        // depth offset when the wireframe mesh is drawn on top.
-        const DrawToken shadedDrawToken = needWireframe ?
-            kDrawSmoothShadedDepthOffset : kDrawSmoothShaded;
-
-        // Get the default material.
-        //
-        // Note that we will only use the material if the viewport
-        // option "Use default material" has been selected. But,
-        // we still need to set a material (even an unevaluated
-        // one), so that the draw request is indentified as
-        // drawing geometry instead of drawing the wireframe mesh.
-        MMaterial material = MMaterial::defaultMaterial();
-
-        if (view.usingDefaultMaterial()) {
-            // Evaluate the material.
-            if (!material.evaluateMaterial(view, path)) {
-                MStatus stat;
-                MString msg = MStringResource::getString(kEvaluateMaterialErrorMsg, stat);
-                perror(msg.asChar());
-            }
-
-            // Create the smooth shaded draw request
-            MDrawRequest request = info.getPrototype(*this);
-            request.setDrawData(data);
-
-            // This draw request will draw all sub nodes using an
-            // opaque default material.
-            request.setToken(shadedDrawToken);
-            request.setIsTransparent(false);
-
-            request.setMaterial(material);
-            queue.add(request);
-        }
-        else if (view.xray()) {
-            // Create the smooth shaded draw request
-            MDrawRequest request = info.getPrototype(*this);
-            request.setDrawData(data);
-
-            // This draw request will draw all sub nodes using in X-Ray mode
-            request.setToken(shadedDrawToken);
-            request.setIsTransparent(true);
-
-            request.setMaterial(material);
-            queue.add(request);
-        }
-        else {
-            // Opaque draw request
-            //if (geom->transparentType() != SubNode::kTransparent)
-            {
-                // Create the smooth shaded draw request
-                MDrawRequest request = info.getPrototype(*this);
-                request.setDrawData(data);
-
-                // This draw request will draw opaque sub nodes
-                request.setToken(shadedDrawToken);
-
-                request.setMaterial(material);
-                queue.add(request);
-            }
-
-            // Transparent draw request
-            /*
-            if (geom->transparentType() != SubNode::kOpaque) {
-            // Create the smooth shaded draw request
-            MDrawRequest request = info.getPrototype( *this );
-            request.setDrawData( data );
-
-            // This draw request will draw transparent sub nodes
-            request.setToken( shadedDrawToken );
-            request.setIsTransparent( true );
-
-            request.setMaterial( material );
+        request.setToken(kDrawFlatShaded);
+        getDrawRequestsShaded(request, info, queue, data);
+        queue.add(request);
+        break;
+    case M3dView::kBoundingBox :
+            request.setToken( kDrawBoundingBox );
+            getDrawRequestsBoundingBox(request, info);
             queue.add( request );
+    default:
+        break;
+    }
+
+    //cout << "Ending draw request" << endl;
+}
+
+namespace {
+    struct GLGuard {
+        GLGuard(M3dView& m3dview_): m3dview(m3dview_)
+        {
+            m3dview.beginGL();
+            // Setup the OpenGL state as necessary
+            //
+            // The most straightforward way to ensure that the OpenGL
+            // material parameters are properly restored after drawing is
+            // to use push/pop attrib as we have no easy of knowing the
+            // current values of all the parameters.
+            glPushAttrib(MGL_LIGHTING_BIT);
+        }
+        ~GLGuard()
+        {
+            glPopAttrib();
+            m3dview.endGL();
+        }
+        M3dView& m3dview;
+    };
+} // unnamed namespace
+
+void CAlembicHolderUI::draw(const MDrawRequest& request, M3dView& view) const
+{
+    int token = request.token();
+
+    M3dView::DisplayStatus displayStatus = request.displayStatus();
+
+    bool cacheSelected =  ((displayStatus == M3dView::kActive) || (displayStatus == M3dView::kLead) || (displayStatus == M3dView::kHilite));
+    MDrawData data = request.drawData();
+
+    nozAlembicHolder* shapeNode = (nozAlembicHolder*) surfaceShape();
+    if (!shapeNode)
+        return;
+    auto drawable_container = (VP1DrawableContainer*)(data.geometry());
+    const auto& color_overrides = shapeNode->getDiffuseColorOverrides();
+
+    const bool forceBoundingBox = shapeNode->isBBExtendedMode() && cacheSelected == false;
+    const auto sceneKey = shapeNode->getSceneKey();
+    const auto selectionKey = shapeNode->getSelectionKey();
+    const bool selectionMode = !selectionKey.empty();
+
+    GLGuard glguard(view);
+
+    // handling refreshes
+    if( token == kDrawBoundingBox || forceBoundingBox || selectionMode )
+    {
+        drawBoundingBox(request, view);
+    }
+
+	if (forceBoundingBox)
+		return;
+
+    switch (token)
+    {
+		case kDrawBoundingBox :
+			break;
+		case kDrawWireframe:
+		case kDrawWireframeOnShaded:
+			if (drawable_container && !drawable_container->drawables.empty()) {
+				gGLFT->glPolygonMode(GL_FRONT_AND_BACK, MGL_LINE);
+				gGLFT->glPushMatrix();
+                auto color = request.color();
+                gGLFT->glColor4f(color.r, color.g, color.b, 1.0f);
+                drawable_container->draw(VP1DrawSettings(false));
+				gGLFT->glPopMatrix();
+				gGLFT->glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+			}
+			else
+				drawBoundingBox( request, view );
+			break;
+		case kDrawSmoothShaded:
+		case kDrawFlatShaded:
+        {
+            if (drawable_container && !drawable_container->drawables.empty()) {
+                drawWithTwoSidedLightingSupport(*drawable_container, VP1DrawSettings(true, view.textureMode(), color_overrides, VP1PrimitiveFilter::TRIANGLES));
+                gGLFT->glDisable(GL_LIGHTING);
+                drawable_container->draw(VP1DrawSettings(true, view.textureMode(), color_overrides, ~VP1PrimitiveFilter::TRIANGLES));
+                gGLFT->glEnable(GL_LIGHTING);
+            } else {
+                drawBoundingBox( request, view );
             }
-            */
+            break;
+        }
+    }
+}
+
+void VP1DrawableContainer::draw(const VP1DrawSettings& draw_settings) const
+{
+    static MGLFunctionTable *gGLFT = NULL;
+    if (gGLFT == NULL)
+        gGLFT = MHardwareRenderer::theRenderer()->glFunctionTable();
+
+    for (size_t i = 0; i < drawables.size(); ++i) {
+        const auto& drawable = drawables[i];
+
+        if (!draw_settings.primitive_filter.has(drawable.buffer.primType()))
+            continue;
+
+        gGLFT->glPushMatrix();
+        // Get the current matrix.
+        MGLdouble currentMatrix[16];
+        gGLFT->glGetDoublev(MGL_MODELVIEW_MATRIX, currentMatrix);
+
+        // Basically, we want to load our matrix into the thingy.
+        // We don't use the OpenGL transform stack because we have
+        // deep deep hierarchy that exhausts the max stack depth quickly.
+        gGLFT->glMatrixMode(MGL_MODELVIEW);
+        static_assert(sizeof(MGLfloat) == sizeof(drawable.world_matrix[0][0]),
+            "matrix element size mismatch");
+        gGLFT->glMultMatrixf((const MGLfloat *)&drawable.world_matrix[0][0]);
+
+        C3f color = drawable.diffuse_color;
+        const auto& color_overrides = draw_settings.color_overrides;
+        auto color_override_it = color_overrides.find(drawable.drawable_id);
+        if (color_override_it != color_overrides.end()) {
+            color = color_override_it->second.diffuse_color;
+        }
+
+        const bool use_texture = draw_settings.use_texture && !textures.empty() && textures[i].second;
+        if (use_texture) {
+            gGLFT->glEnable(MGL_TEXTURE_2D);
+            gGLFT->glBindTexture(MGL_TEXTURE_2D, *textures[i].second);
+            gGLFT->glTexParameteri(MGL_TEXTURE_2D, MGL_TEXTURE_MIN_FILTER, MGL_LINEAR);
+            gGLFT->glTexParameteri(MGL_TEXTURE_2D, MGL_TEXTURE_MAG_FILTER, MGL_LINEAR);
+            gGLFT->glTexParameteri(MGL_TEXTURE_2D, MGL_TEXTURE_WRAP_S, MGL_REPEAT);
+            gGLFT->glTexParameteri(MGL_TEXTURE_2D, MGL_TEXTURE_WRAP_T, MGL_REPEAT);
+            color = C3f(1.0f, 1.0f, 1.0f);
+        }
+
+        if (draw_settings.override_color) {
+            gGLFT->glColor4f(color.x, color.y, color.z, 1.0f);
+        }
+
+        drawable.buffer.render(draw_settings.flip_normals);
+
+        if (use_texture) {
+            gGLFT->glDisable(MGL_TEXTURE_2D);
+            gGLFT->glBindTexture(MGL_TEXTURE_2D, 0); // deactivate the texture
+        }
+
+        // And back out, restore the matrix.
+        gGLFT->glMatrixMode(MGL_MODELVIEW);
+        gGLFT->glLoadMatrixd(currentMatrix);
+        gGLFT->glPopMatrix();
+    }
+}
+
+void CAlembicHolderUI::drawWithTwoSidedLightingSupport(
+    const VP1DrawableContainer& drawable_container,
+    VP1DrawSettings draw_settings) const
+{
+    gGLFT->glPushMatrix();
+
+    glEnable(MGL_POLYGON_OFFSET_FILL);  // Viewport has set the offset, just enable it
+
+    glColorMaterial(MGL_FRONT_AND_BACK, MGL_AMBIENT_AND_DIFFUSE);
+    glEnable(MGL_COLOR_MATERIAL) ;
+    glColor4f(.7, .7, .7, 1.0);
+    // On Geforce cards, we emulate two-sided lighting by drawing
+    // triangles twice because two-sided lighting is 10 times
+    // slower than single-sided lighting.
+
+    bool needEmulateTwoSidedLighting = false;
+    // Query face-culling and two-sided lighting state
+    bool  cullFace = (gGLFT->glIsEnabled(MGL_CULL_FACE) == MGL_TRUE);
+    MGLint twoSidedLighting = MGL_FALSE;
+    gGLFT->glGetIntegerv(MGL_LIGHT_MODEL_TWO_SIDE, &twoSidedLighting);
+
+    needEmulateTwoSidedLighting = (!cullFace && twoSidedLighting);
+
+    if(needEmulateTwoSidedLighting)
+    {
+        glEnable(MGL_CULL_FACE);
+        glLightModeli(MGL_LIGHT_MODEL_TWO_SIDE, 0);
+        glCullFace(MGL_FRONT);
+        draw_settings.flip_normals = false;
+        drawable_container.draw(draw_settings);
+        glCullFace(MGL_BACK);
+        draw_settings.flip_normals = true;
+        drawable_container.draw(draw_settings);
+        gGLFT->glLightModeli(MGL_LIGHT_MODEL_TWO_SIDE, 1);
+        glDisable(MGL_CULL_FACE);
+    }
+    else
+        drawable_container.draw(draw_settings);
+
+    glDisable(MGL_POLYGON_OFFSET_FILL);
+    glFrontFace(MGL_CCW);
+
+    gGLFT->glPopMatrix();
+}
+
+void CAlembicHolderUI::drawBoundingBox( const MDrawRequest & request,
+                                                          M3dView & view ) const
+//
+// Description:
+//
+//     Bounding box drawing routine
+//
+// Arguments:
+//
+//     request - request to be drawn
+//     view    - view to draw into
+//
+{
+        // Get the surface shape
+        MPxSurfaceShape *shape = surfaceShape();
+        if ( !shape )
+                return;
+
+        // Get the bounding box
+        MBoundingBox box = shape->boundingBox();
+    float w = (float) box.width();
+    float h = (float) box.height();
+    float d = (float) box.depth();
+
+    {
+        // Query current state so it can be restored
+        //
+        bool lightingWasOn = glIsEnabled( MGL_LIGHTING ) == MGL_TRUE;
+
+        // Setup the OpenGL state as necessary
+        //
+        if ( lightingWasOn ) {
+            glDisable( MGL_LIGHTING );
+        }
+
+        glEnable( MGL_LINE_STIPPLE );
+        glLineStipple(1, LINE_STIPPLE_SHORTDASHED);
+
+        // Below we just two sides and then connect
+        // the edges together
+
+        MPoint minVertex = box.min();
+
+        request.color();
+
+        // Draw first side
+        glBegin( MGL_LINE_LOOP );
+        MPoint vertex = minVertex;
+        glVertex3f( (float)vertex[0],   (float)vertex[1],   (float)vertex[2] );
+        glVertex3f( (float)vertex[0]+w, (float)vertex[1],   (float)vertex[2] );
+        glVertex3f( (float)vertex[0]+w, (float)vertex[1]+h, (float)vertex[2] );
+        glVertex3f( (float)vertex[0],   (float)vertex[1]+h, (float)vertex[2] );
+        glVertex3f( (float)vertex[0],   (float)vertex[1],   (float)vertex[2] );
+        glEnd();
+
+        // Draw second side
+        MPoint sideFactor(0,0,d);
+        MPoint vertex2 = minVertex + sideFactor;
+        glBegin( MGL_LINE_LOOP );
+        glVertex3f( (float)vertex2[0],   (float)vertex2[1],   (float)vertex2[2] );
+        glVertex3f( (float)vertex2[0]+w, (float)vertex2[1],   (float)vertex2[2] );
+        glVertex3f( (float)vertex2[0]+w, (float)vertex2[1]+h, (float)vertex2[2] );
+        glVertex3f( (float)vertex2[0],   (float)vertex2[1]+h, (float)vertex2[2] );
+        glVertex3f( (float)vertex2[0],   (float)vertex2[1],   (float)vertex2[2] );
+        glEnd();
+
+        // Connect the edges together
+        glBegin( MGL_LINES );
+        glVertex3f( (float)vertex2[0],   (float)vertex2[1],   (float)vertex2[2] );
+        glVertex3f( (float)vertex[0],   (float)vertex[1],   (float)vertex[2] );
+
+        glVertex3f( (float)vertex2[0]+w,   (float)vertex2[1],   (float)vertex2[2] );
+        glVertex3f( (float)vertex[0]+w,   (float)vertex[1],   (float)vertex[2] );
+
+        glVertex3f( (float)vertex2[0]+w,   (float)vertex2[1]+h,   (float)vertex2[2] );
+        glVertex3f( (float)vertex[0]+w,   (float)vertex[1]+h,   (float)vertex[2] );
+
+        glVertex3f( (float)vertex2[0],   (float)vertex2[1]+h,   (float)vertex2[2] );
+        glVertex3f( (float)vertex[0],   (float)vertex[1]+h,   (float)vertex[2] );
+        glEnd();
+
+        // Restore the state
+        //
+        if ( lightingWasOn ) {
+            glEnable( MGL_LIGHTING );
+        }
+
+        glDisable( MGL_LINE_STIPPLE );
+    }
+}
+
+void CAlembicHolderUI::getDrawRequestsWireFrame(MDrawRequest& request,
+        const MDrawInfo& info) {
+
+    request.setToken(kDrawWireframe);
+    M3dView::DisplayStatus displayStatus = info.displayStatus();
+    M3dView::ColorTable activeColorTable = M3dView::kActiveColors;
+    M3dView::ColorTable dormantColorTable = M3dView::kDormantColors;
+    switch (displayStatus) {
+    case M3dView::kLead:
+        request.setColor(LEAD_COLOR, activeColorTable);
+        break;
+    case M3dView::kActive:
+        request.setColor(ACTIVE_COLOR, activeColorTable);
+        break;
+    case M3dView::kActiveAffected:
+        request.setColor(ACTIVE_AFFECTED_COLOR, activeColorTable);
+        break;
+    case M3dView::kDormant:
+        request.setColor(DORMANT_COLOR, dormantColorTable);
+        break;
+    case M3dView::kHilite:
+        request.setColor(HILITE_COLOR, activeColorTable);
+        break;
+    default:
+        break;
+    }
+
+}
+
+void CAlembicHolderUI::getDrawRequestsBoundingBox(MDrawRequest& request,
+        const MDrawInfo& info) {
+
+    request.setToken(kDrawBoundingBox);
+    M3dView::DisplayStatus displayStatus = info.displayStatus();
+    M3dView::ColorTable activeColorTable = M3dView::kActiveColors;
+    M3dView::ColorTable dormantColorTable = M3dView::kDormantColors;
+    switch (displayStatus) {
+    case M3dView::kLead:
+        request.setColor(LEAD_COLOR, activeColorTable);
+        break;
+    case M3dView::kActive:
+        request.setColor(ACTIVE_COLOR, activeColorTable);
+        break;
+    case M3dView::kActiveAffected:
+        request.setColor(ACTIVE_AFFECTED_COLOR, activeColorTable);
+        break;
+    case M3dView::kDormant:
+        request.setColor(DORMANT_COLOR, dormantColorTable);
+        break;
+    case M3dView::kHilite:
+        request.setColor(HILITE_COLOR, activeColorTable);
+        break;
+    default:
+        break;
+    }
+
+}
+
+
+void CAlembicHolderUI::getDrawRequestsShaded(MDrawRequest& request,
+        const MDrawInfo& info, MDrawRequestQueue& queue, MDrawData& data)
+{
+        // Need to get the material info
+        //
+        MDagPath path = info.multiPath();       // path to your dag object
+        M3dView view = info.view();;            // view to draw to
+        MMaterial material = MPxSurfaceShapeUI::material( path );
+        M3dView::DisplayStatus displayStatus = info.displayStatus();
+
+        // Evaluate the material and if necessary, the texture.
+        //
+        if ( ! material.evaluateMaterial( view, path ) ) {
+                cerr << "Couldnt evaluate\n";
+        }
+
+        bool drawTexture = true;
+        if ( drawTexture && material.materialIsTextured() ) {
+                material.evaluateTexture( data );
+        }
+
+        request.setMaterial( material );
+
+        bool materialTransparent = false;
+        material.getHasTransparency( materialTransparent );
+        if ( materialTransparent ) {
+                request.setIsTransparent( true );
         }
 
         // create a draw request for wireframe on shaded if
         // necessary.
-        if (needWireframe &&
-            DisplayPref::wireframeOnShadedMode() != DisplayPref::kWireframeOnShadedNone)
-        {
-            MDrawRequest wireRequest = info.getPrototype(*this);
-            wireRequest.setDrawData(data);
-            wireRequest.setToken(kDrawWireframeOnShaded);
-            wireRequest.setDisplayStyle(M3dView::kWireFrame);
-
-            MColor wireframeColor = MHWRender::MGeometryUtilities::wireframeColor(path);
-            wireRequest.setColor(wireframeColor);
-
-            queue.add(wireRequest);
-        }
-    } break;
-    }
-}
-
-void CAlembicHolderUI::draw(const MDrawRequest & request, M3dView & view) const
-{
-    // Initialize GL Function Table.
-    InitializeGLFT();
-
-    // Get the token from the draw request.
-    // The token specifies what needs to be drawn.
-    DrawToken token = DrawToken(request.token());
-
-    switch (token)
-    {
-    case kBoundingBox:
-        drawBoundingBox(request, view);
-        break;
-
-    case kDrawWireframe:
-    case kDrawWireframeOnShaded:
-        drawWireframe(request, view);
-        break;
-
-    case kDrawSmoothShaded:
-        drawShaded(request, view, false);
-        break;
-
-    case kDrawSmoothShadedDepthOffset:
-        drawShaded(request, view, true);
-        break;
-    }
-}
-
-void CAlembicHolderUI::drawBoundingBox(const MDrawRequest & request, M3dView & view) const
-{
-    // Get the surface shape
-    auto node = (nozAlembicHolder*)surfaceShape();
-    if (!node) return;
-
-    // Get the bounding box
-    MBoundingBox box = node->boundingBox();
-
-    view.beginGL();
-    {
-        // Query current state so it can be restored
         //
-        bool lightingWasOn = gGLFT->glIsEnabled(MGL_LIGHTING) == MGL_TRUE;
-
-        // Setup the OpenGL state as necessary
-        //
-        if (lightingWasOn) {
-            gGLFT->glDisable(MGL_LIGHTING);
-        }
-
-        gGLFT->glEnable(MGL_LINE_STIPPLE);
-        gGLFT->glLineStipple(1, Config::kLineStippleShortDashed);
-
-        VBOProxy vboProxy;
-        vboProxy.drawBoundingBox(box);
-
-        // Restore the state
-        //
-        if (lightingWasOn) {
-            gGLFT->glEnable(MGL_LIGHTING);
-        }
-
-        gGLFT->glDisable(MGL_LINE_STIPPLE);
-    }
-    view.endGL();
-}
-
-
-namespace {
-
-//==========================================================================
-// CLASS DrawWireframeTraversal
-//==========================================================================
-
-class DrawWireframeState : public DrawTraversalState
-{
-public:
-    DrawWireframeState(
-        const Frustum&  frustrum,
-        const double    seconds)
-        : DrawTraversalState(frustrum, seconds, kPruneNone)
-    {}
-};
-
-class DrawWireframeTraversal
-    : public DrawTraversal<DrawWireframeTraversal, DrawWireframeState>
-{
-public:
-
-    typedef DrawTraversal<DrawWireframeTraversal, DrawWireframeState> BaseClass;
-
-    DrawWireframeTraversal(
-        DrawWireframeState&     state,
-        const MMatrix&          xform,
-        bool                    isReflection,
-        Frustum::ClippingResult parentClippingResult)
-        : BaseClass(state, xform, isReflection, parentClippingResult)
-    {}
-
-    void draw(const std::shared_ptr<const ShapeSample>& sample)
-    {
-        if (!sample->visibility()) return;
-        gGLFT->glLoadMatrixd(xform().matrix[0]);
-
-        if (sample->isBoundingBoxPlaceHolder()) {
-            state().vboProxy().drawBoundingBox(sample);
-            //GlobalReaderCache::theCache().hintShapeReadOrder(subNode());
-            return;
-        }
-
-        assert(sample->positions());
-        assert(sample->normals());
-
-        state().vboProxy().drawWireframe(sample);
-    }
-};
-
-
-//==========================================================================
-// CLASS DrawShadedTraversal
-//==========================================================================
-
-class DrawShadedTypes
-{
-public:
-    enum ColorType {
-        kSubNodeColor,
-        kDefaultColor,
-        kBlackColor,
-        kXrayColor
-    };
-
-    enum NormalsType {
-        kFrontNormals,
-        kBackNormals
-    };
-};
-
-typedef ::nozAlembicHolder::TextureMap TextureMap;
-
-class DrawShadedState : public DrawTraversalState, public DrawShadedTypes
-{
-public:
-    DrawShadedState(
-        const Frustum&                  frustrum,
-        const double                    seconds,
-        const TransparentPruneType      transparentPrune,
-        const ColorType                 colorType,
-        const MColor&                   defaultDiffuseColor,
-        const NormalsType               normalsType,
-        const bool                      isTextured,
-        TextureMap*                     textureMap,
-        short                           textRes,
-        std::set<MString, MStringComp>* ownTextures)
-        : DrawTraversalState(frustrum, seconds, transparentPrune),
-        fColorType(colorType),
-        fDefaultDiffuseColor(defaultDiffuseColor),
-        fNormalsType(normalsType),
-        fIsTextured(isTextured),
-        fTextureMap(textureMap),
-        fTextRes(textRes),
-        fOwnTextures(ownTextures)
-    {}
-
-    ColorType      colorType() const { return fColorType; }
-    const MColor&  defaultDiffuseColor() const { return fDefaultDiffuseColor; }
-    NormalsType    normalsType() const { return fNormalsType; }
-
-    bool isTextured() const { return fIsTextured; }
-    std::map<MString, MGLuint, MStringComp>* textureMap() { return fTextureMap; }
-    short textRes() { return fTextRes; }
-    short fTextRes;
-
-    std::set<MString, MStringComp>* ownTextures() { return fOwnTextures; }
-
-private:
-    const ColorType      fColorType;
-    const MColor         fDefaultDiffuseColor;
-    const NormalsType    fNormalsType;
-
-    const bool             fIsTextured;
-    std::map<MString, MGLuint, MStringComp>* fTextureMap;
-    std::set<MString, MStringComp>* fOwnTextures;
-};
-
-class DrawShadedTraversal
-    : public DrawTraversal<DrawShadedTraversal, DrawShadedState>,
-    public DrawShadedTypes
-{
-public:
-
-    typedef DrawTraversal<DrawShadedTraversal, DrawShadedState> BaseClass;
-
-    DrawShadedTraversal(
-        DrawShadedState&        state,
-        const MMatrix&          xform,
-        bool                    isReflection,
-        Frustum::ClippingResult parentClippingResult)
-        : BaseClass(state, xform, isReflection, parentClippingResult)
-    {}
-
-    void draw(const std::shared_ptr<const ShapeSample>& sample)
-    {
-        if (!sample->visibility()) return;
-
-        MGLuint textureID;
-
-        VBOProxy::UVsMode useUvs = VBOProxy::kNoUVs;
-
-        if (sample->uvs() && state().isTextured())
+        if ( (displayStatus == M3dView::kActive) ||
+                 (displayStatus == M3dView::kLead) ||
+                 (displayStatus == M3dView::kHilite) )
         {
-            useUvs = VBOProxy::kUVs;
+                MDrawRequest wireRequest = info.getPrototype( *this );
+                wireRequest.setDrawData( data );
+                getDrawRequestsWireFrame( wireRequest, info );
+                wireRequest.setToken( kDrawWireframeOnShaded );
+                wireRequest.setDisplayStyle( M3dView::kWireFrame );
+                wireRequest.setColor(MHWRender::MGeometryUtilities::wireframeColor(path));
+                queue.add( wireRequest );
         }
-
-        MColor diffuseColor = sample->diffuseColor();
-
-        if (sample->getTexturePath() == "" || !state().isTextured())
-        {
-            gGLFT->glDisable(MGL_TEXTURE_2D);
-
-        }
-        else
-        {
-            std::map<MString, MGLuint, MStringComp>::iterator it;
-            it = state().textureMap()->find(sample->getTexturePath());
-            if (it != state().textureMap()->end()) {
-                textureID = (*it).second;
-            }
-            else {
-                state().ownTextures()->insert(sample->getTexturePath());
-                gGLFT->glGenTextures(1, &textureID);
-                gGLFT->glBindTexture(MGL_TEXTURE_2D, textureID);
-                MImage image;
-                MStatus stat = image.readFromFile(sample->getTexturePath());
-                unsigned int res = state().textRes();
-                unsigned int width, height;
-                image.getSize(width, height);
-                if (res != 0)
-                {
-                    if (width > res || height > res)
-                    {
-                        image.resize(res, res, true);
-                        image.getSize(width, height);
-                    }
-                }
-                if (!stat)
-                {
-                    MGlobal::displayWarning("In MTexture::load(), file not found:");
-                }
-                gGLFT->glTexImage2D(MGL_TEXTURE_2D, 0, MGL_RGBA8, width, height, 0, MGL_RGBA, MGL_UNSIGNED_BYTE, image.pixels());
-                gGLFT->glTexParameteri(MGL_TEXTURE_2D, MGL_TEXTURE_MIN_FILTER, MGL_LINEAR);
-                gGLFT->glTexParameteri(MGL_TEXTURE_2D, MGL_TEXTURE_MAG_FILTER, MGL_LINEAR);
-                gGLFT->glBindTexture(MGL_TEXTURE_2D, 0); // deactivate the texture
-
-                state().textureMap()->insert(std::pair<MString, MGLuint>(sample->getTexturePath(), textureID));
-
-
-            }
-        }
-
-        gGLFT->glLoadMatrixd(xform().matrix[0]);
-
-        if (sample->isBoundingBoxPlaceHolder()) {
-            state().vboProxy().drawBoundingBox(sample, true);
-            //GlobalReaderCache::theCache().hintShapeReadOrder(subNode());
-            return;
-        }
-
-        if (!sample->positions() || !sample->normals())
-        {
-            return;
-        }
-
-        switch (state().colorType()) {
-        case kSubNodeColor:
-            //diffuseColor = sample->diffuseColor();
-            diffuseColor = MColor(sample->diffuseColor()[0],
-                sample->diffuseColor()[1],
-                sample->diffuseColor()[2],
-                1.0f);
-            break;
-        case kDefaultColor:
-            diffuseColor = state().defaultDiffuseColor();
-            break;
-        case kBlackColor:
-            diffuseColor =
-                MColor(0.0f, 0.0f, 0.0f, sample->diffuseColor()[3]);
-            break;
-        case kXrayColor:
-            diffuseColor = MColor(sample->diffuseColor()[0],
-                sample->diffuseColor()[1],
-                sample->diffuseColor()[2],
-                0.3f);
-            break;
-        default:
-            assert(0);
-            break;
-        }
-
-        if (diffuseColor[3] <= 0.0 ||
-            (diffuseColor[3] >= 1.0 &&
-                state().transparentPrune() == DrawShadedState::kPruneOpaque) ||
-                (diffuseColor[3] < 1.0 &&
-                    state().transparentPrune() == DrawShadedState::kPruneTransparent)) {
-            return;
-        }
-
-        if (state().isTextured() && sample->getTexturePath() != "")
-        {
-            gGLFT->glEnable(MGL_TEXTURE_2D);
-            gGLFT->glBindTexture(MGL_TEXTURE_2D, textureID);
-            diffuseColor = MColor(1.0f, 1.0f, 1.0f, 1.0f);
-        }
-
-        gGLFT->glColor4f(diffuseColor[0] * diffuseColor[3],
-            diffuseColor[1] * diffuseColor[3],
-            diffuseColor[2] * diffuseColor[3],
-            diffuseColor[3]);
-
-        // The meaning of front faces changes depending whether
-        // the transformation has a reflection or not.
-        gGLFT->glFrontFace(isReflection() ? MGL_CW : MGL_CCW);
-
-        for (size_t groupId = 0; groupId < sample->numIndexGroups(); ++groupId) {
-            state().vboProxy().drawTriangles(
-                sample, groupId,
-                state().normalsType() == kFrontNormals ?
-                VBOProxy::kFrontNormals : VBOProxy::kBackNormals,
-                useUvs);
-        }
-
-        gGLFT->glDisable(MGL_TEXTURE_2D);
-        gGLFT->glBindTexture(MGL_TEXTURE_2D, 0);
-    }
-};
-
-} // unnamed namespace
-
-void CAlembicHolderUI::drawWireframe(const MDrawRequest & request, M3dView & view) const
-{
-    // Get the surface shape
-    auto node = (nozAlembicHolder*)surfaceShape();
-    if (!node) return;
-
-    // Extract the cached geometry.
-    const auto& rootNode = node->getGeometry();
-    if (!rootNode) return;
-
-    const double seconds = MAnimControl::currentTime().as(MTime::kSeconds);
-    //const double myseconds = seconds + (node->timeOffset / 24.0f);
-    const double myseconds = seconds + node->getTimeOffset().as(MTime::kSeconds);
-
-    MMatrix projMatrix;
-    view.projectionMatrix(projMatrix);
-    MMatrix modelViewMatrix;
-    view.modelViewMatrix(modelViewMatrix);
-
-    MMatrix localToPort = modelViewMatrix * projMatrix;
-
-    view.beginGL();
-    {
-        // Query current state so it can be restored
-        //
-        bool lightingWasOn = gGLFT->glIsEnabled(MGL_LIGHTING) == MGL_TRUE;
-
-        // Setup the OpenGL state as necessary
-        //
-        if (lightingWasOn) {
-            gGLFT->glDisable(MGL_LIGHTING);
-        }
-
-        gGLFT->glEnable(MGL_LINE_STIPPLE);
-        if (request.token() == kDrawWireframeOnShaded) {
-            // Wireframe on shaded is affected by wireframe on shaded mode
-            DisplayPref::WireframeOnShadedMode wireframeOnShadedMode =
-                DisplayPref::wireframeOnShadedMode();
-            if (wireframeOnShadedMode == DisplayPref::kWireframeOnShadedReduced) {
-                gGLFT->glLineStipple(1, Config::kLineStippleDotted);
-            }
-            else {
-                assert(wireframeOnShadedMode != DisplayPref::kWireframeOnShadedNone);
-                gGLFT->glLineStipple(1, Config::kLineStippleShortDashed);
-            }
-        }
-        else {
-            gGLFT->glLineStipple(1, Config::kLineStippleShortDashed);
-        }
-
-        // Draw the wireframe mesh
-        //
-        {
-            Frustum frustum(localToPort.inverse());
-            MMatrix xform(modelViewMatrix);
-
-            DrawWireframeState state(frustum, myseconds);
-            DrawWireframeTraversal traveral(state, xform, false, Frustum::kUnknown);
-            rootNode->accept(traveral);
-        }
-
-        // Restore the state
-        //
-        if (lightingWasOn) {
-            gGLFT->glEnable(MGL_LIGHTING);
-        }
-
-        gGLFT->glDisable(MGL_LINE_STIPPLE);
-    }
-    view.endGL();
-}
-
-
-void CAlembicHolderUI::drawShaded(
-    const MDrawRequest & request, M3dView & view, bool depthOffset) const
-{
-    // Get the surface shape
-    const auto& node = (nozAlembicHolder*)surfaceShape();
-    if (!node) return;
-
-    // Extract the cached geometry.
-    const auto& rootNode = node->getGeometry();
-    if (!rootNode) return;
-
-    const auto& textureMap = node->getTextureMap();
-    if (!textureMap) return;
-
-    const double seconds = MAnimControl::currentTime().as(MTime::kSeconds);
-    //const double myseconds = seconds + (node->timeOffset / 24.0f);
-    const double myseconds = seconds + node->getTimeOffset().as(MTime::kSeconds);
-
-    MMatrix projMatrix;
-    view.projectionMatrix(projMatrix);
-    MMatrix modelViewMatrix;
-    view.modelViewMatrix(modelViewMatrix);
-
-    MMatrix localToNDC = modelViewMatrix * projMatrix;
-
-    bool textured = false;
-    if (view.textureMode())
-    {
-        textured = true;
-    }
-
-    M3dView::LightingMode lightingMode;
-    view.getLightingMode(lightingMode);
-    unsigned int lightCount;
-    view.getLightCount(lightCount);
-
-    const bool noLightSoDrawAsBlack =
-        (lightingMode == M3dView::kLightAll ||
-            lightingMode == M3dView::kLightSelected ||
-            lightingMode == M3dView::kLightActive)
-        && lightCount == 0;
-
-    view.beginGL();
-    {
-        // Setup the OpenGL state as necessary
-        //
-        // The most straightforward way to ensure that the OpenGL
-        // material parameters are properly restored after drawing is
-        // to use push/pop attrib as we have no easy of knowing the
-        // current values of all the parameters.
-        gGLFT->glPushAttrib(MGL_LIGHTING_BIT);
-
-        // Reset specular and emission materials as we only display diffuse color.
-        {
-            static const float sBlack[4] = { 0.0f, 0.0f, 0.0f, 1.0f };
-            gGLFT->glMaterialfv(MGL_FRONT_AND_BACK, MGL_SPECULAR, sBlack);
-            gGLFT->glMaterialfv(MGL_FRONT_AND_BACK, MGL_EMISSION, sBlack);
-        }
-
-        DrawShadedState::TransparentPruneType transparentPrune =
-            DrawShadedState::kPruneTransparent;
-
-        const bool isTransparent = request.isTransparent();
-        if (isTransparent) {
-            // We use premultiplied alpha
-            gGLFT->glBlendFunc(MGL_ONE, MGL_ONE_MINUS_SRC_ALPHA);
-            transparentPrune = DrawShadedState::kPruneOpaque;
-
-            gGLFT->glDepthMask(false);
-        }
-
-        MColor defaultDiffuseColor;
-        DrawShadedTypes::ColorType colorType = DrawShadedTypes::kSubNodeColor;
-        if (view.usingDefaultMaterial()) {
-            if (!noLightSoDrawAsBlack) {
-                MMaterial material = request.material();
-                material.setMaterial(request.multiPath(), isTransparent);
-                material.getDiffuse(defaultDiffuseColor);
-            }
-
-            // We must ignore the alpha channel of the default
-            // material when the option "Use default material" is
-            // selected.
-            defaultDiffuseColor[3] = 1.0f;
-            transparentPrune = DrawShadedState::kPruneNone;
-            colorType = DrawShadedTypes::kDefaultColor;
-        }
-        else if (view.xray()) {
-            transparentPrune = DrawShadedState::kPruneNone;
-
-            if (noLightSoDrawAsBlack) {
-                defaultDiffuseColor = MColor(0, 0, 0, 0.3f);
-                colorType = DrawShadedTypes::kDefaultColor;
-            }
-            else {
-                colorType = DrawShadedTypes::kXrayColor;
-            }
-        }
-        else if (noLightSoDrawAsBlack) {
-            colorType = DrawShadedTypes::kBlackColor;
-        }
-
-        if (noLightSoDrawAsBlack) {
-            // The default viewport leaves an unrelated light enabled
-            // in the OpenGL state even when there are no light in the
-            // scene. We therefore manually disable lighting in that
-            // case.
-            gGLFT->glDisable(MGL_LIGHTING);
-        }
-
-        const bool depthOffsetWasEnabled = (gGLFT->glIsEnabled(MGL_POLYGON_OFFSET_FILL) == MGL_TRUE);
-        if (depthOffset && !depthOffsetWasEnabled) {
-            // Viewport has set the offset, just enable it
-            gGLFT->glEnable(MGL_POLYGON_OFFSET_FILL);
-        }
-
-        // We will override the material color for each individual sub-nodes.!
-        gGLFT->glColorMaterial(MGL_FRONT_AND_BACK, MGL_AMBIENT_AND_DIFFUSE);
-        gGLFT->glEnable(MGL_COLOR_MATERIAL);
-
-        // On Geforce cards, we emulate two-sided lighting by drawing
-        // triangles twice because two-sided lighting is 10 times
-        // slower than single-sided lighting.
-        bool needEmulateTwoSidedLighting = false;
-        if (Config::emulateTwoSidedLighting()) {
-            // Query face-culling and two-sided lighting state
-            bool  cullFace = (gGLFT->glIsEnabled(MGL_CULL_FACE) == MGL_TRUE);
-            MGLint twoSidedLighting = MGL_FALSE;
-            gGLFT->glGetIntegerv(MGL_LIGHT_MODEL_TWO_SIDE, &twoSidedLighting);
-
-            // Need to emulate two-sided lighting when back-face
-            // culling is off (i.e. drawing both sides) and two-sided
-            // lLighting is on.
-            needEmulateTwoSidedLighting = (!cullFace && twoSidedLighting);
-        }
-
-        {
-            Frustum frustum(localToNDC.inverse());
-            MMatrix xform(modelViewMatrix);
-
-            if (needEmulateTwoSidedLighting) {
-                gGLFT->glEnable(MGL_CULL_FACE);
-                gGLFT->glLightModeli(MGL_LIGHT_MODEL_TWO_SIDE, 0);
-
-                // first, draw with back-face culling
-                {
-                    gGLFT->glCullFace(MGL_FRONT);
-                    DrawShadedState state(frustum,
-                        myseconds,
-                        transparentPrune,
-                        colorType,
-                        defaultDiffuseColor,
-                        DrawShadedState::kBackNormals,
-                        textured,
-                        textureMap,
-                        node->getTextRes(),
-                        node->getOwnTextures());
-                    DrawShadedTraversal traveral(
-                        state, xform, xform.det3x3() < 0.0, Frustum::kUnknown);
-                    rootNode->accept(traveral);
-                }
-
-                // then, draw with front-face culling
-                {
-                    gGLFT->glCullFace(MGL_BACK);
-                    DrawShadedState state(frustum,
-                        myseconds,
-                        transparentPrune,
-                        colorType,
-                        defaultDiffuseColor,
-                        DrawShadedState::kFrontNormals,
-                        textured,
-                        textureMap,
-                        node->getTextRes(),
-                        node->getOwnTextures());
-                    DrawShadedTraversal traveral(
-                        state, xform, xform.det3x3() < 0.0, Frustum::kUnknown);
-                    rootNode->accept(traveral);
-                }
-
-                // restore the OpenGL state
-                gGLFT->glDisable(MGL_CULL_FACE);
-                gGLFT->glLightModeli(MGL_LIGHT_MODEL_TWO_SIDE, 1);
-            }
-            else {
-                DrawShadedState state(frustum,
-                    myseconds,
-                    transparentPrune,
-                    colorType,
-                    defaultDiffuseColor,
-                    DrawShadedState::kFrontNormals,
-                    textured,
-                    textureMap,
-                    node->getTextRes(),
-                    node->getOwnTextures());
-                DrawShadedTraversal traveral(
-                    state, xform, xform.det3x3() < 0.0, Frustum::kUnknown);
-                rootNode->accept(traveral);
-            }
-        }
-
-        // Restore the state
-        //
-        if (isTransparent) {
-            gGLFT->glDepthMask(true);
-
-            gGLFT->glBlendFunc(MGL_SRC_ALPHA, MGL_ONE_MINUS_SRC_ALPHA);
-        }
-
-        if (depthOffset && !depthOffsetWasEnabled) {
-            gGLFT->glDisable(MGL_POLYGON_OFFSET_FILL);
-        }
-
-        gGLFT->glFrontFace(MGL_CCW);
-
-        gGLFT->glPopAttrib();
-    }
-    view.endGL();
 }
 
 //
@@ -1897,7 +1315,7 @@ void CAlembicHolderUI::drawShaded(
 //
 MPoint CAlembicHolderUI::getPointAtDepth(
     MSelectInfo &selectInfo,
-    double     depth)
+    double     depth) const
 {
     MDagPath cameraPath;
     M3dView view = selectInfo.view();
@@ -1932,102 +1350,66 @@ MPoint CAlembicHolderUI::getPointAtDepth(
     MVector rayVector;
     selectInfo.getLocalRay(cursor, rayVector);
     cursor = cursor * selectInfo.multiPath().inclusiveMatrix();
-    short x, y;
+    short x,y;
     view.worldToView(cursor, x, y);
 
     MPoint res, neardb, fardb;
-    view.viewToWorld(x, y, neardb, fardb);
-    res = neardb + depth*(fardb - neardb);
+    view.viewToWorld(x,y, neardb, fardb);
+    res = neardb + depth*(fardb-neardb);
 
     return res;
 }
 
 
-bool CAlembicHolderUI::select(
-    MSelectInfo &selectInfo,
-    MSelectionList &selectionList,
-    MPointArray &worldSpaceSelectPts) const
+bool CAlembicHolderUI::select(MSelectInfo &selectInfo,
+        MSelectionList &selectionList, MPointArray &worldSpaceSelectPts) const
 {
-    // Initialize GL Function Table.
-    InitializeGLFT();
+    nozAlembicHolder* shapeNode = (nozAlembicHolder*) surfaceShape();
+    auto sample = shapeNode->getSample();
+    if (sample.empty())
+        return false;
 
-    MSelectionMask mask(kPluginId);
-    if (!selectInfo.selectable(mask)) {
+    MSelectionMask mask("alembicHolder");
+    if (!selectInfo.selectable(mask)){
         return false;
     }
-
-    // Check plugin display filter. Invisible geometry can't be selected
-    if (!selectInfo.pluginObjectDisplayStatus(Config::kDisplayFilter)) {
-        return false;
-    }
-
-    // Get the geometry information
-    //
-    auto node = (nozAlembicHolder*)surfaceShape();
-    const auto& alembicData = node->alembicData();
-    const auto& rootNode = node->getGeometry();
-    if (!rootNode) { return false; }
-
-    const double seconds = MAnimControl::currentTime().as(MTime::kSeconds);
-    //const double myseconds = seconds + (node->timeOffset / 24.0f);
-    const double myseconds = seconds + node->getTimeOffset().as(MTime::kSeconds);
 
     const bool boundingboxSelection =
-        (M3dView::kBoundingBox == selectInfo.displayStyle());
+        (M3dView::kBoundingBox == selectInfo.displayStyle() ||
+         !selectInfo.singleSelection());
 
-    const bool wireframeSelection =
-        (M3dView::kWireFrame == selectInfo.displayStyle() ||
-            !selectInfo.singleSelection());
 
-    // If all the model editors are Viewport2.0, we will not use VBO for select
-    // because VBO will double the memory consumption.
-    VBOProxy::VBOMode vboMode = VBOProxy::kUseVBOIfPossible;
-    //if (Config::vp2OverrideAPI() != Config::kMPxDrawOverride) {
-    //    vboMode = (sModelEditorState == kViewport2Only) ?
-    //        VBOProxy::kDontUseVBO : VBOProxy::kUseVBOIfPossible;
-    //}
-
-    // We select base on edges if the object is displayed in wireframe
-    // mode or if we are performing a marquee selection. Else, we
-    // select using the object faces (i.e. single-click selection in
-    // shaded mode).
-    GLfloat minZ;
+    if (boundingboxSelection)
     {
-        Select* selector;
-        NbPrimitivesVisitor nbPrimitives(myseconds);
-        rootNode->accept(nbPrimitives);
-
-        if (boundingboxSelection) {
-            // We are only drawing 12 edges so we only use GL picking selection.
-            selector = new GLPickingSelect(selectInfo);
-
-            selector->processBoundingBox(rootNode, myseconds);
-        }
-        else if (wireframeSelection) {
-            if (nbPrimitives.numWires() < Config::openGLPickingWireframeThreshold())
-                selector = new GLPickingSelect(selectInfo);
-            else
-                selector = new RasterSelect(selectInfo);
-
-            //selector->processEdges(rootNode, myseconds, nbPrimitives.numWires(), vboMode);
-            selector->processEdges(alembicData, alembicData->m_currscenekey, nbPrimitives.numWires());
-        }
-        else {
-            if (nbPrimitives.numTriangles() < Config::openGLPickingSurfaceThreshold())
-                selector = new GLPickingSelect(selectInfo);
-            else
-                selector = new RasterSelect(selectInfo);
-
-            //selector->processTriangles(rootNode, myseconds, nbPrimitives.numTriangles(), vboMode);
-            selector->processTriangles(alembicData, alembicData->m_currscenekey, nbPrimitives.numTriangles());
-        }
-        selector->end();
-        minZ = selector->minZ();
-        delete selector;
+        // We hit the bounding box, so we want the object?
+        MSelectionList item;
+        item.add(selectInfo.selectPath());
+        MPoint xformedPt;
+        selectInfo.addSelection(item, xformedPt, selectionList,
+                worldSpaceSelectPts, mask, false);
+        return true;
     }
 
+    GLfloat minZ;
+    Select* selector;
+
+    size_t numTriangles = sample.hierarchy_stat.triangle_count;
+
+    if (numTriangles < 1024)
+        selector = new GLPickingSelect(selectInfo);
+    else
+        selector = new RasterSelect(selectInfo);
+
+    selector->processTriangles(m_vp1drawables, numTriangles);
+
+    selector->end();
+    minZ = selector->minZ();
+    delete selector;
+
+
     bool selected = (minZ <= 1.0f);
-    if (selected) {
+    if ( selected )
+    {
         // Add the selected item to the selection list
 
         MSelectionList selectionItem;
@@ -2055,151 +1437,11 @@ bool CAlembicHolderUI::select(
             selectionItem,
             worldSpaceselectionPoint,
             selectionList, worldSpaceSelectPts,
-            mask, false);
+            mask, false );
     }
 
     return selected;
-}
 
-bool CAlembicHolderUI::snap(MSelectInfo& snapInfo) const
-{
-    // Initialize GL Function Table.
-    InitializeGLFT();
-
-    // Check plugin display filter. Invisible geometry can't be snapped
-    if (!snapInfo.pluginObjectDisplayStatus(Config::kDisplayFilter)) {
-        return false;
-    }
-
-    // Get the geometry information
-    //
-    auto node = (nozAlembicHolder*)surfaceShape();
-    const auto& rootNode = node->getGeometry();
-    if (!rootNode) return false;
-
-    const double seconds = MAnimControl::currentTime().as(MTime::kSeconds);
-    //const double myseconds = seconds + (node->timeOffset / 24.0f);
-    const double myseconds = seconds + node->getTimeOffset().as(MTime::kSeconds);
-
-    M3dView view = snapInfo.view();
-
-    const MDagPath & path = snapInfo.multiPath();
-    const MMatrix inclusiveMatrix = path.inclusiveMatrix();
-
-    MMatrix projMatrix;
-    view.projectionMatrix(projMatrix);
-    MMatrix modelViewMatrix;
-    view.modelViewMatrix(modelViewMatrix);
-
-    unsigned int vpx, vpy, vpw, vph;
-    view.viewport(vpx, vpy, vpw, vph);
-    double w_over_two = vpw * 0.5;
-    double h_over_two = vph * 0.5;
-    double vpoff_x = w_over_two + vpx;
-    double vpoff_y = h_over_two + vpy;
-    MMatrix ndcToPort;
-    ndcToPort(0, 0) = w_over_two;
-    ndcToPort(1, 1) = h_over_two;
-    ndcToPort(2, 2) = 0.5;
-    ndcToPort(3, 0) = vpoff_x;
-    ndcToPort(3, 1) = vpoff_y;
-    ndcToPort(3, 2) = 0.5;
-
-    const MMatrix localToNDC = modelViewMatrix * projMatrix;
-    const MMatrix localToPort = localToNDC * ndcToPort;
-
-    AlembicHolder::Frustum frustum(localToNDC.inverse());
-
-    SnapTraversalState state(
-        frustum, myseconds, localToPort, inclusiveMatrix, snapInfo);
-    SnapTraversal visitor(state, MMatrix::identity, false, Frustum::kUnknown);
-    rootNode->accept(visitor);
-    return state.selected();
-}
-
-
-namespace AlembicHolder {
-
-//==============================================================================
-// Error checking
-//==============================================================================
-
-#define MCHECKERROR(STAT,MSG)                   \
-if (!STAT) {                                \
-    perror(MSG);                            \
-    return MS::kFailure;                    \
-}
-
-#define MREPORTERROR(STAT,MSG)                  \
-if (!STAT) {                                \
-    perror(MSG);                            \
-}
-
-#define MCHECKERRORVOID(STAT,MSG)               \
-if (!STAT) {                                \
-    perror(MSG);                            \
-    return;                                 \
-}
-
-
-//==============================================================================
-// CLASS DisplayPref
-//==============================================================================
-
-DisplayPref::WireframeOnShadedMode DisplayPref::fsWireframeOnShadedMode;
-MCallbackId DisplayPref::fsDisplayPrefChangedCallbackId;
-
-MStatus DisplayPref::initCallback()
-{
-    MStatus stat;
-
-    // Register DisplayPreferenceChanged callback
-    fsDisplayPrefChangedCallbackId = MEventMessage::addEventCallback(
-        "DisplayPreferenceChanged", DisplayPref::displayPrefChanged, NULL, &stat);
-    MCHECKERROR(stat, "MEventMessage::addEventCallback(DisplayPreferenceChanged");
-
-    // Trigger the callback manually to init class members
-    displayPrefChanged(NULL);
-
-    return MS::kSuccess;
-}
-
-MStatus DisplayPref::removeCallback()
-{
-    MStatus stat;
-
-    // Remove DisplayPreferenceChanged callback
-    MEventMessage::removeCallback(fsDisplayPrefChangedCallbackId);
-    MCHECKERROR(stat, "MEventMessage::removeCallback(DisplayPreferenceChanged)");
-
-    return MS::kSuccess;
-}
-
-void DisplayPref::displayPrefChanged(void*)
-{
-    MStatus stat;
-    // Wireframe on shaded mode: Full/Reduced/None
-    MString wireframeOnShadedActive = MGlobal::executeCommandStringResult(
-        "displayPref -q -wireframeOnShadedActive", false, false, &stat);
-    if (stat) {
-        if (wireframeOnShadedActive == "full") {
-            fsWireframeOnShadedMode = kWireframeOnShadedFull;
-        }
-        else if (wireframeOnShadedActive == "reduced") {
-            fsWireframeOnShadedMode = kWireframeOnShadedReduced;
-        }
-        else if (wireframeOnShadedActive == "none") {
-            fsWireframeOnShadedMode = kWireframeOnShadedNone;
-        }
-        else {
-            assert(0);
-        }
-    }
-}
-
-DisplayPref::WireframeOnShadedMode DisplayPref::wireframeOnShadedMode()
-{
-    return fsWireframeOnShadedMode;
 }
 
 } // namespace AlembicHolder

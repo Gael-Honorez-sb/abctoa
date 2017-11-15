@@ -28,18 +28,13 @@ public:
 
     // Process edges to determine if they fall within the selection
     // region.
-    virtual void processEdges(CAlembicDatas* geom,
-                                std::string scenekey,
+    virtual void processEdges(const AlembicHolder::VP1DrawableContainer& drawables,
                               size_t numWires) = 0;
 
     // Process triangles to determine if they fall within the
     // selection region.
-    virtual void processTriangles(CAlembicDatas* geom,
-                                    std::string scenekey,
+    virtual void processTriangles(const AlembicHolder::VP1DrawableContainer& drawables,
                                   size_t triangles) = 0;
-
-    virtual void processBoundingBox(const AlembicHolder::DrawablePtr& rootNode,
-                                    double seconds) = 0;
 
     // End rasterization selection mode.
     //

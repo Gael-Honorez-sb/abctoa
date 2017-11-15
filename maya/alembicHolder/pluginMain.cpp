@@ -13,7 +13,7 @@ License along with this library.*/
 
 
 #include "nozAlembicHolderNode.h"
-#include "gpuCacheSubsceneOverride.h"
+#include "SubsceneOverride.h"
 #include "version.h"
 
 #include "cmds/ABCGetTags.h"
@@ -42,6 +42,9 @@ MString    drawRegistrantId("alembicHolder");
 #undef DLLEXPORT
 #define DLLEXPORT __attribute__ ((visibility("default")))
 #endif
+
+
+using namespace AlembicHolder;
 
 DLLEXPORT MStatus initializePlugin( MObject obj )
 {
@@ -119,16 +122,25 @@ DLLEXPORT MStatus initializePlugin( MObject obj )
         }
     }
 
+    SubSceneOverride::initializeShaderTemplates();
+
     return status;
 }
 
 DLLEXPORT MStatus uninitializePlugin( MObject obj)
 {
-    std::cout << "uninitializePlugin" << std::endl;
-
     MStatus   status;
     MFnPlugin plugin( obj );
 
+    SubSceneOverride::releaseShaderTemplates();
+
+    status = MHWRender::MDrawRegistry::deregisterSubSceneOverrideCreator(
+        drawDbClassification,
+        drawRegistrantId);
+    if (!status) {
+        status.perror("deregisterSubSceneOverrideCreator");
+        return status;
+    }
 
     status = plugin.deregisterNode( nozAlembicHolder::id );
     if (!status) {
@@ -139,14 +151,6 @@ DLLEXPORT MStatus uninitializePlugin( MObject obj)
     status = plugin.deregisterCommand( "ABCGetTags" );
     if (!status) {
         status.perror("deregisterCommand");
-        return status;
-    }
-
-    status = MHWRender::MDrawRegistry::deregisterSubSceneOverrideCreator(
-        drawDbClassification,
-        drawRegistrantId);
-    if (!status) {
-        status.perror("deregisterSubSceneOverrideCreator");
         return status;
     }
 

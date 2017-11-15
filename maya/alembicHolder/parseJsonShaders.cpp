@@ -66,14 +66,24 @@ bool findShaderColor(MString shaderName, MColor & shaderColor)
         shaderNode = findShader(shaderNodeSG);
         if (shaderNode == MObject::kNullObj)
             return false;
-            
-        MPlug colorPlug = MFnDependencyNode(shaderNode).findPlug("color", &status);
-        if (status == MS::kFailure)
-            return false;
-            
-        MPlugArray cc;
-        colorPlug.connectedTo( cc, true /* asDst */, false );
-        if ( cc.length() > 0 )
+
+        MPlug colorPlug;
+        bool found = false;
+        for (auto plugName : { "color", "ambientColor" }) {
+            colorPlug = MFnDependencyNode(shaderNode).findPlug(plugName, &status);
+            if (status == MS::kFailure)
+                continue;
+
+            MPlugArray cc;
+            colorPlug.connectedTo(cc, true /* asDst */, false);
+            if (cc.length() > 0) {
+                continue;
+            }
+
+            found = true;
+            break;
+        }
+        if (!found)
             return false;
 
         colorPlug.child(0).getValue( shaderColor.r );
@@ -90,7 +100,51 @@ bool findShaderColor(MString shaderName, MColor & shaderColor)
     return false;
 }
 
-void ParseShaders(Json::Value jroot, std::map<std::string, MColor> & shaderColors)
+bool findShaderTexture(MString shaderName, std::string & shaderTexture)
+{
+    MStatus status;
+    MSelectionList slist;
+    status = slist.add(shaderName);
+    if(status)
+    {
+        // we've added the shader, so it exists!
+        MObject shaderNodeSG, shaderNode;
+        slist.getDependNode(0, shaderNodeSG);
+
+        if (shaderNodeSG == MObject::kNullObj)
+            return false;
+
+        shaderNode = findShader(shaderNodeSG);
+        if (shaderNode == MObject::kNullObj)
+            return false;
+
+        MPlug colorPlug = MFnDependencyNode(shaderNode).findPlug("color", &status);
+        if (status == MS::kFailure)
+            return false;
+            
+        MPlugArray cc;
+        colorPlug.connectedTo( cc, true /* asDst */, false );
+        if ( cc.length() == 0 )
+            return false;
+
+        auto filePathPlug = MFnDependencyNode(cc[0].node()).findPlug("fileTextureName", status);
+        if (status != MS::kSuccess)
+            return false;
+
+        const std::string filePath = filePathPlug.asString().asChar();
+        if (filePath.empty())
+            return false;
+
+        shaderTexture = filePath;
+
+        return true;
+    }
+
+    // no shader found, we return black!
+    return false;
+}
+
+void ParseShaders(Json::Value jroot, std::map<std::string, MColor> & shaderColors, std::map<std::string, std::string> & shaderTextures)
 {
     for( Json::ValueIterator itr = jroot.begin() ; itr != jroot.end() ; itr++ )
     {
@@ -106,12 +160,16 @@ void ParseShaders(Json::Value jroot, std::map<std::string, MColor> & shaderColor
             shaderColor.b = ((double) rand() / (RAND_MAX));
         }
 
+        std::string texturePath;
+        bool foundShaderTexture = findShaderTexture(MString(itr.key().asCString()), texturePath);
 
         const Json::Value paths = jroot[itr.key().asString()];
         for( Json::ValueConstIterator itr2 = paths.begin() ; itr2 != paths.end() ; itr2++ )
         {
             Json::Value val = paths[itr2.key().asUInt()];
             shaderColors[val.asString()] = shaderColor;
+            if (foundShaderTexture)
+                shaderTextures[val.asString()] = texturePath;
         }
 
     }

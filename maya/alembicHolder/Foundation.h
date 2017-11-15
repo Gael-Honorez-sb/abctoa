@@ -50,6 +50,9 @@
 #include <ImathFun.h>
 #include <ImathBoxAlgo.h>
 
+#include <boost/timer.hpp>
+#include <boost/functional/hash.hpp>
+
 #include <iostream>
 #include <algorithm>
 #include <utility>
@@ -69,7 +72,17 @@
 
 #include <maya/MHardwareRenderer.h>
 #include <maya/MGLFunctionTable.h>
+#include <maya/MPoint.h>
+#include <maya/MMatrix.h>
+#include <maya/MBoundingBox.h>
 
+#include <sys/types.h>
+#include <sys/stat.h>
+#ifndef WIN32
+#include <unistd.h>
+#else
+#define stat _stat
+#endif
 
 
 namespace AlembicHolder {
@@ -99,6 +112,29 @@ inline const T &clamp( const T &x, const T &lo, const T &hi )
     return x < lo ? lo : x > hi ? hi : x;
 }
 
+template <typename T>
+inline MColor mayaFromImath(const Imath::Color3<T>& c)
+{
+    return MColor(c.x, c.y, c.z);
+};
+
+template <typename T>
+inline MPoint mayaFromImath(const Imath::Vec3<T>& v)
+{
+    return MPoint(v.x, v.y, v.z);
+};
+
+template <typename T>
+inline MMatrix mayaFromImath(const Imath::Matrix44<T>& m)
+{
+    return MMatrix(m.x);
+};
+
+template <typename T>
+inline MBoundingBox mayaFromImath(const Imath::Box<T>& bbox)
+{
+    return MBoundingBox(mayaFromImath(bbox.min), mayaFromImath(bbox.max));
+}
 
 //-*****************************************************************************
 //-*****************************************************************************
@@ -155,7 +191,97 @@ while( 0 )
 #endif
 
 
+// Stores a view to a [start, start+size) memory range.
+template <typename T>
+struct Span {
+    T* start;
+    size_t size;
+
+    Span() : start(nullptr), size(0) {}
+    Span(T* start_, size_t size_) : start(start_), size(size_) {}
+    template <typename U>
+    Span(const Span<U>& s) : start(s.start), size(s.size) {}
+    template <typename U>
+    explicit Span(std::vector<U>& v) : start(v.data()), size(v.size()) {}
+    template <typename U>
+    explicit Span(const std::vector<U>& v) : start(v.data()), size(v.size()) {}
+    template <typename U>
+    explicit Span(const TypedArraySample<U>& a) : start(a.get()), size(a.size()) {}
+    template <typename U>
+    explicit Span(const Alembic::Util::shared_ptr<TypedArraySample<U>>& p)
+        : start(p ? p->get() : nullptr), size(p ? p->size() : 0) {}
+
+    T* begin() { return start; }
+    const T* begin() const { return start; }
+    T* end() { return start + size; }
+    const T* end() const { return start + size; }
+
+    bool empty() const { return start == nullptr || size == 0; }
+    T& operator[](size_t index) const { assert(index < size); return start[index]; }
+};
+
+template <typename T>
+bool updateValue(T& out, const T& in)
+{
+    if (out == in)
+        return false;
+    out = in;
+    return true;
+}
+
+// Stores a file path a hash computed from the path, the file's creation time
+// and last modification time.
+class FileRef {
+public:
+    FileRef() : m_hash(0) {}
+    
+    FileRef(const std::vector<std::string>& paths)
+        : m_paths(paths), m_hash(computeHash(paths))
+    {}
+
+    FileRef(const std::string path)
+    {
+        m_paths.push_back(path);
+        computeHash(m_paths);
+    }
+
+    const std::vector<std::string>& paths() const { return m_paths; }
+    const std::string& path() const { assert(m_paths.empty() == false); return m_paths[0]; }
+    size_t hash() const { return m_hash; }
+    bool operator==(const FileRef& rhs) const { return m_paths == rhs.m_paths && m_hash == rhs.m_hash; }
+    bool operator!=(const FileRef& rhs) const { return !(*this == rhs); }
+private:
+    std::vector<std::string> m_paths;
+    size_t m_hash;
+
+    static size_t computeHash(const std::vector<std::string>& paths)
+    {
+        size_t hash = boost::hash_range(paths.begin(), paths.end());
+
+        struct stat file_stat;
+        for (size_t i = 0; i < paths.size(); i++)
+        {
+            if (stat(paths[i].c_str(), &file_stat) != 0)
+            {
+                boost::hash_combine(hash, file_stat.st_ctime);
+                boost::hash_combine(hash, file_stat.st_mtime);
+            }
+        }
+
+        return hash;
+    }
+};
 
 } // End namespace AlembicHolder
+
+namespace std {
+    template<>
+    struct hash<AlembicHolder::FileRef> {
+        size_t operator()(const AlembicHolder::FileRef& file_hash) const
+        {
+            return file_hash.hash();
+        }
+    };
+} // namespace std
 
 #endif

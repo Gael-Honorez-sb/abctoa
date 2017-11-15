@@ -14,6 +14,7 @@ include_directories(${CMAKE_SOURCE_DIR}/ThirdParty/jsoncpp/include)
 include_directories(${CMAKE_SOURCE_DIR}/ThirdParty/pystring)
 include_directories(${CMAKE_SOURCE_DIR}/alembic/lib)
 include_directories(${CMAKE_BINARY_DIR}/alembic/lib)
+include_directories(${CMAKE_CURRENT_BINARY_DIR})
 
 INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR}/thirdParty/openEXR/IlmBase/Half)
 INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR}/thirdParty/openEXR/IlmBase/Iex)

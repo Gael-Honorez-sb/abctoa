@@ -46,11 +46,7 @@ BufferObject::BufferObject():
     mPrimNum(0)
 {
     if (gGLFT == NULL)
-    {
-        MHardwareRenderer *rend = MHardwareRenderer::theRenderer();
-        if (rend)
-            gGLFT = rend->glFunctionTable();
-    }
+        gGLFT = MHardwareRenderer::theRenderer()->glFunctionTable();
 }
 
 BufferObject::~BufferObject() { }
@@ -58,11 +54,13 @@ BufferObject::~BufferObject() { }
 void
 BufferObject::render(bool normalFlipped) const
 {
-    if (gGLFT == NULL || mPrimNum == 0 || !gGLFT->glIsBufferARB(mIndexBuffer) || !gGLFT->glIsBufferARB(mVertexBuffer))
+    if (gGLFT == NULL || mPrimNum == 0 || !gGLFT->glIsBufferARB(mVertexBuffer))
         return;
 
+    const bool usesIndexBuffer = gGLFT->glIsBufferARB(mIndexBuffer);
     const bool usesColorBuffer = gGLFT->glIsBufferARB(mColorBuffer);
     const bool usesNormalBuffer = gGLFT->glIsBufferARB(mNormalBuffer);
+    const bool usesUVBuffer = gGLFT->glIsBufferARB(mUVBuffer);
 
     gGLFT->glBindBufferARB(MGL_ARRAY_BUFFER_ARB, mVertexBuffer);
     gGLFT->glEnableClientState(MGL_VERTEX_ARRAY);
@@ -83,22 +81,31 @@ BufferObject::render(bool normalFlipped) const
         gGLFT->glNormalPointer(MGL_FLOAT, 0, 0);
     }
 
-    gGLFT->glBindBufferARB(MGL_ELEMENT_ARRAY_BUFFER_ARB, mIndexBuffer);
-    gGLFT->glDrawElements(mPrimType, mPrimNum, MGL_UNSIGNED_INT, 0);
+    if (usesUVBuffer) {
+        gGLFT->glEnableClientState(MGL_TEXTURE_COORD_ARRAY);
+        gGLFT->glBindBufferARB(MGL_ARRAY_BUFFER_ARB, mUVBuffer);
+        gGLFT->glTexCoordPointer(2, MGL_FLOAT, 0, 0);
+    }
+
+    if (usesIndexBuffer) {
+        gGLFT->glBindBufferARB(MGL_ELEMENT_ARRAY_BUFFER_ARB, mIndexBuffer);
+        gGLFT->glDrawElements(mPrimType, mPrimNum, MGL_UNSIGNED_INT, 0);
+    } else {
+        gGLFT->glDrawArrays(mPrimType, 0, mPrimNum);
+    }
 
     // disable client-side capabilities
     if (usesColorBuffer) gGLFT->glDisableClientState(MGL_COLOR_ARRAY);
     if (usesNormalBuffer) gGLFT->glDisableClientState(MGL_NORMAL_ARRAY);
+    if (usesUVBuffer) gGLFT->glDisableClientState(MGL_TEXTURE_COORD_ARRAY);
 
     // release vbo's
     gGLFT->glBindBufferARB(MGL_ARRAY_BUFFER_ARB, 0);
-    gGLFT->glBindBufferARB(MGL_ELEMENT_ARRAY_BUFFER_ARB, 0);
-
-    gGLFT->glDisableClientState(MGL_VERTEX_ARRAY);
+    if (usesIndexBuffer) gGLFT->glBindBufferARB(MGL_ELEMENT_ARRAY_BUFFER_ARB, 0);
 }
 
 void
-BufferObject::genIndexBuffer(const std::vector<MGLuint>& v, MGLenum primType)
+BufferObject::genIndexBuffer(const Span<const uint32_t>& indices)
 {
     if(gGLFT == NULL)
         return;
@@ -113,18 +120,16 @@ BufferObject::genIndexBuffer(const std::vector<MGLuint>& v, MGLenum primType)
 
     // upload data
     gGLFT->glBufferDataARB(MGL_ELEMENT_ARRAY_BUFFER_ARB,
-        sizeof(MGLuint) * v.size(), &v[0], MGL_STATIC_DRAW_ARB); // upload data
+        sizeof(MGLuint) * indices.size, indices.start, MGL_STATIC_DRAW_ARB); // upload data
     if (MGL_NO_ERROR != gGLFT->glGetError()) throw "Error: Unable to upload index buffer data";
 
     // release buffer
     gGLFT->glBindBufferARB(MGL_ELEMENT_ARRAY_BUFFER_ARB, 0);
-
-    mPrimNum = v.size();
-    mPrimType = primType;
 }
 
 void
-BufferObject::genVertexBuffer(const std::vector<MGLfloat>& v)
+BufferObject::genVertexBuffer(const Span<const V3f>& vertices)
+
 {
     if(gGLFT == NULL)
         return;
@@ -135,14 +140,14 @@ BufferObject::genVertexBuffer(const std::vector<MGLfloat>& v)
     gGLFT->glBindBufferARB(MGL_ARRAY_BUFFER_ARB, mVertexBuffer);
     if (gGLFT->glIsBufferARB(mVertexBuffer) == MGL_FALSE) throw "Error: Unable to create vertex buffer";
 
-    gGLFT->glBufferDataARB(MGL_ARRAY_BUFFER_ARB, sizeof(MGLfloat) * v.size(), &v[0], MGL_STATIC_DRAW_ARB);
+    gGLFT->glBufferDataARB(MGL_ARRAY_BUFFER_ARB, sizeof(MGLfloat) * 3 * vertices.size, vertices.start, MGL_STATIC_DRAW_ARB);
     if (MGL_NO_ERROR != gGLFT->glGetError()) throw "Error: Unable to upload vertex buffer data";
 
     gGLFT->glBindBufferARB(MGL_ARRAY_BUFFER_ARB, 0);
 }
 
 void
-BufferObject::genNormalBuffer(const std::vector<MGLfloat>& v, bool flipped)
+BufferObject::genNormalBuffer(const Span<const V3f>& normals, bool flipped)
 {
     if(gGLFT == NULL)
         return;
@@ -165,10 +170,27 @@ BufferObject::genNormalBuffer(const std::vector<MGLfloat>& v, bool flipped)
         if (gGLFT->glIsBufferARB(mNormalBuffer) == MGL_FALSE) throw "Error: Unable to create normal buffer";
     }
 
-    gGLFT->glBufferDataARB(MGL_ARRAY_BUFFER_ARB, sizeof(MGLfloat) * v.size(), &v[0], MGL_STATIC_DRAW_ARB);
+    gGLFT->glBufferDataARB(MGL_ARRAY_BUFFER_ARB, sizeof(MGLfloat) * 3 * normals.size, normals.start, MGL_STATIC_DRAW_ARB);
     if (MGL_NO_ERROR != gGLFT->glGetError()) throw "Error: Unable to upload normal buffer data";
     gGLFT->glBindBufferARB(MGL_ARRAY_BUFFER_ARB, 0);
 
+}
+
+void BufferObject::genUVBuffer(const Span<const V2f>& uvs)
+{
+    if(gGLFT == NULL)
+        return;
+
+    if (gGLFT->glIsBufferARB(mUVBuffer) == MGL_TRUE) gGLFT->glDeleteBuffersARB(1, &mUVBuffer);
+
+    gGLFT->glGenBuffersARB(1, &mUVBuffer);
+    gGLFT->glBindBufferARB(MGL_ARRAY_BUFFER_ARB, mUVBuffer);
+    if (gGLFT->glIsBufferARB(mUVBuffer) == MGL_FALSE) throw "Error: Unable to create UV buffer";
+
+    gGLFT->glBufferDataARB(MGL_ARRAY_BUFFER_ARB, sizeof(MGLfloat) * 2 * uvs.size, uvs.start, MGL_STATIC_DRAW_ARB);
+    if (MGL_NO_ERROR != gGLFT->glGetError()) throw "Error: Unable to upload UV buffer data";
+
+    gGLFT->glBindBufferARB(MGL_ARRAY_BUFFER_ARB, 0);
 }
 
 void
@@ -199,6 +221,7 @@ BufferObject::clear()
     if (gGLFT->glIsBufferARB(mVertexBuffer) == MGL_TRUE) gGLFT->glDeleteBuffersARB(1, &mVertexBuffer);
     if (gGLFT->glIsBufferARB(mColorBuffer) == MGL_TRUE) gGLFT->glDeleteBuffersARB(1, &mColorBuffer);
     if (gGLFT->glIsBufferARB(mNormalBuffer) == MGL_TRUE) gGLFT->glDeleteBuffersARB(1, &mNormalBuffer);
+    if (gGLFT->glIsBufferARB(mUVBuffer) == MGL_TRUE) gGLFT->glDeleteBuffersARB(1, &mUVBuffer);
 
     mPrimType = MGL_POINTS;
     mPrimNum = 0;

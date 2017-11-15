@@ -15,16 +15,15 @@ License along with this library.*/
 #ifndef _nozAlembicHolderNode
 #define _nozAlembicHolderNode
 
-#include "Drawable.h"
+#include "AlembicScene.h"
+#include "RenderModules.h"
 #include "Foundation.h"
-#include "Scene.h"
-#include "SceneManager.h"
+#include "TextureLoader.h"
 
 #include <maya/MPxSurfaceShape.h>
 #include <maya/MPxSurfaceShapeUI.h>
 
 #include <maya/MPxNode.h>
-//#include <maya/MPxLocatorNode.h>
 #include <maya/MFnNumericAttribute.h>
 #include <maya/MFnData.h>
 #include <maya/MFnDagNode.h>
@@ -44,33 +43,16 @@ License along with this library.*/
 #include <maya/MMatrix.h>
 #include <maya/MFnCamera.h>
 #include <maya/MFnRenderLayer.h>
+#include <maya/MTime.h>
 
 #include <json/json.h>
 #include "parseJson.h"
 
 #include <iostream>
+#include <unordered_map>
+#include <unordered_set>
 
-
-class CAlembicDatas
-{
-public:
-    CAlembicDatas();
-    MBoundingBox bbox;
-    int token;
-    bool m_abcdirty;
-    std::string m_currscenekey;
-	std::string m_currselectionkey;
-    bool m_bbextendedmode;
-    double time;
-
-	holderPrms *m_params;
-
-    //BufferObject buffer;
-
-    static AlembicHolder::SceneState   abcSceneState;
-    static AlembicHolder::SceneManager abcSceneManager;
-};
-
+namespace AlembicHolder {
 
 struct MStringComp
 {
@@ -87,6 +69,12 @@ struct MStringComp
     }
 };
 
+typedef HierarchyNodeCategories::DrawableID DrawableID;
+struct DiffuseColorOverride {
+    C3f diffuse_color;
+    std::string diffuse_texture_path;
+};
+typedef std::unordered_map<DrawableID, DiffuseColorOverride> DiffuseColorOverrideMap;
 
 class nozAlembicHolder : public MPxSurfaceShape
 {
@@ -97,61 +85,63 @@ public:
     virtual void postConstructor();
     virtual MStatus compute( const MPlug& plug, MDataBlock& data );
 
-    bool getInternalValueInContext(const MPlug& plug, MDataHandle& dataHandle, MDGContext& ctx) override;
-    bool setInternalValueInContext(const MPlug& plug, const MDataHandle& dataHandle, MDGContext& ctx) override;
-
     virtual bool isBounded() const;
-    virtual MBoundingBox boundingBox()const ;
-    int cacheVersion() const { return MPlug(thisMObject(), aUpdateCache).asInt(); }
-    int assignmentVersion() const { return MPlug(thisMObject(), aUpdateAssign).asInt(); }
-    MStatus setDependentsDirty(MPlug const & inPlug, MPlugArray  & affectedPlugs);
+    virtual MBoundingBox boundingBox()const;
 
     virtual void copyInternalData( MPxNode* srcNode );
-
-    void setHolderTime();
 
     static  void*       creator();
     static  MStatus     initialize();
 
-    std::string getSceneKey() const;
-    std::string getSelectionKey() const;
-
-    CAlembicDatas* alembicData();
-    const CAlembicDatas* alembicData() const { return &fGeometry; }
-    AlembicHolder::DrawablePtr getGeometry() const;
-    AlembicHolder::MaterialGraphMap::Ptr getMaterial() const;
-
-
-
-
-
-    MTime getTimeOffset() const { return MPlug(thisMObject(), aTimeOffset).asMTime(); }
-
-    typedef std::map<MString, MGLuint, MStringComp> TextureMap;
-    TextureMap* getTextureMap() { return &textureMap; }
-
-    typedef std::set<MString, MStringComp> TextureSet;
-    TextureSet* getOwnTextures() { return &ownTextures; }
-
-    short getTextRes() const { return textRes; }
+    MSelectionMask getShapeSelectionMask() const override;
 
 private:
-    CAlembicDatas        fGeometry;
-    TextureMap           textureMap;
-    TextureSet           ownTextures;
-    int fCacheVersion;
-    int fAssignmentVersion;
+    void updateCache() const { MPlug(thisMObject(), aUpdateCache).asInt(); }
+    void updateAssign() const { MPlug(thisMObject(), aUpdateAssign).asInt(); }
+
+public:
+    const AlembicScenePtr& getScene() const;
+    const AlembicSceneKey& getSceneKey() const;
+    std::string getSelectionKey() const;
+    chrono_t getTime() const;
+    bool isBBExtendedMode() const;
+    const DiffuseColorOverrideMap& getDiffuseColorOverrides() const;
+    std::string getShaderAssignmentsJson() const;
+
+    struct SceneSample {
+        chrono_t time;
+        DrawableSampleVector drawable_samples;
+        HierarchyStat hierarchy_stat;
+        std::vector<bool> selection_visibility;
+        SceneSample() : time(-std::numeric_limits<chrono_t>::infinity()) {}
+        bool empty() const { return drawable_samples.empty(); }
+    };
+    const SceneSample& getSample() const;
+
+private:
+    AlembicSceneKey m_scene_key;
+    AlembicScenePtr m_scene;
+    SceneSample m_sample;
+    std::string m_selection_key;
+
+    std::string m_shader_assignments;
+    DiffuseColorOverrideMap m_diffuse_color_overrides;
+    void updateDiffuseColorOverrides();
+
+private:
+    holderPrms m_params;
+public:
+    const holderPrms& params() const { return m_params; }
 
     static    MObject    aAbcFiles;
     static    MObject    aObjectPath;
     static    MObject    aBoundingExtended;
-//    static  MObject    aBooleanAttr; // example boolean attribute
     static    MObject    aTime;
     static    MObject    aTimeOffset;
     static    MObject    aSelectionPath;
     static    MObject    aShaderPath;
     static    MObject    aForceReload;
-    
+
 	static    MObject    aJsonFile;
 	static    MObject    aJsonFileSecondary;
 	static    MObject    aShadersNamespace;
@@ -173,92 +163,105 @@ private:
 
     static    MObject    aBoundMin;
     static    MObject    aBoundMax;
-    bool isConstant;
-
-    static MObject       aTextureResolution;
-    short textRes;
 
 public:
     static  MTypeId     id;
 
-protected:
-    int dUpdate;
-	int dUpdateA;
-
+private:
+    static MSelectionMask s_selection_mask;
 };
 
-class CAlembicHolderUI : public MPxSurfaceShapeUI {
+struct VP1DrawableItem {
+    BufferObject buffer;
+    M44f world_matrix;
+    C3f diffuse_color;
+    DrawableID drawable_id;
+    VP1DrawableItem(MGLenum prim_type, MGLsizei prim_count)
+    {
+        buffer.setPrimType(prim_type);
+        buffer.setPrimNum(prim_count);
+    }
+};
+struct VP1PrimitiveFilter {
+    enum { POINTS = 1, LINES = 2, TRIANGLES = 4, ALL = 7 };
+    uint8_t mask;
+    VP1PrimitiveFilter(uint8_t mask_=ALL) : mask(mask_) {}
+    bool has(MGLenum gl_prim_type) const
+    {
+        uint8_t prim_type = 0;
+        if (gl_prim_type == MGL_POINTS)
+            prim_type = POINTS;
+        else if (gl_prim_type == MGL_LINES)
+            prim_type = LINES;
+        else if (gl_prim_type == MGL_TRIANGLES)
+            prim_type = TRIANGLES;
+        return (mask & prim_type) != 0;
+    }
+};
+struct VP1DrawSettings {
+    bool override_color;
+    bool use_texture;
+    const DiffuseColorOverrideMap& color_overrides;
+    // Only draw the types of primitives specified in the filter.
+    VP1PrimitiveFilter primitive_filter;
+    bool flip_normals;
+    VP1DrawSettings(bool override_color_, bool use_texture_ = false,
+                 const DiffuseColorOverrideMap& color_overrides_ = DiffuseColorOverrideMap(),
+                 VP1PrimitiveFilter primitive_filter_ = VP1PrimitiveFilter(),
+                 bool flip_normals_=false)
+        : override_color(override_color_), use_texture(use_texture_)
+        , color_overrides(color_overrides_)
+        , primitive_filter(primitive_filter_)
+        , flip_normals(flip_normals_)
+    {}
+};
+struct VP1DrawableContainer {
+    std::vector<VP1DrawableItem> drawables;
+    std::vector<std::pair<std::string, VP1TexturePtr>> textures;
+    void draw(const VP1DrawSettings& draw_settings) const;
+};
+
+// UI class    - defines the UI part of a shape node
+class CAlembicHolderUI: public MPxSurfaceShapeUI {
 public:
-
-    static void* creator();
-
-    CAlembicHolderUI ();
-    ~CAlembicHolderUI ();
-
+    CAlembicHolderUI();
+    virtual ~CAlembicHolderUI();
     virtual void getDrawRequests(const MDrawInfo & info,
-        bool objectAndActiveOnly,
-        MDrawRequestQueue & queue);
-
-    // Viewport 1.0 draw
+            bool objectAndActiveOnly, MDrawRequestQueue & requests);
     virtual void draw(const MDrawRequest & request, M3dView & view) const;
 
-    virtual bool snap(MSelectInfo &snapInfo) const;
+    void drawBoundingBox( const MDrawRequest & request, M3dView & view ) const;
+
+    MPoint getPointAtDepth(MSelectInfo &selectInfo, double    depth) const;
+
     virtual bool select(MSelectInfo &selectInfo, MSelectionList &selectionList,
-        MPointArray &worldSpaceSelectPts) const;
+            MPointArray &worldSpaceSelectPts) const;
+
+    void getDrawRequestsWireFrame(MDrawRequest&, const MDrawInfo&);
+    void getDrawRequestsBoundingBox(MDrawRequest&, const MDrawInfo&);
+    void            getDrawRequestsShaded(      MDrawRequest&,
+                                              const MDrawInfo&,
+                                              MDrawRequestQueue&,
+                                              MDrawData& data );
 
 
-private:
-    // Prohibited and not implemented.
-    CAlembicHolderUI(const CAlembicHolderUI& obj);
-    const CAlembicHolderUI& operator=(const CAlembicHolderUI& obj);
-
-    static MPoint getPointAtDepth(MSelectInfo &selectInfo, double depth);
-
-    // Helper functions for the viewport 1.0 drawing purposes.
-    void drawBoundingBox(const MDrawRequest & request, M3dView & view) const;
-    void drawWireframe(const MDrawRequest & request, M3dView & view) const;
-    void drawShaded(const MDrawRequest & request, M3dView & view, bool depthOffset) const;
-
+    static void * creator();
     // Draw Tokens
-    enum DrawToken {
-        kBoundingBox,
+    //
+    enum {
         kDrawWireframe,
         kDrawWireframeOnShaded,
         kDrawSmoothShaded,
-        kDrawSmoothShadedDepthOffset
+        kDrawFlatShaded,
+        kDrawBoundingBox,
+        kLastToken
     };
-};
-
-
-namespace AlembicHolder {
-
-///////////////////////////////////////////////////////////////////////////////
-//
-// DisplayPref
-//
-// Keeps track of the display preference.
-//
-////////////////////////////////////////////////////////////////////////////////
-
-class DisplayPref {
-public:
-    enum WireframeOnShadedMode {
-        kWireframeOnShadedFull,
-        kWireframeOnShadedReduced,
-        kWireframeOnShadedNone
-    };
-
-    static WireframeOnShadedMode wireframeOnShadedMode();
-
-    static MStatus initCallback();
-    static MStatus removeCallback();
 
 private:
-    static void displayPrefChanged(void*);
-
-    static WireframeOnShadedMode fsWireframeOnShadedMode;
-    static MCallbackId fsDisplayPrefChangedCallbackId;
-};
+    VP1DrawableContainer m_vp1drawables;
+    void updateVP1Drawables(const nozAlembicHolder::SceneSample& scene_sample, const DiffuseColorOverrideMap& color_overrides, const StaticMaterialVector& static_materials);
+    void drawWithTwoSidedLightingSupport(const VP1DrawableContainer& drawable_container, VP1DrawSettings draw_settings) const;
+}; // class CAlembicHolderUI
 
 } // namespace AlembicHolder
 
