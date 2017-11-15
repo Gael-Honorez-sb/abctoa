@@ -44,63 +44,45 @@
 
 #include <Alembic/AbcGeom/All.h>
 
-#include "NodeCache.h"
+#include "pystring.h"
 #include "json/json.h"
+
+#include "NodeCache.h"
+
 
 //-*****************************************************************************
 
 struct ProcArgs
 {
     //constructor parses
-    ProcArgs( const char * paramStr );
+    ProcArgs( AtNode *node );
 
     //copy constructor
     ProcArgs( const ProcArgs &rhs )
-    : filename( rhs.filename )
+    : filenames( rhs.filenames )
     , nameprefix( rhs.nameprefix )
-    , xmlpath ( rhs.xmlpath)
     , objectpath( rhs.objectpath )
     , frame( rhs.frame )
     , fps( rhs.fps )
     , shutterOpen( rhs.shutterOpen )
     , shutterClose( rhs.shutterClose )
-    , excludeXform( rhs.excludeXform )
-    , inheritXform( rhs.inheritXform )
-    , subdIterations ( rhs.subdIterations )
-    , subdivType( rhs.subdivType )
-    , subdivAdaptiveMetric (rhs.subdivAdaptiveMetric )
-    , subdivPixelError (rhs.subdivPixelError )
-    , subdivUvSmoothing (rhs.subdivUvSmoothing )
     , proceduralNode( rhs.proceduralNode )
     {}
 
     //member variables
-    std::string filename;
+    std::vector<std::string> filenames;
     std::string nameprefix;
-    std::string xmlpath;
-
     std::string objectpath;
+
     double frame;
     double fps;
     double shutterOpen;
     double shutterClose;
 
-    bool excludeXform;
-    bool inheritXform;
-
-    int subdIterations;
-    int subdivType;
-
-    int subdivAdaptiveMetric;
-    float subdivPixelError;
-    int subdivUvSmoothing;
-
     AtNode * proceduralNode;
 
     NodeCollector * createdNodes;
 	NodeCache * nodeCache;
-
-	AtCritSec lock;
 
     bool linkShader;
     bool linkDisplacement;
@@ -110,10 +92,6 @@ struct ProcArgs
     
 	std::string ns;
 	std::string shaderAssignationAttribute;
-	
-
-    bool useUvArchive;
-    Alembic::AbcGeom::IObject uvsRoot;
 
     std::vector<std::pair<std::string, AtNode*> > shaders;
     std::map<std::string, AtNode*> displacements;
@@ -124,8 +102,6 @@ struct ProcArgs
     bool useAbcShaders;
     Alembic::AbcGeom::IObject materialsObject;
     const char* abcShaderFile;
-
-    void usage();
 };
 
 #endif

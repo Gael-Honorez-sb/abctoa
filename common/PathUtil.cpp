@@ -35,8 +35,7 @@
 //-*****************************************************************************
 #include "PathUtil.h"
 
-#include <boost/tokenizer.hpp>
-#include <boost/regex.hpp>
+#include <regex>
 #include <pystring.h>
 
 //-*****************************************************************************
@@ -97,12 +96,11 @@ bool pathInJsonString(const std::string &path, const std::string &jsonString )
 
 void TokenizePath(const std::string &path, const char* separator, std::vector<std::string> &result)
 {
-    typedef boost::char_separator<char> Separator;
-    typedef boost::tokenizer<Separator> Tokenizer;
+    std::vector<std::string> tokenizer;
 
-    Tokenizer tokenizer(path, Separator(separator));
-
-    for (Tokenizer::iterator iter = tokenizer.begin(); iter != tokenizer.end(); ++iter)
+    pystring::split(path, tokenizer, separator);
+    
+    for (std::vector<std::string>::iterator iter = tokenizer.begin(); iter != tokenizer.end(); ++iter)
     {
         if ((*iter).empty()) { continue; }
         result.push_back(*iter);
@@ -179,7 +177,7 @@ static std::string translate(const char *pattern)
                 result += "]";
             }
         } else {
-            if (isalnum(c)) {
+            if (isalnum(c) || c== '_') {
                 result += c;
             } else {
                 result += "\\";
@@ -190,12 +188,23 @@ static std::string translate(const char *pattern)
     /*
 * Make the expression multi-line and make the dot match any character at all.
 */
-    return result + "\\Z(?ms)";
+    return result;
 }
 
 bool matchPattern(const std::string& str, const std::string& pat)
 {
-    boost::regex rx (translate(pat.c_str()).c_str());
-    bool result = boost::regex_search(str,rx);
+    bool result = false;
+
+    try 
+    {
+        std::regex rx (translate(pat.c_str()).c_str());
+        result = std::regex_search(str,rx);
+    } 
+ 
+    catch (const std::regex_error& e) 
+    {
+        return false;
+    }
+    
     return result;
 }

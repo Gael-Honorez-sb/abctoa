@@ -44,19 +44,26 @@ public:
 
     void render(bool normalFlipped=false) const;
 
+    void genIndexBuffer(const Span<const uint32_t>& indices);
+
+    void genVertexBuffer(const Span<const V3f>& vertices);
+    void genNormalBuffer(const Span<const V3f>& normals, bool flipped = false);
+    void genUVBuffer(const Span<const V2f>& uvs);
+    void genColorBuffer(const std::vector<MGLfloat>&);
+
     /// @note accepted @c primType: GL_POINTS, GL_LINE_STRIP, GL_LINE_LOOP,
     /// GL_LINES, GL_TRIANGLE_STRIP, GL_TRIANGLE_FAN, GL_TRIANGLES,
     /// GL_QUAD_STRIP, GL_QUADS and GL_POLYGON
-    void genIndexBuffer(const std::vector<MGLuint>&, MGLenum primType);
+    void setPrimType(MGLenum primType) { mPrimType = primType; }
+    MGLenum primType() const { return mPrimType; }
 
-    void genVertexBuffer(const std::vector<MGLfloat>&);
-    void genNormalBuffer(const std::vector<MGLfloat>&, bool flipped = false);
-    void genColorBuffer(const std::vector<MGLfloat>&);
+    void setPrimNum(MGLsizei primNum) { mPrimNum = primNum; }
+    MGLsizei primNum() const { return mPrimNum; }
 
     void clear();
 
 private:
-    MGLuint mVertexBuffer, mNormalBuffer, mNormalBufferFlipped, mIndexBuffer, mColorBuffer;
+    MGLuint mVertexBuffer, mNormalBuffer, mNormalBufferFlipped, mIndexBuffer, mUVBuffer, mColorBuffer;
     MGLenum mPrimType;
     MGLsizei mPrimNum;
 };

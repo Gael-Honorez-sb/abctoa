@@ -42,8 +42,8 @@ node_parameters
     AiParameterStr("shader", "");
     AiParameterRGB("shaderIn", 1.0f,0,0);
 
-    AiMetaDataSetInt(mds, NULL, "maya.id", 0x70532);
-    AiMetaDataSetBool(mds, NULL, "maya.hide", true);
+    AiMetaDataSetInt(nentry, NULL, "maya.id", 0x70532);
+    AiMetaDataSetBool(nentry, NULL, "maya.hide", true);
 
 
 
@@ -58,7 +58,7 @@ node_initialize
     Alembic::Abc::IArchive archive;
     Alembic::AbcCoreFactory::IFactory factory;
     factory.setPolicy(Alembic::Abc::ErrorHandler::kQuietNoopPolicy);
-    archive = factory.getArchive(AiNodeGetStr(node, "file"));
+    archive = factory.getArchive(AiNodeGetStr(node, "file").c_str());
     if (!archive.valid())
     {
         AiMsgError("[AbcShader] Cannot read file %s", AiNodeGetStr(node, "file"));
@@ -245,6 +245,6 @@ shader_evaluate
 {
     ShaderData* data = reinterpret_cast<ShaderData*>(AiNodeGetLocalData(node));
 
-    sg->out.RGB = AiShaderEvalParamRGB(p_shader);
+    sg->out.RGB() = AiShaderEvalParamRGB(p_shader);
 }
 

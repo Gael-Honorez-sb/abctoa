@@ -39,13 +39,12 @@
 #include <sstream>
 
 
-#include <boost/algorithm/string/replace.hpp>
 #define   AI_TYPE_DOUBLE   0x10
 
 std::string CleanAttributeName(std::string str)
 {
-   boost::replace_first(str, "mtoa_constant_", "");
-   return str;
+    pystring::replace(str, "mtoa_constant_", "");
+    return str;
 }
 
 
@@ -60,7 +59,7 @@ std::string GetArnoldTypeString( GeometryScope scope, int arnoldAPIType, AtNode 
         buffer << "uniform";
         break;
     case kVaryingScope:
-        if(AiNodeIs(primNode, "points"))
+        if(AiNodeIs(primNode, AtString("points")))
             buffer << "uniform";
         else
             buffer << "varying";
@@ -75,7 +74,7 @@ std::string GetArnoldTypeString( GeometryScope scope, int arnoldAPIType, AtNode 
 			buffer << "varying";
         break;
     case kConstantScope:
-		if(AiNodeIs(primNode, "points"))
+		if(AiNodeIs(primNode, AtString("points")))
 		{
 			buffer << "uniform";
 			break;
@@ -110,14 +109,11 @@ std::string GetArnoldTypeString( GeometryScope scope, int arnoldAPIType, AtNode 
         case AI_TYPE_RGBA:
             buffer << "RGBA";
             break;
-        case AI_TYPE_POINT:
-            buffer << "POINT";
-            break;
         case AI_TYPE_VECTOR:
             buffer << "VECTOR";
             break;
-        case AI_TYPE_POINT2:
-            buffer << "POINT2";
+        case AI_TYPE_VECTOR2:
+            buffer << "VECTOR2";
             break;
         case AI_TYPE_MATRIX:
             buffer << "MATRIX";
@@ -167,7 +163,7 @@ void SetArrayByArnoldType(AtArray* array, int idx, int arnoldAPIType, typename T
 							valueSample->get() );
 
 			AiArraySetRGB( array, idx,
-					AiColor(data[idxSample*3], data[idxSample*3+1], data[idxSample*3+2]) );
+					AtRGB(data[idxSample*3], data[idxSample*3+1], data[idxSample*3+2]) );
 
 			break;
 		}
@@ -177,20 +173,7 @@ void SetArrayByArnoldType(AtArray* array, int idx, int arnoldAPIType, typename T
 					reinterpret_cast<const float32_t *>(
 							valueSample->get() );
 			AiArraySetRGBA( array, idx,
-					AiRGBACreate(data[idxSample*3], data[idxSample*3+1], data[idxSample*3+2],  data[idxSample*3+3]));
-
-			break;
-		}
-		case AI_TYPE_POINT:
-		{
-			const float32_t * data =
-					reinterpret_cast<const float32_t *>(
-							valueSample->get() );
-
-			
-
-			AiArraySetPnt( array, idx,
-					 AiPoint(data[idxSample*3], data[idxSample*3+1], data[idxSample*3+2]));
+					AtRGBA(data[idxSample*3], data[idxSample*3+1], data[idxSample*3+2],  data[idxSample*3+3]));
 
 			break;
 		}
@@ -200,19 +183,21 @@ void SetArrayByArnoldType(AtArray* array, int idx, int arnoldAPIType, typename T
 					reinterpret_cast<const float32_t *>(
 							valueSample->get() );
 
+			
+
 			AiArraySetVec( array, idx,
-					AiVector(data[idxSample*3], data[idxSample*3+1], data[idxSample*3+2]) );
+					 AtVector(data[idxSample*3], data[idxSample*3+1], data[idxSample*3+2]));
 
 			break;
 		}
-		case AI_TYPE_POINT2:
+		case AI_TYPE_VECTOR2:
 		{
 			const float32_t * data =
 					reinterpret_cast<const float32_t *>(
 							valueSample->get() );
 
-			AiArraySetPnt2( array, idx,
-					AiPoint2(data[idxSample*3], data[idxSample*3+1]) );
+			AiArraySetVec2( array, idx,
+					AtVector2(data[idxSample*3], data[idxSample*3+1]) );
 			break;
 		}
 		case AI_TYPE_MATRIX:
@@ -274,7 +259,7 @@ void AddArbitraryGeomParam( ICompoundProperty & parent,
     }
 
     // Varying and faceVarying attributes are not supported on instance!
-    if((param.getScope() == kVaryingScope || param.getScope() == kFacevaryingScope ) && AiNodeIs(primNode, "ginstance"))
+    if((param.getScope() == kVaryingScope || param.getScope() == kFacevaryingScope ) && AiNodeIs(primNode, AtString("ginstance")))
         return;
 
     // Check if that attribute is not existing already as a standard attribute.
@@ -298,7 +283,7 @@ void AddArbitraryGeomParam( ICompoundProperty & parent,
     }
     AiParamIteratorDestroy(iter);
 
-	if ( AiNodeIs(primNode, "points"))
+	if ( AiNodeIs(primNode, AtString("points")))
 	{
         typename T::prop_type::sample_ptr_type valueSample =
                 param.getExpandedValue( sampleSelector ).getVals();
@@ -388,17 +373,6 @@ void AddArbitraryGeomParam( ICompoundProperty & parent,
 
                 break;
             }
-            case AI_TYPE_POINT:
-            {
-                const float32_t * data =
-                        reinterpret_cast<const float32_t *>(
-                                valueSample->get() );
-
-                AiNodeSetPnt( primNode, CleanAttributeName(param.getName()).c_str(),
-                        data[0], data[1], data[2]);
-
-                break;
-            }
             case AI_TYPE_VECTOR:
             {
                 const float32_t * data =
@@ -406,17 +380,17 @@ void AddArbitraryGeomParam( ICompoundProperty & parent,
                                 valueSample->get() );
 
                 AiNodeSetVec( primNode, CleanAttributeName(param.getName()).c_str(),
-                        data[0], data[1], data[2] );
+                        data[0], data[1], data[2]);
 
                 break;
             }
-            case AI_TYPE_POINT2:
+            case AI_TYPE_VECTOR2:
             {
                 const float32_t * data =
                         reinterpret_cast<const float32_t *>(
                                 valueSample->get() );
 
-                AiNodeSetPnt2( primNode, CleanAttributeName(param.getName()).c_str(),
+                AiNodeSetVec2( primNode, CleanAttributeName(param.getName()).c_str(),
                         data[0], data[1] );
                 break;
             }
@@ -478,7 +452,7 @@ void AddArbitraryGeomParam( ICompoundProperty & parent,
                unsigned int base = 0;
                AtArray* nsides = AiNodeGetArray(primNode, "nsides");
                std::vector<unsigned int> nvidxReversed;
-               for (unsigned int i = 0; i < nsides->nelements / nsides->nkeys; ++i)
+               for (unsigned int i = 0; i < AiArrayGetNumElements(nsides) / AiArrayGetNumKeys(nsides); ++i)
                {
                   int curNum = AiArrayGetUInt(nsides ,i);
 
@@ -493,7 +467,7 @@ void AddArbitraryGeomParam( ICompoundProperty & parent,
 			else
 			{
 				// Not indexed, probably a curve ?
-				if(!AiNodeIs(primNode, "curves"))
+				if(!AiNodeIs(primNode, AtString("curves")))
 					return;
 
                 typename T::prop_type::sample_ptr_type valueSample =
@@ -503,19 +477,19 @@ void AddArbitraryGeomParam( ICompoundProperty & parent,
 					if ( !AiNodeDeclare( primNode, cleanAttributeName.c_str(), declStr.c_str() ) )
 						return;
 
-				int basis = AiNodeGetInt(primNode, "basis");
+				int basis = AiNodeGetInt(primNode, AtString("basis"));
 
 				if(basis != 3)
 				{
 					AtArray* curveNumPoints = AiNodeGetArray( primNode , "num_points"); 
 					AtArray* radius = AiNodeGetArray( primNode, "radius");
-					AtArray* finalValues = AiArrayAllocate( radius->nelements, 1, arnoldAPIType);
+					AtArray* finalValues = AiArrayAllocate( AiArrayGetNumElements(radius), 1, arnoldAPIType);
 
 					unsigned int c_verts = 0;
 					unsigned int w_start = 0; 
 					unsigned int w_end = 0;
 					int idxArray = 0;
-					for ( int curCurve = 0; curCurve < curveNumPoints->nelements; curCurve++)
+					for ( int curCurve = 0; curCurve < AiArrayGetNumElements(curveNumPoints); curCurve++)
 					{
 						c_verts = AiArrayGetUInt(curveNumPoints, curCurve);
 						unsigned int w_start = w_end;
@@ -742,7 +716,7 @@ void AddArbitraryGeomParams( ICompoundProperty &parent,
                     propHeader,
                     sampleSelector,
                     primNode,
-                    AI_TYPE_POINT2);
+                    AI_TYPE_VECTOR2);
         }
         else if ( IV3fGeomParam::matches( propHeader ) )
         {
@@ -760,7 +734,7 @@ void AddArbitraryGeomParams( ICompoundProperty &parent,
                     propHeader,
                     sampleSelector,
                     primNode,
-                    AI_TYPE_POINT);
+                    AI_TYPE_VECTOR);
         }
         else if ( IN3fGeomParam::matches( propHeader ) )
         {
@@ -914,28 +888,21 @@ void AddArbitraryProceduralParams(AtNode* proc, AtNode * primNode)
                 AiNodeSetRGBA( primNode, paramName, val.r, val.b, val.g, val.a);
                 break;
             }
-            case AI_TYPE_POINT:
-            {
-                AtPoint val = AiNodeGetPnt(proc, paramName);
-                AiNodeSetPnt( primNode, paramName, val.x, val.y, val.z);
-                break;
-            }
             case AI_TYPE_VECTOR:
             {
                 AtVector val = AiNodeGetVec(proc, paramName);
                 AiNodeSetVec( primNode, paramName, val.x, val.y, val.z);
                 break;
             }
-            case AI_TYPE_POINT2:
+            case AI_TYPE_VECTOR2:
             {
-                AtPoint2 val = AiNodeGetPnt2(proc, paramName);
-                AiNodeSetPnt2( primNode, paramName, val.x, val.y);
+                AtVector2 val = AiNodeGetVec2(proc, paramName);
+                AiNodeSetVec2( primNode, paramName, val.x, val.y);
                 break;
             }
             case AI_TYPE_MATRIX:
             {
-                AtMatrix m;
-                AiNodeGetMatrix(proc, paramName, m);
+                AtMatrix m = AiNodeGetMatrix(proc, paramName);
                 AiNodeSetMatrix( primNode, paramName, m);
                 break;
             }

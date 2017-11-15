@@ -1,0 +1,12 @@
+[submodule "thirdParty/jsoncpp"]
+	path = thirdParty/jsoncpp
+	url = https://github.com/Gael-Honorez-sb/jsoncpp
+[submodule "thirdParty/pystring"]
+	path = thirdParty/pystring
+	url = https://github.com/Gael-Honorez-sb/pystring
+[submodule "alembic"]
+	path = alembic
+	url = https://github.com/Gael-Honorez-sb/alembic.git
+[submodule "thirdParty/openEXR"]
+	path = thirdParty/openEXR
+	url = https://github.com/Gael-Honorez-sb/openexr.git

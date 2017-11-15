@@ -1,10 +1,12 @@
 
+
 IF(NOT MTOA_BASE_DIR AND NOT $ENV{MTOA_BASE_DIR} STREQUAL "")
   SET(MTOA_BASE_DIR $ENV{MTOA_BASE_DIR})
 ENDIF()
 
+
 set(MTOA_BASE_DIR
-"${MTOA_BASE_DIR}"
+${MTOA_BASE_DIR}
 CACHE
 PATH
 "Directory to search for MTOA")
@@ -22,7 +24,7 @@ find_library(MTOA_LIBRARY
 
 find_path(MTOA_INCLUDE_DIR
 	NAMES
-	scene/MayaScene.h
+	utils/Version.h
 	PATHS
 	"${MTOA_BASE_DIR}"
 	PATH_SUFFIXES

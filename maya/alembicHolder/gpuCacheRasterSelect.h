@@ -56,14 +56,12 @@ public:
     virtual ~RasterSelect();
     
     // Base class virtual overrides */
-    virtual void processEdges(CAlembicDatas* geom,
-                                std::string sceneKey,
+    virtual void processEdges(const AlembicHolder::VP1DrawableContainer& drawables,
                               size_t numWires);
 
-    virtual void processTriangles(CAlembicDatas* geom,
-                                    std::string sceneKey,
+    virtual void processTriangles(const AlembicHolder::VP1DrawableContainer& drawables,
                                   size_t numTriangles);
-    
+
     virtual void end();
     virtual bool isSelected() const;
     virtual float minZ() const;

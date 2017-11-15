@@ -48,8 +48,6 @@
 
 #include "json/value.h"
 
-#include <boost/regex.hpp>
-// #include <boost/thread.hpp>
 //-*****************************************************************************
 
 #if AI_VERSION_ARCH_NUM == 3
@@ -192,7 +190,7 @@ AtNode* writeCurves(
     const SampleTimeSet& sampleTimes
     )
 {
-	std::vector<AtPoint> vlist;
+	std::vector<AtVector> vlist;
 	std::vector<float> radius;
 	std::vector<float> finalRadius;
 
@@ -239,7 +237,7 @@ AtNode* writeCurves(
         {
             if(name.find(*it) != string::npos || std::find(tags.begin(), tags.end(), *it) != tags.end() || matchPattern(name,*it))
             {
-                const Json::Value overrides = args.attributesRoot[*it];
+                Json::Value overrides = args.attributesRoot[*it];
                 if(overrides.size() > 0)
                 {
                     for( Json::ValueIterator itr = overrides.begin() ; itr != overrides.end() ; itr++ )
@@ -409,14 +407,14 @@ AtNode* writeCurves(
                 if(pId <= velptr->size())
                 {
                     Alembic::Abc::V3f posAtOpen = ((*v3ptr)[pId] + (*velptr)[pId] * scaleVelocity *-timeoffset);
-                    AtPoint pos1;
+                    AtVector pos1;
                     pos1.x = posAtOpen.x;
                     pos1.y = posAtOpen.y;
                     pos1.z = posAtOpen.z;
                     vlist[pId]= pos1;
 
                     Alembic::Abc::V3f posAtEnd = ((*v3ptr)[pId] + (*velptr)[pId]* scaleVelocity *(1.0f-timeoffset));
-                    AtPoint pos2;
+                    AtVector pos2;
                     pos2.x = posAtEnd.x;
                     pos2.y = posAtEnd.y;
                     pos2.z = posAtEnd.z;
@@ -429,7 +427,7 @@ AtNode* writeCurves(
         {
             for ( size_t pId = 0; pId < pSize; ++pId )
             {
-                AtPoint pos;
+                AtVector pos;
                 pos.x = (*v3ptr)[pId].x;
                 pos.y = (*v3ptr)[pId].y;
                 pos.z = (*v3ptr)[pId].z;
@@ -493,11 +491,11 @@ AtNode* writeCurves(
     {
         AiNodeSetArray(curvesNode, "points",
                 AiArrayConvert( vlist.size() / sampleTimes.size(),
-                        sampleTimes.size(), AI_TYPE_POINT, (void*)(&(vlist[0]))
+                        sampleTimes.size(), AI_TYPE_VECTOR, (void*)(&(vlist[0]))
                                 ));
 
 
-        if ( sampleTimes.size() > 1 )
+        /*if ( sampleTimes.size() > 1 )
         {
             std::vector<float> relativeSampleTimes;
             relativeSampleTimes.reserve( sampleTimes.size() );
@@ -514,17 +512,17 @@ AtNode* writeCurves(
             AiNodeSetArray( curvesNode, "deform_time_samples",
                     AiArrayConvert(relativeSampleTimes.size(), 1,
                             AI_TYPE_FLOAT, &relativeSampleTimes[0]));
-        }
+        }*/
     }
     else
     {
         AiNodeSetArray(curvesNode, "points",
                 AiArrayConvert( vlist.size() / 2,
-                        2, AI_TYPE_POINT, (void*)(&(vlist[0]))
+                        2, AI_TYPE_VECTOR, (void*)(&(vlist[0]))
                                 ));
 
-        AiNodeSetArray( curvesNode, "deform_time_samples",
-                    AiArray(2, 1, AI_TYPE_FLOAT, 0.f, 1.f));
+        /*AiNodeSetArray( curvesNode, "deform_time_samples",
+                    AiArray(2, 1, AI_TYPE_FLOAT, 0.f, 1.f));*/
 
     }
 

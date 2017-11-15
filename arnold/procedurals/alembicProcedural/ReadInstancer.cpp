@@ -38,11 +38,6 @@ void WalkObjectForInstancer( IObject & parent, const ObjectHeader &i_ohead, Proc
 
         // also check visibility flags
 
-		if ( args.excludeXform )
-        {
-            nextParentObject = child;
-        }
-        else
         {
             if ( xs.getNumOps() > 0 )
             {
@@ -125,13 +120,12 @@ void WalkObjectForInstancer( IObject & parent, const ObjectHeader &i_ohead, Proc
 		for ( size_t pId = 0; pId < pSize; ++pId )
 		{
 			Alembic::Abc::V3f pos = (*v3ptr)[pId];
-            AtPoint apos;
+            AtVector apos;
             apos.x = pos.x;
             apos.y = pos.y;
             apos.z = pos.z;
 
-			AtMatrix outMtx;
-			AiM4Translation (outMtx, &apos);
+			AtMatrix outMtx = AiM4Translation(apos);
 
 			AtNode* instance = AiNode("procedural");
 			std::string newName(AiNodeGetName(proc));
@@ -139,9 +133,9 @@ void WalkObjectForInstancer( IObject & parent, const ObjectHeader &i_ohead, Proc
 			AiNodeSetStr(instance, "name", newName.c_str());
 			AiNodeSetStr(instance, "dso", AiNodeGetStr(proc, "dso"));
 			std::string dataField(AiNodeGetStr(proc, "data"));
-			boost::smatch what;
-			if(boost::regex_match(dataField, what, e))
-				dataField = what[1] + newName + what[3];
+			std::smatch what;
+			if(std::regex_match(dataField, what, e))
+				dataField = what[1].str() + newName + what[3].str();
 
 			AiNodeSetStr(instance, "data", dataField.c_str());
 			AiNodeSetMatrix(instance, "matrix", outMtx);

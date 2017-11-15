@@ -13,6 +13,8 @@
 
 #include <algorithm>
 
+using namespace AlembicHolder;
+
 //==============================================================================
 // CLASS RasterSelect
 //==============================================================================
@@ -88,8 +90,7 @@ RasterSelect::~RasterSelect()
 //------------------------------------------------------------------------------
 //
 void RasterSelect::processEdges(
-    CAlembicDatas* geom,
-    std::string sceneKey,
+    const AlembicHolder::VP1DrawableContainer& drawables,
     size_t /* numWires */
 )
 {
@@ -102,23 +103,14 @@ void RasterSelect::processEdges(
 
     MMatrix localToPort = modelViewMatrix * projMatrix;
 
-    {/*
-        Frustum frustum(localToPort.inverse());
-        MMatrix xform(modelViewMatrix);
-        
-        DrawWireframeState state(frustum, seconds);
-        DrawWireframeTraversal traveral(state, xform, false, Frustum::kUnknown);
-        rootNode->accept(traveral);*/
-		geom->abcSceneManager.getScene(sceneKey)->draw(geom->abcSceneState, geom->m_currselectionkey, geom->time, geom->m_params);
-    }
+    drawables.draw(VP1DrawSettings(false));
 }
 
 
 //------------------------------------------------------------------------------
 //
 void RasterSelect::processTriangles(
-    CAlembicDatas* geom,
-    std::string sceneKey,
+    const AlembicHolder::VP1DrawableContainer& drawables,
     size_t /* numTriangles */
 )
 {
@@ -131,15 +123,7 @@ void RasterSelect::processTriangles(
 
     MMatrix localToPort = modelViewMatrix * projMatrix;
 
-    {/*
-        Frustum frustum(localToPort.inverse());
-        MMatrix xform(modelViewMatrix);
-        
-        DrawShadedState state(frustum, seconds);
-        DrawShadedTraversal traveral(state, xform, false, Frustum::kUnknown);
-        rootNode->accept(traveral);*/
-		geom->abcSceneManager.getScene(sceneKey)->draw(geom->abcSceneState, geom->m_currselectionkey, geom->time, geom->m_params);
-    }
+    drawables.draw(VP1DrawSettings(false));
 }
 
 

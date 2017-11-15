@@ -1,5 +1,5 @@
-/*Alembic HoldersetTime
-Copyright (c) 2014, Gaël Honorez, All rights reserved.
+/*Alembic Holder
+Copyright (c) 2014, GaÃ«l Honorez, All rights reserved.
 This library is free software; you can redistribute it and/or
 modify it under the terms of the GNU Lesser General Public
 License as published by the Free Software Foundation; either
@@ -12,10 +12,9 @@ You should have received a copy of the GNU Lesser General Public
 License along with this library.*/
 
 
-#include <maya/MCommandResult.h>
-
 #include "nozAlembicHolderNode.h"
 #include "parseJsonShaders.h"
+#include "../../common/PathUtil.h"
 
 #include "gpuCacheGLPickingSelect.h"
 #include "gpuCacheRasterSelect.h"
@@ -40,7 +39,6 @@ License along with this library.*/
 #include <maya/MRenderView.h>
 #include <maya/MViewport2Renderer.h>
 #include <maya/MHWGeometryUtilities.h>
-#include <maya/MFnMessageAttribute.h>
 #include <maya/MFileObject.h>
 #include <maya/MObjectArray.h>
 
@@ -59,6 +57,7 @@ License along with this library.*/
 
 #include <stdio.h>
 #include <map>
+#include <unordered_map>
 
 #define LEAD_COLOR                18    // green
 #define ACTIVE_COLOR            15    // white
@@ -67,20 +66,18 @@ License along with this library.*/
 #define HILITE_COLOR            17    // pale blue
 //#include "timer.h"
 
+namespace AlembicHolder {
+
 //
 static MGLFunctionTable *gGLFT = NULL;
 
 //#include "boost/foreach.hpp"
 
-typedef std::map<std::string, GLuint> NodeCache;
-
-NodeCache g_bboxCache;
-
 
 // The id is a 32bit value used to identify this type of node in the binary file format.
 MTypeId nozAlembicHolder::id(0x00114956);
 
-MObject nozAlembicHolder::aAbcFile;
+MObject nozAlembicHolder::aAbcFiles;
 MObject nozAlembicHolder::aObjectPath;
 MObject nozAlembicHolder::aSelectionPath;
 MObject nozAlembicHolder::aBoundingExtended;
@@ -113,93 +110,17 @@ MObject nozAlembicHolder::aUpdateCache;
 MObject nozAlembicHolder::aBoundMin;
 MObject nozAlembicHolder::aBoundMax;
 
-
-AlembicHolder::SceneState CAlembicDatas::abcSceneState;
-AlembicHolder::SceneManager CAlembicDatas::abcSceneManager;
-
-CAlembicDatas::CAlembicDatas() {
-
-    bbox = MBoundingBox(MPoint(-1.0f, -1.0f, -1.0f), MPoint(1.0f, 1.0f, 1.0f));
-    token = 0;
-    m_bbextendedmode = false;
-    m_currscenekey = "";
-	m_currselectionkey = "";
-    m_abcdirty = false;
-	m_params = new holderPrms();
-	m_params->linkAttributes = false;
+nozAlembicHolder::nozAlembicHolder()
+{
+    if (gGLFT == NULL)
+        gGLFT = MHardwareRenderer::theRenderer()->glFunctionTable();
 }
 
-void abcDirtiedCallback(MObject & nodeMO, MPlug & plug, void* data) {
-
-    const nozAlembicHolder& node = *(nozAlembicHolder*)data;
-
-    //nozAlembicHolder::nozAlembicHolder *node = (nozAlembicHolder::nozAlembicHolder *) data;
-    //cout << "plug.attribute()" << plug.partialName(false, false, false, false, false, true) << endl;
-
-    MFnDagNode fn( nodeMO );
-    if (plug.partialName(false, false, false, false, false, true) == "abcFile" || plug.partialName(false, false, false, false, false, true) == "objectPath")
-    {
-        MFnDagNode fn(node.thisMObject());
-        //std::cout << "plugDirtied: " << fn.name() << " " << plug.name() << " = " << plug.asString() << std::endl;
-        node.boundingBox();
-
-    }
-}
-
-void abcChangedCallback(MNodeMessage::AttributeMessage msg, MPlug & plug,
-        MPlug & otherPlug, void* data) {
-}
-
-void nodePreRemovalCallback(MObject& obj, void* data) {
-    std::string sceneKey = ((nozAlembicHolder*) data)->getSceneKey();
-    CAlembicDatas::abcSceneManager.removeScene(sceneKey);
-    if(CAlembicDatas::abcSceneManager.hasKey(sceneKey) == 0)
-    {
-        NodeCache::iterator J = g_bboxCache.find(sceneKey);
-        if (J != g_bboxCache.end())
-        {
-            glDeleteLists((*J).second, 1);
-            g_bboxCache.erase(J);
-        }
-
-    }
-}
-
-nozAlembicHolder::nozAlembicHolder() 
+nozAlembicHolder::~nozAlembicHolder()
 {
 }
 
-nozAlembicHolder::~nozAlembicHolder() {
-}
-
-void nozAlembicHolder::setHolderTime() const {
-
-    CAlembicDatas* geom = const_cast<nozAlembicHolder*> (this)->alembicData();
-
-    if(geom != NULL)
-    {
-        MFnDagNode fn(thisMObject());
-        MTime time, timeOffset;
-
-        MPlug plug = fn.findPlug(aTime);
-        plug.getValue(time);
-        plug = fn.findPlug(aTimeOffset);
-        plug.getValue(timeOffset);
-
-        double dtime;
-
-        dtime = time.as(MTime::kSeconds) + timeOffset.as(MTime::kSeconds);
-		
-		geom->time = dtime;
-
-        std::string sceneKey = getSceneKey();
-        if (geom->abcSceneManager.hasKey(sceneKey))
-			geom->abcSceneManager.getScene(sceneKey)->setTime(dtime );
-    }
-}
-
-
-bool nozAlembicHolder::isBounded() const 
+bool nozAlembicHolder::isBounded() const
 {
     return true;
 }
@@ -208,65 +129,25 @@ bool nozAlembicHolder::isBounded() const
 
 MBoundingBox nozAlembicHolder::boundingBox() const
 {
-	CAlembicDatas* geom = const_cast<nozAlembicHolder*> (this)->alembicData();
-    MBoundingBox bbox = MBoundingBox(MPoint(-1.0f, -1.0f, -1.0f), MPoint(1.0f, 1.0f, 1.0f));
-
-    if(geom != NULL)
-        bbox = geom->bbox;
-
-    return bbox;
+    updateCache();
+    if (m_scene)
+        return mayaFromImath(m_sample.hierarchy_stat.bbox);
+    else
+        return mayaFromImath(Box3d({-0.5, -0.5, -0.5}, {0.5, 0.5, 0.5}));
 }
 
-void* nozAlembicHolder::creator() 
+void* nozAlembicHolder::creator()
 {
     return new nozAlembicHolder();
 }
 
-void nozAlembicHolder::postConstructor() 
+void nozAlembicHolder::postConstructor()
 {
     // This call allows the shape to have shading groups assigned
     setRenderable(true);
-    isConstant = false;
-    // callbacks
-    MObject node = thisMObject();
-    MNodeMessage::addAttributeChangedCallback(node, abcChangedCallback, this);
-    MNodeMessage::addNodePreRemovalCallback(node, nodePreRemovalCallback, this);
-
-
 }
 
 void nozAlembicHolder::copyInternalData(MPxNode* srcNode) {
-    // here we ensure that the scene manager stays up to date when duplicating nodes
-
-    const nozAlembicHolder& node = *(nozAlembicHolder*)srcNode;
-
-    CAlembicDatas* geom = const_cast<nozAlembicHolder*> (this)->alembicData();
-
-    MFnDagNode fn(node.thisMObject());
-    MString abcfile;
-    MPlug plug = fn.findPlug(aAbcFile);
-    plug.getValue(abcfile);
-    abcfile = abcfile.expandFilePath();
-    MString objectPath;
-    plug = fn.findPlug(aObjectPath);
-    plug.getValue(objectPath);
-
-    MString selectionPath;
-    plug = fn.findPlug(aSelectionPath);
-    plug.getValue(selectionPath);
-
-    bool extendedMode = false;
-    plug = fn.findPlug(aBoundingExtended);
-    plug.getValue(extendedMode);
-
-    if(geom != NULL)
-    {
-        geom->abcSceneManager.addScene(abcfile.asChar(), objectPath.asChar());
-        geom->m_currscenekey = getSceneKey();
-		geom->m_currselectionkey = getSelectionKey();
-        geom->m_bbextendedmode = extendedMode;
-    }
-
 }
 
 MStatus nozAlembicHolder::initialize() {
@@ -278,12 +159,13 @@ MStatus nozAlembicHolder::initialize() {
     MFnUnitAttribute uAttr;
     MStatus stat;
 
-    aAbcFile = tAttr.create("cacheFileName", "cfn", MFnStringData::kString, MObject::kNullObj);
+    aAbcFiles = tAttr.create("cacheFileNames", "cfn", MFnData::kString);
     tAttr.setWritable(true);
     tAttr.setReadable(true);
     tAttr.setHidden(false);
     tAttr.setStorable(true);
     tAttr.setKeyable(true);
+    tAttr.setArray(true);
 
     aObjectPath = tAttr.create("cacheGeomPath", "cmp", MFnStringData::kString);
     tAttr.setWritable(true);
@@ -434,9 +316,15 @@ MStatus nozAlembicHolder::initialize() {
 
     aUpdateAssign = nAttr.create("updateAssign", "uass", MFnNumericData::kInt, 0);
     nAttr.setHidden(true);
+    nAttr.setStorable(false);
+    nAttr.setReadable(false);
+    nAttr.setWritable(false);
 
     aUpdateCache = nAttr.create("updateCache", "upc", MFnNumericData::kInt, 0);
     nAttr.setHidden(true);
+    nAttr.setStorable(false);
+    nAttr.setReadable(false);
+    nAttr.setWritable(false);
 
     aForceReload = nAttr.create("forceReload", "frel", MFnNumericData::kBoolean, false, &stat);
     nAttr.setDefault(false);
@@ -452,7 +340,7 @@ MStatus nozAlembicHolder::initialize() {
 
     // Add the attributes we have created to the node
     //
-    addAttribute(aAbcFile);
+    addAttribute(aAbcFiles);
     addAttribute(aObjectPath);
     addAttribute(aSelectionPath);
     addAttribute(aBoundingExtended);
@@ -482,7 +370,10 @@ MStatus nozAlembicHolder::initialize() {
     addAttribute(aBoundMin);
     addAttribute(aBoundMax);
 
-    attributeAffects(aAbcFile, aUpdateCache);
+    // Update cache
+    attributeAffects(aAbcFiles, aUpdateCache);
+    attributeAffects(aTime, aUpdateCache);
+    attributeAffects(aTimeOffset, aUpdateCache);
 
     // Update assinations
 	attributeAffects(aJsonFile, aUpdateAssign);
@@ -496,61 +387,106 @@ MStatus nozAlembicHolder::initialize() {
 	return MS::kSuccess;
 }
 
-MStatus nozAlembicHolder::setDependentsDirty(const MPlug& plug, MPlugArray& plugArray)
+MSelectionMask nozAlembicHolder::s_selection_mask("alembicHolder");
+
+MSelectionMask nozAlembicHolder::getShapeSelectionMask() const
 {
+    return s_selection_mask;
+}
 
-    if (plug != aForceReload && plug != aBoundingExtended && plug != aObjectPath
-        && plug != aSelectionPath && plug != aTime && plug != aTimeOffset && plug != aUpdateCache)
-        return MPxNode::setDependentsDirty(plug, plugArray);
+const nozAlembicHolder::SceneSample& nozAlembicHolder::getSample() const
+{
+    updateCache();
+    return m_sample;
+}
 
+const AlembicScenePtr& nozAlembicHolder::getScene() const
+{
+    updateCache();
+    return m_scene;
+}
 
-    if ((plug == aTime || plug == aTimeOffset) && isConstant)
-        return MPxNode::setDependentsDirty(plug, plugArray);
-
-    if (plug == aUpdateCache)
-    {
-        MObjectArray objArray;
-        objArray.append(aBoundMin);
-        objArray.append(aBoundMax);
-        for (unsigned i(0), numObjects = objArray.length(); i < numObjects; i++)
-        {
-            MPlug plug(thisMObject(), objArray[i]);
-            plugArray.append(plug);
-        }
-    }
-    else
-    {
-        MPlug plug(thisMObject(), aUpdateCache);
-        plugArray.append(plug);
-    }
-    return MPxNode::setDependentsDirty(plug, plugArray);
+const AlembicSceneKey& nozAlembicHolder::getSceneKey() const
+{
+    updateCache();
+    return m_scene_key;
 }
 
 std::string nozAlembicHolder::getSelectionKey() const {
-    MFnDagNode fn(thisMObject());
-    MString selectionPath;
-    MPlug plug = fn.findPlug(aSelectionPath);
-    plug.getValue(selectionPath);
-    return std::string(selectionPath.asChar());
+    return std::string(MPlug(thisMObject(), aSelectionPath).asString().asChar());
 }
 
-std::string nozAlembicHolder::getSceneKey() const {
-    MFnDagNode fn(thisMObject());
-    MString abcfile;
-    MPlug plug = fn.findPlug(aAbcFile);
-    plug.getValue(abcfile);
-
-    MFileObject fileObject;
-    fileObject.setRawFullName(abcfile.expandFilePath());
-    fileObject.setResolveMethod(MFileObject::kInputFile);
-    abcfile = fileObject.resolvedFullName();
-
-    MString objectPath;
-    plug = fn.findPlug(aObjectPath);
-    plug.getValue(objectPath);
-    return std::string((abcfile + "|" + objectPath).asChar());
+chrono_t nozAlembicHolder::getTime() const
+{
+    auto time = MPlug(thisMObject(), aTime).asMTime() + MPlug(thisMObject(), aTimeOffset).asMTime();
+    return time.as(MTime::kSeconds);
 }
 
+bool nozAlembicHolder::isBBExtendedMode() const
+{
+    return MPlug(thisMObject(), aBoundingExtended).asBool();
+}
+
+const DiffuseColorOverrideMap& nozAlembicHolder::getDiffuseColorOverrides() const
+{
+    updateCache();
+    return m_diffuse_color_overrides;
+}
+
+std::string nozAlembicHolder::getShaderAssignmentsJson() const
+{
+    return MPlug(thisMObject(), aShadersAssignation).asString().asChar();
+}
+
+void nozAlembicHolder::updateDiffuseColorOverrides()
+{
+    if (!m_scene)
+        return;
+
+    m_diffuse_color_overrides.clear();
+
+    Json::Value jroot;
+    Json::Reader reader;
+    if (!reader.parse(m_shader_assignments, jroot, false))
+        return;
+
+    std::map<std::string, MColor> shaderColors;
+    std::map<std::string, std::string> shaderTextures;
+    ParseShaders(jroot, shaderColors, shaderTextures);
+
+    for (const auto& drawable : m_scene->nodeCategories().drawables())
+    {
+        const auto fullName = drawable.node_ref.source_object.getFullName();
+
+        for (auto it = shaderColors.begin(); it != shaderColors.end(); ++it)
+        {
+            //check both path & tag
+            const bool matches_exactly = it->first.find("/") != std::string::npos &&
+                fullName.find(it->first) != std::string::npos;
+            const bool matches_wildcard = matchPattern(fullName, it->first);
+            if (matches_exactly || matches_wildcard)
+            {
+                const auto& color = it->second;
+                auto& entry = m_diffuse_color_overrides[drawable.drawable_id];
+                entry.diffuse_color = C3f(color.r, color.g, color.b);
+            }
+        }
+
+        for (auto it = shaderTextures.begin(); it != shaderTextures.end(); ++it)
+        {
+            //check both path & tag
+            const bool matches_exactly = it->first.find("/") != std::string::npos &&
+                fullName.find(it->first) != std::string::npos;
+            const bool matches_wildcard = matchPattern(fullName, it->first);
+            if (matches_exactly || matches_wildcard)
+            {
+                const auto& texture = it->second;
+                auto& entry = m_diffuse_color_overrides[drawable.drawable_id];
+                entry.diffuse_texture_path = texture;
+            }
+        }
+    }
+}
 MStatus nozAlembicHolder::compute(const MPlug& plug, MDataBlock& block)
 {
 	if (plug == aUpdateAssign)
@@ -564,13 +500,13 @@ MStatus nozAlembicHolder::compute(const MPlug& plug, MDataBlock& block)
 		bool skipLayers = false;
 		bool customLayer = false;
 		std::string layerName = "defaultRenderLayer";
-		MObject currentRenderLayerObj = MFnRenderLayer::currentLayer(&status);   
+		MObject currentRenderLayerObj = MFnRenderLayer::currentLayer(&status);
 		if (status)
 		{
 			MFnRenderLayer currentRenderLayer(currentRenderLayerObj, &status);
 			if (status)
 				layerName = currentRenderLayer.name().asChar();
-		}		
+		}
         if(layerName != std::string("defaultRenderLayer"))
             customLayer = true;
 
@@ -682,14 +618,14 @@ MStatus nozAlembicHolder::compute(const MPlug& plug, MDataBlock& block)
 					OverrideProperties(jrootattributes, jrootLayers[layerName]["properties"]);
 			}
 		}
-		
-		fGeometry.m_params->attributes.clear();
+
+		m_params.attributes.clear();
 
 		if( jrootattributes.size() > 0 )
 		{
 			bool addtoPath = false;
-			fGeometry.m_params->linkAttributes = true;
-			fGeometry.m_params->attributesRoot = jrootattributes;
+			m_params.linkAttributes = true;
+			m_params.attributesRoot = jrootattributes;
 			for( Json::ValueIterator itr = jrootattributes.begin() ; itr != jrootattributes.end() ; itr++ )
 			{
 				addtoPath = false;
@@ -707,117 +643,81 @@ MStatus nozAlembicHolder::compute(const MPlug& plug, MDataBlock& block)
 					}
 				}
 				if(addtoPath)
-					fGeometry.m_params->attributes.push_back(path);
+					m_params.attributes.push_back(path);
 
 			}
-			
-			std::sort(fGeometry.m_params->attributes.begin(), fGeometry.m_params->attributes.end());
-			
+
+			std::sort(m_params.attributes.begin(), m_params.attributes.end());
+
 		}
 		else
 		{
-			fGeometry.m_params->linkAttributes = false;
+			m_params.linkAttributes = false;
 		}
 
-		fGeometry.m_abcdirty = true;
 		block.outputValue(aForceReload).setBool(false);
 
 	}
-
-	else if (plug == aUpdateCache)
+    else if (plug == aUpdateCache)
     {
         MStatus status;
         MFnDagNode fn(thisMObject());
 
-        // Try to parse JSON Shader assignation here.
-        MPlug shaderAssignation = fn.findPlug("shadersAssignation", &status);
+        MArrayDataHandle fileArrayHandle = block.inputArrayValue(aAbcFiles);
+        unsigned count = fileArrayHandle.elementCount();
 
-        if(status == MS::kSuccess)
+        std::vector <std::string> files;
+        std::string key;
+        for (unsigned i = 0; i < count; i++)
         {
-            bool parsingSuccessful = false;
-            MString jsonAssign = block.inputValue(shaderAssignation).asString();
-            if(jsonAssign != "")
-            {
-                Json::Value jroot;
-                Json::Reader reader;
-                parsingSuccessful = reader.parse( jsonAssign.asChar(), jroot, false );
-                if(parsingSuccessful)
-                    ParseShaders(jroot, fGeometry.m_params->shaderColors);
-            }
-        }
+            fileArrayHandle.jumpToArrayElement(i);
+            MDataHandle InputElement = fileArrayHandle.inputValue(&status);
 
-        MString file = block.inputValue(aAbcFile).asString();
-        MFileObject fileObject;
-        fileObject.setRawFullName(file.expandFilePath());
-        fileObject.setResolveMethod(MFileObject::kInputFile);
-        file = fileObject.resolvedFullName();
+            MFileObject fileObject;
+            fileObject.setRawFullName(InputElement.asString().expandFilePath());
+            fileObject.setResolveMethod(MFileObject::kInputFile);
+            std::string nameResolved = std::string(fileObject.resolvedFullName().asChar());
+            files.push_back(nameResolved);
+        }
 
         MString objectPath = block.inputValue(aObjectPath).asString();
         MString selectionPath = block.inputValue(aSelectionPath).asString();
 
-		fGeometry.m_currselectionkey = selectionPath.asChar();
-
-        MTime time = block.inputValue(aTime).asTime() + block.inputValue(aTimeOffset).asTime(); 
-
-        fGeometry.m_bbextendedmode = block.inputValue(aBoundingExtended).asBool();
-
-        bool hasToReload = false;
-
-        if (fGeometry.time != time.value())
-        {
-            fGeometry.m_abcdirty = true;
-			fGeometry.time = time.value();
-            hasToReload = true;
+        // Update scene and scene key.
+        const auto scene_key_changed = updateValue(m_scene_key, AlembicSceneKey(FileRef(files), objectPath.asChar()));
+        if (!m_scene || scene_key_changed) {
+            // First clear the drawable samples so the handles to the cache
+            // buffers are deleted. The handles must not survive the caches.
+            m_sample.drawable_samples.clear();
+            m_scene = AlembicSceneCache::instance().getScene(m_scene_key);
         }
 
-        MString mkey = file + "|" + objectPath;
+        if (m_scene) {
+            // Update sample.
+            const auto time_changed = updateValue(m_sample.time, getTime());
+            if (m_sample.drawable_samples.empty() || time_changed) {
+                m_scene->sampleHierarchy(m_sample.time, m_sample.drawable_samples, m_sample.hierarchy_stat);
+            }
 
-        std::string key = mkey.asChar();
+            // Update selection visibility.
+            if (scene_key_changed) {
+                m_sample.selection_visibility.assign(m_scene->nodeCategories().drawableCount(), true);
+            }
 
-        if ((fGeometry.m_currscenekey != key && mkey != "|" ) || hasToReload)
-        {
-            if (fGeometry.m_currscenekey != key && mkey != "|" )
-            {
-                CAlembicDatas::abcSceneManager.removeScene(fGeometry.m_currscenekey);
-                if(CAlembicDatas::abcSceneManager.hasKey(fGeometry.m_currscenekey) == 0)
-                {
-                    NodeCache::iterator J = g_bboxCache.find(fGeometry.m_currscenekey);
-                    if (J != g_bboxCache.end())
-                    {
-                        glDeleteLists((*J).second, 1);
-                        g_bboxCache.erase(J);
-                    }
-
+            const auto selection_key_changed = updateValue(m_selection_key, getSelectionKey());
+            if (scene_key_changed || selection_key_changed) {
+                for (auto& sample : m_sample.drawable_samples) {
+                    const auto visible = m_selection_key.empty() ||
+                        pathInJsonString(m_scene->getDrawableName(sample.drawable_id), m_selection_key);
+                    m_sample.selection_visibility[sample.drawable_id] = visible;
                 }
-
-
-                fGeometry.m_currscenekey = "";
-                CAlembicDatas::abcSceneManager.addScene(file.asChar(), objectPath.asChar());
-                fGeometry.m_currscenekey = key;
             }
+        }
 
-            if (CAlembicDatas::abcSceneManager.hasKey(key))
-            {
-                fGeometry.bbox = MBoundingBox();
-                AlembicHolder::Box3d bb;
-                setHolderTime();
-                bb = CAlembicDatas::abcSceneManager.getScene(key)->getBounds();
-                fGeometry.bbox.expand(MPoint(bb.min.x, bb.min.y, bb.min.z));
-                fGeometry.bbox.expand(MPoint(bb.max.x, bb.max.y, bb.max.z));
-
-
-				block.outputValue(aBoundMin).set3Float(bb.min.x, bb.min.y, bb.min.z);
-				block.outputValue(aBoundMax).set3Float(bb.max.x, bb.max.y, bb.max.z);
-
-
-                // notify viewport 2.0 that we are dirty
-                MHWRender::MRenderer::setGeometryDrawDirty(thisMObject());
-
-            }
-            fGeometry.m_abcdirty = true;
-            if(fGeometry.abcSceneManager.hasKey(fGeometry.m_currscenekey))
-                isConstant = fGeometry.abcSceneManager.getScene(fGeometry.m_currscenekey)->isConstant();
-
+        // Try to parse JSON Shader assignation here.
+        const bool shader_assignments_changed = updateValue(m_shader_assignments, getShaderAssignmentsJson());
+        if (scene_key_changed || shader_assignments_changed) {
+            updateDiffuseColorOverrides();
         }
 
         block.outputValue(aForceReload).setBool(false);
@@ -832,40 +732,6 @@ MStatus nozAlembicHolder::compute(const MPlug& plug, MDataBlock& block)
 
 }
 
-bool nozAlembicHolder::GetPlugData()
-{
-    int update = 0;
-	int updateA = 0;
-    MPlug updatePlug(thisMObject(), aUpdateCache );
-	MPlug updateAssign(thisMObject(), aUpdateAssign );
-    updatePlug.getValue( update );
-	updateAssign.getValue( updateA );
-	
-
-    if (update != dUpdate || updateA != dUpdateA)
-    {
-		dUpdateA = updateA;
-        dUpdate = update;
-        return true;
-    }
-    else
-    {
-        return false;
-    }
-    return false;
-
-}
-
-CAlembicDatas* nozAlembicHolder::alembicData()
-{
-    if (MRenderView::doesRenderEditorExist())
-    {
-        GetPlugData();
-        return &fGeometry;
-    }
-    return NULL;
-}
-
 // UI IMPLEMENTATION
 
 CAlembicHolderUI::~CAlembicHolderUI() {
@@ -877,6 +743,129 @@ void* CAlembicHolderUI::creator() {
 
 CAlembicHolderUI::CAlembicHolderUI() {
 }
+
+void CAlembicHolderUI::updateVP1Drawables(const nozAlembicHolder::SceneSample& scene_sample, const DiffuseColorOverrideMap& color_overrides, const StaticMaterialVector& static_materials)
+{
+    m_vp1drawables.drawables.clear();
+    for (const auto& drawable : scene_sample.drawable_samples) {
+        const bool is_visible = drawable.visible && scene_sample.selection_visibility[drawable.drawable_id];
+        if (!is_visible || !drawable.cache_handles.geometry.endpoints[0])
+            continue;
+
+        MGLenum primitive_type;
+        MGLsizei element_count;
+        if (drawable.type == GeometryType::TRIANGLES) {
+            primitive_type = MGL_TRIANGLES;
+            element_count = drawable.cache_handles.indices
+                ? MGLsizei(drawable.cache_handles.indices->triangle_buffer.size())
+                : MGLsizei(drawable.cache_handles.geometry.endpoints[0]->positions.size());
+
+        } else if (drawable.type == GeometryType::LINES) {
+            primitive_type = MGL_LINES;
+            element_count = drawable.cache_handles.indices
+                ? MGLsizei(drawable.cache_handles.indices->wireframe_buffer.size())
+                : MGLsizei(drawable.cache_handles.geometry.endpoints[0]->positions.size());
+
+        } else if (drawable.type == GeometryType::POINTS) {
+            primitive_type = MGL_POINTS;
+            element_count = MGLsizei(drawable.cache_handles.geometry.endpoints[0]->positions.size());
+
+        } else {
+            continue;
+        }
+
+        m_vp1drawables.drawables.push_back({primitive_type, element_count});
+        auto& item = m_vp1drawables.drawables.back();
+        item.world_matrix = drawable.world_matrix;
+        item.drawable_id = drawable.drawable_id;
+        const auto& static_material = static_materials[drawable.drawable_id];
+        item.diffuse_color = static_material.diffuse_color;
+
+        if (drawable.cache_handles.indices) {
+            if (drawable.type == GeometryType::TRIANGLES) {
+                item.buffer.genIndexBuffer(Span<const uint32_t>(drawable.cache_handles.indices->triangle_buffer));
+            } else if (drawable.type == GeometryType::LINES) {
+                item.buffer.genIndexBuffer(Span<const uint32_t>(drawable.cache_handles.indices->wireframe_buffer));
+            }
+        }
+
+        const auto& geo = drawable.cache_handles.geometry;
+        std::vector<V3f> staging(geo.endpoints[0]->positions.size());
+        const auto staging_span = Span<V3f>(staging);
+
+        // Generate straight and flipped normal buffers.
+        // Should work if normals and staging alias the same memory range
+        // (and exactly the same, no partial overlap).
+        const auto genNormals = [&item, &staging_span](const Span<const V3f>& normals) {
+            item.buffer.genNormalBuffer(normals, false);
+            for (size_t i = 0; i < normals.size; ++i) {
+                staging_span[i] = -normals[i];
+            }
+            item.buffer.genNormalBuffer(staging_span, true);
+        };
+
+        // Interpolate positions and normals if needed.
+        if (geo.endpoints[1] && geo.alpha != 0) {
+            auto& pos0 = geo.endpoints[0]->positions;
+            auto& pos1 = geo.endpoints[1]->positions;
+            assert(pos0.size() == pos1.size());
+
+            lerpSpans(geo.alpha,
+                Span<const V3f>(pos0),
+                Span<const V3f>(pos1),
+                staging_span);
+            item.buffer.genVertexBuffer(staging_span);
+
+            auto& normals0 = geo.endpoints[0]->normals;
+            auto& normals1 = geo.endpoints[1]->normals;
+            assert(normals0.size() == normals1.size());
+            assert(normals0.size() == pos0.size());
+
+            if (!normals0.empty()) {
+                lerpSpans(geo.alpha,
+                    Span<const V3f>(normals0),
+                    Span<const V3f>(normals1),
+                    staging_span);
+                genNormals(staging_span);
+            }
+        } else {
+            item.buffer.genVertexBuffer(Span<const V3f>(geo.endpoints[0]->positions));
+            if (!geo.endpoints[0]->normals.empty())
+                item.buffer.genNormalBuffer(Span<const V3f>(geo.endpoints[0]->normals));
+        }
+
+        if (drawable.cache_handles.texcoords.endpoints[0] && !drawable.cache_handles.texcoords.endpoints[0]->uvs.empty()) {
+            // Interpolate uvs if needed.
+            if (drawable.cache_handles.texcoords.endpoints[1] && drawable.cache_handles.texcoords.alpha != 0) {
+                std::vector<V2f> texcoords(drawable.cache_handles.texcoords.endpoints[0]->uvs.size());
+                auto texcoords_span = Span<V2f>(texcoords);
+                lerpSpans(drawable.cache_handles.texcoords.alpha,
+                    Span<const V2f>(drawable.cache_handles.texcoords.endpoints[0]->uvs),
+                    Span<const V2f>(drawable.cache_handles.texcoords.endpoints[1]->uvs),
+                    texcoords_span);
+                item.buffer.genUVBuffer(texcoords_span);
+            } else {
+                item.buffer.genUVBuffer(Span<const V2f>(drawable.cache_handles.texcoords.endpoints[0]->uvs));
+            }
+        }
+    }
+
+    if (M3dView::active3dView().textureMode()) {
+        m_vp1drawables.textures.resize(m_vp1drawables.drawables.size());
+        for (size_t i = 0; i < m_vp1drawables.drawables.size(); ++i) {
+            const auto& drawable = m_vp1drawables.drawables[i];
+            const auto& static_material = static_materials[drawable.drawable_id];
+            const auto override_it = color_overrides.find(drawable.drawable_id);
+            std::string texture_path = static_material.diffuse_texture_path;
+            if (override_it != color_overrides.end())
+                texture_path = override_it->second.diffuse_texture_path;
+            const auto texture_path_updated = updateValue(m_vp1drawables.textures[i].first, texture_path);
+            if (texture_path_updated)
+                m_vp1drawables.textures[i].second = loadVP1Texture(texture_path);
+        }
+    }
+}
+
 void CAlembicHolderUI::getDrawRequests(const MDrawInfo & info,
         bool /*objectAndActiveOnly*/, MDrawRequestQueue & queue) {
 
@@ -886,12 +875,13 @@ void CAlembicHolderUI::getDrawRequests(const MDrawInfo & info,
     MDrawData data;
     MDrawRequest request = info.getPrototype(*this);
     nozAlembicHolder* shapeNode = (nozAlembicHolder*) surfaceShape();
-    CAlembicDatas* geom = shapeNode->alembicData();
-    
-    if(geom == NULL)
-        return;
+    const auto& scene = shapeNode->getScene();
+    const auto& sample = shapeNode->getSample();
 
-    getDrawData(geom, data);
+    // Update GL buffers.
+    updateVP1Drawables(sample, shapeNode->getDiffuseColorOverrides(), scene ? scene->staticMaterials() : StaticMaterialVector());
+
+    getDrawData(&m_vp1drawables, data);
     request.setDrawData(data);
 
     // Are we displaying meshes?
@@ -906,11 +896,12 @@ void CAlembicHolderUI::getDrawRequests(const MDrawInfo & info,
         queue.add(request);
         break;
 
-    case M3dView::kGouraudShaded:
+    case M3dView::kGouraudShaded: {
         request.setToken(kDrawSmoothShaded);
         getDrawRequestsShaded(request, info, queue, data);
         queue.add(request);
         break;
+    }
 
     case M3dView::kFlatShaded:
         request.setToken(kDrawFlatShaded);
@@ -928,75 +919,71 @@ void CAlembicHolderUI::getDrawRequests(const MDrawInfo & info,
     //cout << "Ending draw request" << endl;
 }
 
-void CAlembicHolderUI::draw(const MDrawRequest & request, M3dView & view) const
+namespace {
+    struct GLGuard {
+        GLGuard(M3dView& m3dview_): m3dview(m3dview_)
+        {
+            m3dview.beginGL();
+            // Setup the OpenGL state as necessary
+            //
+            // The most straightforward way to ensure that the OpenGL
+            // material parameters are properly restored after drawing is
+            // to use push/pop attrib as we have no easy of knowing the
+            // current values of all the parameters.
+            glPushAttrib(MGL_LIGHTING_BIT);
+        }
+        ~GLGuard()
+        {
+            glPopAttrib();
+            m3dview.endGL();
+        }
+        M3dView& m3dview;
+    };
+} // unnamed namespace
+
+void CAlembicHolderUI::draw(const MDrawRequest& request, M3dView& view) const
 {
     int token = request.token();
 
     M3dView::DisplayStatus displayStatus = request.displayStatus();
-    
+
     bool cacheSelected =  ((displayStatus == M3dView::kActive) || (displayStatus == M3dView::kLead) || (displayStatus == M3dView::kHilite));
     MDrawData data = request.drawData();
 
     nozAlembicHolder* shapeNode = (nozAlembicHolder*) surfaceShape();
-    CAlembicDatas * cache = (CAlembicDatas*) data.geometry();
+    if (!shapeNode)
+        return;
+    auto drawable_container = (VP1DrawableContainer*)(data.geometry());
+    const auto& color_overrides = shapeNode->getDiffuseColorOverrides();
 
-    bool refresh = cache->m_abcdirty;
-    bool forceBoundingBox = cache->m_bbextendedmode && cacheSelected == false;
-	bool selectionMode = cache->m_currselectionkey.size() != 0; 
+    const bool forceBoundingBox = shapeNode->isBBExtendedMode() && cacheSelected == false;
+    const auto sceneKey = shapeNode->getSceneKey();
+    const auto selectionKey = shapeNode->getSelectionKey();
+    const bool selectionMode = !selectionKey.empty();
 
-    int oldToken = cache->token;
-
-    cache->token = token;
-    view.beginGL();
-
-    // Setup the OpenGL state as necessary
-    //
-    // The most straightforward way to ensure that the OpenGL
-    // material parameters are properly restored after drawing is
-    // to use push/pop attrib as we have no easy of knowing the
-    // current values of all the parameters.
-    glPushAttrib(MGL_LIGHTING_BIT);
+    GLGuard glguard(view);
 
     // handling refreshes
-    GLuint glcache = -1;
     if( token == kDrawBoundingBox || forceBoundingBox || selectionMode )
     {
-        NodeCache::iterator I = g_bboxCache.find(cache->m_currscenekey);
-        if (I == g_bboxCache.end())
-            refresh=true;
-        else
-            glcache = (*I).second;
-
-        if(refresh == true)
-        {
-            if (glcache != -1)
-            {
-                glDeleteLists(glcache,1);
-            }
-            glcache = glGenLists(1);
-            glNewList(glcache, MGL_COMPILE);
-            drawBoundingBox( request, view );
-            glEndList();
-            g_bboxCache[cache->m_currscenekey] = glcache;
-        }
-
-		glCallList(glcache);
+        drawBoundingBox(request, view);
     }
-	
+
 	if (forceBoundingBox)
 		return;
-	
+
     switch (token)
     {
 		case kDrawBoundingBox :
 			break;
 		case kDrawWireframe:
 		case kDrawWireframeOnShaded:
-			if (cache->abcSceneManager.hasKey(cache->m_currscenekey))
-			{
+			if (drawable_container && !drawable_container->drawables.empty()) {
 				gGLFT->glPolygonMode(GL_FRONT_AND_BACK, MGL_LINE);
 				gGLFT->glPushMatrix();
-				cache->abcSceneManager.getScene(cache->m_currscenekey)->draw(cache->abcSceneState, cache->m_currselectionkey, cache->time, cache->m_params);
+                auto color = request.color();
+                gGLFT->glColor4f(color.r, color.g, color.b, 1.0f);
+                drawable_container->draw(VP1DrawSettings(false));
 				gGLFT->glPopMatrix();
 				gGLFT->glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 			}
@@ -1005,19 +992,84 @@ void CAlembicHolderUI::draw(const MDrawRequest & request, M3dView & view) const
 			break;
 		case kDrawSmoothShaded:
 		case kDrawFlatShaded:
-			if (cache->abcSceneManager.hasKey(cache->m_currscenekey))
-				drawingMeshes(cache->m_currscenekey, cache, cache->m_currselectionkey);
-			else
-				drawBoundingBox( request, view );
-			break;
+        {
+            if (drawable_container && !drawable_container->drawables.empty()) {
+                drawWithTwoSidedLightingSupport(*drawable_container, VP1DrawSettings(true, view.textureMode(), color_overrides, VP1PrimitiveFilter::TRIANGLES));
+                gGLFT->glDisable(GL_LIGHTING);
+                drawable_container->draw(VP1DrawSettings(true, view.textureMode(), color_overrides, ~VP1PrimitiveFilter::TRIANGLES));
+                gGLFT->glEnable(GL_LIGHTING);
+            } else {
+                drawBoundingBox( request, view );
+            }
+            break;
+        }
     }
-
-    cache->m_abcdirty = false;
-    glPopAttrib();
-    view.endGL();
 }
 
-void CAlembicHolderUI::drawingMeshes( std::string sceneKey, CAlembicDatas * cache, std::string selectionKey) const
+void VP1DrawableContainer::draw(const VP1DrawSettings& draw_settings) const
+{
+    static MGLFunctionTable *gGLFT = NULL;
+    if (gGLFT == NULL)
+        gGLFT = MHardwareRenderer::theRenderer()->glFunctionTable();
+
+    for (size_t i = 0; i < drawables.size(); ++i) {
+        const auto& drawable = drawables[i];
+
+        if (!draw_settings.primitive_filter.has(drawable.buffer.primType()))
+            continue;
+
+        gGLFT->glPushMatrix();
+        // Get the current matrix.
+        MGLdouble currentMatrix[16];
+        gGLFT->glGetDoublev(MGL_MODELVIEW_MATRIX, currentMatrix);
+
+        // Basically, we want to load our matrix into the thingy.
+        // We don't use the OpenGL transform stack because we have
+        // deep deep hierarchy that exhausts the max stack depth quickly.
+        gGLFT->glMatrixMode(MGL_MODELVIEW);
+        static_assert(sizeof(MGLfloat) == sizeof(drawable.world_matrix[0][0]),
+            "matrix element size mismatch");
+        gGLFT->glMultMatrixf((const MGLfloat *)&drawable.world_matrix[0][0]);
+
+        C3f color = drawable.diffuse_color;
+        const auto& color_overrides = draw_settings.color_overrides;
+        auto color_override_it = color_overrides.find(drawable.drawable_id);
+        if (color_override_it != color_overrides.end()) {
+            color = color_override_it->second.diffuse_color;
+        }
+
+        const bool use_texture = draw_settings.use_texture && !textures.empty() && textures[i].second;
+        if (use_texture) {
+            gGLFT->glEnable(MGL_TEXTURE_2D);
+            gGLFT->glBindTexture(MGL_TEXTURE_2D, *textures[i].second);
+            gGLFT->glTexParameteri(MGL_TEXTURE_2D, MGL_TEXTURE_MIN_FILTER, MGL_LINEAR);
+            gGLFT->glTexParameteri(MGL_TEXTURE_2D, MGL_TEXTURE_MAG_FILTER, MGL_LINEAR);
+            gGLFT->glTexParameteri(MGL_TEXTURE_2D, MGL_TEXTURE_WRAP_S, MGL_REPEAT);
+            gGLFT->glTexParameteri(MGL_TEXTURE_2D, MGL_TEXTURE_WRAP_T, MGL_REPEAT);
+            color = C3f(1.0f, 1.0f, 1.0f);
+        }
+
+        if (draw_settings.override_color) {
+            gGLFT->glColor4f(color.x, color.y, color.z, 1.0f);
+        }
+
+        drawable.buffer.render(draw_settings.flip_normals);
+
+        if (use_texture) {
+            gGLFT->glDisable(MGL_TEXTURE_2D);
+            gGLFT->glBindTexture(MGL_TEXTURE_2D, 0); // deactivate the texture
+        }
+
+        // And back out, restore the matrix.
+        gGLFT->glMatrixMode(MGL_MODELVIEW);
+        gGLFT->glLoadMatrixd(currentMatrix);
+        gGLFT->glPopMatrix();
+    }
+}
+
+void CAlembicHolderUI::drawWithTwoSidedLightingSupport(
+    const VP1DrawableContainer& drawable_container,
+    VP1DrawSettings draw_settings) const
 {
     gGLFT->glPushMatrix();
 
@@ -1029,9 +1081,9 @@ void CAlembicHolderUI::drawingMeshes( std::string sceneKey, CAlembicDatas * cach
     // On Geforce cards, we emulate two-sided lighting by drawing
     // triangles twice because two-sided lighting is 10 times
     // slower than single-sided lighting.
-        
+
     bool needEmulateTwoSidedLighting = false;
-    // Query face-culling and two-sided lighting state          
+    // Query face-culling and two-sided lighting state
     bool  cullFace = (gGLFT->glIsEnabled(MGL_CULL_FACE) == MGL_TRUE);
     MGLint twoSidedLighting = MGL_FALSE;
     gGLFT->glGetIntegerv(MGL_LIGHT_MODEL_TWO_SIDE, &twoSidedLighting);
@@ -1043,14 +1095,16 @@ void CAlembicHolderUI::drawingMeshes( std::string sceneKey, CAlembicDatas * cach
         glEnable(MGL_CULL_FACE);
         glLightModeli(MGL_LIGHT_MODEL_TWO_SIDE, 0);
         glCullFace(MGL_FRONT);
-		cache->abcSceneManager.getScene(sceneKey)->draw(cache->abcSceneState, selectionKey, cache->time, cache->m_params, true);
+        draw_settings.flip_normals = false;
+        drawable_container.draw(draw_settings);
         glCullFace(MGL_BACK);
-        cache->abcSceneManager.getScene(sceneKey)->draw(cache->abcSceneState, selectionKey, cache->time, cache->m_params, false);
+        draw_settings.flip_normals = true;
+        drawable_container.draw(draw_settings);
         gGLFT->glLightModeli(MGL_LIGHT_MODEL_TWO_SIDE, 1);
         glDisable(MGL_CULL_FACE);
     }
     else
-		cache->abcSceneManager.getScene(sceneKey)->draw(cache->abcSceneState, selectionKey, cache->time, cache->m_params, true);
+        drawable_container.draw(draw_settings);
 
     glDisable(MGL_POLYGON_OFFSET_FILL);
     glFrontFace(MGL_CCW);
@@ -1249,6 +1303,7 @@ void CAlembicHolderUI::getDrawRequestsShaded(MDrawRequest& request,
                 getDrawRequestsWireFrame( wireRequest, info );
                 wireRequest.setToken( kDrawWireframeOnShaded );
                 wireRequest.setDisplayStyle( M3dView::kWireFrame );
+                wireRequest.setColor(MHWRender::MGeometryUtilities::wireframeColor(path));
                 queue.add( wireRequest );
         }
 }
@@ -1310,9 +1365,8 @@ bool CAlembicHolderUI::select(MSelectInfo &selectInfo,
         MSelectionList &selectionList, MPointArray &worldSpaceSelectPts) const
 {
     nozAlembicHolder* shapeNode = (nozAlembicHolder*) surfaceShape();
-    CAlembicDatas* geom = shapeNode->alembicData();
-    
-    if(geom == NULL)
+    auto sample = shapeNode->getSample();
+    if (sample.empty())
         return false;
 
     MSelectionMask mask("alembicHolder");
@@ -1323,8 +1377,8 @@ bool CAlembicHolderUI::select(MSelectInfo &selectInfo,
     const bool boundingboxSelection =
         (M3dView::kBoundingBox == selectInfo.displayStyle() ||
          !selectInfo.singleSelection());
-    
-    
+
+
     if (boundingboxSelection)
     {
         // We hit the bounding box, so we want the object?
@@ -1339,27 +1393,22 @@ bool CAlembicHolderUI::select(MSelectInfo &selectInfo,
     GLfloat minZ;
     Select* selector;
 
-    AlembicHolder::ScenePtr _ptr = geom->abcSceneManager.getScene(geom->m_currscenekey);
-    if(_ptr == NULL)
-        return false;
+    size_t numTriangles = sample.hierarchy_stat.triangle_count;
 
-    size_t numTriangles = _ptr->getNumTriangles();
-    const unsigned int bufferSize = (unsigned int)std::min(numTriangles,(size_t)100000);
-        
     if (numTriangles < 1024)
         selector = new GLPickingSelect(selectInfo);
     else
         selector = new RasterSelect(selectInfo);
 
-    selector->processTriangles(geom, geom->m_currscenekey, numTriangles);
-        
+    selector->processTriangles(m_vp1drawables, numTriangles);
+
     selector->end();
     minZ = selector->minZ();
     delete selector;
 
-  
+
     bool selected = (minZ <= 1.0f);
-    if ( selected ) 
+    if ( selected )
     {
         // Add the selected item to the selection list
 
@@ -1379,7 +1428,7 @@ bool CAlembicHolderUI::select(MSelectInfo &selectInfo,
                 }
             }
             selectionItem.add(path);
-        }        
+        }
 
         MPoint worldSpaceselectionPoint =
             getPointAtDepth(selectInfo, minZ);
@@ -1394,3 +1443,5 @@ bool CAlembicHolderUI::select(MSelectInfo &selectInfo,
     return selected;
 
 }
+
+} // namespace AlembicHolder

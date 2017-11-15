@@ -13,7 +13,7 @@ License along with this library.*/
 
 
 #include "nozAlembicHolderNode.h"
-#include "alembicHolderOverride.h"
+#include "SubsceneOverride.h"
 #include "version.h"
 
 #include "cmds/ABCGetTags.h"
@@ -33,8 +33,7 @@ License along with this library.*/
 #define kSelectionMenuItemLabel MStringResourceId( kPluginId, "kSelectionMenuItemLabel", "Alembic Holder")
 #define kOutlinerMenuItemLabel MStringResourceId( kPluginId, "kOutlinerMenuItemLabel", "Alembic Holder")
 
-
-MString    drawDbClassification("drawdb/geometry/alembicHolder");
+MString    drawDbClassification("drawdb/subscene/alembicHolder");
 MString    drawRegistrantId("alembicHolder");
 
 #ifdef _WIN32
@@ -43,6 +42,9 @@ MString    drawRegistrantId("alembicHolder");
 #undef DLLEXPORT
 #define DLLEXPORT __attribute__ ((visibility("default")))
 #endif
+
+
+using namespace AlembicHolder;
 
 DLLEXPORT MStatus initializePlugin( MObject obj )
 {
@@ -62,15 +64,11 @@ DLLEXPORT MStatus initializePlugin( MObject obj )
         return status;
     }
 
-    status = MHWRender::MDrawRegistry::registerDrawOverrideCreator
-    (
-                drawDbClassification,
-                drawRegistrantId,
-               AlembicHolderOverride::Creator
+    status = MHWRender::MDrawRegistry::registerSubSceneOverrideCreator(
+        drawDbClassification, drawRegistrantId, AlembicHolder::SubSceneOverride::creator
     );
-
     if (!status) {
-        status.perror("registerNodeDrawOverride");
+        status.perror("registerSubSceneOverride");
         return status;
     }
 
@@ -124,6 +122,8 @@ DLLEXPORT MStatus initializePlugin( MObject obj )
         }
     }
 
+    SubSceneOverride::initializeShaderTemplates();
+
     return status;
 }
 
@@ -132,11 +132,13 @@ DLLEXPORT MStatus uninitializePlugin( MObject obj)
     MStatus   status;
     MFnPlugin plugin( obj );
 
-    status = MHWRender::MDrawRegistry::deregisterDrawOverrideCreator(
+    SubSceneOverride::releaseShaderTemplates();
+
+    status = MHWRender::MDrawRegistry::deregisterSubSceneOverrideCreator(
         drawDbClassification,
         drawRegistrantId);
     if (!status) {
-        status.perror("deregisterDrawOverrideCreator");
+        status.perror("deregisterSubSceneOverrideCreator");
         return status;
     }
 

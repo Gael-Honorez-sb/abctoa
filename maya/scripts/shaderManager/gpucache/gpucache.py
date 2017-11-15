@@ -12,7 +12,7 @@
 # License along with this library.
 
 from shaderManager.assignations._assignations import cacheAssignations
-from PySide import QtCore
+from PySide2 import QtWidgets
 
 import json
 import maya.cmds as cmds
@@ -168,7 +168,7 @@ class gpucache(object):
 
     def updateCache(self):
         if self.isValid():
-            self.ABCcache =  str(cmds.getAttr("%s.cacheFileName" % self.shape))
+            self.ABCcache =  str(cmds.getAttr("%s.cacheFileNames[0]" % self.shape))
             self.ABCcurPath = str(cmds.getAttr("%s.cacheGeomPath" % self.shape))
             if self.ABCcache:
                 self.archive = IArchive(self.ABCcache)

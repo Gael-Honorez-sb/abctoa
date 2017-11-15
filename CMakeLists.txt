@@ -1,12 +1,14 @@
 cmake_minimum_required(VERSION 2.6)
 
+set_property(GLOBAL PROPERTY USE_FOLDERS ON)
+
 set(CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/share)
 
 project(abcToA)
 
-set(ABCTOA_MAJOR_VERSION 2)
-set(ABCTOA_MINOR_VERSION 2)
-set(ABCTOA_PATCH_VERSION 1)
+set(ABCTOA_MAJOR_VERSION 3)
+set(ABCTOA_MINOR_VERSION 0)
+set(ABCTOA_PATCH_VERSION 0)
 set(ABCTOA_VERSION "${ABCTOA_MAJOR_VERSION}.${ABCTOA_MINOR_VERSION}.${ABCTOA_PATCH_VERSION}")
 
 IF(NOT MTOA_VERSION AND NOT $ENV{MTOA_VERSION} STREQUAL "")
@@ -46,10 +48,27 @@ IF ("${CMAKE_SYSTEM_NAME}" MATCHES "Linux")
 ENDIF()
 
 OPTION(USE_HDF5 "Include HDF5 stuff" OFF)
-OPTION(USE_STATIC_BOOST "Build with static Boost libs" ON)
 OPTION(USE_ILMBASE_STATIC_LIBS "Build with static ilmBase libs" ON)
 OPTION(USE_STATIC_HDF5 "Build with static HDF5 libs" OFF)
 OPTION(ALEMBIC_SHARED_LIBS "Build shared libraries" ON)
+option(USE_NSIS "Use NSIS generator to produce installer" OFF)
+
+# Custom target for packaging.
+if(USE_NSIS)
+  set(CPACK_GENERATOR "NSIS")
+else(USE_NSIS)
+  set(CPACK_GENERATOR "ZIP")
+endif(USE_NSIS)
+
+
+
+set(CPACK_PACKAGE_VERSION "${ABCTOA_MAJOR_VERSION}")
+set(CPACK_PACKAGE_VERSION_PATCH "${ABCTOA_PATCH_VERSION}")
+set(CPACK_PACKAGE_VENDOR "Nozon")
+set(CPACK_PACKAGE_INSTALL_REGISTRY_KEY "abcToA")
+
+set(CPACK_SOURCE_GENERATOR "TGZ")
+
 
 IF (LINUX OR DARWIN)
 	INCLUDE(CheckCXXCompilerFlag)
@@ -119,23 +138,6 @@ find_package(Mtoa REQUIRED)
 # Find maya
 find_package(Maya REQUIRED)
 
-# Find Boost
-SET(Boost_USE_STATIC_LIBS ${USE_STATIC_BOOST})
-find_package(Boost REQUIRED COMPONENTS regex system program_options filesystem)
-
-# Find ILMBASE
-find_package(IlmBase REQUIRED)
-
-if (${CMAKE_SYSTEM_NAME} MATCHES "Windows")
-	if(NOT USE_ILMBASE_STATIC_LIBS)
-		add_definitions( "-DOPENEXR_DLL -DHALF_EXPORTS")
-	endif()
-endif()
-
-
-# Find alembic
-find_package(Alembic REQUIRED)
-
 # Find HDF5
 if(USE_HDF5)
 	find_package(AlembicHDF5 REQUIRED)
@@ -144,29 +146,13 @@ if(USE_HDF5)
 endif()
 
 
-
-# Find JSONCPP
-find_package(JsonCPP REQUIRED)
-
-# Find Pystring
-find_package(PyString REQUIRED)
-
-
 configure_file(
     "${PROJECT_SOURCE_DIR}/exportArnoldDefinitions.in.py"
     "${PROJECT_SOURCE_DIR}/exportArnoldDefinitions.py"
 )
 
 if (NOT DEFINED INSTALL_DIR)
-    if (DEFINED INSTALL_ROOT)
-        set(INSTALL_DIR "${INSTALL_ROOT}/abcToA-${ABCTOA_VERSION}")
-        message("INSTALL_ROOT defined. Adding versions automatically:\n\t${INSTALL_DIR}")
-    else()
-		set(INSTALL_ROOT "${CMAKE_BINARY_DIR}/dist")
-        set(INSTALL_DIR "${INSTALL_ROOT}/abcToA-${ABCTOA_VERSION}")
-		
-        message("INSTALL_DIR not defined. Defaulting to:\n\t${INSTALL_DIR}")
-    endif()
+	set(INSTALL_DIR "abcToA-${ABCTOA_VERSION}")
 else()
     message("Installing to:\n\t${INSTALL_DIR}")
 endif()
@@ -189,21 +175,21 @@ message("Samples will be installed to: \n\t${INSTALL_DIR}/samples")
 
 # Set the list of subdirectories to recurse into to find stuff to build
 set(SUBDIRECTORIES 
+		alembic
+		ThirdParty
         arnold/procedurals/alembicProcedural
-		arnold/shaders/abcShader
+		#arnold/shaders/abcShader
 		arnold/utility/assShadersToAbc
 		maya/alembicHolder
 		mtoa/ABCViewer
-		mtoa/abcShader
+		#mtoa/abcShader
 )
-
-
-include_directories(common)
 
 # loop over subdirectories
 foreach(SUBDIR ${SUBDIRECTORIES})
     add_subdirectory(${SUBDIR})
 endforeach()
+
 
 # abcMayaShader won't compile on darwin for the moment.
 IF(NOT DARWIN)
@@ -223,22 +209,19 @@ INSTALL(DIRECTORY maya/samples DESTINATION ${INSTALL_DIR})
 
 configure_file (
   "${CMAKE_SOURCE_DIR}/maya/alembicHolder/version.h.in"
-  "${CMAKE_SOURCE_DIR}/maya/alembicHolder/version.h"
+  "${CMAKE_BINARY_DIR}/maya/alembicHolder/version.h"
   )
 
 configure_file (
 "${CMAKE_SOURCE_DIR}/abcToA.mod.in"
-"${PROJECT_SOURCE_DIR}/abcToA.mod"
+"${CMAKE_BINARY_DIR}/abcToA.mod"
 )
 
 configure_file(
-    "${PROJECT_SOURCE_DIR}/INSTALL.in"
-    "${PROJECT_SOURCE_DIR}/INSTALL"
+    "${CMAKE_SOURCE_DIR}/INSTALL.in"
+    "${CMAKE_BINARY_DIR}/INSTALL"
 )
   
 # 
-configure_file(
-    "${PROJECT_SOURCE_DIR}/package.in.py"
-    "${PROJECT_SOURCE_DIR}/package.py"
-)
+
 

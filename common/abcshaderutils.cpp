@@ -38,7 +38,7 @@ void setUserParameter(AtNode* source, std::string interfaceName, Alembic::AbcCor
         // point type
         // We don't really have point type in maya, so the source is a vector.
         AtVector val = AiNodeGetVec(source, interfaceName.c_str());
-        AiNodeSetPnt(node, header.getName().c_str(), val.x, val.y, val.z);
+        AiNodeSetVec(node, header.getName().c_str(), val.x, val.y, val.z);
     }
     else if (Abc::IV3fProperty::matches(header))
     {
@@ -49,7 +49,7 @@ void setUserParameter(AtNode* source, std::string interfaceName, Alembic::AbcCor
     else if (Abc::IC3fProperty::matches(header))
     {
         // color type
-        AtColor val = AiNodeGetRGB(source, interfaceName.c_str());
+        AtRGB val = AiNodeGetRGB(source, interfaceName.c_str());
         AiNodeSetRGB(node, header.getName().c_str(), val.r, val.g, val.b);
     }
 }
@@ -189,14 +189,14 @@ void setArrayParameter(Alembic::Abc::ICompoundProperty props, Alembic::AbcCoreAb
             if (numSamples > 0)
             {
                 prop.get( samp, Alembic::Abc::ISampleSelector((Alembic::Abc::index_t)0) );
-                arrayValues = AiArrayAllocate(samp->size(), numSamples, AI_TYPE_POINT);
+                arrayValues = AiArrayAllocate(samp->size(), numSamples, AI_TYPE_VECTOR);
                 for( int i = 0; i < samp->size(); ++i)
                 {
-                    AtPoint val;
+                    AtVector val;
                     val.x = (*samp)[i].x;
                     val.y = (*samp)[i].y;
                     val.z = (*samp)[i].z;
-                    AiArraySetPnt(arrayValues,i, val);
+                    AiArraySetVec(arrayValues,i, val);
 
                 }
                 AiNodeSetArray(node, header.getName().c_str(), arrayValues);
@@ -217,7 +217,7 @@ void setArrayParameter(Alembic::Abc::ICompoundProperty props, Alembic::AbcCoreAb
                 arrayValues = AiArrayAllocate(samp->size(), numSamples, AI_TYPE_RGB);
                 for( int i = 0; i < samp->size(); ++i)
                 {
-                    AtColor val;
+                    AtRGB val;
                     val.r = (*samp)[i].x;
                     val.g = (*samp)[i].y;
                     val.b = (*samp)[i].z;
@@ -266,13 +266,13 @@ void setArrayParameter(Alembic::Abc::ICompoundProperty props, Alembic::AbcCoreAb
             if (numSamples > 0)
             {
                 prop.get( samp, Alembic::Abc::ISampleSelector((Alembic::Abc::index_t)0) );
-                arrayValues = AiArrayAllocate(samp->size(), numSamples, AI_TYPE_POINT2);
+                arrayValues = AiArrayAllocate(samp->size(), numSamples, AI_TYPE_VECTOR2);
                 for( int i = 0; i < samp->size(); ++i)
                 {
-                    AtPoint2 val;
+                    AtVector2 val;
                     val.x = (*samp)[i].x;
                     val.y = (*samp)[i].y;
-                    AiArraySetPnt2(arrayValues,i, val);
+                    AiArraySetVec2(arrayValues,i, val);
 
                 }
                 AiNodeSetArray(node, header.getName().c_str(), arrayValues);
@@ -294,7 +294,7 @@ void setParameter(Alembic::Abc::ICompoundProperty props, Alembic::AbcCoreAbstrac
     {
         // float type
         Abc::IFloatProperty prop(props, header.getName());
-        if (prop.valid() && prop.getValue() != pdefaultvalue->FLT)
+        if (prop.valid() && prop.getValue() != pdefaultvalue->FLT())
         {
             AiNodeSetFlt(node, header.getName().c_str(), prop.getValue());
             AiMsgDebug("Setting float parameter %s.%s with value %f", AiNodeGetName(node), header.getName().c_str(), prop.getValue());
@@ -304,7 +304,7 @@ void setParameter(Alembic::Abc::ICompoundProperty props, Alembic::AbcCoreAbstrac
     {
         // int type
         Abc::IInt32Property prop(props, header.getName());
-        if (prop.valid() && prop.getValue() != pdefaultvalue->INT)
+        if (prop.valid() && prop.getValue() != pdefaultvalue->INT())
         {
             AiNodeSetInt(node, header.getName().c_str(), prop.getValue());
             AiMsgDebug("Setting int32 parameter %s.%s with value %i", AiNodeGetName(node), header.getName().c_str(), prop.getValue());
@@ -317,12 +317,12 @@ void setParameter(Alembic::Abc::ICompoundProperty props, Alembic::AbcCoreAbstrac
         if (prop.valid())
         {
             Alembic::AbcCoreAbstract::MetaData md = prop.getMetaData();
-            if(md.get("type") == "byte" && prop.getValue() != pdefaultvalue->BYTE)
+            if(md.get("type") == "byte" && prop.getValue() != pdefaultvalue->BYTE())
             {
                 AiNodeSetByte(node, header.getName().c_str(), prop.getValue());
                 AiMsgDebug("Setting Byte parameter %s.%s with value %i", AiNodeGetName(node), header.getName().c_str(), prop.getValue());
             }
-            else if(prop.getValue() != pdefaultvalue->UINT)
+            else if(prop.getValue() != pdefaultvalue->UINT())
             {
                 AiNodeSetUInt(node, header.getName().c_str(), prop.getValue());
                 AiMsgDebug("Setting Uint32 parameter %s.%s with value %i", AiNodeGetName(node), header.getName().c_str(), prop.getValue());
@@ -334,7 +334,7 @@ void setParameter(Alembic::Abc::ICompoundProperty props, Alembic::AbcCoreAbstrac
     {
         // bool type
         Abc::IBoolProperty prop(props, header.getName());
-        if (prop.valid() && prop.getValue() != pdefaultvalue->BOOL)
+        if (prop.valid() && prop.getValue() != pdefaultvalue->BOOL())
         {
             AiNodeSetBool(node, header.getName().c_str(), prop.getValue());
             AiMsgDebug("Setting bool parameter %s.%s with value %i", AiNodeGetName(node), header.getName().c_str(), prop.getValue());
@@ -344,7 +344,7 @@ void setParameter(Alembic::Abc::ICompoundProperty props, Alembic::AbcCoreAbstrac
     {
         // string type
         Abc::IStringProperty prop(props, header.getName());
-        if (prop.valid() && (strcmp(prop.getValue().c_str(),pdefaultvalue->STR) != 0))
+        if (prop.valid() && (strcmp(prop.getValue().c_str(),pdefaultvalue->STR()) != 0))
         {
             
 			std::string value = prop.getValue();
@@ -361,7 +361,7 @@ void setParameter(Alembic::Abc::ICompoundProperty props, Alembic::AbcCoreAbstrac
     {
         // vector type
         Abc::IV3fProperty prop(props, header.getName());
-        if (prop.valid() && (prop.getValue().x != pdefaultvalue->VEC.x || prop.getValue().y != pdefaultvalue->VEC.y || prop.getValue().z != pdefaultvalue->VEC.z))
+        if (prop.valid() && (prop.getValue().x != pdefaultvalue->VEC().x || prop.getValue().y != pdefaultvalue->VEC().y || prop.getValue().z != pdefaultvalue->VEC().z))
         {
             AiNodeSetVec(node, header.getName().c_str(), prop.getValue().x , prop.getValue().y, prop.getValue().z);
             AiMsgDebug("Setting vector parameter %s.%s with value %f %f %f", AiNodeGetName(node), header.getName().c_str(),prop.getValue().x , prop.getValue().y, prop.getValue().z);
@@ -371,9 +371,9 @@ void setParameter(Alembic::Abc::ICompoundProperty props, Alembic::AbcCoreAbstrac
     {
         // vector type
         Abc::IP3fProperty prop(props, header.getName());
-        if (prop.valid() && (prop.getValue().x != pdefaultvalue->PNT.x || prop.getValue().y != pdefaultvalue->PNT.y || prop.getValue().z != pdefaultvalue->PNT.z))
+        if (prop.valid() && (prop.getValue().x != pdefaultvalue->VEC().x || prop.getValue().y != pdefaultvalue->VEC().y || prop.getValue().z != pdefaultvalue->VEC().z))
         {
-            AiNodeSetPnt(node, header.getName().c_str(), prop.getValue().x , prop.getValue().y, prop.getValue().z);
+            AiNodeSetVec(node, header.getName().c_str(), prop.getValue().x , prop.getValue().y, prop.getValue().z);
             AiMsgDebug("Setting point parameter %s.%s with value %f %f %f", AiNodeGetName(node), header.getName().c_str(),prop.getValue().x , prop.getValue().y, prop.getValue().z);
         }
     }
@@ -382,7 +382,7 @@ void setParameter(Alembic::Abc::ICompoundProperty props, Alembic::AbcCoreAbstrac
     {
         // color type
         Abc::IC3fProperty prop(props, header.getName());
-        if (prop.valid() && (prop.getValue().x != pdefaultvalue->RGB.r || prop.getValue().y != pdefaultvalue->RGB.g || prop.getValue().z != pdefaultvalue->RGB.b))
+        if (prop.valid() && (prop.getValue().x != pdefaultvalue->RGB().r || prop.getValue().y != pdefaultvalue->RGB().g || prop.getValue().z != pdefaultvalue->RGB().b))
         {
             AiNodeSetRGB(node, header.getName().c_str(), prop.getValue().x , prop.getValue().y, prop.getValue().z);
             AiMsgDebug("Setting color parameter %s.%s with value %f %f %f", AiNodeGetName(node), header.getName().c_str(),prop.getValue().x , prop.getValue().y, prop.getValue().z);
@@ -392,7 +392,7 @@ void setParameter(Alembic::Abc::ICompoundProperty props, Alembic::AbcCoreAbstrac
     {
         // color type
         Abc::IC4fProperty prop(props, header.getName());
-        if (prop.valid() && (prop.getValue().r != pdefaultvalue->RGBA.r || prop.getValue().g != pdefaultvalue->RGBA.g || prop.getValue().b != pdefaultvalue->RGBA.b || prop.getValue().a != pdefaultvalue->RGBA.a))
+        if (prop.valid() && (prop.getValue().r != pdefaultvalue->RGBA().r || prop.getValue().g != pdefaultvalue->RGBA().g || prop.getValue().b != pdefaultvalue->RGBA().b || prop.getValue().a != pdefaultvalue->RGBA().a))
         {
             AiNodeSetRGBA(node, header.getName().c_str(), prop.getValue().r , prop.getValue().g, prop.getValue().b, prop.getValue().a);
             AiMsgDebug("Setting color parameter %s.%s with value %f %f %f %f", AiNodeGetName(node), header.getName().c_str(),prop.getValue().r , prop.getValue().g, prop.getValue().b, prop.getValue().a);
@@ -403,9 +403,9 @@ void setParameter(Alembic::Abc::ICompoundProperty props, Alembic::AbcCoreAbstrac
     {
         //  point2
         Abc::IP2fProperty prop(props, header.getName());
-        if (prop.valid()  && (prop.getValue().x != pdefaultvalue->PNT2.x || prop.getValue().y != pdefaultvalue->PNT2.y))
+        if (prop.valid()  && (prop.getValue().x != pdefaultvalue->VEC2().x || prop.getValue().y != pdefaultvalue->VEC2().y))
         {
-            AiNodeSetPnt2(node, header.getName().c_str(), prop.getValue().x , prop.getValue().y);
+            AiNodeSetVec2(node, header.getName().c_str(), prop.getValue().x , prop.getValue().y);
             AiMsgDebug("Setting point2 parameter %s.%s with value %f %f", AiNodeGetName(node), header.getName().c_str(), prop.getValue().x , prop.getValue().y);
         }
     }

@@ -19,9 +19,8 @@ d = os.path.dirname(__file__)
 import json
 from arnold import *
 
-from PySide import QtGui, QtCore
-from PySide.QtGui import *
-from PySide.QtCore import *
+from PySide2 import QtWidgets, QtGui, QtCore
+
 
 from gpucache import gpucache, treeitem, treeDelegate, treeitemWildcard, treeitemTag
 reload(treeitem)
@@ -42,7 +41,7 @@ import maya.cmds as cmds
 
 from maya.OpenMaya import MObjectHandle, MDGMessage, MMessage, MNodeMessage, MFnDependencyNode, MObject, MSceneMessage
 
-class ShaderManager(QMainWindow, UI_ABCHierarchy.Ui_NAM):
+class ShaderManager(QtWidgets.QMainWindow, UI_ABCHierarchy.Ui_NAM):
     def __init__(self, parent=None):
         super(ShaderManager, self).__init__(parent)
         
@@ -72,7 +71,7 @@ class ShaderManager(QMainWindow, UI_ABCHierarchy.Ui_NAM):
 
         self.propertyEditing = False
 
-        self.propertyEditorWindow = QtGui.QDockWidget(self)
+        self.propertyEditorWindow = QtWidgets.QDockWidget(self)
         self.propertyEditorWindow.setAllowedAreas(QtCore.Qt.LeftDockWidgetArea | QtCore.Qt.RightDockWidgetArea)
         self.propertyEditorWindow.setWindowTitle("Properties")
         self.propertyEditorWindow.setMinimumWidth(300)
@@ -85,7 +84,7 @@ class ShaderManager(QMainWindow, UI_ABCHierarchy.Ui_NAM):
         self.propertyEditor.propertyChanged.connect(self.propertyChanged)
 
         self.hierarchyWidget.setColumnWidth(0,600)
-        self.hierarchyWidget.setIconSize(QSize(22,22))
+        self.hierarchyWidget.setIconSize(QtCore.QSize(22,22))
 
         self.hierarchyWidget.dragEnterEvent = self.newhierarchyWidgetdragEnterEvent
         self.hierarchyWidget.dragMoveEvent = self.newhierarchyWidgetdragMoveEvent
@@ -152,12 +151,12 @@ class ShaderManager(QMainWindow, UI_ABCHierarchy.Ui_NAM):
     def showEvent(self, event):
         self.reset()
         self.isolateCheckbox.setChecked(0)
-        return QtGui.QMainWindow.showEvent(self, event)
+        return QtWidgets.QMainWindow.showEvent(self, event)
 
     def hideEvent(self, event):
         self.reset()
         self.isolateCheckbox.setChecked(0)
-        return QtGui.QMainWindow.hideEvent(self, event)
+        return QtWidgets.QMainWindow.hideEvent(self, event)
 
     def reset(self, *args, **kwargs):
         try:
@@ -344,13 +343,13 @@ class ShaderManager(QMainWindow, UI_ABCHierarchy.Ui_NAM):
                 if cmds.nodeType(nodeName) == "displacementShader":
                     icon = QtGui.QIcon()
                     icon.addFile(os.path.join(d, "../../icons/sg.xpm"), QtCore.QSize(25,25))
-                    item = QtGui.QListWidgetItem(nodeName)
+                    item = QtWidgets.QListWidgetItem(nodeName)
                     item.setIcon(icon)
                     self.displacementList.addItem(item)
                 else:
                     icon = QtGui.QIcon()
                     icon.addFile(os.path.join(d, "../../icons/sg.xpm"), QtCore.QSize(25,25))
-                    item = QtGui.QListWidgetItem(nodeName)
+                    item = QtWidgets.QListWidgetItem(nodeName)
                     item.setIcon(icon)
                     self.shadersList.addItem(item)
 
@@ -686,7 +685,7 @@ class ShaderManager(QMainWindow, UI_ABCHierarchy.Ui_NAM):
         icon = QtGui.QIcon()
         icon.addFile(os.path.join(d, "../../icons/sg.xpm"), QtCore.QSize(25,25))
         for shader in shaders:
-            item = QtGui.QListWidgetItem(shader)
+            item = QtWidgets.QListWidgetItem(shader)
             item.setIcon(icon)
             self.shadersList.addItem(item)
 
@@ -696,7 +695,7 @@ class ShaderManager(QMainWindow, UI_ABCHierarchy.Ui_NAM):
         icon = QtGui.QIcon()
         icon.addFile(os.path.join(d, "../../icons/displacement.xpm"), QtCore.QSize(25,25))
         for sg in displaces:
-            item = QtGui.QListWidgetItem(sg)
+            item = QtWidgets.QListWidgetItem(sg)
             item.setIcon(icon)
             self.displacementList.addItem(item)
 
@@ -772,9 +771,8 @@ class ShaderManager(QMainWindow, UI_ABCHierarchy.Ui_NAM):
 
         cache.setSelection(allSelected)
 
-        if self.isolateCheckbox.checkState() == Qt.Checked:
+        if self.isolateCheckbox.checkState() == QtCore.Qt.Checked:
             cache.setToPath(curPath)
-
 
         self.propertyEditor.resetToDefault()
 
@@ -827,7 +825,7 @@ class ShaderManager(QMainWindow, UI_ABCHierarchy.Ui_NAM):
 
     def itemPressed(self, item, col) :
         self.lastClick = 1
-        if QtGui.QApplication.mouseButtons()  == QtCore.Qt.RightButton:
+        if QtWidgets.QApplication.mouseButtons()  == QtCore.Qt.RightButton:
             item.pressed()
 
 
@@ -872,7 +870,7 @@ class ShaderManager(QMainWindow, UI_ABCHierarchy.Ui_NAM):
 
     def expandItem(self, item) :
         expandAll = False
-        modifiers = QtGui.QApplication.keyboardModifiers()
+        modifiers = QtWidgets.QApplication.keyboardModifiers()
         if modifiers == QtCore.Qt.ShiftModifier:
             expandAll = True
 
@@ -916,7 +914,7 @@ class ShaderManager(QMainWindow, UI_ABCHierarchy.Ui_NAM):
                 # check if the item has chidren, but go no further...
                 childsItems = newItem.cache.getHierarchy(newItem.getPath())
                 if childsItems:
-                    newItem.setChildIndicatorPolicy(QtGui.QTreeWidgetItem.ShowIndicator)
+                    newItem.setChildIndicatorPolicy(QtWidgets.QTreeWidgetItem.ShowIndicator)
                     newItem.setHasChildren(True)
                 else:
                     newItem.setHasChildren(False)

@@ -21,11 +21,8 @@ License along with this library.*/
 #include <Alembic/AbcCoreOgawa/All.h>
 #include <Alembic/AbcMaterial/OMaterial.h>
 
-#include <boost/algorithm/string/replace.hpp>
-#include <boost/lexical_cast.hpp>
 #include <set>
-//#include <pystring.h>
-
+#include "pystring.h"
 #include <sstream>
 
 namespace Abc =  Alembic::Abc;

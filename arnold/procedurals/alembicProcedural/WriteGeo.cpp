@@ -48,8 +48,6 @@
 #include "json/json.h"
 #include "json/value.h"
 
-#include <boost/regex.hpp>
-
 //-*****************************************************************************
 
 #if AI_VERSION_ARCH_NUM == 3
@@ -380,7 +378,7 @@ inline void doNormals<IPolyMesh>(IPolyMesh& prim, AtNode *meshNode, const Sample
                 for (size_t i = 0; i < numValidNormals; ++i)
                 {
                     const size_t id = i * 3;
-                    AtVector v = {nlist[id], nlist[id + 1], nlist[id + 2]};
+                    AtVector v = AtVector(nlist[id], nlist[id + 1], nlist[id + 2]);
                     AiArraySetVec(narr, i, v);
                 }
 
@@ -392,7 +390,7 @@ inline void doNormals<IPolyMesh>(IPolyMesh& prim, AtNode *meshNode, const Sample
                     for (size_t j = 0; j < numNormals; ++j)
                     {
                         const size_t id = validNormalSource + j * 3;
-                        AtVector v = {nlist[id], nlist[id + 1], nlist[id + 2]};
+                        AtVector v = AtVector(nlist[id], nlist[id + 1], nlist[id + 2]);
                         AiArraySetVec(narr, normalTarget + j, v);
                     }
                 }
@@ -411,7 +409,7 @@ inline void doNormals<IPolyMesh>(IPolyMesh& prim, AtNode *meshNode, const Sample
                unsigned int base = 0;
                AtArray* nsides = AiNodeGetArray(meshNode, "nsides");
                std::vector<unsigned int> nvidxReversed;
-               for (unsigned int i = 0; i < nsides->nelements / nsides->nkeys; ++i)
+               for (unsigned int i = 0; i < AiArrayGetNumElements(nsides) / AiArrayGetNumKeys(nsides); ++i)
                {
                   int curNum = AiArrayGetUInt(nsides ,i);
 
@@ -463,7 +461,7 @@ AtNode* writeMesh(
 
     // Getting all the data relative to the mesh.
     std::vector<unsigned int> vidxs;
-    std::vector<AtByte> nsides;
+    std::vector<uint8_t> nsides;
     std::vector<float> vlist;
 
     std::vector<float> uvlist;
@@ -494,7 +492,7 @@ AtNode* writeMesh(
                     return NULL;
                 }
 
-                nsides.push_back( (AtByte) n );
+                nsides.push_back( (uint8_t) n );
             }
 
             size_t vidxSize = sample.getFaceIndices()->size();
@@ -531,7 +529,7 @@ AtNode* writeMesh(
                 {
                     if(name.find(*it) != string::npos || std::find(tags.begin(), tags.end(), *it) != tags.end() || matchPattern(name,*it))
                     {
-                        const Json::Value overrides = args.attributesRoot[*it];
+                        Json::Value overrides = args.attributesRoot[*it];
                         if(overrides.size() > 0)
                         {
                             for( Json::ValueIterator itr = overrides.begin() ; itr != overrides.end() ; itr++ )
@@ -583,57 +581,13 @@ AtNode* writeMesh(
         }
     }
 
-    bool customUv = false;
-    if(args.useUvArchive)
-    {
-        customUv = true;
-        PathList path;
-        TokenizePath( prim.getFullName(), "/", path );
-        IObject current = args.uvsRoot;
-        for ( size_t i = 0; i < path.size(); ++i )
-        {
-            IObject parent = current;
-            current = current.getChild(path[i]);
-            if(!current.valid())
-            {
-                if(i == path.size()-1)
-                {
-                    current = parent.getChild(path[i]+"Deformed");
-                    if(!current.valid())
-                        customUv = false;
-                }
-                else
-                    customUv = false;
-            }
-        }
-        if (customUv)
-        {
-            customUv = false;
-            if (IPolyMesh::matches(current.getMetaData()))
-            {
-                IPolyMesh polymesh( current, kWrapExisting);
-                if(polymesh.valid())
-                {
-                    ProcessIndexedBuiltinParam(
-                    polymesh.getSchema().getUVsParam(),
-                    singleSampleTimes,
-                    uvlist,
-                    uvidxs,
-                    2);
-                    customUv = true;
-                }
-            }
-        }
-    }
-    if(!customUv)
-    {
-        ProcessIndexedBuiltinParam(
-                ps.getUVsParam(),
-                singleSampleTimes,
-                uvlist,
-                uvidxs,
-                2);
-    }
+    // UVs.
+    ProcessIndexedBuiltinParam(
+        ps.getUVsParam(),
+        singleSampleTimes,
+        uvlist,
+        uvidxs,
+        2);
 
 
     // Set the meshNode.
@@ -657,7 +611,7 @@ AtNode* writeMesh(
         {
             if(name.find(*it) != string::npos || std::find(tags.begin(), tags.end(), *it) != tags.end() || matchPattern(name,*it))
             {
-                const Json::Value overrides = args.attributesRoot[*it];
+                Json::Value overrides = args.attributesRoot[*it];
                 if(overrides.size() > 0)
                 {
                     for( Json::ValueIterator itr = overrides.begin() ; itr != overrides.end() ; itr++ )
@@ -772,7 +726,7 @@ AtNode* writeMesh(
 
     AiNodeSetArray(meshNode, "vlist",
             AiArrayConvert( vlist.size() / (numSampleTimes * 3),
-                    numSampleTimes, AI_TYPE_POINT, &vlist[0]
+                    numSampleTimes, AI_TYPE_VECTOR, &vlist[0]
                             ));
 
 
@@ -816,7 +770,7 @@ AtNode* writeMesh(
         }
     }
 
-    if ( sampleTimes.size() > 1 )
+    /*if ( sampleTimes.size() > 1 )
     {
         std::vector<float> relativeSampleTimes;
         relativeSampleTimes.reserve( sampleTimes.size() );
@@ -838,7 +792,7 @@ AtNode* writeMesh(
     {
         AiNodeSetArray( meshNode, "deform_time_samples",
                 AiArray(2, 1, AI_TYPE_FLOAT, 0.f, 1.f));
-    }
+    }*/
 
     
     // NORMALS   
@@ -851,7 +805,7 @@ AtNode* writeMesh(
     if ( faceSetNames.size() > 0 )
     {
 
-        std::vector<AtByte> faceSetArray;
+        std::vector<uint8_t> faceSetArray;
         // By default, we are using all the faces.
         faceSetArray.resize(nsides.size());
         for ( int i = 0; i < (int) nsides.size(); ++i )
@@ -870,7 +824,7 @@ AtNode* writeMesh(
                 for( int f = 0; f < (int) faceSetSample.getFaces()->size(); f++)
                 {
                     if(faceArray[f] <= nsides.size() )
-                        faceSetArray[faceArray[f]] = (AtByte) i;
+                        faceSetArray[faceArray[f]] = (uint8_t) i;
                     else
                         AiMsgWarning("Face set is higher than nsides side");
                 }
@@ -1127,14 +1081,14 @@ void ProcessPolyMesh( IPolyMesh &polymesh, ProcArgs &args,
 
     getSampleTimes(polymesh, args, sampleTimes);
     std::string cacheId = getHash(name, originalName, polymesh, args, sampleTimes);
-    AiCritSecEnter(&args.lock);
+
     AtNode* meshNode = args.nodeCache->getCachedNode(cacheId);
 
     if(meshNode == NULL)
     { // We don't have a cache, so we much create this mesh.
         meshNode = writeMesh(name, originalName, cacheId, polymesh, args, sampleTimes);
     }
-    AiCritSecLeave(&args.lock);
+
     AtNode *instanceNode = NULL;
     // we can create the instance, with correct transform, attributes & shaders.
     if(meshNode != NULL)

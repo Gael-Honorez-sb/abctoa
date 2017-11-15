@@ -11,6 +11,6 @@
 const size_t hash( std::string const& s );
 MObject findShader( MObject& setNode );
 bool findShaderColor(MString shaderName, MColor & shaderColor);
-void ParseShaders(Json::Value jroot, std::map<std::string, MColor> & shaderColors);
+void ParseShaders(Json::Value jroot, std::map<std::string, MColor> & shaderColors, std::map<std::string, std::string> & shaderTextures);
 
 #endif

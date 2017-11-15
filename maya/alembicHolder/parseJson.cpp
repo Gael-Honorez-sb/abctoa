@@ -20,7 +20,7 @@ void OverrideProperties(Json::Value & jroot, Json::Value jrootAttributes)
     for( Json::ValueIterator itr = jrootAttributes.begin() ; itr != jrootAttributes.end() ; itr++ )
     {
         const Json::Value paths = jrootAttributes[itr.key().asString()];
-        for( Json::ValueIterator overPath = paths.begin() ; overPath != paths.end() ; overPath++ )
+        for( Json::ValueConstIterator overPath = paths.begin() ; overPath != paths.end() ; overPath++ )
         {
             Json::Value attr = paths[overPath.key().asString()];
             jroot[itr.key().asString()][overPath.key().asString()] = attr;

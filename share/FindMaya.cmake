@@ -46,6 +46,9 @@
 # - Post-commnad for correcting Qt library linking on osx
 # - Windows link flags for exporting initializePlugin/uninitializePlugin
 
+IF(NOT MAYA_VERSION AND NOT $ENV{MAYA_VERSION} STREQUAL "")
+  SET(MAYA_VERSION $ENV{MAYA_VERSION})
+ENDIF()
 
 macro(MAYA_SET_TRANSLATOR_PROPERTIES target)
    
@@ -127,7 +130,7 @@ endmacro(MAYA_SET_PLUGIN_PROPERTIES)
 
 
 set(_maya_TEST_VERSIONS)
-set(_maya_KNOWN_VERSIONS "2013" "2014")
+set(_maya_KNOWN_VERSIONS "2015" "2016" "2017" "2018")
 
 if(APPLE)
     set(MAYA_PLUGIN_SUFFIX ".bundle")
@@ -176,40 +179,6 @@ foreach(version ${_maya_TEST_VERSIONS})
     endif()
 endforeach(version)
 
-# search for maya executable within the MAYA_LOCATION and PATH env vars and test paths
-find_program(MAYA_EXECUTABLE maya
-    PATHS $ENV{MAYA_LOCATION} ${_maya_TEST_PATHS}
-    PATH_SUFFIXES bin
-    NO_SYSTEM_ENVIRONMENT_PATH
-    DOC "Maya's executable path")
-
-if(MAYA_EXECUTABLE)
-    # TODO: use GET_FILENAME_COMPONENT here
-    # derive MAYA_LOCATION from MAYA_EXECUTABLE
-    string(REGEX REPLACE "/bin/maya.*" "" MAYA_LOCATION "${MAYA_EXECUTABLE}")
-
-    string(REGEX MATCH "20[0-9][0-9]" MAYA_VERSION "${MAYA_LOCATION}")
-
-    if(Maya_FIND_VERSION)
-        # test that we've found a valid version
-        list(FIND _maya_TEST_VERSIONS ${MAYA_VERSION} _maya_FOUND_INDEX)
-        if(${_maya_FOUND_INDEX} EQUAL -1)
-            message(STATUS "Found Maya version ${MAYA_VERSION}, but requested at least ${Maya_FIND_VERSION}. Re-searching without environment variables...")
-            set(MAYA_LOCATION NOTFOUND)
-            # search again, but don't use environment variables
-            # (these should be only paths we constructed based on requested version)
-            find_path(MAYA_LOCATION maya
-                PATHS ${_maya_TEST_PATHS}
-                PATH_SUFFIXES bin
-                DOC "Maya's Base Directory"
-                NO_SYSTEM_ENVIRONMENT_PATH)
-            set(MAYA_EXECUTABLE "${MAYA_LOCATION}/bin/maya"
-                CACHE PATH "Maya's executable path")
-            string(REGEX MATCH "20[0-9][0-9]" MAYA_VERSION "${MAYA_LOCATION}")
-        #ELSE: error?
-        endif()
-    endif()
-endif()
 
 # Qt Versions
 if(${MAYA_VERSION} STREQUAL "2011")
@@ -262,10 +231,8 @@ foreach(_maya_lib
     OpenMayaFX
     OpenMayaRender
     OpenMayaUI
-    Image
     Foundation
-    IMFbase
-    tbb)
+    )
 # cg
 # cgGL
     # HINTS is searched before PATHS, so preference is given to MAYA_LOCATION
@@ -279,24 +246,18 @@ foreach(_maya_lib
             NO_CMAKE_SYSTEM_PATH
             DOC "Maya's ${MAYA_LIB} library path")
     else()
-        find_library(MAYA_${_maya_lib}_LIBRARY ${_maya_lib}
-            HINTS ${MAYA_LOCATION}
-            PATHS ${_maya_TEST_PATHS}
-            PATH_SUFFIXES lib # linux and windows
+        find_library(MAYA_${_maya_lib}_LIBRARY 
+			NAMES ${_maya_lib}
+            PATHS 
+				${MAYA_LOCATION}
+            PATH_SUFFIXES 
+			"lib/" # linux and windows
+			"Maya.app/Contents/MacOS/"
             DOC "Maya's ${MAYA_LIB} library path")
     endif()
     list(APPEND MAYA_LIBRARIES ${MAYA_${_maya_lib}_LIBRARY})
 endforeach()
 
-
-find_path(MAYA_USER_DIR
-    NAMES ${MAYA_VERSION}-x64 ${MAYA_VERSION}
-    PATHS
-        $ENV{HOME}/Library/Preferences/Autodesk/maya # osx
-        $ENV{USERPROFILE}/Documents/maya # windows
-        $ENV{HOME}/maya # linux
-    DOC "Maya user home directory"
-    NO_SYSTEM_ENVIRONMENT_PATH)
 
 # if (Maya_FOUND)
 # if (NOT Maya_FIND_QUIETLY)
@@ -324,23 +285,6 @@ find_path(MAYA_USER_DIR
 # all passed variables are TRUE
 include(FindPackageHandleStandardArgs)
 find_package_handle_standard_args(Maya DEFAULT_MSG
-    MAYA_LIBRARIES MAYA_EXECUTABLE MAYA_INCLUDE_DIRS
-    MAYA_LIBRARY_DIRS MAYA_VERSION MAYA_PLUGIN_SUFFIX
-    MAYA_USER_DIR)
+    MAYA_LIBRARIES MAYA_INCLUDE_DIRS
+    MAYA_LIBRARY_DIRS MAYA_VERSION MAYA_PLUGIN_SUFFIX)
 
-#
-# Copyright 2012, Chad Dombrova
-#
-# vfxcmake is free software: you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License as published by
-# the Free Software Foundation, either version 3 of the License, or
-# (at your option) any later version.
-#
-# vfxcmake is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-# GNU General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public License
-# along with vfxcmake. If not, see <http://www.gnu.org/licenses/>.
-#

@@ -32,9 +32,8 @@ const std::vector< std::string > GetComponentNames(int arnoldParamType)
    case AI_TYPE_RGBA:
       return std::vector<std::string> (RGBA_COMPONENTS , RGBA_COMPONENTS + 3);
    case AI_TYPE_VECTOR:
-   case AI_TYPE_POINT:
       return std::vector<std::string> (VECTOR_COMPONENTS , VECTOR_COMPONENTS + 2);
-   case AI_TYPE_POINT2:
+   case AI_TYPE_VECTOR2:
       return std::vector<std::string> (POINT2_COMPONENTS , POINT2_COMPONENTS + 1);
    default:
       return std::vector<std::string> ();
@@ -55,9 +54,9 @@ void getAllArnoldNodes(AtNode* node, AtNodeSet* nodes)
         if(inputType == AI_TYPE_ARRAY)
         {
             AtArray* paramArray = AiNodeGetArray(node, paramName);
-            if(paramArray->type == AI_TYPE_NODE ||paramArray->type == AI_TYPE_POINTER)
+            if(AiArrayGetType(paramArray) == AI_TYPE_NODE || AiArrayGetType(paramArray) == AI_TYPE_POINTER)
             {
-                for(unsigned int i=0; i < paramArray->nelements; i++)
+                for(unsigned int i=0; i < AiArrayGetNumElements(paramArray); i++)
                 {
                     AtNode* linkedNode = (AtNode*)AiArrayGetPtr(paramArray, i);
                     if(linkedNode != NULL)
@@ -73,7 +72,7 @@ void getAllArnoldNodes(AtNode* node, AtNodeSet* nodes)
                 if(AiNodeIsLinked(node, paramName))
                 {
                     int comp;
-                    for(unsigned int i=0; i < paramArray->nelements; i++)
+                    for(unsigned int i=0; i < AiArrayGetNumElements(paramArray); i++)
                     {
 
                         std::string paramNameArray = std::string(paramName) + "[" + to_string(i) +"]";
@@ -156,13 +155,13 @@ void getAllArnoldNodes(AtNode* node, AtNodeSet* nodes)
 
 void processArrayValues(AtNode* sit, const char *paramName, AtArray* paramArray, int outputType, Mat::OMaterial matObj, std::string nodeName)
 {
-    int typeArray = paramArray->type;
+    int typeArray = AiArrayGetType(paramArray);
     if (typeArray == AI_TYPE_INT ||  typeArray == AI_TYPE_ENUM)
     {
         //type int
         Abc::OInt32ArrayProperty prop(matObj.getSchema().getNetworkNodeParameters(nodeName.c_str()), paramName);
         std::vector<int> vals;
-        for(unsigned int i=0; i < paramArray->nelements; i++)
+        for(unsigned int i=0; i < AiArrayGetNumElements(paramArray); i++)
             vals.push_back(AiArrayGetInt(paramArray, i));
 
         prop.set(vals);
@@ -173,7 +172,7 @@ void processArrayValues(AtNode* sit, const char *paramName, AtArray* paramArray,
         //type int
         Abc::OUInt32ArrayProperty prop(matObj.getSchema().getNetworkNodeParameters(nodeName.c_str()), paramName);
         std::vector<unsigned int> vals;
-        for(unsigned int i=0; i < paramArray->nelements; i++)
+        for(unsigned int i=0; i < AiArrayGetNumElements(paramArray); i++)
             vals.push_back(AiArrayGetUInt(paramArray, i));
 
         prop.set(vals);
@@ -182,11 +181,11 @@ void processArrayValues(AtNode* sit, const char *paramName, AtArray* paramArray,
     else if (typeArray == AI_TYPE_BYTE)
     {
         Alembic::AbcCoreAbstract::MetaData md;
-        md.set("type", boost::lexical_cast<std::string>("byte"));
+        md.set("type", std::string("byte"));
         //type int
         Abc::OUInt32ArrayProperty prop(matObj.getSchema().getNetworkNodeParameters(nodeName.c_str()), paramName, md);
         std::vector<unsigned int> vals;
-        for(unsigned int i=0; i < paramArray->nelements; i++)
+        for(unsigned int i=0; i < AiArrayGetNumElements(paramArray); i++)
             vals.push_back(AiArrayGetByte(paramArray, i));
 
         prop.set(vals);
@@ -197,7 +196,7 @@ void processArrayValues(AtNode* sit, const char *paramName, AtArray* paramArray,
         // type float
         Abc::OFloatArrayProperty prop(matObj.getSchema().getNetworkNodeParameters(nodeName.c_str()), paramName);
         std::vector<float> vals;
-        for(unsigned int i=0; i < paramArray->nelements; i++)
+        for(unsigned int i=0; i < AiArrayGetNumElements(paramArray); i++)
             vals.push_back(AiArrayGetFlt(paramArray, i));
         prop.set(vals);
 
@@ -207,7 +206,7 @@ void processArrayValues(AtNode* sit, const char *paramName, AtArray* paramArray,
         // type bool
         Abc::OBoolArrayProperty prop(matObj.getSchema().getNetworkNodeParameters(nodeName.c_str()), paramName);
         std::vector<Abc::bool_t> vals;
-        for(unsigned int i=0; i < paramArray->nelements; i++)
+        for(unsigned int i=0; i < AiArrayGetNumElements(paramArray); i++)
             vals.push_back(AiArrayGetBool(paramArray, i));
 
         prop.set(vals);
@@ -218,9 +217,9 @@ void processArrayValues(AtNode* sit, const char *paramName, AtArray* paramArray,
         // type rgb
         Abc::OC3fArrayProperty prop(matObj.getSchema().getNetworkNodeParameters(nodeName.c_str()), paramName);
         std::vector<Imath::C3f> vals;
-        for(unsigned int i=0; i < paramArray->nelements; i++)
+        for(unsigned int i=0; i < AiArrayGetNumElements(paramArray); i++)
         {
-            AtColor a_val = AiArrayGetRGB(paramArray, i);
+            AtRGB a_val = AiArrayGetRGB(paramArray, i);
             Imath::C3f color_val( a_val.r, a_val.g, a_val.b );
             vals.push_back(color_val);
         }
@@ -231,7 +230,7 @@ void processArrayValues(AtNode* sit, const char *paramName, AtArray* paramArray,
         // type rgba
         Abc::OC4fArrayProperty prop(matObj.getSchema().getNetworkNodeParameters(nodeName.c_str()), paramName);
         std::vector<Imath::C4f> vals;
-        for(unsigned int i=0; i < paramArray->nelements; i++)
+        for(unsigned int i=0; i < AiArrayGetNumElements(paramArray); i++)
         {
             AtRGBA a_val = AiArrayGetRGBA(paramArray, i);
             Imath::C4f color_val( a_val.r, a_val.g, a_val.b, a_val.a );
@@ -239,41 +238,27 @@ void processArrayValues(AtNode* sit, const char *paramName, AtArray* paramArray,
         }
         prop.set(vals);
     }
-    else if (typeArray == AI_TYPE_POINT2)
+    else if (typeArray == AI_TYPE_VECTOR2)
     {
         // type point2
         Abc::OP2fArrayProperty prop(matObj.getSchema().getNetworkNodeParameters(nodeName.c_str()), paramName);
         std::vector<Imath::V2f> vals;
-        for(unsigned int i=0; i < paramArray->nelements; i++)
+        for(unsigned int i=0; i < AiArrayGetNumElements(paramArray); i++)
         {
-            AtPoint2 a_val = AiArrayGetPnt2(paramArray, i);
+            AtVector2 a_val = AiArrayGetVec2(paramArray, i);
             Imath::V2f vec_val( a_val.x, a_val.y );
             vals.push_back(vec_val);
         }
         prop.set(vals);
     }
 
-
-    else if (typeArray == AI_TYPE_POINT)
-    {
-        // type point
-        Abc::OP3fArrayProperty prop(matObj.getSchema().getNetworkNodeParameters(nodeName.c_str()), paramName);
-        std::vector<Imath::V3f> vals;
-        for(unsigned int i=0; i < paramArray->nelements; i++)
-        {
-            AtPoint a_val = AiArrayGetPnt(paramArray, i);
-            Imath::V3f vec_val( a_val.x, a_val.y, a_val.z );
-            vals.push_back(vec_val);
-        }
-        prop.set(vals);
-    }
     else if (typeArray == AI_TYPE_VECTOR)
     {
         Abc::OV3fArrayProperty prop(matObj.getSchema().getNetworkNodeParameters(nodeName.c_str()), paramName);
         std::vector<Imath::V3f> vals;
-        for(unsigned int i=0; i < paramArray->nelements; i++)
+        for(unsigned int i=0; i < AiArrayGetNumElements(paramArray); i++)
         {
-            AtPoint a_val = AiArrayGetPnt(paramArray, i);
+            AtVector a_val = AiArrayGetVec(paramArray, i);
             Imath::V3f vec_val( a_val.x, a_val.y, a_val.z );
             vals.push_back(vec_val);
         }
@@ -284,12 +269,12 @@ void processArrayValues(AtNode* sit, const char *paramName, AtArray* paramArray,
         // type string
         Abc::OStringArrayProperty prop(matObj.getSchema().getNetworkNodeParameters(nodeName.c_str()), paramName);
         std::vector<std::string> vals;
-        for(unsigned int i=0; i < paramArray->nelements; i++)
-            vals.push_back(AiArrayGetStr(paramArray, i));
+        for(unsigned int i=0; i < AiArrayGetNumElements(paramArray); i++)
+            vals.push_back(AiArrayGetStr(paramArray, i).c_str());
         prop.set(vals);
     }
 
-   // cout << "exported " << paramArray->nelements << " array values of type " << typeArray << " for " << nodeName.c_str() << "." << paramName << endl;
+   // cout << "exported " << AiArrayGetNumElements(paramArray) << " array values of type " << typeArray << " for " << nodeName.c_str() << "." << paramName << endl;
 }
 
 
@@ -298,12 +283,12 @@ void processArrayParam(AtNode* sit, const char *paramName, AtArray* paramArray, 
     //first, test if the entry is linked
     //Build the paramname...
 	AiMsgTab (+2);
-    int typeArray = paramArray->type;
+    int typeArray = AiArrayGetType(paramArray);
 
     if(typeArray == AI_TYPE_NODE || typeArray == AI_TYPE_POINTER)
     {
 
-        for(unsigned int i=0; i < paramArray->nelements; i++)
+        for(unsigned int i=0; i < AiArrayGetNumElements(paramArray); i++)
         {
             AtNode* linkedNode = (AtNode*)AiArrayGetPtr(paramArray, i);
             if(linkedNode != NULL)
@@ -379,8 +364,9 @@ void exportLink(AtNode* sit, Mat::OMaterial matObj, std::string nodeName, std::s
     std::string nodeNameLinked = containerName + ":" + std::string(AiNodeGetName(linked));
 
     //We need to replace the "." stuff from the name as we does it from the exporter.
-	boost::replace_all(nodeNameLinked, ".message", "");
-	boost::replace_all(nodeNameLinked, ".", "_");
+
+    nodeNameLinked = pystring::replace(nodeNameLinked, ".message", "");
+    nodeNameLinked = pystring::replace(nodeNameLinked, ".", "_");
 
     std::string outPlug;
 
@@ -399,7 +385,7 @@ void exportLink(AtNode* sit, Mat::OMaterial matObj, std::string nodeName, std::s
             else if(comp == 3)
                 outPlug = "a";
         }
-        else if(outputType == AI_TYPE_VECTOR || outputType == AI_TYPE_POINT ||outputType == AI_TYPE_POINT2)
+        else if(outputType == AI_TYPE_VECTOR || outputType == AI_TYPE_VECTOR2)
         {
             if(comp == 0)
                 outPlug = "x";
@@ -438,7 +424,7 @@ void exportParameter(AtNode* sit, Mat::OMaterial matObj, int type, std::string n
     else if (type == AI_TYPE_BYTE)
     {
         Alembic::AbcCoreAbstract::MetaData md;
-        md.set("type", boost::lexical_cast<std::string>("byte"));
+        md.set("type", std::string("byte"));
 
         //type Byte
         Abc::OUInt32Property prop(matObj.getSchema().getNetworkNodeParameters(c_nodeName), c_paramName, md);
@@ -454,19 +440,19 @@ void exportParameter(AtNode* sit, Mat::OMaterial matObj, int type, std::string n
         float val;
         bool success = AiMetaDataGetFlt(arnoldNodeEntry, c_paramName, "min", &val);
         if(success)
-            md.set("min", boost::lexical_cast<std::string>(val));
+            md.set("min", std::to_string(val));
 
         success = AiMetaDataGetFlt(arnoldNodeEntry, c_paramName, "max", &val);
         if(success)
-            md.set("max", boost::lexical_cast<std::string>(val));
+            md.set("max", std::to_string(val));
 
         success = AiMetaDataGetFlt(arnoldNodeEntry, c_paramName, "softmin", &val);
         if(success)
-            md.set("softmin", boost::lexical_cast<std::string>(val));
+            md.set("softmin", std::to_string(val));
 
         success = AiMetaDataGetFlt(arnoldNodeEntry, c_paramName, "softmax", &val);
         if(success)
-            md.set("softmax", boost::lexical_cast<std::string>(val));
+            md.set("softmax", std::to_string(val));
 
         Abc::OFloatProperty prop(matObj.getSchema().getNetworkNodeParameters(c_nodeName), c_paramName, md);
         prop.set(AiNodeGetFlt(sit, c_paramName));
@@ -482,7 +468,7 @@ void exportParameter(AtNode* sit, Mat::OMaterial matObj, int type, std::string n
     {
         // type rgb
         Abc::OC3fProperty prop(matObj.getSchema().getNetworkNodeParameters(c_nodeName), c_paramName);
-        AtColor a_val = AiNodeGetRGB(sit, c_paramName);
+        AtRGB a_val = AiNodeGetRGB(sit, c_paramName);
         Imath::C3f color_val( a_val.r, a_val.g, a_val.b );
         prop.set(color_val);
         //cout << "exporting RGB value of " <<  a_val.r << " " << a_val.g << " " << a_val.b << " for " << c_nodeName <<"."<<paramName << endl;
@@ -496,20 +482,12 @@ void exportParameter(AtNode* sit, Mat::OMaterial matObj, int type, std::string n
         prop.set(color_val);
         //cout << "exporting RGB value of " <<  a_val.r << " " << a_val.g << " " << a_val.b << " for " << c_nodeName <<"."<<paramName << endl;
     }
-    else if (type == AI_TYPE_POINT2)
+    else if (type == AI_TYPE_VECTOR2)
     {
         // type point
         Abc::OP2fProperty prop(matObj.getSchema().getNetworkNodeParameters(c_nodeName), c_paramName);
-        AtPoint2 a_val = AiNodeGetPnt2(sit, c_paramName);
+        AtVector2 a_val = AiNodeGetVec2(sit, c_paramName);
         Imath::V2f vec_val( a_val.x, a_val.y);
-        prop.set(vec_val);
-    }
-    else if (type == AI_TYPE_POINT)
-    {
-        // type point
-        Abc::OP3fProperty prop(matObj.getSchema().getNetworkNodeParameters(c_nodeName), c_paramName);
-        AtVector a_val = AiNodeGetPnt(sit, c_paramName);
-        Imath::V3f vec_val( a_val.x, a_val.y, a_val.z );
         prop.set(vec_val);
     }
     else if (type == AI_TYPE_VECTOR)
@@ -524,7 +502,7 @@ void exportParameter(AtNode* sit, Mat::OMaterial matObj, int type, std::string n
     {
         // type string
         Abc::OStringProperty prop(matObj.getSchema().getNetworkNodeParameters(c_nodeName), c_paramName);
-        prop.set(AiNodeGetStr(sit, c_paramName));
+        prop.set(AiNodeGetStr(sit, c_paramName).c_str());
     }
 
     if(strcmp(c_paramName,"name") != 0 && isDefaultValue(sit, c_paramName) == false)
@@ -548,47 +526,43 @@ bool isDefaultValue(AtNode* node, const char* paramName)
     switch(AiParamGetType(pentry))
     {
         case AI_TYPE_BYTE:
-            if (AiNodeGetByte(node, paramName) == pdefaultvalue->BYTE)
+            if (AiNodeGetByte(node, paramName) == pdefaultvalue->BYTE())
                 return true;
             break;
         case AI_TYPE_INT:
-            if (AiNodeGetInt(node, paramName) == pdefaultvalue->INT)
+            if (AiNodeGetInt(node, paramName) == pdefaultvalue->INT())
                 return true;
             break;
         case AI_TYPE_UINT:
-            if (AiNodeGetUInt(node, paramName) == pdefaultvalue->UINT)
+            if (AiNodeGetUInt(node, paramName) == pdefaultvalue->UINT())
                 return true;
             break;
         case AI_TYPE_BOOLEAN:
-            if (AiNodeGetBool (node, paramName) == pdefaultvalue->BOOL)
+            if (AiNodeGetBool (node, paramName) == pdefaultvalue->BOOL())
                 return true;
             break;
         case AI_TYPE_FLOAT:
-            if (AiNodeGetFlt (node, paramName) == pdefaultvalue->FLT)
+            if (AiNodeGetFlt (node, paramName) == pdefaultvalue->FLT())
                 return true;
             break;
         case AI_TYPE_RGB:
-            if (AiNodeGetRGB (node, paramName) == pdefaultvalue->RGB)
+            if (AiNodeGetRGB (node, paramName) == pdefaultvalue->RGB())
                 return true;
             break;
         case AI_TYPE_RGBA:
-            if (AiNodeGetRGBA (node, paramName) == pdefaultvalue->RGBA)
+            if (AiNodeGetRGBA (node, paramName) == pdefaultvalue->RGBA())
                 return true;
             break;
         case AI_TYPE_VECTOR:
-            if (AiNodeGetVec (node, paramName) == pdefaultvalue->VEC)
+            if (AiNodeGetVec (node, paramName) == pdefaultvalue->VEC())
                 return true;
             break;
-        case AI_TYPE_POINT:
-            if (AiNodeGetPnt (node, paramName) == pdefaultvalue->PNT)
-                return true;
-            break;
-        case AI_TYPE_POINT2:
-            if (AiNodeGetPnt2 (node, paramName) == pdefaultvalue->PNT2)
+        case AI_TYPE_VECTOR2:
+            if (AiNodeGetVec2 (node, paramName) == pdefaultvalue->VEC2())
                 return true;
             break;
         case AI_TYPE_STRING:
-            if (strcmp(AiNodeGetStr(node, paramName), pdefaultvalue->STR) == 0)
+            if (AiNodeGetStr(node, paramName) == pdefaultvalue->STR())
                 return true;
             break;
         default:

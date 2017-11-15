@@ -30,8 +30,10 @@ AI_TYPE_ENUM =          0x0F  ## Enumeration (see \ref AtEnum)
 AI_TYPE_UNDEFINED =     0xFF  ## Undefined, you should never encounter a parameter of this type
 AI_TYPE_NONE =          0xFF  ## No type
 
-from PySide.QtGui import *
-from PySide.QtCore import *
+
+from PySide2.QtGui import *
+from PySide2.QtCore import *
+from PySide2.QtWidgets import *
 import json, os
 
 from shaderManager.propertywidgets import property_widget

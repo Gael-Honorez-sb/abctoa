@@ -16,7 +16,6 @@ License along with this library.*/
 #include <maya/MArgDatabase.h>
 #include <maya/MGlobal.h>
 #include "abcExporterUtils.h"
-#include <boost/lexical_cast.hpp>
 
 #include <sstream>
 
@@ -107,12 +106,12 @@ MStatus abcContainersExportCmd::doIt( const MArgList &args)
         }
          if(!toExport.isNull())
          {
-             CNodeTranslator* translator = arnoldSession->ExportNode(toExport, exportedNodes, NULL ,false, &stat);
+             CNodeTranslator* translator = arnoldSession->ExportNode(toExport, exportedNodes, NULL ,false, -1, &stat);
              if(exportedNodes->size() > 0)
              {
-                 AtNode* root = translator->GetArnoldRootNode();
+                 AtNode* root = translator->GetArnoldNode();
 
-                 std::set<AtNode*>::const_iterator sit (exportedNodes->begin()), send(exportedNodes->end());
+                 std::unordered_set<AtNode*>::const_iterator sit (exportedNodes->begin()), send(exportedNodes->end());
                  for(;sit!=send;++sit)
                  {
                      // adding the node to the network
@@ -147,10 +146,10 @@ MStatus abcContainersExportCmd::doIt( const MArgList &args)
                              if(AiParamGetType(paramEntry) == AI_TYPE_ARRAY)
                              {
                                  AtArray* paramArray = AiNodeGetArray(*sit, paramName);
-                                 cout << "this is an array of size " <<  paramArray->nelements << endl;
+                                 cout << "this is an array of size " <<  AiArrayGetNumElements(paramArray) << endl;
 
                                  processArrayValues(*sit, paramName, paramArray, outputType, matObj, nodeName, container.name());
-                                 for(unsigned int i=0; i < paramArray->nelements; i++)
+                                 for(unsigned int i=0; i < AiArrayGetNumElements(paramArray); i++)
                                  {
                                      processArrayParam(*sit, paramName, paramArray, i, outputType, matObj, nodeName, container.name());
                                  }

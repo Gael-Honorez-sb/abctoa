@@ -119,12 +119,12 @@ MStatus abcCacheExportCmd::doIt( const MArgList &args)
             CNodeTranslator* translator = arnoldSession->ExportNode(toExport);
             if(true)
              {
-                 AtNode* root = translator->GetArnoldRootNode();
+                 AtNode* root = translator->GetArnoldNode();
                  exportedNodes->insert(root);
                  // We need to traverse the tree again...
                  getAllArnoldNodes(root, exportedNodes);
 
-                 std::set<AtNode*>::const_iterator sit (exportedNodes->begin()), send(exportedNodes->end());
+                 std::unordered_set<AtNode*>::const_iterator sit (exportedNodes->begin()), send(exportedNodes->end());
                  for(;sit!=send;++sit)
                  {
                      // adding the node to the network
@@ -164,7 +164,7 @@ MStatus abcCacheExportCmd::doIt( const MArgList &args)
                             AtArray* paramArray = AiNodeGetArray(*sit, paramName);
 
                             processArrayValues(*sit, paramName, paramArray, outputType, matObj, nodeName, container.name());
-                            for(unsigned int i=0; i < paramArray->nelements; i++)
+                            for(unsigned int i=0; i < AiArrayGetNumElements(paramArray); i++)
                             {
                                 processArrayParam(*sit, paramName, paramArray, i, outputType, matObj, nodeName, container.name());
                             }

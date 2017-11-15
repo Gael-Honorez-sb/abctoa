@@ -1,0 +1,6 @@
+*.pyc
+/INSTALL
+/abcToA.mod
+/exportArnoldDefinitions.py
+/maya/alembicHolder/version.h
+/package.py
