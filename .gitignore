@@ -1,6 +1,7 @@
 *.pyc
 /INSTALL
 /abcToA.mod
-/exportArnoldDefinitions.py
+exportArnoldDefinitions.py
+local.cmake
 /maya/alembicHolder/version.h
 /package.py

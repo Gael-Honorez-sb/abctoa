@@ -1,5 +1,5 @@
 #-------------------------------------------------------------------------------
-# Copyright (c) 2014, Gaël Honorez, All rights reserved.
+# Copyright (c) 2014-2017, Gaël Honorez, All rights reserved.
 # This library is free software; you can redistribute it and/or
 # modify it under the terms of the GNU Lesser General Public
 # License as published by the Free Software Foundation; either
@@ -19,18 +19,15 @@ This is the source code for the Maya Alembic Holder plugin & scripts.
 
 Pre-requisites are :
 
-- Maya > 2013
-- PySide for maya (ie. http://3devartist.blogspot.com.tr/2012/11/pyside-113-for-autodesk-maya-2013-x64.html)
+- Maya > 2017
 
 For compilation :
 - Cmake > 2.8
 - Alembic libraries 
-- Arnold > 4.2.2.0
-- MtoA > 1.1.2.0
-- Python > 2.6
-- Boost > 1.4
-- pystring (https://code.google.com/p/pystring)
-- jsoncpp (https://github.com/open-source-parsers/jsoncpp)
+- Arnold > 5.0.0.0
+- MtoA > 2.0.0.0
+- Python > 2.7
+- Boost > 1.5
 
 If you want to contribute back to the project, please make a fork and create pull-Requests of your changes.
 
