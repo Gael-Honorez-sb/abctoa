@@ -125,8 +125,6 @@ bool nozAlembicHolder::isBounded() const
     return true;
 }
 
-
-
 MBoundingBox nozAlembicHolder::boundingBox() const
 {
     updateCache();
@@ -348,7 +346,7 @@ MStatus nozAlembicHolder::initialize() {
     addAttribute(aShaderPath);
     addAttribute(aTime);
     addAttribute(aTimeOffset);
-	
+
 	addAttribute(aJsonFile);
 	addAttribute(aJsonFileSecondary);
 	addAttribute(aShadersNamespace);
@@ -364,7 +362,7 @@ MStatus nozAlembicHolder::initialize() {
 	addAttribute(aSkipAttributes);
 	addAttribute(aSkipLayers);
 	addAttribute(aSkipDisplacements);
-	
+
 	addAttribute(aUpdateAssign);
     addAttribute(aUpdateCache);
     addAttribute(aBoundMin);
@@ -387,11 +385,9 @@ MStatus nozAlembicHolder::initialize() {
 	return MS::kSuccess;
 }
 
-MSelectionMask nozAlembicHolder::s_selection_mask("alembicHolder");
-
 MSelectionMask nozAlembicHolder::getShapeSelectionMask() const
 {
-    return s_selection_mask;
+    return MSelectionMask("alembicHolder");
 }
 
 const nozAlembicHolder::SceneSample& nozAlembicHolder::getSample() const
@@ -487,6 +483,7 @@ void nozAlembicHolder::updateDiffuseColorOverrides()
         }
     }
 }
+
 MStatus nozAlembicHolder::compute(const MPlug& plug, MDataBlock& block)
 {
 	if (plug == aUpdateAssign)
@@ -543,7 +540,7 @@ MStatus nozAlembicHolder::compute(const MPlug& plug, MDataBlock& block)
 				if (reader.parse( test2, jroot2, false ))
 					update(jroot, jroot2);
 			}
-		
+
 			if ( parsingSuccessful )
 			{
 				if(skipAttributes == false)

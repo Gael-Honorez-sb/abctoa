@@ -1,5 +1,5 @@
 /*Alembic Holder
-Copyright (c) 2014, Gaël Honorez, All rights reserved.
+Copyright (c) 2014, Gaï¿½l Honorez, All rights reserved.
 This library is free software; you can redistribute it and/or
 modify it under the terms of the GNU Lesser General Public
 License as published by the Free Software Foundation; either
@@ -166,6 +166,7 @@ public:
 
 public:
     static  MTypeId     id;
+};
 
 private:
     static MSelectionMask s_selection_mask;
@@ -264,6 +265,5 @@ private:
 }; // class CAlembicHolderUI
 
 } // namespace AlembicHolder
-
 
 #endif // header guard

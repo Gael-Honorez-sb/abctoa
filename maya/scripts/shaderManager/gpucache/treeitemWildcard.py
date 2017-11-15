@@ -30,7 +30,7 @@ TAG = 6
 # Herited from normal tree item.
 class wildCardItem(treeitem.abcTreeItem):
     def __init__(self, cache, expression, parent=None, *args, **kwargs):
-        QtGui.QTreeWidgetItem.__init__(self, *args, **kwargs)
+        QtWidgets.QTreeWidgetItem.__init__(self, *args, **kwargs)
         self.interface = parent
         self.cache = cache
         self.expression = expression
@@ -92,17 +92,17 @@ class wildCardItem(treeitem.abcTreeItem):
         return self.expression
 
     def pressed(self):
-        menu = QtGui.QMenu(self.interface)
+        menu = QtWidgets.QMenu(self.interface)
         shader = self.interface.getShader()
         if shader:
             if  cmds.nodeType(shader) == "displacementShader":
-                assignDisplacement = QtGui.QAction("Assign %s" % shader, menu)
+                assignDisplacement = QtWidgets.QAction("Assign %s" % shader, menu)
                 assignDisplacement.triggered.connect(self.assignDisplacement)
                 self.shaderToAssign = shader
                 menu.addAction(assignDisplacement)
 
             else:
-                assignShader = QtGui.QAction("Assign %s" % shader, menu)
+                assignShader = QtWidgets.QAction("Assign %s" % shader, menu)
                 assignShader.triggered.connect(self.assignShader)
                 self.shaderToAssign = shader
                 menu.addAction(assignShader)
@@ -110,7 +110,7 @@ class wildCardItem(treeitem.abcTreeItem):
         if len(self.cache.parent.shadersFromFile) > 0:
             menu.addSeparator()
             for sh in self.cache.parent.shadersFromFile:
-                assignShader = QtGui.QAction("Assign %s" % sh, menu)
+                assignShader = QtWidgets.QAction("Assign %s" % sh, menu)
                 assignShader.triggered.connect(functools.partial(self.assignShaderFromFile, sh))
                 self.shaderToAssign = shader
                 menu.addAction(assignShader)
@@ -119,7 +119,7 @@ class wildCardItem(treeitem.abcTreeItem):
             menu.addSeparator()
             for sh in self.cache.parent.displaceFromFile:
                 sh = sh.replace(".message", "")
-                assignShader = QtGui.QAction("Assign displacement %s" % sh, menu)
+                assignShader = QtWidgets.QAction("Assign displacement %s" % sh, menu)
 
                 assignShader.triggered.connect(functools.partial(self.assignDisplacementFromFile, sh))
                 self.shaderToAssign = shader
@@ -129,20 +129,20 @@ class wildCardItem(treeitem.abcTreeItem):
         menu.addSeparator()
         shader = self.cache.assignations.getShader(path, self.interface.getLayer())
         if shader:
-            deassignShader = QtGui.QAction("Deassign %s" % shader["shader"], menu)
+            deassignShader = QtWidgets.QAction("Deassign %s" % shader["shader"], menu)
             deassignShader.triggered.connect(self.deassignShader)
             menu.addAction(deassignShader)
 
         menu.addSeparator()
         shader = self.cache.assignations.getDisplace(path, self.interface.getLayer())
         if shader:
-                deassignShader = QtGui.QAction("Deassign displace %s" % shader["shader"], menu)
+                deassignShader = QtWidgets.QAction("Deassign displace %s" % shader["shader"], menu)
                 deassignShader.triggered.connect(self.deassignDisplace)
                 menu.addAction(deassignShader)
 
         menu.addSeparator()
         if not self.protected:
-            deleteWildcard = QtGui.QAction("Delete WildCard", menu)
+            deleteWildcard = QtWidgets.QAction("Delete WildCard", menu)
             deleteWildcard.triggered.connect(self.deleteWildcard)
             menu.addAction(deleteWildcard)
 

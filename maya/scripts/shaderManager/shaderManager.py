@@ -846,7 +846,7 @@ class ShaderManager(QtWidgets.QMainWindow, UI_ABCHierarchy.Ui_NAM):
         if column == 0:
             if item.isWildCard:
                 if not item.protected:
-                    text, ok = QtGui.QInputDialog.getText(self, 'WildCard expression',  'Enter the expression:', QtGui.QLineEdit.Normal, item.getPath())
+                    text, ok = QtWidgets.QInputDialog.getText(self, 'WildCard expression',  'Enter the expression:', QtWidgets.QLineEdit.Normal, item.getPath())
                     if ok:
                         #first change the path
                         item.setExpression(text)
@@ -886,7 +886,7 @@ class ShaderManager(QtWidgets.QMainWindow, UI_ABCHierarchy.Ui_NAM):
             return
 
 
-        item.setChildIndicatorPolicy(QtGui.QTreeWidgetItem.DontShowIndicator)
+        item.setChildIndicatorPolicy(QtWidgets.QTreeWidgetItem.DontShowIndicator)
 
     def createBranch(self, parentItem, abcchild, hierarchy = False, p = "/") :
         ''' 
@@ -933,20 +933,15 @@ class ShaderManager(QtWidgets.QMainWindow, UI_ABCHierarchy.Ui_NAM):
     def populate(self) :
         for cache in self.ABCViewerNode.values():
             if cache.cache != "":
-                firstLevel = cache.getHierarchy()
+                firstLevel = cache.getHierarchy(cache.ABCcurPath or "/")
 
-                root = treeitem.abcTreeItem(cache, [], "Transform", self)
-                #root.setCheckState(0, QtCore.Qt.Unchecked)
+                pathList = [elem for elem in cache.ABCcurPath.split("/") if elem]
+                root = treeitem.abcTreeItem(cache, pathList, "Transform", self)
+
                 root.checkShaders(self.getLayer())
                 root.checkProperties(self.getLayer())
                 root.setHasChildren(True)
                 cache.itemsTree.append(root)
-
-                if cache.ABCcurPath != None :
-                    if cache.ABCcurPath != "/" :
-                        paths = cache.ABCcurPath.split("/")
-                        if len(paths) > 0 :
-                            self.createBranch(root, paths[1:], True)
 
                 self.hierarchyWidget.addTopLevelItem(root)
                 self.createBranch(root,firstLevel)
@@ -1141,7 +1136,7 @@ class ShaderManager(QtWidgets.QMainWindow, UI_ABCHierarchy.Ui_NAM):
 
         newItem = treeitemWildcard.wildCardItem(parentItem.cache, wildcard, self)
         parentItem.cache.itemsTree.append(newItem)
-        newItem.setChildIndicatorPolicy(QtGui.QTreeWidgetItem.DontShowIndicator)
+        newItem.setChildIndicatorPolicy(QtWidgets.QTreeWidgetItem.DontShowIndicator)
         parentItem.addChild(newItem)
         
         newItem.checkShaders(self.getLayer())
@@ -1154,7 +1149,7 @@ class ShaderManager(QtWidgets.QMainWindow, UI_ABCHierarchy.Ui_NAM):
 
         newItem = treeitemTag.tagItem(parentItem.cache, tag, self)
         parentItem.cache.itemsTree.append(newItem)
-        newItem.setChildIndicatorPolicy(QtGui.QTreeWidgetItem.DontShowIndicator)
+        newItem.setChildIndicatorPolicy(QtWidgets.QTreeWidgetItem.DontShowIndicator)
         parentItem.addChild(newItem)
         
         newItem.checkShaders(self.getLayer())

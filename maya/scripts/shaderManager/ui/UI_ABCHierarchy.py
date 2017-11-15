@@ -3,7 +3,7 @@
 # Form implementation generated from reading ui file 's:\projects\Gael_Testing\config\modules_2015\abcToA-2.0.0\scripts\shaderManager\ui\UI_ABCHierarchy.ui'
 #
 # Created: Fri Aug 19 15:16:53 2016
-#      by: pyside-uic 0.2.15 running on PySide 1.2.4
+#      by: pyside-uic 0.2.15 running on Qt 1.2.4
 #
 # WARNING! All changes made in this file will be lost!
 
