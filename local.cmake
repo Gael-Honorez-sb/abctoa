@@ -15,6 +15,10 @@ IF(NOT MTOA_VERSION AND NOT $ENV{MTOA_VERSION} STREQUAL "")
 ENDIF()
 
 
+<<<<<<< Updated upstream
+=======
+set(BOOST_ROOT //server01/shared/Dev/boost_1_61_0)
+>>>>>>> Stashed changes
 set(MAYA_LOCATION //server01/shared/Dev/Maya/devkit/${MAYA_VERSION}/windows)
 set(ARNOLD_ROOT //server01/shared/Dev/Arnold-${ARNOLD_VERSION})
 set(ARNOLD_INCLUDE_DIR //server01/shared/Dev/Arnold-${ARNOLD_VERSION}/include)
