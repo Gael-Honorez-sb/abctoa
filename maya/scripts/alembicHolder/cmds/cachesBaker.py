@@ -74,7 +74,7 @@ def writeAbcShaders():
         if not shape:
             continue
 
-        cache = cmds.getAttr("%s.cacheFileName" % shape)
+        cache = cmds.getAttr("%s.cacheFileNames[0]" % shape)
         abcfile = os.path.join(os.path.dirname(cache), "shaders_%s" % os.path.basename(cache))
         try:
             cmds.abcCacheExport(f=abcfile, node=shape)
@@ -100,7 +100,7 @@ def writeJson(namespace=None):
 
         if cmds.nodeType(shape) == "gpuCache" or cmds.nodeType(shape) == "alembicHolder":
 
-            cache = cmds.getAttr("%s.cacheFileName" % shape)
+            cache = cmds.getAttr("%s.cacheFileNames[0]" % shape)
             jsonfile = cache.replace(".abc", ".json")
 
             assignations = {}
