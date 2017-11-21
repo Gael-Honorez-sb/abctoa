@@ -106,10 +106,14 @@ MStatus abcContainersExportCmd::doIt( const MArgList &args)
         }
          if(!toExport.isNull())
          {
-             CNodeTranslator* translator = arnoldSession->ExportNode(toExport, exportedNodes, NULL ,false, -1, &stat);
-             if(exportedNodes->size() > 0)
+             CNodeTranslator* translator = arnoldSession->ExportNode(toExport);
+             
+             if(true)
              {
                  AtNode* root = translator->GetArnoldNode();
+
+                 exportedNodes->insert(root);
+                 getAllArnoldNodes(root, exportedNodes);
 
                  std::unordered_set<AtNode*>::const_iterator sit (exportedNodes->begin()), send(exportedNodes->end());
                  for(;sit!=send;++sit)
@@ -146,7 +150,6 @@ MStatus abcContainersExportCmd::doIt( const MArgList &args)
                              if(AiParamGetType(paramEntry) == AI_TYPE_ARRAY)
                              {
                                  AtArray* paramArray = AiNodeGetArray(*sit, paramName);
-                                 cout << "this is an array of size " <<  AiArrayGetNumElements(paramArray) << endl;
 
                                  processArrayValues(*sit, paramName, paramArray, outputType, matObj, nodeName, container.name());
                                  for(unsigned int i=0; i < AiArrayGetNumElements(paramArray); i++)
