@@ -193,11 +193,7 @@ class gpucache(object):
         if IPolyMesh.matches(ohead):
             arbGeomParams = IPolyMesh(iObj, WrapExistingFlag.kWrapExisting).getSchema().getArbGeomParams()
         if ISubD.matches(ohead):
-            arbGeomParams = ISubD(iObj, WrapExistingFlag.kWrapExisting).getSchema().getArbGeomParams()
-        if ICurves.matches(ohead):
-            arbGeomParams = ICurves(iObj, WrapExistingFlag.kWrapExisting).getSchema().getArbGeomParams()
-        if IPoints.matches(ohead):
-            arbGeomParams = IPoints(iObj, WrapExistingFlag.kWrapExisting).getSchema().getArbGeomParams()                
+            arbGeomParams = ISubD(iObj, WrapExistingFlag.kWrapExisting).getSchema().getArbGeomParams()           
 
         if arbGeomParams is not None and arbGeomParams.valid():
             for attrName in allowedTags:
