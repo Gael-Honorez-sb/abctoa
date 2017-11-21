@@ -1106,11 +1106,17 @@ VP2BufferHandles VP2DrawableBufferCache::sampleBuffers(chrono_t time, const Draw
         auto geometry = std::unique_ptr<VP2GeometrySample>(new VP2GeometrySample());
 
         // Interpolate if needed.
-        if (cache_handles.geometry.endpoints[1] && cache_handles.geometry.alpha != 0) {
+        if (
+            cache_handles.geometry.endpoints[1] && 
+            cache_handles.geometry.endpoints[0]->positions.size() == cache_handles.geometry.endpoints[1]->positions.size() && 
+            cache_handles.geometry.alpha != 0
+            ) 
+        {
             const unsigned int vertex_count = unsigned(cpu_geo.endpoints[0]->positions.size());
             // Positions.
             {
                 auto position_buffer = static_cast<V3f*>(geometry->positions.acquire(vertex_count));
+
                 lerpSpans(cpu_geo.alpha,
                     Span<const V3f>(cpu_geo.endpoints[0]->positions),
                     Span<const V3f>(cpu_geo.endpoints[1]->positions),
