@@ -49,7 +49,9 @@ ENDIF()
 OPTION(USE_HDF5 "Include HDF5 stuff" OFF)
 OPTION(USE_ILMBASE_STATIC_LIBS "Build with static ilmBase libs" ON)
 OPTION(USE_STATIC_HDF5 "Build with static HDF5 libs" OFF)
-OPTION(ALEMBIC_SHARED_LIBS "Build shared libraries" ON)
+OPTION(ALEMBIC_SHARED_LIBS "Use shared libraries" OFF)
+OPTION(ALEMBIC_ILMBASE_LINK_STATIC "Use static IlmBase libraries" ON)
+OPTION(BUILD_SHARED_LIBS "Build shared libraries" OFF)
 option(USE_NSIS "Use NSIS generator to produce installer" OFF)
 
 # Custom target for packaging.
