@@ -262,13 +262,12 @@ class abcTreeItem(QtWidgets.QTreeWidgetItem):
     def assignShader(self):
         if not cmds.objExists(str(self.shaderToAssign)):
             if self.shaderToAssign.endswith("SG") and cmds.objExists(str(self.shaderToAssign)[:-2]):
-                
-                self.shaderToAssign = self.interface.createSG(str(self.shaderToAssign)[:-2])
+                self.interface.createSG(str(self.shaderToAssign)[:-2])
             else:
                 return
         
         if not cmds.nodeType(self.shaderToAssign) == "shadingEngine":
-            self.shaderToAssign = self.interface.createSG(str(self.shaderToAssign))
+            self.interface.createSG(str(self.shaderToAssign))
 
         path = self.getPath()
 

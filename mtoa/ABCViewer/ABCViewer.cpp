@@ -134,10 +134,7 @@ void CABCViewerTranslator::ExportProcedural(AtNode* procedural, bool update)
                         for (unsigned int k=0; k<connections.length(); ++k)
                         {
                             MPlug sgPlug = connections[k];
-                            if (sgPlug.node().apiType() == MFn::kShadingEngine || sgPlug.node().apiType() == MFn::kDisplacementShader)
-                            {
-                                ExportConnectedNode(sgPlug);
-                            }
+                            ExportConnectedNode(sgPlug);
                         }
                 }
 
