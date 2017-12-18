@@ -372,6 +372,9 @@ MStatus nozAlembicHolder::initialize() {
     attributeAffects(aAbcFiles, aUpdateCache);
     attributeAffects(aTime, aUpdateCache);
     attributeAffects(aTimeOffset, aUpdateCache);
+    attributeAffects(aObjectPath, aUpdateCache);
+    attributeAffects(aSelectionPath, aUpdateCache);
+    attributeAffects(aForceReload, aUpdateCache);
 
     // Update assinations
 	attributeAffects(aJsonFile, aUpdateAssign);
