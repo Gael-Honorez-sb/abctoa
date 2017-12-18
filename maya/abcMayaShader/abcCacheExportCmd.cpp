@@ -72,7 +72,7 @@ MStatus abcCacheExportCmd::doIt( const MArgList &args)
 
     renderSession->SetOutputAssMask(16);
     arnoldSession->SetExportFilterMask(16);
-    renderSession->SetForceTranslateShadingEngines(true);
+    renderSession->SetForceTranslateShadingEngines(false);
 
     CMayaScene::Export(NULL);
 
@@ -95,10 +95,7 @@ MStatus abcCacheExportCmd::doIt( const MArgList &args)
              for (unsigned int k=0; k<connections.length(); ++k)
              {
                 MPlug sgPlug = connections[k];
-                if (sgPlug.node().apiType() == MFn::kShadingEngine || sgPlug.node().apiType() == MFn::kDisplacementShader)
-                {
-                    shaderToExport.push_back(sgPlug);
-                }
+                shaderToExport.push_back(sgPlug);
              }
           }
 
