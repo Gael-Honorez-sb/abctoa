@@ -27,7 +27,7 @@ License along with this library.*/
 #include <maya/MGlobal.h>
 #include <maya/MPlugArray.h>
 
-#include <unordered_set>
+#include <set>
 
 class abcCacheExportCmd : public MPxCommand {
   public:
