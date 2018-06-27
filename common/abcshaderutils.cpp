@@ -26,7 +26,7 @@ void setUserParameter(AtNode* source, std::string interfaceName, Alembic::AbcCor
     else if (Abc::IStringProperty::matches(header))
     {
         // string type
-		std::string value = AiNodeGetStr(source, interfaceName.c_str());
+		std::string value = AiNodeGetStr(source, interfaceName.c_str()).c_str();
 		value = pystring::replace(value, "\\", "/");
 		for (std::map<std::string,std::string>::iterator it=remapping.begin(); it!=remapping.end(); ++it)
 			value = pystring::replace(value, it->first, it->second);
