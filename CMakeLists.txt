@@ -175,7 +175,7 @@ message("PySide will be installed to: \n\t${PYSIDE_INSTALL_DIR}")
 message("Samples will be installed to: \n\t${INSTALL_DIR}/samples")
 
 add_subdirectory(alembic EXCLUDE_FROM_ALL) 
-add_subdirectory(ThirdParty EXCLUDE_FROM_ALL)
+add_subdirectory(thirdParty EXCLUDE_FROM_ALL)
 
 # Set the list of subdirectories to recurse into to find stuff to build
 set(SUBDIRECTORIES 
