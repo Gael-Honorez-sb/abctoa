@@ -28,7 +28,7 @@ INCLUDE_DIRECTORIES(${CMAKE_BINARY_DIR}/thirdParty/openEXR/IlmBase/config)
 if (${CMAKE_SYSTEM_NAME} MATCHES "Windows")
 	target_link_libraries(${MAYAPLUGIN} ${MAYA_LIBRARIES} ${MAYA_LIBRARY_DIRS}/tbb.lib Alembic jsoncpp_lib_static pystring_lib_static Iex Half ${Boost_REGEX_LIBRARY} ${Boost_SYSTEM_LIBRARY} ${Boost_CHRONO_LIBRARY} ${Boost_DATE_TIME_LIBRARY} ${Boost_THREAD_LIBRARY})
 else()	
-	target_link_libraries(${MAYAPLUGIN} ${MAYA_LIBRARIES} tbb Alembic jsoncpp_lib_static pystring_lib_static Iex Half ${Boost_REGEX_LIBRARY} ${Boost_SYSTEM_LIBRARY} ${Boost_CHRONO_LIBRARY} ${Boost_DATE_TIME_LIBRARY} ${Boost_THREAD_LIBRARY})
+	target_link_libraries(${MAYAPLUGIN} ${MAYA_LIBRARIES} Alembic jsoncpp_lib_static pystring_lib_static Iex Half ${Boost_REGEX_LIBRARY} ${Boost_SYSTEM_LIBRARY} ${Boost_CHRONO_LIBRARY} ${Boost_DATE_TIME_LIBRARY} ${Boost_THREAD_LIBRARY})
 endif()
 
 
