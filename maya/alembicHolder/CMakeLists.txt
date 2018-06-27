@@ -10,8 +10,8 @@ add_library(${MAYAPLUGIN} SHARED ${SRC})
 
 
 include_directories(${Boost_INCLUDE_DIR})
-include_directories(${CMAKE_SOURCE_DIR}/ThirdParty/jsoncpp/include)
-include_directories(${CMAKE_SOURCE_DIR}/ThirdParty/pystring)
+include_directories(${CMAKE_SOURCE_DIR}/thirdParty/jsoncpp/include)
+include_directories(${CMAKE_SOURCE_DIR}/thirdParty/pystring)
 include_directories(${CMAKE_SOURCE_DIR}/alembic/lib)
 include_directories(${CMAKE_BINARY_DIR}/alembic/lib)
 include_directories(${CMAKE_CURRENT_BINARY_DIR})

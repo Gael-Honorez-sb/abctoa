@@ -3,8 +3,8 @@ set(UTIL assShadersToAbc)
 file(GLOB SRC "*.cpp" "*h" "../../../common/abc*.h" "../../../common/abc*.cpp")
 
 
-include_directories(${CMAKE_SOURCE_DIR}/ThirdParty/jsoncpp/include)
-include_directories(${CMAKE_SOURCE_DIR}/ThirdParty/pystring)
+include_directories(${CMAKE_SOURCE_DIR}/thirdParty/jsoncpp/include)
+include_directories(${CMAKE_SOURCE_DIR}/thirdParty/pystring)
 include_directories(${CMAKE_SOURCE_DIR}/alembic/lib)
 include_directories(${CMAKE_BINARY_DIR}/alembic/lib)
 

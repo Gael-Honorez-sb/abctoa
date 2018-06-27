@@ -20,7 +20,7 @@ INCLUDE_DIRECTORIES(${CMAKE_BINARY_DIR}/thirdParty/openEXR/IlmBase/config)
 
 
 include_directories(${MTOA_INCLUDE_DIR})
-include_directories(${CMAKE_SOURCE_DIR}/ThirdParty/pystring)
+include_directories(${CMAKE_SOURCE_DIR}/thirdParty/pystring)
 include_directories(${ARNOLD_INCLUDE_DIR})
 
 target_link_libraries(${MAYAPLUGIN} Alembic pystring_lib_static ${MTOA_LIBRARY} ${MAYA_LIBRARIES} ai Iex Half)

@@ -5,7 +5,7 @@ include_directories(${Boost_INCLUDE_DIR})
 include_directories(${MTOA_INCLUDE_DIR})
 include_directories(${ARNOLD_INCLUDE_DIR})
 link_directories(${ARNOLD_LIBRARY_DIR})
-include_directories(${CMAKE_SOURCE_DIR}/ThirdParty/pystring)
+include_directories(${CMAKE_SOURCE_DIR}/thirdParty/pystring)
 
 add_library(${MTOATRANSLATOR} SHARED ${SRC})
 link_directories(${ARNOLD_LIBRARY_DIR})
