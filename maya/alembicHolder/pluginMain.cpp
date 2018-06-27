@@ -13,7 +13,7 @@ License along with this library.*/
 
 
 #include "nozAlembicHolderNode.h"
-#include "SubsceneOverride.h"
+#include "SubSceneOverride.h"
 #include "version.h"
 
 #include "cmds/ABCGetTags.h"
