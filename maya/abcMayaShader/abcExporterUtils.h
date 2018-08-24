@@ -52,7 +52,7 @@ void exportLink(AtNode* sit, Mat::OMaterial matObj, MString nodeName, const char
 
 bool relink(AtNode* src, AtNode* dest, const char* input, int comp);
 AtNode* renameAndCloneNodeByParent(AtNode* node, AtNode* parent);
-void getAllArnoldNodes(AtNode* node, AtNodeSet* nodes);
+void getAllArnoldNodes(AtNode* node, std::set<AtNode*> nodes);
 bool isDefaultValue(AtNode* node, const char* paramName);
 
 #endif

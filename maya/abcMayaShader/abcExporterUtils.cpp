@@ -99,7 +99,7 @@ bool relink(AtNode* src, AtNode* dest, const char* input, int comp)
     return false;
 }
 
-void getAllArnoldNodes(AtNode* node, AtNodeSet* nodes)
+void getAllArnoldNodes(AtNode* node, std::set<AtNode*> nodes)
 {
     AtParamIterator* iter = AiNodeEntryGetParamIterator(AiNodeGetNodeEntry(node));
     while (!AiParamIteratorFinished(iter))
@@ -122,7 +122,7 @@ void getAllArnoldNodes(AtNode* node, AtNodeSet* nodes)
                         //AiMsgDebug("we have a link to %s for %s", AiNodeGetName(linkedNode), AiNodeGetName(node));
                         //linkedNode = renameAndCloneNodeByParent(linkedNode, node);
                         //AiArraySetPtr(paramArray, i, linkedNode);
-                        nodes->insert(linkedNode);
+                        nodes.insert(linkedNode);
                         getAllArnoldNodes(linkedNode, nodes);
                     }
                 }
@@ -147,7 +147,7 @@ void getAllArnoldNodes(AtNode* node, AtNodeSet* nodes)
                                 //AiMsgDebug("we have a link to %s on %s", AiNodeGetName(linkedNode), paramNameArray.asChar());
                                 //linkedNode = renameAndCloneNodeByParent(linkedNode, node);
                                 //relink(linkedNode, node, paramNameArray.asChar(), comp);
-                                nodes->insert(linkedNode);
+                                nodes.insert(linkedNode);
                                 getAllArnoldNodes(linkedNode, nodes);
                             }
                             else
@@ -166,7 +166,7 @@ void getAllArnoldNodes(AtNode* node, AtNodeSet* nodes)
                                         {
                                             //linkedNode = renameAndCloneNodeByParent(linkedNode, node);
                                             //relink(linkedNode, node, compAttrName.asChar(), comp);
-                                            nodes->insert(linkedNode);
+                                            nodes.insert(linkedNode);
                                             getAllArnoldNodes(linkedNode, nodes);
                                         }
                                     }
@@ -190,7 +190,7 @@ void getAllArnoldNodes(AtNode* node, AtNodeSet* nodes)
                     // CRASHING HERE
                     //linkedNode = renameAndCloneNodeByParent(linkedNode, node);
                     //relink(linkedNode, node, paramName, comp);
-                    nodes->insert(linkedNode);
+                    nodes.insert(linkedNode);
                     getAllArnoldNodes(linkedNode, nodes);
                 }
                 else
@@ -209,7 +209,7 @@ void getAllArnoldNodes(AtNode* node, AtNodeSet* nodes)
                             {
                                 //linkedNode = renameAndCloneNodeByParent(linkedNode, node);
                                 //relink(linkedNode, node, compAttrName.asChar(), comp);
-                                nodes->insert(linkedNode);
+                                nodes.insert(linkedNode);
                                 getAllArnoldNodes(linkedNode, nodes);
                             }
                         }

@@ -10,8 +10,8 @@ add_library(${MAYAPLUGIN} SHARED ${SRC})
 
 
 include_directories(${Boost_INCLUDE_DIR})
-include_directories(${CMAKE_SOURCE_DIR}/ThirdParty/jsoncpp/include)
-include_directories(${CMAKE_SOURCE_DIR}/ThirdParty/pystring)
+include_directories(${CMAKE_SOURCE_DIR}/thirdParty/jsoncpp/include)
+include_directories(${CMAKE_SOURCE_DIR}/thirdParty/pystring)
 include_directories(${CMAKE_SOURCE_DIR}/alembic/lib)
 include_directories(${CMAKE_BINARY_DIR}/alembic/lib)
 include_directories(${CMAKE_CURRENT_BINARY_DIR})
@@ -25,8 +25,11 @@ INCLUDE_DIRECTORIES(${CMAKE_BINARY_DIR}/thirdParty/openEXR/IlmBase/config)
 
 
 
-
-target_link_libraries(${MAYAPLUGIN} ${MAYA_LIBRARIES} ${MAYA_LIBRARY_DIRS}/tbb.lib Alembic jsoncpp_lib_static pystring_lib_static Iex Half ${Boost_REGEX_LIBRARY} ${Boost_SYSTEM_LIBRARY} ${Boost_CHRONO_LIBRARY} ${Boost_DATE_TIME_LIBRARY} ${Boost_THREAD_LIBRARY})
+if (${CMAKE_SYSTEM_NAME} MATCHES "Windows")
+	target_link_libraries(${MAYAPLUGIN} ${MAYA_LIBRARIES} ${MAYA_LIBRARY_DIRS}/tbb.lib Alembic jsoncpp_lib_static pystring_lib_static Iex Half ${Boost_REGEX_LIBRARY} ${Boost_SYSTEM_LIBRARY} ${Boost_CHRONO_LIBRARY} ${Boost_DATE_TIME_LIBRARY} ${Boost_THREAD_LIBRARY})
+else()	
+	target_link_libraries(${MAYAPLUGIN} ${MAYA_LIBRARIES} Alembic jsoncpp_lib_static pystring_lib_static Iex Half ${Boost_REGEX_LIBRARY} ${Boost_SYSTEM_LIBRARY} ${Boost_CHRONO_LIBRARY} ${Boost_DATE_TIME_LIBRARY} ${Boost_THREAD_LIBRARY})
+endif()
 
 
 MAYA_SET_PLUGIN_PROPERTIES(${MAYAPLUGIN})

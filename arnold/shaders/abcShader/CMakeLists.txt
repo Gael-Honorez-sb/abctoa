@@ -16,7 +16,7 @@ include_directories(${CMAKE_SOURCE_DIR}/common)
 
 include_directories(${ARNOLD_INCLUDE_DIR})
 
-include_directories(${CMAKE_SOURCE_DIR}/ThirdParty/pystring)
+include_directories(${CMAKE_SOURCE_DIR}/thirdParty/pystring)
 link_directories(${ARNOLD_LIBRARY_DIR})
 
 add_library(${SHADER} SHARED ${SRC})

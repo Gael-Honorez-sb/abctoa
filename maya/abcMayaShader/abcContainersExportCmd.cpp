@@ -69,7 +69,7 @@ MStatus abcContainersExportCmd::doIt( const MArgList &args)
 
     CMayaScene::Begin(MTOA_SESSION_ASS);
     CArnoldSession* arnoldSession = CMayaScene::GetArnoldSession();
-    AtNodeSet* exportedNodes = new AtNodeSet;
+    std::set<AtNode*> exportedNodes;
     MItSelectionList iter(list, MFn::kContainer);
      for (; !iter.isDone(); iter.next())
      {
@@ -112,10 +112,10 @@ MStatus abcContainersExportCmd::doIt( const MArgList &args)
              {
                  AtNode* root = translator->GetArnoldNode();
 
-                 exportedNodes->insert(root);
+                 exportedNodes.insert(root);
                  getAllArnoldNodes(root, exportedNodes);
 
-                 std::unordered_set<AtNode*>::const_iterator sit (exportedNodes->begin()), send(exportedNodes->end());
+                 std::set<AtNode*>::const_iterator sit (exportedNodes.begin()), send(exportedNodes.end());
                  for(;sit!=send;++sit)
                  {
                      // adding the node to the network

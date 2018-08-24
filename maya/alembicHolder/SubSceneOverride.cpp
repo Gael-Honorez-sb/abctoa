@@ -1,4 +1,4 @@
-#include "subSceneOverride.h"
+#include "SubSceneOverride.h"
 
 #include <maya/MDagMessage.h>
 #include <maya/MDGMessage.h>
