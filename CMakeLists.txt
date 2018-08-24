@@ -180,6 +180,7 @@ add_subdirectory(thirdParty EXCLUDE_FROM_ALL)
 # Set the list of subdirectories to recurse into to find stuff to build
 set(SUBDIRECTORIES 
 		arnold/procedurals/alembicProcedural
+		arnold/operators/alembicMaterialOperator
 		#arnold/shaders/abcShader
 		arnold/utility/assShadersToAbc
 		maya/alembicHolder
